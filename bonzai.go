@@ -42,7 +42,9 @@ func ExitOff() { DoNotExit = true }
 // ExitOn sets DoNotExit to true.
 func ExitOn() { DoNotExit = false }
 
-// Exit calls os.Exit(0) unless DoNotExit has been set to true.
+// Exit calls os.Exit(0) unless DoNotExit has been set to true. Cmds
+// should never call Exit themselves returning a nil error from their
+// Methods instead.
 func Exit() {
 	if !DoNotExit {
 		os.Exit(0)
@@ -50,7 +52,8 @@ func Exit() {
 }
 
 // ExitError prints err and exits with 1 return value unless DoNotExit
-// has been set to true.
+// has been set to true. Commands should usually never call ExitError
+// themselves returning an error from their Method instead.
 func ExitError(err ...interface{}) {
 	switch e := err[0].(type) {
 	case string:
@@ -69,7 +72,7 @@ func ExitError(err ...interface{}) {
 	}
 }
 
-// ArgsFrom returns a list of strings split on space with an extra
+// ArgsFrom returns a list of field strings split on space with an extra
 // trailing special space item appended if the line has any trailing
 // spaces at all signifying a definite word boundary and not a potential
 // prefix.
