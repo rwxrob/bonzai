@@ -43,3 +43,14 @@ the name. In fact, I think we have our new theme song.
   Cmds should be *very* light. In fact, most Cmds should assign their
   Method directly from one matching the Method function signature in a
   callable, high-level library.
+
+## Legal 
+
+Copyright 2022 Robert S. Muhlestein (<mailto:rob@rwx.gg>)  
+Licensed under Apache-2.0
+
+"Bonzai" and "bonzai" are legal trademarks of Robert S. Muhlestein but
+can be used freely to refer to the cmdbox project
+<https://github.com/rwxrob/bonzai> without limitation. To avoid
+potential developer confusion, intentionally using these trademarks to
+refer to other projects --- free or proprietary --- is prohibited.
