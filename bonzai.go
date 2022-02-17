@@ -32,21 +32,8 @@ type Method func(args ...string) error
 
 // ----------------------- errors, exit, debug -----------------------
 
-// DEBUG is set when os.Getenv("CMDBOX_DEBUG") is set to anything.
-// Produces verbose debugging logs to stderr to help cmdbox users
-// develop robust tools.
-//
-var DEBUG bool
-
-func init() {
-	if os.Getenv("CMDBOX_DEBUG") != "" {
-		DEBUG = true
-	}
-}
-
-// DoNotExit is a utility for disabling any call to os.Exit via any
-// caller in order to trap panics and use them for testing, etc.
-//
+// DoNotExit effectively disables Exit and ExitError allowing the
+// program to continue running, usually for test evaluation.
 var DoNotExit bool
 
 // ExitOff sets DoNotExit to false.
