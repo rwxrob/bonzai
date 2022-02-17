@@ -1,5 +1,14 @@
 # Bonzai, Well-Tended CLI Command Trees for Gophers
 
+Bonzai commands are unlike anything you've probably encountered so far,
+no getopt dashes, no ugly commander interface to learn, no 12637 lines
+of shell tab completion bloat to source before it will work, just well
+manicured commands organized into rooted node trees for your
+command-line, nested-tab-completing enjoyment with built-in (optional)
+help documentation that can easily be marshalled into JSON and presented
+either as text or well-styled HTML. Think "readthedocs" but served
+locally from your Bonzai command-line apps themselves.
+
 ## "It's spelled bonsai/banzai."
 
 We know. The domains were taken. Plus, this makes it more unique and
