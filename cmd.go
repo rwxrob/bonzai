@@ -44,55 +44,64 @@ type Cmd struct {
 	Site        string         `json:"site,omitempty"`
 	Source      string         `json:"source,omitempty"`
 	Issues      string         `json:"issues,omitempty"`
-	Caller      *Cmd           `json:"-"`
 	Commands    []*Cmd         `json:"commands,omitempty"`
 	Params      []string       `json:"params,omitempty"`
 	Hidden      []string       `json:"hide,omitempty"`
 	Completer   comp.Completer `json:"-"`
-	Method      Method         `json:"-"`
+	Call        Method         `json:"-"`
 }
 
-// Run detects the runtime (shell) and performs completion and exists if
-// completion context is detected. Otherwise, it executes the leaf Cmd
-// returned from Seek calling its Method, and then Exits. Normally, Run
-// is called from within main() to convert the Cmd into an actual
-// executable program and normally it exits the program. Exiting can be
-// controlled, however, with ExitOn/ExitOff when testing or for other
-// purposes requiring multiple Run calls.
-//
+// Run is for running a command within a specific runtime (shell) and
+// performs completion if completion context is detected.  Otherwise, it
+// executes the leaf Cmd returned from Seek calling its Method, and then
+// Exits. Normally, Run is called from within main() to convert the Cmd
+// into an actual executable program and normally it exits the program.
+// Exiting can be controlled, however, with ExitOn/ExitOff when testing
+// or for other purposes requiring multiple Run calls. Using Call
+// instead will also just call the Cmd's Call Method without exiting.
 // Note: Only bash runtime ("COMP_LINE") is currently supported, but
 // others such a zsh and shell-less REPLs are planned.
 func (x *Cmd) Run() {
 
-	// TODO add completion for other runtimes
+	// bash completion context
 	line := os.Getenv("COMP_LINE")
 	if line != "" {
 		cmd, args := x.Seek(ArgsFrom(line)[1:])
 		if cmd.Completer == nil {
-			comp.Standard(cmd, args)
+			list := comp.Standard(cmd, args)
+			filter.Println(list)
+			Exit()
 		}
-		cmd.Completer(cmd, args)
+		filter.Println(cmd.Completer(cmd, args))
 		Exit()
 	}
 
-	log.Print("would execute")
+	// seek should never fail to return something, but ...
+	cmd, args := x.Seek(os.Args[1:])
+	if cmd == nil {
+		ExitError("usage: %v %v\n", x.Name, x.Usage)
+	}
 
-	// TODO execute Command with left-over args if match
-
-	// TODO call x.Method with args[1:] if x.Method not nil
-
-	// TODO fail with help (if found) or generic usage error
-
-}
-
-func (x *Cmd) initRuntime() {
-	/*
-		if os.Getenv("BASH_VERSION") == "" {
-			x.runtime = run.Bash{}
-			return
+	// default to first Command if no Call defined
+	if cmd.Call == nil {
+		if cmd.Commands != nil {
+			def := cmd.Commands[0]
+			if def.Call == nil {
+				ExitError("default command \"%v\" must be callable", def.Name)
+			}
+			if err := def.Call(args...); err != nil {
+				ExitError(err)
+			}
+			Exit()
 		}
-	*/
-	return
+		ExitError("usage: %v %v\n", x.Name, x.Usage)
+	}
+
+	// delegate
+	if err := cmd.Call(args...); err != nil {
+		ExitError(err)
+	}
+	Exit()
 }
 
 // Add creates a new Cmd and sets the name and aliases and adds to

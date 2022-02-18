@@ -58,9 +58,10 @@ func ExitError(err ...interface{}) {
 	switch e := err[0].(type) {
 	case string:
 		if len(e) > 1 {
-			log.Printf(e+"\n", err[1:])
+			log.Printf(e+"\n", err[1:]...)
+		} else {
+			log.Println(e)
 		}
-		log.Println(e)
 	case error:
 		out := fmt.Sprintf("%v", e)
 		if len(out) > 0 {
