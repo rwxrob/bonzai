@@ -99,6 +99,14 @@ the name. In fact, I think we have our new theme song.
   Method directly from one matching the Method function signature in a
   callable, high-level library.
 
+## Acknowledgements
+
+The <https://twitch.tv/rwxrob> community has been constantly involved
+with the development of this project, making suggestions about
+everything from my use of init, to the name "bonzai". While all their
+contributions are too numerous to name specifically, they deserve a
+more than deserve a huge thank you here.
+
 ## Legal 
 
 Copyright 2022 Robert S. Muhlestein (<mailto:rob@rwx.gg>)  
