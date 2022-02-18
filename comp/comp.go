@@ -27,7 +27,6 @@ type Completer func(leaf Command, args []string) []string
 // independently.
 type Command interface {
 	GetName() string
-	GetCaller() Command
 	GetCommands() []string
 	GetHidden() []string
 	GetParams() []string

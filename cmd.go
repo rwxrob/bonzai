@@ -189,9 +189,6 @@ func (x *Cmd) Seek(args []string) (*Cmd, []string) {
 // GetName fulfills the comp.Command interface.
 func (x *Cmd) GetName() string { return x.Name }
 
-// GetCaller fulfills the comp.Command interface.
-func (x *Cmd) GetCaller() comp.Command { return x.Caller }
-
 // GetCommands fulfills the comp.Command interface.
 func (x *Cmd) GetCommands() []string { return x.CmdNames() }
 
