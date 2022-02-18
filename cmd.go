@@ -49,6 +49,23 @@ type Cmd struct {
 	Hidden      []string       `json:"hide,omitempty"`
 	Completer   comp.Completer `json:"-"`
 	Call        Method         `json:"-"`
+
+	_aliases map[string]*Cmd
+}
+
+func (x *Cmd) cacheAliases() {
+	x._aliases = map[string]*Cmd{}
+	if x.Commands == nil {
+		return
+	}
+	for _, c := range x.Commands {
+		if c.Aliases == nil {
+			continue
+		}
+		for _, a := range c.Aliases {
+			x._aliases[a] = c
+		}
+	}
 }
 
 // Run is for running a command within a specific runtime (shell) and
@@ -62,6 +79,8 @@ type Cmd struct {
 // Note: Only bash runtime ("COMP_LINE") is currently supported, but
 // others such a zsh and shell-less REPLs are planned.
 func (x *Cmd) Run() {
+
+	x.cacheAliases()
 
 	// bash completion context
 	line := os.Getenv("COMP_LINE")
@@ -116,6 +135,7 @@ func (x *Cmd) Add(name string, aliases ...string) *Cmd {
 	return c
 }
 
+// Cmd looks up a given Command by name or name from Aliases.
 func (x *Cmd) Cmd(name string) *Cmd {
 	if x.Commands == nil {
 		return nil
@@ -124,6 +144,9 @@ func (x *Cmd) Cmd(name string) *Cmd {
 		if name == c.Name {
 			return c
 		}
+	}
+	if c, has := x._aliases[name]; has {
+		return c
 	}
 	return nil
 }
