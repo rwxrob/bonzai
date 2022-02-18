@@ -1,13 +1,58 @@
-# Bonzai, Well-Tended CLI Command Trees for Gophers
+# Bonzai! CLI Command Trees for Discerning Gophers
 
-Bonzai commands are unlike anything you've probably encountered so far,
-no getopt dashes, no ugly commander interface to learn, no 12637 lines
-of shell tab completion bloat to source before it will work, just well
-manicured commands organized into rooted node trees for your
-command-line, nested-tab-completing enjoyment with built-in (optional)
-help documentation that can easily be marshalled into JSON and presented
-either as text or well-styled HTML. Think "readthedocs" but served
-locally from your Bonzai command-line apps themselves.
+[![Go Version](https://img.shields.io/github/go-mod/go-version/rwxrob/bonzai)](https://tip.golang.org/doc/go1.18)
+[![GoDoc](https://godoc.org/github.com/rwxrob/bonzai?status.svg)](https://godoc.org/github.com/rwxrob/bonzai)
+[![License](https://img.shields.io/badge/license-Apache2-brightgreen.svg)](LICENSE)
+[![Go Report
+Card](https://goreportcard.com/badge/github.com/rwxrob/bonzai)](https://goreportcard.com/report/github.com/rwxrob/bonzai)
+
+Bonzai command trees are unlike anything you've probably encountered so
+far, no getopt dashes (we kind of hate them), no ugly commander
+interface to learn, no 12637 lines of shell tab completion bloat to
+source before your command will complete, just well manicured
+nested-tab-complete-with-magical-aliases-enabled commands organized into
+rooted node trees for your command-line enjoyment. Your right-pinky will
+be particularly grateful.
+
+## Installation
+
+🎉 ***Bonzai shamelessly requires Go 1.18+*** 💋
+
+1. Install Go 1.18 and the tooling your require for it
+1. `go install github.com/rwxrob/bonzai@latest` 
+1. `import "github.com/rwxrob/bonzai"`
+1. Consider using the [template][] to get started
+
+[template]: <https://github.com/rwxrob/bonzai-template>
+
+😎 *Yes, we use the wonderful new generics within the [`filter`](filter)
+subpackage.*
+
+## Embedded Text or Web Docs FTW!
+
+And, all the documentation for your command tree goes *inside* the
+binary (if you want). That's right. Portable, text or web-enabled "man"
+pages without the man page. You can use one of the composable
+interactive-color-terminal-sensing help documentation commands like
+`cmd.Help` that will easily marshal into JSON, or text, or well-styled
+HTML locally while enabling you to write your embedded docs in
+simplified CommonMark. Think "readthedocs" but without the Internet
+dependency. And if you don't want `cmd.Help` you don't need it. You can
+even write your own composable Bonzai command
+or pick from a rich ecosystem of embeddable Bonzai command trees
+available from anywhere on the Internet or maintained by the Bonzai
+project. No registries to worry about. Just use good 'ol Go module imports are all that are need to share your creations.
+
+## Contributors/PRs Welcome
+
+*... especially for "Completers" and Runtime Detection.*
+
+Speaking of sharing, why not send a PR for your addition to the ever
+growing collection of `comp` subpackage `Completers` for everything from
+days of the week, to tab-driven inline math calculations, to a list of
+all the listening ports running on your current system.
+
+[CONTRIBUTING](CONTRIBUTING)
 
 ## "It's spelled bonsai/banzai."
 
@@ -24,9 +69,19 @@ works out just fine for us.
 Then, of course, there's the image of Buckaroo invoked every time we say
 the name. In fact, I think we have our new theme song.
 
+## What People Are Saying
+
+> "It's like a modular, multicall BusyBox builder for Go with built in
+> completion and embedded documentation support."
+
+> "The utility here is that Bonzai lets you maintain your own personal
+> 'toolbox' with built in auto-complete that you can assemble from
+> various Go modules. Individual commands are isolated and unaware of
+> each other and possibly maintained by other people." (tadasv123)
+
 ## Example GitHub Template
 
-<https://github.com/rwxrob/template-bonzai>
+<https://github.com/rwxrob/bonzai-template>
 
 ## Design Considerations
 
