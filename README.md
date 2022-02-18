@@ -1,4 +1,4 @@
-# Bonzai! CLI Command Trees for Discerning Gophers
+# Bonzai! Simple CLI Command Trees in Go
 
 [![Go Version](https://img.shields.io/github/go-mod/go-version/rwxrob/bonzai)](https://tip.golang.org/doc/go1.18)
 [![GoDoc](https://godoc.org/github.com/rwxrob/bonzai?status.svg)](https://godoc.org/github.com/rwxrob/bonzai)
