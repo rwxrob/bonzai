@@ -104,7 +104,7 @@ the name. In fact, I think we have our new theme song.
 The <https://twitch.tv/rwxrob> community has been constantly involved
 with the development of this project, making suggestions about
 everything from my use of init, to the name "bonzai". While all their
-contributions are too numerous to name specifically, they deserve a
+contributions are too numerous to name specifically, they 
 more than deserve a huge thank you here.
 
 ## Legal 
