@@ -26,8 +26,8 @@ import (
 //
 //     2. If leaf has no arguments, return all Commands and Params
 //
-//     3. If first argument is the name of a Command or one of
-//        Aliases return only the Command name
+//     3. If first argument is the name of a Command return it only even
+//        if in the Hidden list
 //
 //     4. Otherwise, return every Command or Param that is not in the
 //        Hidden list and HasPrefix matching the first arg
@@ -40,11 +40,6 @@ func Standard(x Command, args []string) []string {
 		return c(x, args)
 	}
 
-	// fetch to avoid redundant calls
-	commands := x.GetCommands()
-	params := x.GetParams()
-	hidden := x.GetHidden()
-
 	// check for unique first argument command
 	if len(args) == 0 {
 		return []string{x.GetName()}
@@ -52,11 +47,11 @@ func Standard(x Command, args []string) []string {
 
 	// build list of visible commands and params
 	list := []string{}
-	list = append(list, commands...)
-	list = append(list, params...)
-	list = filter.Minus(list, hidden)
+	list = append(list, x.GetCommands()...)
+	list = append(list, x.GetParams()...)
+	list = filter.Minus(list, x.GetHidden())
 
-	// catch edge case for first command
+	// catch edge case for explicit word boundary
 	if args[0] == " " {
 		return list
 	}
