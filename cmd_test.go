@@ -20,6 +20,7 @@ import (
 	"fmt"
 
 	"github.com/rwxrob/bonzai"
+	"github.com/rwxrob/bonzai/cmd"
 )
 
 func ExampleCmd_Seek() {
@@ -27,7 +28,7 @@ func ExampleCmd_Seek() {
 	hello := &bonzai.Cmd{
 		Name:   `hello`,
 		Params: []string{"there"},
-		Method: func(args ...string) error {
+		Call: func(args ...string) error {
 			if len(args) > 0 {
 				fmt.Printf("hello %v\n", args[0])
 				return nil
@@ -40,7 +41,7 @@ func ExampleCmd_Seek() {
 	hi := &bonzai.Cmd{
 		Name:   `hi`,
 		Params: []string{"there", "ya"},
-		Method: func(args ...string) error {
+		Call: func(args ...string) error {
 			if len(args) > 0 {
 				fmt.Printf("hi %v\n", args[0])
 				return nil
@@ -52,7 +53,7 @@ func ExampleCmd_Seek() {
 
 	yo := &bonzai.Cmd{
 		Name: `yo`,
-		Method: func(args ...string) error {
+		Call: func(args ...string) error {
 			fmt.Println("yo")
 			return nil
 		},
@@ -61,7 +62,7 @@ func ExampleCmd_Seek() {
 	salut := &bonzai.Cmd{
 		Name:   `salut`,
 		Params: []string{"la"},
-		Method: func(args ...string) error {
+		Call: func(args ...string) error {
 			if len(args) > 0 {
 				fmt.Printf("salut %v\n", args[0])
 				return nil
@@ -74,12 +75,12 @@ func ExampleCmd_Seek() {
 	french := &bonzai.Cmd{
 		Name:     `french`,
 		Aliases:  []string{"fr"},
-		Commands: []*bonzai.Cmd{salut},
+		Commands: []*bonzai.Cmd{cmd.Help, salut},
 	}
 
 	greet := &bonzai.Cmd{
 		Name:     `greet`,
-		Commands: []*bonzai.Cmd{yo, hi, hello, french},
+		Commands: []*bonzai.Cmd{cmd.Help, yo, hi, hello, french},
 	}
 
 	cmd, args := greet.Seek(bonzai.ArgsFrom(`hi there`))
@@ -91,10 +92,18 @@ func ExampleCmd_Seek() {
 	cmd, args = greet.Seek(bonzai.ArgsFrom(`french salut `))
 	fmt.Printf("%v %q\n", cmd.Name, args)
 
+	cmd, args = greet.Seek(bonzai.ArgsFrom(`french h`))
+	fmt.Printf("%v %q\n", cmd.Name, args)
+
+	cmd, args = greet.Seek(bonzai.ArgsFrom(`french help`))
+	fmt.Printf("%v %q\n", cmd.Name, args)
+
 	// Output:
 	// hi ["there"]
 	// salut []
 	// salut [" "]
+	// french ["h"]
+	// help []
 }
 
 func ExampleCmd_CmdNames() {
@@ -109,25 +118,18 @@ func ExampleCmd_CmdNames() {
 
 func ExampleCmd_GetCommands() {
 	foo := new(bonzai.Cmd)
-	foo.Params = []string{"box"}
 	foo.Add("bar")
 	foo.Add("blah")
 	foo.Add("other")
 	fmt.Println(foo.GetCommands())
-	fmt.Println(foo.GetCommands("b"))
 	// Output:
 	// [bar blah other]
-	// [bar blah]
 }
 
 func ExampleCmd_GetParams() {
 	foo := new(bonzai.Cmd)
 	foo.Params = []string{"box", "bing", "and"}
-	foo.Add("bar")
-	foo.Add("blah")
 	fmt.Println(foo.GetParams())
-	fmt.Println(foo.GetParams("b"))
 	// Output:
 	// [box bing and]
-	// [box bing]
 }

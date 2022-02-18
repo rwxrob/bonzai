@@ -16,8 +16,17 @@ limitations under the License.
 
 package cmd
 
-var Help = &Cmd{
+import (
+	"log"
+
+	"github.com/rwxrob/bonzai"
+)
+
+var Help = &bonzai.Cmd{
 	Name:    `help`,
 	Aliases: []string{"h"},
-	// TODO
+	Call: func(none ...string) error {
+		log.Println("would print help")
+		return nil
+	},
 }

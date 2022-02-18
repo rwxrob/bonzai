@@ -17,10 +17,10 @@ limitations under the License.
 package bonzai
 
 import (
-	"log"
 	"os"
 
 	"github.com/rwxrob/bonzai/comp"
+	"github.com/rwxrob/bonzai/filter"
 )
 
 // Cmd is a struct the easier to use and read when creating
