@@ -14,28 +14,13 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-package filter_test
+package filter
 
-import (
-	"fmt"
+import "fmt"
 
-	"github.com/rwxrob/bonzai/filter"
-)
-
-func ExampleHasPrefix() {
-	set := []string{
-		"one", "two", "three", "four", "five", "six", "seven",
+// Println prints ever element of the set.
+func Println[T P](set []T) {
+	for _, i := range set {
+		fmt.Println(i)
 	}
-	fmt.Println(filter.HasPrefix(set, "t"))
-	// Output:
-	// [two three]
-}
-
-func ExampleMinus() {
-	set := []string{
-		"one", "two", "three", "four", "five", "six", "seven",
-	}
-	fmt.Println(filter.Minus(set, []string{"two", "four", "six"}))
-	// Output:
-	// [one three five seven]
 }

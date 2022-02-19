@@ -14,28 +14,23 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-package filter_test
+package filter
 
-import (
-	"fmt"
-
-	"github.com/rwxrob/bonzai/filter"
-)
-
-func ExampleHasPrefix() {
-	set := []string{
-		"one", "two", "three", "four", "five", "six", "seven",
-	}
-	fmt.Println(filter.HasPrefix(set, "t"))
-	// Output:
-	// [two three]
+// Number combines the primitives generally considered numbers by JSON
+// and other high-level structure data representations.
+type Number interface {
+	int16 | int32 | int64 | float32 | float64
 }
 
-func ExampleMinus() {
-	set := []string{
-		"one", "two", "three", "four", "five", "six", "seven",
-	}
-	fmt.Println(filter.Minus(set, []string{"two", "four", "six"}))
-	// Output:
-	// [one three five seven]
+// Text combines byte slice and string.
+type Text interface {
+	[]byte | string
+}
+
+// P is for "principle" in this case. These are the types that have
+// representations in JSON and other high-level structured data
+// representations.
+type P interface {
+	int16 | int32 | int64 | float32 | float64 |
+		[]byte | string | bool
 }
