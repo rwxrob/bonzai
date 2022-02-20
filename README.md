@@ -110,7 +110,7 @@ more than deserve a huge thank you here.
 ## Legal 
 
 Copyright 2022 Robert S. Muhlestein (<mailto:rob@rwx.gg>)  
-Licensed under Apache-2.0
+SPDX-License-Identifier: Apache-2.0
 
 "Bonzai" and "bonzai" are legal trademarks of Robert S. Muhlestein but
 can be used freely to refer to the cmdbox project
