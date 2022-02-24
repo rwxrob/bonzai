@@ -87,7 +87,7 @@ func (x *Cmd) Run() {
 	// seek should never fail to return something, but ...
 	cmd, args := x.Seek(os.Args[1:])
 	if cmd == nil {
-		ExitError("usage: %v %v\n", x.Name, x.Usage)
+		ExitError(x.UsageError())
 	}
 
 	// default to first Command if no Call defined
@@ -102,7 +102,7 @@ func (x *Cmd) Run() {
 			}
 			Exit()
 		}
-		ExitError("usage: %v %v\n", x.Name, x.Usage)
+		ExitError(x.UsageError())
 	}
 
 	// delegate
@@ -110,6 +110,10 @@ func (x *Cmd) Run() {
 		ExitError(err)
 	}
 	Exit()
+}
+
+func (x *Cmd) UsageError() error {
+	return fmt.Sprintf("usage: %v %v\n", x.Name, x.Usage)
 }
 
 // Add creates a new Cmd and sets the name and aliases and adds to
