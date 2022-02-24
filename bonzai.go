@@ -11,10 +11,10 @@ import (
 )
 
 // Method defines the main code to execute for a command (Cmd). By
-// convention the parameter list should be names "args" if there are
-// args expected and "none" if not. Methods must never write error
-// output to anything but standard error and should almost always use
-// the log package to do so.
+// convention the parameter list should be named "args" if there are
+// args expected and underscore (_) if not. Methods must never write
+// error output to anything but standard error and should almost always
+// use the log package to do so.
 type Method func(caller *Cmd, args ...string) error
 
 // ----------------------- errors, exit, debug -----------------------

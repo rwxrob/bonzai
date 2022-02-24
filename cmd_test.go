@@ -15,7 +15,7 @@ func ExampleCmd_Seek() {
 	hello := &bonzai.Cmd{
 		Name:   `hello`,
 		Params: []string{"there"},
-		Call: func(args ...string) error {
+		Call: func(_ *bonzai.Cmd, args ...string) error {
 			if len(args) > 0 {
 				fmt.Printf("hello %v\n", args[0])
 				return nil
@@ -28,7 +28,7 @@ func ExampleCmd_Seek() {
 	hi := &bonzai.Cmd{
 		Name:   `hi`,
 		Params: []string{"there", "ya"},
-		Call: func(args ...string) error {
+		Call: func(_ *bonzai.Cmd, args ...string) error {
 			if len(args) > 0 {
 				fmt.Printf("hi %v\n", args[0])
 				return nil
@@ -40,7 +40,7 @@ func ExampleCmd_Seek() {
 
 	yo := &bonzai.Cmd{
 		Name: `yo`,
-		Call: func(args ...string) error {
+		Call: func(_ *bonzai.Cmd, args ...string) error {
 			fmt.Println("yo")
 			return nil
 		},
@@ -49,7 +49,7 @@ func ExampleCmd_Seek() {
 	salut := &bonzai.Cmd{
 		Name:   `salut`,
 		Params: []string{"la"},
-		Call: func(args ...string) error {
+		Call: func(_ *bonzai.Cmd, args ...string) error {
 			if len(args) > 0 {
 				fmt.Printf("salut %v\n", args[0])
 				return nil
