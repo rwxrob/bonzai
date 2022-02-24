@@ -20,22 +20,24 @@ import (
 // parameters. Standard completion will not recursively complete
 // multiple params, one param per completion.
 type Cmd struct {
-	Name        string         `json:"name,omitempty"`
-	Aliases     []string       `json:"aliases,omitempty"`
-	Summary     string         `json:"summary,omitempty"`
-	Usage       string         `json:"usage,omitempty"`
-	Version     string         `json:"version,omitempty"`
-	Copyright   string         `json:"copyright,omitempty"`
-	License     string         `json:"license,omitempty"`
-	Description string         `json:"description,omitempty"`
-	Site        string         `json:"site,omitempty"`
-	Source      string         `json:"source,omitempty"`
-	Issues      string         `json:"issues,omitempty"`
-	Commands    []*Cmd         `json:"commands,omitempty"`
-	Params      []string       `json:"params,omitempty"`
-	Hidden      []string       `json:"hide,omitempty"`
-	Completer   comp.Completer `json:"-"`
-	Call        Method         `json:"-"`
+	Name        string            `json:"name,omitempty"`
+	Aliases     []string          `json:"aliases,omitempty"`
+	Summary     string            `json:"summary,omitempty"`
+	Usage       string            `json:"usage,omitempty"`
+	Version     string            `json:"version,omitempty"`
+	Copyright   string            `json:"copyright,omitempty"`
+	License     string            `json:"license,omitempty"`
+	Description string            `json:"description,omitempty"`
+	Site        string            `json:"site,omitempty"`
+	Source      string            `json:"source,omitempty"`
+	Issues      string            `json:"issues,omitempty"`
+	Other       map[string]string `json:"issues,omitempty"`
+	Commands    []*Cmd            `json:"commands,omitempty"`
+	Params      []string          `json:"params,omitempty"`
+	Hidden      []string          `json:"hide,omitempty"`
+	Completer   comp.Completer    `json:"-"`
+	Call        Method            `json:"-"`
+	Caller      *Cmd              `json:"-"`
 
 	_aliases map[string]*Cmd
 }
@@ -187,6 +189,7 @@ func (x *Cmd) Seek(args []string) (*Cmd, []string) {
 		if next == nil {
 			break
 		}
+		next.Caller = cur
 		cur = next
 	}
 	return cur, args[n:]
@@ -208,5 +211,11 @@ func (x *Cmd) GetHidden() []string { return x.Hidden }
 // GetParams fulfills the comp.Command interface.
 func (x *Cmd) GetParams() []string { return x.Params }
 
+// GetOther fulfills the comp.Command interface.
+func (x *Cmd) GetOther() map[string]string { return x.Other }
+
 // GetCompleter fulfills the Command interface.
 func (x *Cmd) GetCompleter() comp.Completer { return x.Completer }
+
+// GetCaller fulfills the comp.Command interface.
+func (x *Cmd) GetCaller() comp.Command { return x.Caller }

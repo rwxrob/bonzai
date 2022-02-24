@@ -17,5 +17,7 @@ type Command interface {
 	GetCommands() []string
 	GetHidden() []string
 	GetParams() []string
+	GetOther() map[string]string
 	GetCompleter() Completer
+	GetCaller() Command
 }
