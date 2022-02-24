@@ -3,7 +3,11 @@
 
 package filter_test
 
-import "github.com/rwxrob/bonzai/filter"
+import (
+	"fmt"
+
+	"github.com/rwxrob/bonzai/filter"
+)
 
 func ExamplePrintln() {
 	set := []string{"doe", "ray", "mi"}
@@ -17,4 +21,14 @@ func ExamplePrintln() {
 	// false
 	// true
 	// true
+}
+
+func ExampleKeys() {
+	m1 := map[string]int{"two": 2, "three": 3, "one": 1}
+	m2 := map[string]string{"two": "two", "three": "three", "one": "one"}
+	fmt.Println(filter.Keys(m1))
+	fmt.Println(filter.Keys(m2))
+	// Output:
+	// [one three two]
+	// [one three two]
 }
