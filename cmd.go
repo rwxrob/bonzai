@@ -95,7 +95,7 @@ func (x *Cmd) Run() {
 			if def.Call == nil {
 				ExitError("default command \"%v\" must be callable", def.Name)
 			}
-			if err := def.Call(args...); err != nil {
+			if err := def.Call(x, args...); err != nil {
 				ExitError(err)
 			}
 			Exit()
@@ -104,7 +104,7 @@ func (x *Cmd) Run() {
 	}
 
 	// delegate
-	if err := cmd.Call(args...); err != nil {
+	if err := cmd.Call(x, args...); err != nil {
 		ExitError(err)
 	}
 	Exit()

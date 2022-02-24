@@ -15,7 +15,7 @@ import (
 // args expected and "none" if not. Methods must never write error
 // output to anything but standard error and should almost always use
 // the log package to do so.
-type Method func(args ...string) error
+type Method func(caller *Cmd, args ...string) error
 
 // ----------------------- errors, exit, debug -----------------------
 
