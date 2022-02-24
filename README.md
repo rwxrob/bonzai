@@ -113,7 +113,7 @@ Copyright 2022 Robert S. Muhlestein (<mailto:rob@rwx.gg>)
 SPDX-License-Identifier: Apache-2.0
 
 "Bonzai" and "bonzai" are legal trademarks of Robert S. Muhlestein but
-can be used freely to refer to the cmdbox project
+can be used freely to refer to the bonzai project
 <https://github.com/rwxrob/bonzai> without limitation. To avoid
 potential developer confusion, intentionally using these trademarks to
 refer to other projects --- free or proprietary --- is prohibited.
