@@ -7,6 +7,9 @@ import (
 )
 
 func Files(dir string) []string {
+	if dir == "" {
+		dir = "."
+	}
 	files := []string{}
 	finfo, _ := os.ReadDir(dir)
 	for _, f := range finfo {
