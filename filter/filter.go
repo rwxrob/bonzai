@@ -75,3 +75,12 @@ func Keys[T any](m map[string]T) []string {
 	}
 	return keys
 }
+
+// Prefix returns a new slice with prefix added to each string.
+func Prefix(in []string, pre string) []string {
+	list := []string{}
+	for _, i := range in {
+		list = append(list, pre+i)
+	}
+	return list
+}

@@ -50,3 +50,9 @@ func ExampleKeys() {
 	// [one three two]
 	// [one three two]
 }
+
+func ExamplePrefix() {
+	fmt.Println(filter.Prefix([]string{"foo", "bar"}, "my"))
+	// Output:
+	// [myfoo mybar]
+}
