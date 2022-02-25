@@ -4,7 +4,6 @@
 package comp
 
 import (
-	"github.com/rwxrob/bonzai/check"
 	"github.com/rwxrob/bonzai/filter"
 )
 
@@ -29,7 +28,7 @@ func Standard(x Command, args ...string) []string {
 	}
 
 	// not sure we've completed the command name itself yet
-	if check.Blank(args) {
+	if len(args) == 0 {
 		return []string{x.GetName()}
 	}
 
@@ -38,6 +37,10 @@ func Standard(x Command, args ...string) []string {
 	list = append(list, x.GetCommands()...)
 	list = append(list, x.GetParams()...)
 	list = filter.Minus(list, x.GetHidden())
+
+	if len(args) == 0 {
+		return list
+	}
 
 	return filter.HasPrefix(list, args[0])
 }

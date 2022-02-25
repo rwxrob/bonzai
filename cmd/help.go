@@ -7,7 +7,9 @@ import (
 	"log"
 
 	"github.com/rwxrob/bonzai"
+	"github.com/rwxrob/bonzai/check"
 	"github.com/rwxrob/bonzai/comp"
+	"github.com/rwxrob/bonzai/filter"
 )
 
 // Help provides help documentation for the caller allowing the specific
@@ -18,7 +20,7 @@ var Help = &bonzai.Cmd{
 		"name", "title", "summary", "params", "commands", "description",
 		"examples", "legal", "copyright", "license", "version",
 	},
-	Completer: comp.Help,
+	Completer: helpCompleter,
 	Call: func(caller *bonzai.Cmd, args ...string) error {
 		section := "all"
 		if len(args) > 0 {
@@ -27,4 +29,31 @@ var Help = &bonzai.Cmd{
 		log.Printf("would show help about %v %v", caller.Name, section)
 		return nil
 	},
+}
+
+func helpCompleter(x comp.Command, args ...string) []string {
+
+	// not sure we've completed the command name itself yet
+	if len(args) == 0 {
+		return []string{x.GetName()}
+	}
+
+	// build list of visible commands and params
+	list := []string{}
+	list = append(list, x.GetParams()...)
+
+	// if the caller has other sections get those
+	caller := x.GetCaller()
+	if !check.IsNil(caller) {
+		other := caller.GetOther()
+		if other != nil {
+			list = append(list, filter.Keys(other)...)
+		}
+	}
+
+	if len(args) == 0 {
+		return list
+	}
+
+	return filter.HasPrefix(list, args[0])
 }

@@ -77,6 +77,7 @@ func (x *Cmd) Run() {
 	if line != "" {
 		cmd, args := x.Seek(ArgsFrom(line)[1:])
 		if cmd.Completer == nil {
+
 			list := comp.Standard(cmd, args...)
 			filter.Println(list)
 			Exit()
@@ -185,7 +186,7 @@ func (x *Cmd) IsHidden(name string) bool {
 }
 
 func (x *Cmd) Seek(args []string) (*Cmd, []string) {
-	if args == nil || len(args) == 0 || x.Commands == nil || len(x.Commands) == 0 {
+	if args == nil || x.Commands == nil {
 		return x, args
 	}
 	cur := x
