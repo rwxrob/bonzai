@@ -113,8 +113,9 @@ func (x *Cmd) Run() {
 	Exit()
 }
 
+// UsageError returns an error with a single-line usage string.
 func (x *Cmd) UsageError() error {
-	return fmt.Sprintf("usage: %v %v\n", x.Name, x.Usage)
+	return fmt.Errorf("usage: %v %v\n", x.Name, x.Usage)
 }
 
 // Add creates a new Cmd and sets the name and aliases and adds to
