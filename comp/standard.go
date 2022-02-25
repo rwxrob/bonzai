@@ -4,6 +4,7 @@
 package comp
 
 import (
+	"github.com/rwxrob/bonzai/check"
 	"github.com/rwxrob/bonzai/filter"
 )
 
@@ -28,7 +29,7 @@ func Standard(x Command, args ...string) []string {
 	}
 
 	// not sure we've completed the command name itself yet
-	if args == nil || len(args) == 0 {
+	if check.Blank(args) {
 		return []string{x.GetName()}
 	}
 
