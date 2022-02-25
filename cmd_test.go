@@ -88,7 +88,7 @@ func ExampleCmd_Seek() {
 	// Output:
 	// hi ["there"]
 	// salut []
-	// salut [" "]
+	// salut [""]
 	// french ["h"]
 	// help []
 }

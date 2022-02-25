@@ -17,34 +17,34 @@ func ExampleStandard() {
 	foo.Add("bar")
 	foo.Add("blah")
 
-	// all commands and params since nothing specified
-	args := []string{}
-	fmt.Println(comp.Standard(foo, args))
+	// if no args, we have to assume the command isn't finished yet
+	fmt.Println(comp.Standard(foo))
+
+	// we know it's not a command, but no prefix just yet
+	// (usually this is when a space has been added after the command)
+	fmt.Println(comp.Standard(foo, ""))
 
 	// everything that begins with a (nothing)
-	args = []string{`a`}
-	fmt.Println(comp.Standard(foo, args))
+	fmt.Println(comp.Standard(foo, `a`))
 
 	// everything that begins with b (which is everything)
-	args = []string{`b`}
-	fmt.Println(comp.Standard(foo, args))
+	fmt.Println(comp.Standard(foo, `b`))
 
 	// everything that begins with bl (just blah)
-	args = []string{`bl`}
-	fmt.Println(comp.Standard(foo, args))
+	fmt.Println(comp.Standard(foo, `bl`))
 
 	// give own completer for days of the week
-	foo.Completer = func(cmd comp.Command, args []string) []string {
+	foo.Completer = func(cmd comp.Command, args ...string) []string {
 		list := []string{"mon", "tue", "wed", "thu", "fri", "sat", "sun"}
 		if len(args) == 0 {
 			return list
 		}
 		return filter.HasPrefix(list, args[0])
 	}
-	args = []string{`t`}
-	fmt.Println(comp.Standard(foo, args))
+	fmt.Println(comp.Standard(foo, `t`))
 
 	//Output:
+	// []
 	// [bar blah box]
 	// []
 	// [bar blah box]

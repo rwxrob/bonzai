@@ -7,7 +7,7 @@ package comp
 // the provided arguments, if any. Completer functions must never be
 // passed a nil Command or nil as the args slice. See comp.Standard.
 
-type Completer func(leaf Command, args []string) []string
+type Completer func(leaf Command, args ...string) []string
 
 // Command interface is only here to break cyclical package imports.
 // This enables Completers of any kind to be create and managed

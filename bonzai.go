@@ -71,7 +71,7 @@ func ArgsFrom(line string) []string {
 	}
 	args = strings.Fields(line)
 	if line[len(line)-1] == ' ' {
-		args = append(args, " ")
+		args = append(args, "")
 	}
 	return args
 }

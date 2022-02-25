@@ -14,5 +14,5 @@ func ExampleArgsFrom() {
 	fmt.Printf("%q\n", bonzai.ArgsFrom(`greet hi   french `))
 	// Output:
 	// ["greet" "hi" "french"]
-	// ["greet" "hi" "french" " "]
+	// ["greet" "hi" "french" ""]
 }

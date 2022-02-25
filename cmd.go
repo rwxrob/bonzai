@@ -4,6 +4,7 @@
 package bonzai
 
 import (
+	"fmt"
 	"os"
 
 	"github.com/rwxrob/bonzai/comp"
@@ -76,11 +77,11 @@ func (x *Cmd) Run() {
 	if line != "" {
 		cmd, args := x.Seek(ArgsFrom(line)[1:])
 		if cmd.Completer == nil {
-			list := comp.Standard(cmd, args)
+			list := comp.Standard(cmd, args...)
 			filter.Println(list)
 			Exit()
 		}
-		filter.Println(cmd.Completer(cmd, args))
+		filter.Println(cmd.Completer(cmd, args...))
 		Exit()
 	}
 

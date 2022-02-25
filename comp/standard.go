@@ -20,15 +20,15 @@ import (
 //        Hidden list and HasPrefix matching the first arg
 //
 // See comp.Completer.
-func Standard(x Command, args []string) []string {
+func Standard(x Command, args ...string) []string {
 
 	// if has completer, delegate
 	if c := x.GetCompleter(); c != nil {
-		return c(x, args)
+		return c(x, args...)
 	}
 
-	// check for unique first argument command
-	if len(args) == 0 {
+	// not sure we've completed the command name itself yet
+	if args == nil || len(args) == 0 {
 		return []string{x.GetName()}
 	}
 
@@ -37,11 +37,6 @@ func Standard(x Command, args []string) []string {
 	list = append(list, x.GetCommands()...)
 	list = append(list, x.GetParams()...)
 	list = filter.Minus(list, x.GetHidden())
-
-	// catch edge case for explicit word boundary
-	if args[0] == " " {
-		return list
-	}
 
 	return filter.HasPrefix(list, args[0])
 }
