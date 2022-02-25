@@ -26,3 +26,27 @@ func ExampleMinus() {
 	// Output:
 	// [one three five seven]
 }
+
+func ExamplePrintln() {
+	set := []string{"doe", "ray", "mi"}
+	filter.Println(set)
+	bools := []bool{false, true, true}
+	filter.Println(bools)
+	// Output:
+	// doe
+	// ray
+	// mi
+	// false
+	// true
+	// true
+}
+
+func ExampleKeys() {
+	m1 := map[string]int{"two": 2, "three": 3, "one": 1}
+	m2 := map[string]string{"two": "two", "three": "three", "one": "one"}
+	fmt.Println(filter.Keys(m1))
+	fmt.Println(filter.Keys(m2))
+	// Output:
+	// [one three two]
+	// [one three two]
+}
