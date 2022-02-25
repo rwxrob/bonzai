@@ -3,7 +3,9 @@
 
 package filter
 
-import "strings"
+import (
+	"strings"
+)
 
 // HasPrefix filters the Text input set and returns only those elements
 // that have the give prefix.

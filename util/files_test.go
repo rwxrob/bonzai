@@ -12,6 +12,9 @@ func ExampleFiles() {
 	// Output:
 	// bar
 	// blah
+	// dir1/
+	// dir2/
+	// dir3/
 	// foo
 	// other
 	// some
@@ -24,6 +27,9 @@ func ExampleFiles_empty() {
 	// Output:
 	// bar
 	// blah
+	// dir1/
+	// dir2/
+	// dir3/
 	// foo
 	// other
 	// some
