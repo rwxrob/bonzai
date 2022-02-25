@@ -2,6 +2,7 @@ package check_test
 
 import (
 	"fmt"
+	"reflect"
 
 	"github.com/rwxrob/bonzai/check"
 )
@@ -22,6 +23,21 @@ func ExampleBlank() {
 	// false
 	// false
 	// true
+	// true
+	// true
+}
+
+func ExampleIsNil() {
+	var names []string
+	var namesi interface{}
+	namesi = names
+	fmt.Println(names == nil)
+	fmt.Println(namesi == nil)
+	fmt.Println(reflect.ValueOf(namesi).IsNil())
+	fmt.Println(check.IsNil(namesi))
+	// Output:
+	// true
+	// false
 	// true
 	// true
 }
