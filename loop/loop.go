@@ -20,3 +20,13 @@ func Do[T any](set []T, p func(i T) error) error {
 func Println[T any](set []T) {
 	Do(set, func(i T) error { fmt.Println(i); return nil })
 }
+
+// Print prints ever element of the set.
+func Print[T any](set []T) {
+	Do(set, func(i T) error { fmt.Print(i); return nil })
+}
+
+// Printf prints ever element of the set using format string.
+func Printf[T any](set []T, form string) {
+	Do(set, func(i T) error { fmt.Printf(form, i); return nil })
+}
