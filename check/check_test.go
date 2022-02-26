@@ -21,3 +21,11 @@ func ExampleIsNil() {
 	// true
 	// true
 }
+
+func ExampleIsDir() {
+	fmt.Println(check.IsDir("testdata"))
+	fmt.Println(check.IsDir("nothing"))
+	// Output:
+	// true
+	// false
+}
