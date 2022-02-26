@@ -2,7 +2,9 @@ package maps_test
 
 import (
 	"fmt"
+	"os"
 
+	"github.com/rwxrob/bonzai/loop"
 	"github.com/rwxrob/bonzai/maps"
 )
 
@@ -30,10 +32,21 @@ func ExampleCleanPaths() {
 		`./thing`,
 		`/sub/../../thing`,
 	}
-	filter.Println(filter.CleanPaths(paths))
+
+	loop.Println(maps.CleanPaths(paths))
+
 	// Output:
 	// .
 	// .
 	// .
+	// thing
 	// /thing
+}
+
+func ExampleMarkDirs() {
+	entries, _ := os.ReadDir("testdata/markdirs")
+	loop.Println(maps.MarkDirs(entries))
+	//Output:
+	// dir1/
+	// file1
 }

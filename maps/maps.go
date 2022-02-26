@@ -1,6 +1,8 @@
 package maps
 
 import (
+	"io/fs"
+	"os"
 	"path/filepath"
 	"sort"
 
@@ -25,4 +27,15 @@ func Keys[T any](m map[string]T) []string {
 // CleanPaths runs filepath.Clean on each item in the slice and returns.
 func CleanPaths(paths []string) []string {
 	return fn.Map(paths, func(i string) string { return filepath.Clean(i) })
+}
+
+// MarkDirs will add an os.PathSeparator to the end of the name if the
+// fs.DirEntry is a directory.
+func MarkDirs(entries []fs.DirEntry) []string {
+	return fn.Map(entries, func(f fs.DirEntry) string {
+		if f.IsDir() {
+			return f.Name() + string(os.PathSeparator)
+		}
+		return f.Name()
+	})
 }
