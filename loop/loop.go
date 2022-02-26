@@ -5,9 +5,16 @@ package loop
 
 import "fmt"
 
-// Do executes the given function for each item in the slice. If any
-// error is encountered processing stops and error returned.
-func Do[T any](set []T, p func(i T) error) error {
+// All executes the given function for every item in the slice.
+func All[T any](set []T, p func(i T)) {
+	for _, i := range set {
+		p(i)
+	}
+}
+
+// UntilError executes the give function for every item in the slice
+// until it encounters and error and returns the error, if any.
+func UntilError[T any](set []T, p func(i T) error) error {
 	for _, i := range set {
 		if err := p(i); err != nil {
 			return err
@@ -18,15 +25,15 @@ func Do[T any](set []T, p func(i T) error) error {
 
 // Println prints ever element of the set.
 func Println[T any](set []T) {
-	Do(set, func(i T) error { fmt.Println(i); return nil })
+	All(set, func(i T) { fmt.Println(i) })
 }
 
 // Print prints ever element of the set.
 func Print[T any](set []T) {
-	Do(set, func(i T) error { fmt.Print(i); return nil })
+	All(set, func(i T) { fmt.Print(i) })
 }
 
 // Printf prints ever element of the set using format string.
 func Printf[T any](set []T, form string) {
-	Do(set, func(i T) error { fmt.Printf(form, i); return nil })
+	All(set, func(i T) { fmt.Printf(form, i) })
 }
