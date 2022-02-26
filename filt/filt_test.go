@@ -1,19 +1,19 @@
 // Copyright 2022 Robert S. Muhlestein.
 // SPDX-License-Identifier: Apache-2.0
 
-package filter_test
+package filt_test
 
 import (
 	"fmt"
 
-	"github.com/rwxrob/bonzai/filter"
+	"github.com/rwxrob/bonzai/filt"
 )
 
 func ExampleHasPrefix() {
 	set := []string{
 		"one", "two", "three", "four", "five", "six", "seven",
 	}
-	fmt.Println(filter.HasPrefix(set, "t"))
+	fmt.Println(filt.HasPrefix(set, "t"))
 	// Output:
 	// [two three]
 }

@@ -3,7 +3,7 @@ package util
 import (
 	"os"
 
-	"github.com/rwxrob/bonzai/filter"
+	"github.com/rwxrob/bonzai/filt"
 )
 
 // Files returns a slice of strings matching the names of the files
@@ -26,5 +26,5 @@ func Files(dir string) []string {
 }
 
 func FilesWith(dir, pre string) []string {
-	return filter.HasPrefix(Files(dir), pre)
+	return filt.HasPrefix(Files(dir), pre)
 }

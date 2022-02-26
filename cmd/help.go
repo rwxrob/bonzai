@@ -9,7 +9,8 @@ import (
 	"github.com/rwxrob/bonzai"
 	"github.com/rwxrob/bonzai/check"
 	"github.com/rwxrob/bonzai/comp"
-	"github.com/rwxrob/bonzai/filter"
+	"github.com/rwxrob/bonzai/filt"
+	"github.com/rwxrob/bonzai/maps"
 )
 
 // Help provides help documentation for the caller allowing the specific
@@ -47,7 +48,7 @@ func helpCompleter(x comp.Command, args ...string) []string {
 	if !check.IsNil(caller) {
 		other := caller.GetOther()
 		if other != nil {
-			list = append(list, filter.Keys(other)...)
+			list = append(list, maps.Keys(other)...)
 		}
 	}
 
@@ -55,5 +56,5 @@ func helpCompleter(x comp.Command, args ...string) []string {
 		return list
 	}
 
-	return filter.HasPrefix(list, args[0])
+	return filt.HasPrefix(list, args[0])
 }

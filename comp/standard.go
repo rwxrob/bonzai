@@ -4,7 +4,8 @@
 package comp
 
 import (
-	"github.com/rwxrob/bonzai/filter"
+	"github.com/rwxrob/bonzai/filt"
+	"github.com/rwxrob/bonzai/set"
 )
 
 // Standard completion is resolved as follows:
@@ -36,11 +37,11 @@ func Standard(x Command, args ...string) []string {
 	list := []string{}
 	list = append(list, x.GetCommands()...)
 	list = append(list, x.GetParams()...)
-	list = filter.Minus(list, x.GetHidden())
+	list = set.Minus(list, x.GetHidden())
 
 	if len(args) == 0 {
 		return list
 	}
 
-	return filter.HasPrefix(list, args[0])
+	return filt.HasPrefix(list, args[0])
 }

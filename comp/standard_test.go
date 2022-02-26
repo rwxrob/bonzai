@@ -8,7 +8,7 @@ import (
 
 	"github.com/rwxrob/bonzai"
 	"github.com/rwxrob/bonzai/comp"
-	"github.com/rwxrob/bonzai/filter"
+	"github.com/rwxrob/bonzai/filt"
 )
 
 func ExampleStandard() {
@@ -39,7 +39,7 @@ func ExampleStandard() {
 		if len(args) == 0 {
 			return list
 		}
-		return filter.HasPrefix(list, args[0])
+		return filt.HasPrefix(list, args[0])
 	}
 	fmt.Println(comp.Standard(foo, `t`))
 
