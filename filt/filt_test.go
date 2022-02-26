@@ -7,6 +7,7 @@ import (
 	"fmt"
 
 	"github.com/rwxrob/bonzai/filt"
+	"github.com/rwxrob/bonzai/loop"
 )
 
 func ExampleHasPrefix() {
@@ -16,4 +17,17 @@ func ExampleHasPrefix() {
 	fmt.Println(filt.HasPrefix(set, "t"))
 	// Output:
 	// [two three]
+}
+
+func ExampleBaseHasPrefix() {
+	paths := []string{
+		"some/foo",
+		"some/foo1",
+		"some/",
+		"some/blah",
+	}
+	loop.Println(filt.BaseHasPrefix(paths, "f"))
+	// Output:
+	// some/foo
+	// some/foo1
 }
