@@ -123,6 +123,16 @@ the name. In fact, I think we have our new theme song.
   including tab completion in runtime environments that do not have
   `complete -C foo foo` enabled. 
 
+## Style Guidelines
+
+* Everything through `go fmt` or equiv, no exceptions
+* In Vim `set textwidth=72` (not 80 to line numbers fit)
+* Use `/* */` for package documentation comment, `//` elsewhere
+* Smallest possible names for given scope while still clear
+* Package globals that will be used a lot can be single capital
+* Must be good reason to use more than 4 character pkg name
+* Avoid unnecessary comments
+
 ## Acknowledgements
 
 The <https://twitch.tv/rwxrob> community has been constantly involved
