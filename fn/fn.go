@@ -2,11 +2,25 @@
 // SPDX-License-Identifier: Apache-2.0
 
 /*
+
 Package fn implements the traditional map/filter/reduce/each functions
 and an array type (A) for those who prefer a more object-oriented
 approach. Unlike other implementations, the array (slice) is always
 first preventing the first-class in-line anonymous function from
 obfuscating the parameter list of the functional function.
+
+"Why have a functional package in a commander?"
+
+These functions are included because commander frameworks are about
+creating less friction during command applications development. Since
+many such commands are creating from ported shell scripts where the UNIX
+philosophy and filters reign supreme in makes sense to enable similar
+functional approaches (filters, pipelines) to approximate the simplicity
+of and speed shell scripting development (at the very slight cost of
+runtime performance). In short, this package speeds and simplifies
+command application development by making it more compatible with shell
+scripting in general.
+
 */
 package fn
 

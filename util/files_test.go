@@ -21,26 +21,25 @@ func ExampleFiles() {
 	// testdata/files/some
 }
 
+func ExampleFiles_spaces() {
+	loop.Println(util.Files("testdata/files/dir1"))
+	// Output:
+	// testdata/files/dir1/some\ thing
+}
+
 func ExampleFiles_empty() {
 	os.Chdir("testdata/files")
 	defer os.Chdir("../..")
 	loop.Println(util.Files(""))
 	// Output:
-	// ./bar
-	// ./blah
-	// ./dir1/
-	// ./dir2/
-	// ./dir3/
-	// ./foo
-	// ./other
-	// ./some
-}
-
-func ExampleFilesWith() {
-	loop.Println(util.FilesWith("testdata/files", "b"))
-	// Output:
-	// testdata/files/bar
-	// testdata/files/blah
+	// bar
+	// blah
+	// dir1/
+	// dir2/
+	// dir3/
+	// foo
+	// other
+	// some
 }
 
 func ExampleFiles_not_Directory() {
