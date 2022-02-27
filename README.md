@@ -25,8 +25,7 @@ be particularly grateful.
 
 [template]: <https://github.com/rwxrob/bonzai-template>
 
-😎 *Yes, we use the wonderful new generics within the [`filter`](filter)
-subpackage.*
+😎 *Yes, we use the wonderful new generics all [over](fn).* 👍
 
 ## Embedded Text or Web Docs FTW!
 
