@@ -5,61 +5,79 @@ package fn_test
 
 import (
 	"fmt"
+	"log"
+	"os"
 
 	"github.com/rwxrob/bonzai/fn"
 )
 
-func ExampleHasPrefix() {
-	set := []string{
-		"one", "two", "three", "four", "five", "six", "seven",
-	}
-	fmt.Println(fn.HasPrefix(set, "t"))
+func ExampleA_a_is_for_array() {
+	fn.A[int]{1, 2, 3}.Print()
+	fmt.Println()
+	fn.A[string]{"one", "two", "three"}.Println()
 	// Output:
-	// [two three]
+	// 123
+	// one
+	// two
+	// three
 }
 
-func ExamplePrintln() {
-	set := []string{"doe", "ray", "mi"}
-	filter.Println(set)
-	bools := []bool{false, true, true}
-	filter.Println(bools)
+func ExampleA_Each() {
+	fn.A[int]{1, 2, 3}.Each(func(i int) { fmt.Print(i) })
+	fn.A[int]{1, 2, 3}.E(func(i int) { fmt.Print(i) })
 	// Output:
-	// doe
-	// ray
-	// mi
-	// false
-	// true
-	// true
+	// 123123
 }
 
-func ExampleKeys() {
-	m1 := map[string]int{"two": 2, "three": 3, "one": 1}
-	m2 := map[string]string{"two": "two", "three": "three", "one": "one"}
-	fmt.Println(filter.Keys(m1))
-	fmt.Println(filter.Keys(m2))
+func ExampleA_Map() {
+	AddOne := func(i int) int { return i + 1 }
+	fn.A[int]{1, 2, 3}.Map(AddOne).Print()
+	fn.A[int]{1, 2, 3}.M(AddOne).M(AddOne).Print()
 	// Output:
-	// [one three two]
-	// [one three two]
+	// 234345
 }
 
-func ExamplePrefix() {
-	fmt.Println(filter.Prefix([]string{"foo", "bar"}, "my"))
+func ExampleA_Filter() {
+	GtTwo := func(i int) bool { return i > 2 }
+	LtFour := func(i int) bool { return i < 4 }
+	fn.A[int]{1, 2, 3, 4}.Filter(GtTwo).Print()
+	fn.A[int]{1, 2, 3, 4}.F(GtTwo).F(LtFour).Print()
 	// Output:
-	// [myfoo mybar]
+	// 343
 }
 
-func ExampleCleanPaths() {
-	paths := []string{
-		``,
-		`.`,
-		`./`,
-		`./thing`,
-		`/sub/../../thing`,
-	}
-	filter.Println(filter.CleanPaths(paths))
+func ExampleA_Reduce() {
+	Sum := func(i int, a *int) { *a += i }
+	fmt.Println(*fn.A[int]{1, 2}.Reduce(Sum))
+	fmt.Println(*fn.A[int]{1, 2, 3, 4, 5}.R(Sum))
 	// Output:
-	// .
-	// .
-	// .
-	// /thing
+	// 3
+	// 15
+}
+
+func ExampleA_Print() {
+	fn.A[int]{1, 2}.Println()
+	fn.A[int]{1, 2}.P()
+	fn.A[int]{1, 2}.Printf("some: %v\n")
+	fn.A[int]{1, 2}.Print()
+	// Output:
+	// 1
+	// 2
+	// 1
+	// 2
+	// some: 1
+	// some: 2
+	// 12
+}
+
+func ExampleA_Log() {
+	log.SetOutput(os.Stdout)
+	log.SetFlags(0)
+	fn.A[int]{1, 2}.Log()
+	fn.A[int]{1, 2}.Logf("some: %v")
+	// Output:
+	// 1
+	// 2
+	// some: 1
+	// some: 2
 }
