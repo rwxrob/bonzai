@@ -1,4 +1,4 @@
-package cmd
+package help
 
 /*
 var Help = &Z.Cmd{

@@ -33,14 +33,15 @@ And, all the documentation for your command tree goes *inside* the
 binary (if you want). That's right. Portable, text or web-enabled "man"
 pages without the man page. You can use one of the composable
 interactive-color-terminal-sensing help documentation commands like
-`cmd.Help` that will easily marshal into JSON, or text, or well-styled
+`help.Cmd` that will easily marshal into JSON, or text, or well-styled
 HTML locally while enabling you to write your embedded docs in
 simplified CommonMark. Think "readthedocs" but without the Internet
-dependency. And if you don't want `cmd.Help` you don't need it. You can
-even write your own composable Bonzai command
-or pick from a rich ecosystem of embeddable Bonzai command trees
-available from anywhere on the Internet or maintained by the Bonzai
-project. No registries to worry about. Just use good 'ol Go module imports are all that are need to share your creations.
+dependency. And if you don't want `help.Cmd` you don't need it. You can
+even write your own composable Bonzai command or pick from a rich
+ecosystem of embeddable Bonzai command trees available from anywhere on
+the Internet or maintained by the Bonzai project. No registries to worry
+about. Just use good 'ol Go module imports are all that are need to
+share your creations.
 
 ## Contributors/PRs Welcome
 
@@ -118,7 +119,7 @@ the name. In fact, I think we have our new theme song.
   documented shortcut aliases when completion is not available (h|help,
   for example). 
 
-* **Bonzai commands may default to `cmd.Shell` or `cmd.Help`** These
+* **Bonzai commands may default to `shell.Cmd` or `help.Cmd`** These
   provide help information and optional interactive assistance
   including tab completion in runtime environments that do not have
   `complete -C foo foo` enabled. 

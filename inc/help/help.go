@@ -1,7 +1,7 @@
 // Copyright 2022 Robert S. Muhlestein.
 // SPDX-License-Identifier: Apache-2.0
 
-package cmd
+package help
 
 import (
 	"log"
@@ -13,9 +13,9 @@ import (
 	"github.com/rwxrob/bonzai/maps"
 )
 
-// Help provides help documentation for the caller allowing the specific
+// Cmd provides help documentation for the caller allowing the specific
 // section of help wanted to be passed as a tab-completable parameter.
-var Help = &bonzai.Cmd{
+var Cmd = &bonzai.Cmd{
 	Name: `help`,
 	Params: []string{
 		"name", "title", "summary", "params", "commands", "description",

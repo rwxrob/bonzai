@@ -7,7 +7,7 @@ import (
 	"fmt"
 
 	"github.com/rwxrob/bonzai"
-	"github.com/rwxrob/bonzai/cmd"
+	"github.com/rwxrob/bonzai/inc/help"
 )
 
 func ExampleCmd_Seek() {
@@ -62,12 +62,12 @@ func ExampleCmd_Seek() {
 	french := &bonzai.Cmd{
 		Name:     `french`,
 		Aliases:  []string{"fr"},
-		Commands: []*bonzai.Cmd{cmd.Help, salut},
+		Commands: []*bonzai.Cmd{help.Cmd, salut},
 	}
 
 	greet := &bonzai.Cmd{
 		Name:     `greet`,
-		Commands: []*bonzai.Cmd{cmd.Help, yo, hi, hello, french},
+		Commands: []*bonzai.Cmd{help.Cmd, yo, hi, hello, french},
 	}
 
 	cmd, args := greet.Seek(bonzai.ArgsFrom(`hi there`))
