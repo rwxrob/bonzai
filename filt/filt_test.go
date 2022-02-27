@@ -6,8 +6,8 @@ package filt_test
 import (
 	"fmt"
 
+	"github.com/rwxrob/bonzai/each"
 	"github.com/rwxrob/bonzai/filt"
-	"github.com/rwxrob/bonzai/loop"
 )
 
 func ExampleHasPrefix() {
@@ -26,7 +26,7 @@ func ExampleBaseHasPrefix() {
 		"some/",
 		"some/blah",
 	}
-	loop.Println(filt.BaseHasPrefix(paths, "f"))
+	each.Println(filt.BaseHasPrefix(paths, "f"))
 	// Output:
 	// some/foo
 	// some/foo1

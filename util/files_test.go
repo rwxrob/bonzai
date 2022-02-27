@@ -4,12 +4,12 @@ import (
 	"fmt"
 	"os"
 
-	"github.com/rwxrob/bonzai/loop"
+	"github.com/rwxrob/bonzai/each"
 	"github.com/rwxrob/bonzai/util"
 )
 
 func ExampleFiles() {
-	loop.Println(util.Files("testdata/files"))
+	each.Println(util.Files("testdata/files"))
 	// Output:
 	// testdata/files/bar
 	// testdata/files/blah
@@ -22,7 +22,7 @@ func ExampleFiles() {
 }
 
 func ExampleFiles_spaces() {
-	loop.Println(util.Files("testdata/files/dir1"))
+	each.Println(util.Files("testdata/files/dir1"))
 	// Output:
 	// testdata/files/dir1/some\ thing
 }
@@ -30,7 +30,7 @@ func ExampleFiles_spaces() {
 func ExampleFiles_empty() {
 	os.Chdir("testdata/files")
 	defer os.Chdir("../..")
-	loop.Println(util.Files(""))
+	each.Println(util.Files(""))
 	// Output:
 	// bar
 	// blah

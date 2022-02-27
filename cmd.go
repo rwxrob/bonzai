@@ -8,7 +8,7 @@ import (
 	"os"
 
 	"github.com/rwxrob/bonzai/comp"
-	"github.com/rwxrob/bonzai/loop"
+	"github.com/rwxrob/bonzai/each"
 )
 
 // Cmd is a struct the easier to use and read when creating
@@ -79,10 +79,10 @@ func (x *Cmd) Run() {
 		if cmd.Completer == nil {
 
 			list := comp.Standard(cmd, args...)
-			loop.Println(list)
+			each.Println(list)
 			Exit()
 		}
-		loop.Println(cmd.Completer(cmd, args...))
+		each.Println(cmd.Completer(cmd, args...))
 		Exit()
 	}
 
