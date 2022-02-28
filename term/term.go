@@ -6,6 +6,58 @@ import (
 	"github.com/rwxrob/bonzai/term/esc"
 )
 
+var (
+	Reset      string
+	Bright     string
+	Bold       string
+	Dim        string
+	Italic     string
+	Under      string
+	Blink      string
+	BlinkF     string
+	Reverse    string
+	Hidden     string
+	Strike     string
+	BoldItalic string
+	Black      string
+	Red        string
+	Green      string
+	Yellow     string
+	Blue       string
+	Magenta    string
+	Cyan       string
+	White      string
+	BBlack     string
+	BRed       string
+	BGreen     string
+	BYellow    string
+	BBlue      string
+	BMagenta   string
+	BCyan      string
+	BWhite     string
+	HBlack     string
+	HRed       string
+	HGreen     string
+	HYellow    string
+	HBlue      string
+	HMagenta   string
+	HCyan      string
+	HWhite     string
+	BHBlack    string
+	BHRed      string
+	BHGreen    string
+	BHYellow   string
+	BHBlue     string
+	BHMagenta  string
+	BHCyan     string
+	BHWhite    string
+	X          string
+	B          string
+	I          string
+	U          string
+	BI         string
+)
+
 // WinSizeStruct is the exact struct used by the ioctl system library.
 type WinSizeStruct struct {
 	Row, Col       uint16
@@ -20,64 +72,134 @@ type WinSizeStruct struct {
 // displaying help and usage information.
 var WinSize WinSizeStruct
 
-// IsTerminal returns true if the output is to an interactive terminal
-// (not piped in any way). This is useful when detemining if an extra
+// IsInteractive returns true if the output is to an interactive terminal
+// (not piped in any way). This is useful when determining if an extra
 // line return is needed to avoid making programs chomp the line returns
 // unnecessarily.
-func IsTerminal() bool {
-	if fileInfo, _ := os.Stdout.Stat(); (fileInfo.Mode() & os.ModeCharDevice) != 0 {
+func IsInteractive() bool {
+	if f, _ := os.Stdout.Stat(); (f.Mode() & os.ModeCharDevice) != 0 {
 		return true
 	}
 	return false
 }
 
-var Reset = esc.Reset
-var Bold = esc.Bold
-var Faint = esc.Faint
-var Italic = esc.Italic
-var Underline = esc.Underline
-var BlinkSlow = esc.BlinkSlow
-var BlinkFast = esc.BlinkFast
-var Reverse = esc.Reverse
-var Concealed = esc.Concealed
-var StrikeOut = esc.StrikeOut
-var BoldItalic = esc.BoldItalic
-var Black = esc.Black
-var Red = esc.Red
-var Green = esc.Green
-var Yellow = esc.Yellow
-var Blue = esc.Blue
-var Magenta = esc.Magenta
-var Cyan = esc.Cyan
-var White = esc.White
-var BBlack = esc.BBlack
-var BRed = esc.BRed
-var BGreen = esc.BGreen
-var BYellow = esc.BYellow
-var BBlue = esc.BBlue
-var BMagenta = esc.BMagenta
-var BCyan = esc.BCyan
-var BWhite = esc.BWhite
-var HBlack = esc.HBlack
-var HRed = esc.HRed
-var HGreen = esc.HGreen
-var HYellow = esc.HYellow
-var HBlue = esc.HBlue
-var HMagenta = esc.HMagenta
-var HCyan = esc.HCyan
-var HWhite = esc.HWhite
-var BHBlack = esc.BHBlack
-var BHRed = esc.BHRed
-var BHGreen = esc.BHGreen
-var BHYellow = esc.BHYellow
-var BHBlue = esc.BHBlue
-var BHMagenta = esc.BHMagenta
-var BHCyan = esc.BHCyan
-var BHWhite = esc.BHWhite
-var ClearScreen = esc.ClearScreen
-var X = esc.X
-var B = esc.B
-var I = esc.I
-var U = esc.U
-var BI = esc.BI
-var CS = esc.CS
+// MustVT100 calls bonzai.ExitError if terminal does not support minimal
+// VT100 terminal standard.
+func MustVT100() {
+	// TODO
+}
+
+func init() {
+	if IsInteractive() {
+		AttrOn()
+	}
+}
+
+// AttrOff sets all the terminal attributes to zero values (empty strings).
+// Note that this does not affect anything in the esc subpackage (which
+// contains the constants from the VT100 specification).
+func AttrOff() {
+	Reset = ""
+	Bright = ""
+	Bold = ""
+	Dim = ""
+	Italic = ""
+	Under = ""
+	Blink = ""
+	BlinkF = ""
+	Reverse = ""
+	Hidden = ""
+	Strike = ""
+	BoldItalic = ""
+	Black = ""
+	Red = ""
+	Green = ""
+	Yellow = ""
+	Blue = ""
+	Magenta = ""
+	Cyan = ""
+	White = ""
+	BBlack = ""
+	BRed = ""
+	BGreen = ""
+	BYellow = ""
+	BBlue = ""
+	BMagenta = ""
+	BCyan = ""
+	BWhite = ""
+	HBlack = ""
+	HRed = ""
+	HGreen = ""
+	HYellow = ""
+	HBlue = ""
+	HMagenta = ""
+	HCyan = ""
+	HWhite = ""
+	BHBlack = ""
+	BHRed = ""
+	BHGreen = ""
+	BHYellow = ""
+	BHBlue = ""
+	BHMagenta = ""
+	BHCyan = ""
+	BHWhite = ""
+	X = ""
+	B = ""
+	I = ""
+	U = ""
+	BI = ""
+}
+
+// AttrOn sets all the terminal attributes to zero values (empty strings).
+// Note that this does not affect anything in the esc subpackage (which
+// contains the constants from the VT100 specification).
+func AttrOn() {
+	Reset = esc.Reset
+	Bright = esc.Bright
+	Bold = esc.Bold
+	Dim = esc.Dim
+	Italic = esc.Italic
+	Under = esc.Under
+	Blink = esc.Blink
+	BlinkF = esc.BlinkF
+	Reverse = esc.Reverse
+	Hidden = esc.Hidden
+	Strike = esc.Strike
+	Black = esc.Black
+	Red = esc.Red
+	Green = esc.Green
+	Yellow = esc.Yellow
+	Blue = esc.Blue
+	Magenta = esc.Magenta
+	Cyan = esc.Cyan
+	White = esc.White
+	BBlack = esc.BBlack
+	BRed = esc.BRed
+	BGreen = esc.BGreen
+	BYellow = esc.BYellow
+	BBlue = esc.BBlue
+	BMagenta = esc.BMagenta
+	BCyan = esc.BCyan
+	BWhite = esc.BWhite
+	HBlack = esc.HBlack
+	HRed = esc.HRed
+	HGreen = esc.HGreen
+	HYellow = esc.HYellow
+	HBlue = esc.HBlue
+	HMagenta = esc.HMagenta
+	HCyan = esc.HCyan
+	HWhite = esc.HWhite
+	BHBlack = esc.BHBlack
+	BHRed = esc.BHRed
+	BHGreen = esc.BHGreen
+	BHYellow = esc.BHYellow
+	BHBlue = esc.BHBlue
+	BHMagenta = esc.BHMagenta
+	BHCyan = esc.BHCyan
+	BHWhite = esc.BHWhite
+	X = esc.Reset
+	B = esc.Bold
+	I = esc.Italic
+	U = esc.Under
+	BI = esc.BoldItalic
+}

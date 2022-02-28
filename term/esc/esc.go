@@ -47,7 +47,7 @@ const (
 	EraseScreenE = "\033[J"
 	EraseScreenS = "\033[1J"
 	EraseScreen  = "\033[2J"
-	Clear        = EraseScreen
+	Clear        = EraseScreen + TopLeft
 
 	// unsupported on most modern terminals
 	PrintScreen   = "\033[i"
@@ -59,17 +59,18 @@ const (
 
 	// rest are attributes, the most common
 
-	Reset   = "\033[0m"
-	Bright  = "\033[1m"
-	Bold    = Bright
-	Dim     = "\033[2m"
-	Italic  = "\033[3m" // usually Reverses instead
-	Under   = "\033[4m"
-	Blink   = "\033[5m"
-	BlinkF  = "\033[6m" // usually not supported
-	Reverse = "\033[7m"
-	Hidden  = "\033[8m"
-	Strike  = "\033[9m" // modern support
+	Reset      = "\033[0m"
+	Bright     = "\033[1m"
+	Bold       = Bright
+	Dim        = "\033[2m"
+	Italic     = "\033[3m" // usually Reverses instead
+	Under      = "\033[4m"
+	Blink      = "\033[5m"
+	BlinkF     = "\033[6m" // usually not supported
+	Reverse    = "\033[7m"
+	Hidden     = "\033[8m"
+	Strike     = "\033[9m" // modern support
+	BoldItalic = Bold + Italic
 
 	Black   = "\033[30m"
 	Red     = "\033[31m"

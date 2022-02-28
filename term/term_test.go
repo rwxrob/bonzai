@@ -9,16 +9,16 @@ import (
 
 // coverage will never catch this test
 
-func TestIsTerminal_false(t *testing.T) {
+func TestIsInteractive_false(t *testing.T) {
 	if os.Getenv("TEST_ISNOTTERM") == "1" {
 		fmt.Println("out")
-		if !IsTerminal() {
+		if !IsInteractive() {
 			os.Exit(20)
 		}
 		os.Exit(1)
 	}
 	exe := os.Args[0]
-	cmd := exec.Command(exe, "-test.run=TestIsTerminal_false")
+	cmd := exec.Command(exe, "-test.run=TestIsInteractive_false")
 	cmd.Env = append(os.Environ(), "TEST_ISNOTTERM=1")
 	cmd.StdoutPipe() // just enough to push into background
 	err := cmd.Run()
@@ -30,8 +30,8 @@ func TestIsTerminal_false(t *testing.T) {
 	}
 }
 
-func TestIsTerminal_true(t *testing.T) {
-	if !IsTerminal() {
+func TestIsInteractive_true(t *testing.T) {
+	if !IsInteractive() {
 		t.Error("terminal not connected")
 	}
 }
