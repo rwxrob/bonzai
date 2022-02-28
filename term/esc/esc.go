@@ -1,26 +1,75 @@
 /*
-Package esc contains commonly used ANSI terminal escape sequences for
-different attributes and terminal control. These are meant to be printed
-directly to any terminal supporting the curses standard. They should be
-used directly whenever possible for best terminal performance.  Also see
-the equivalent variables in the term package that are set to empty strings when support for them is not detected at init() time in order to maintain
-the original stateful approach to terminal escape sequence support (first designed for the terminfo C library.)
+Package esc contains commonly used VT100 ANSI terminal escape sequences
+for different attributes and terminal control. These are meant to be
+printed directly to any terminal supporting the VT100 standard. They
+should be used directly whenever possible for best terminal performance.
+Also see the equivalent variables in the term package that are set to
+empty strings when support for them is not detected at init() time in
+order to maintain the original stateful approach to terminal escape
+sequence support (first designed for the terminfo C library.)
 */
 package esc
 
 const (
-	Reset     = "\033[0m"
-	Bold      = "\033[1m"
-	Faint     = "\033[2m"
-	Italic    = "\033[3m"
-	Underline = "\033[4m"
-	BlinkSlow = "\033[5m"
-	BlinkFast = "\033[6m"
-	Reverse   = "\033[7m"
-	Concealed = "\033[8m"
-	StrikeOut = "\033[9m"
+	QCode   = "\033[c"  // "\033[{code}0c"
+	QStatus = "\033[5n" // "\033[0n" ok "\033[3n" not ok
+	QPos    = "\033[6n" // "\033[{row};{col}R"
 
-	BoldItalic = "\033[1m\033[3m"
+	ResetDevice = "\033c" // reset to defaults
+	LineWrapOn  = "\033[7h"
+	LineWrapOff = "\033[7l"
+
+	DefFont = "\033("
+	AltFont = "\033)"
+
+	TopLeft = "\033[H" // "\033[{row};{col}H "\033[{row};{col}f"
+	Up      = "\033[A" // "\033[{count}A"
+	Down    = "\033[B" // "\033[{count}B"
+	Forward = "\033[C" // "\033[{count}C"
+	Back    = "\033[D" // "\033[{count}D"
+
+	Save      = "\033[s" // save position
+	Unsave    = "\033[u" // restore position
+	SaveAll   = "\0337"  // save position and attributes
+	UnsaveAll = "\0338"  // restore position and attributes
+
+	ScrollOn   = "\033[r" // "\033[{start}:{end}r"
+	ScrollDown = "\033D"
+	ScrollUp   = "\033M"
+
+	SetTab      = "\033H"
+	ClearTab    = "\033[g"
+	ClearAllTab = "\033[3g"
+
+	EraseLineE   = "\033[K"
+	EraseLineS   = "\033[1K"
+	EraseLine    = "\033[2K"
+	EraseScreenE = "\033[J"
+	EraseScreenS = "\033[1J"
+	EraseScreen  = "\033[2J"
+	Clear        = EraseScreen
+
+	// unsupported on most modern terminals
+	PrintScreen   = "\033[i"
+	PrintLine     = "\033[1i"
+	StopPrintLog  = "\033[4i"
+	StartPrintLog = "\033[5i"
+
+	// SetKey = "\033[{key};"string"p"
+
+	// rest are attributes, the most common
+
+	Reset   = "\033[0m"
+	Bright  = "\033[1m"
+	Bold    = Bright
+	Dim     = "\033[2m"
+	Italic  = "\033[3m" // usually Reverses instead
+	Under   = "\033[4m"
+	Blink   = "\033[5m"
+	BlinkF  = "\033[6m" // usually not supported
+	Reverse = "\033[7m"
+	Hidden  = "\033[8m"
+	Strike  = "\033[9m" // modern support
 
 	Black   = "\033[30m"
 	Red     = "\033[31m"
@@ -57,13 +106,4 @@ const (
 	BHMagenta = "\033[105m"
 	BHCyan    = "\033[106m"
 	BHWhite   = "\033[107m"
-
-	ClearScreen = "\033[2J\033[H"
-
-	X  = "\033[0m"        // Reset
-	B  = "\033[1m"        // Bold
-	I  = "\033[3m"        // Italic
-	U  = "\033[4m"        // Underline
-	BI = "\033[1m\033[3m" // BoldItalic
-	CS = "\033[2J\033[H"  // ClearScreen
 )
