@@ -124,6 +124,11 @@ the name. In fact, I think we have our new theme song.
   including tab completion in runtime environments that do not have
   `complete -C foo foo` enabled. 
 
+* **Scanner implementation as a struct with no interface.** In order to
+  better tilt the scale toward Scanner performance the decision was made
+  to keep it as a struct with tight coupling to the scanner.Cur and
+  scanner.Pos structs as well.
+
 ## Style Guidelines
 
 * Everything through `go fmt` or equiv, no exceptions

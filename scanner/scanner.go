@@ -1,49 +1,28 @@
-package parser
+package scanner
 
 import (
 	"errors"
 	"fmt"
 	"io"
 	"unicode/utf8"
+
+	"github.com/rwxrob/bonzai/scanner/tk"
 )
 
-// Parser must implement a parser with all the trimmings. See New for
-// a creating a specific instance of Parser.
-type Parser interface {
-	Check(ms ...any) (*Cur, error)
-	Cur() *Cur
-	CopyCur() *Cur
-	Done() bool
-	ErrorExpected(this any) error
-	Expect(ms ...any) (*Cur, error)
-	Init(i any)
-	Jump(m *Cur)
-	Move(n int)
-	NewLine()
-	Next()
-	Look(to *Cur) string
-	LookSlice(beg *Cur, end *Cur) string
-	Print()
-	String() string
-}
-
-// EOD is a special value that is returned when the end of data is
-// reached enabling functional parser functions to look for it reliably
-// no matter what is being parsed.
-const EOD = 1<<31 - 1 // max int32
-
-// see Parser interface
-type parser struct {
+// Scanner implements a non-linear, rune-centric, buffered data
+// scanner. See New for a creating a usable struct that implements
+// Scanner.
+type Scanner struct {
 	in  io.Reader
 	buf []byte
 	cur *Cur
 }
 
-// New returns a newly initialized rune-centric Parser with support for
-// parsing data from io.Reader, string, and []byte types. See the Parser
-// interface and Init method.
-func New(i interface{}) *parser {
-	p := new(parser)
+// New returns a newly initialized non-linear, rune-centric, buffered
+// data scanner with support for parsing data from io.Reader, string,
+// and []byte types. Also see the Init method.
+func New(i interface{}) *Scanner {
+	p := new(Scanner)
 	if err := p.Init(i); err != nil {
 		return p
 	}
@@ -51,17 +30,17 @@ func New(i interface{}) *parser {
 }
 
 // Init reads all of passed parsable (io.Reader, string, []byte) into
-// memory, parses the first rune, and sets the internals of parser
+// memory, parses the first rune, and sets the internals of scanner
 // appropriately returning an error if anything happens while attempting
 // to read and buffer the data (OOM, etc.).
-func (p *parser) Init(i interface{}) error {
+func (p *Scanner) Init(i interface{}) error {
 	if err := p.buffer(i); err != nil {
 		return err
 	}
 	r, ln := utf8.DecodeRune(p.buf) // scan first
 	if ln == 0 {
-		r = EOD
-		return fmt.Errorf("parser: failed to scan first rune")
+		r = tk.EOD
+		return fmt.Errorf("scanner: failed to scan first rune")
 	}
 	p.cur = new(Cur)
 	p.cur.Rune = r
@@ -75,7 +54,7 @@ func (p *parser) Init(i interface{}) error {
 }
 
 // reads and buffers io.Reader, string, or []byte types
-func (p *parser) buffer(i interface{}) error {
+func (p *Scanner) buffer(i interface{}) error {
 	var err error
 	switch in := i.(type) {
 	case io.Reader:
@@ -88,18 +67,18 @@ func (p *parser) buffer(i interface{}) error {
 	case []byte:
 		p.buf = in
 	default:
-		return fmt.Errorf("parser: unsupported input type: %t", i)
+		return fmt.Errorf("scanner: unsupported input type: %t", i)
 	}
 	if len(p.buf) == 0 {
-		return fmt.Errorf("parser: no input")
+		return fmt.Errorf("scanner: no input")
 	}
 	return err
 }
 
 // Next parses the next rune advancing a single rune forward or sets
-// current cursor rune to EOD if at end of data. Returns p.Done() if
+// current cursor rune to tk.EOD if at end of data. Returns p.Done() if
 // attempted after already at end of data.
-func (p *parser) Next() {
+func (p *Scanner) Next() {
 	if p.Done() {
 		return
 	}
@@ -108,7 +87,7 @@ func (p *parser) Next() {
 		p.cur.Byte = p.cur.Next
 		p.cur.Pos.LineByte += p.cur.Len
 	} else {
-		r = EOD
+		r = tk.EOD
 	}
 	p.cur.Rune = r
 	p.cur.Pos.Rune += 1
@@ -116,29 +95,29 @@ func (p *parser) Next() {
 	p.cur.Pos.LineRune += 1
 	p.cur.Len = ln
 }
-func (p *parser) Move(n int) {
+func (p *Scanner) Move(n int) {
 	for i := 0; i < n; i++ {
 		p.Next()
 	}
 }
 
-// Done returns true if current cursor rune is EOD and the cursor length
+// Done returns true if current cursor rune is tk.EOD and the cursor length
 // is also zero.
-func (p *parser) Done() bool {
-	return p.cur.Rune == EOD && p.cur.Len == 0
+func (p *Scanner) Done() bool {
+	return p.cur.Rune == tk.EOD && p.cur.Len == 0
 }
 
 // String delegates to internal cursor String.
-func (p *parser) String() string { return p.cur.String() }
+func (p *Scanner) String() string { return p.cur.String() }
 
 // Print delegates to internal cursor Print.
-func (p *parser) Print() { p.cur.Print() }
+func (p *Scanner) Print() { p.cur.Print() }
 
-// Cur returns exact cursor used by parser. See CopyCur and Cur struct.
-func (p *parser) Cur() *Cur { return p.cur }
+// Cur returns exact cursor used by Scanner. See CopyCur and Cur struct.
+func (p *Scanner) Cur() *Cur { return p.cur }
 
-// CopyCur returns a copy of the current parser cursor. See Cur.
-func (p *parser) CopyCur() *Cur {
+// CopyCur returns a copy of the current scanner cursor. See Cur.
+func (p *Scanner) CopyCur() *Cur {
 	if p.cur == nil {
 		return nil
 	}
@@ -148,15 +127,15 @@ func (p *parser) CopyCur() *Cur {
 }
 
 // Jump replaces the internal cursor with a copy of the one passed
-// effectively repositioning the parser's current position in the
+// effectively repositioning the scanner's current position in the
 // buffered data.
-func (p *parser) Jump(c *Cur) { nc := *c; p.cur = &nc }
+func (p *Scanner) Jump(c *Cur) { nc := *c; p.cur = &nc }
 
 // Look returns a string containing all the bytes from the current
-// parser cursor position up to the passed cursor position, forward or
+// scanner cursor position up to the passed cursor position, forward or
 // backward. Neither the internal nor the passed  cursor position is
 // changed.
-func (p *parser) Look(to *Cur) string {
+func (p *Scanner) Look(to *Cur) string {
 	if to.Byte < p.cur.Byte {
 		return string(p.buf[to.Byte:p.cur.Next])
 	}
@@ -165,7 +144,7 @@ func (p *parser) Look(to *Cur) string {
 
 // LookSlice returns a string containing all the bytes from the first
 // cursor up to the second cursor. Neither cursor position is changed.
-func (p *parser) LookSlice(beg *Cur, end *Cur) string {
+func (p *Scanner) LookSlice(beg *Cur, end *Cur) string {
 	return string(p.buf[beg.Byte:end.Next])
 }
 
@@ -173,7 +152,7 @@ func (p *parser) LookSlice(beg *Cur, end *Cur) string {
 // string, Class, Check, Opt, Not, Seq, One, Min, MinMax, Count. This
 // allows grammars to be represented simply and parsed easily without
 // exceptional overhead from additional function calls and indirection.
-func (p *parser) Expect(ms ...interface{}) (*Cur, error) {
+func (p *Scanner) Expect(ms ...interface{}) (*Cur, error) {
 	var beg, end *Cur
 	beg = p.Cur()
 	for _, m := range ms {
@@ -321,7 +300,7 @@ func (p *parser) Expect(ms ...interface{}) (*Cur, error) {
 	return end, nil
 }
 
-func (p *parser) ErrorExpected(this interface{}) error {
+func (p *Scanner) ErrorExpected(this interface{}) error {
 	var msg string
 	but := fmt.Sprintf(` but got %v`, p)
 	if p.Done() {
@@ -348,9 +327,9 @@ func (p *parser) ErrorExpected(this interface{}) error {
 }
 
 // NewLine delegates to interval Curs.NewLine.
-func (p *parser) NewLine() { p.cur.NewLine() }
+func (p *Scanner) NewLine() { p.cur.NewLine() }
 
-func (p *parser) Check(ms ...interface{}) (*Cur, error) {
+func (p *Scanner) Check(ms ...interface{}) (*Cur, error) {
 	defer p.Jump(p.CopyCur())
 	return p.Expect(ms...)
 }

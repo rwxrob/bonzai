@@ -1,20 +1,32 @@
 // Copyright 2022 Robert S. Muhlestein.
 // SPDX-License-Identifier: Apache-2.0
 
-package parser
+package scanner
 
-import "fmt"
+import (
+	"fmt"
+
+	"github.com/rwxrob/bonzai/scanner/tk"
+)
 
 // Pos contains the user-land position for reporting back when there is
 // a problem with parsing. This is different from internal position
-// information used to parse from the internal data buffer.  The
-// Parser.NewLine() method should always increment the Pos.Line and set
-// Pos.LineRune and Pos.LineByte.
+// information used to parse from the internal data buffer.
 type Pos struct {
 	Line     int // lines (rows) starting at 1
 	LineRune int // offset rune in line starting at 1
 	LineByte int // offset byte in line starting at 1
 	Rune     int // offset rune pos starting with 1
+}
+
+// NewLine forces the internal cursor position to increment it's
+// user-land line counter and reset LineRune and LineByte to 1. This
+// enables specific grammar parser implementations to explicitly create
+// a new line as defined by that grammar.
+func (p *Pos) NewLine() {
+	p.Line++
+	p.LineRune = 1
+	p.LineByte = 1
 }
 
 // Cur is a cursor structure that points to specific position within
@@ -32,16 +44,6 @@ type Cur struct {
 	Next int  // beginning of next rune to decode
 }
 
-// NewLine forces the internal cursor position to increment it's
-// user-land line counter and reset LineRune and LineByte to 1. This
-// enables specific grammar parser implementations to explicitly create
-// a new line as defined by that grammar.
-func (c *Cur) NewLine() {
-	c.Pos.Line++
-	c.Pos.LineRune = 1
-	c.Pos.LineByte = 1
-}
-
 // String fulfills the fmt.Stringer interface by printing
 // the Cursor's location in a human-friendly way:
 //
@@ -55,7 +57,7 @@ func (c *Cur) String() string {
 	if c == nil {
 		return "<nil>"
 	}
-	if c.Rune == EOD {
+	if c.Rune == tk.EOD {
 		return "<EOD>"
 	}
 	s := fmt.Sprintf(`%U %q %v,%v-%v (%v-%v)`,
