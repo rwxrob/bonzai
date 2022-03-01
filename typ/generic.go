@@ -1,7 +1,7 @@
 // Copyright 2022 Robert S. Muhlestein.
 // SPDX-License-Identifier: Apache-2.0
 
-package generic
+package typ
 
 // Number combines the primitives generally considered numbers by JSON
 // and other high-level structure data representations.
