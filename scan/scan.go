@@ -1,7 +1,7 @@
 // Copyright 2022 Robert S. Muhlestein.
 // SPDX-License-Identifier: Apache-2.0
 
-package scanner
+package scan
 
 import (
 	"errors"
@@ -9,8 +9,8 @@ import (
 	"io"
 	"unicode/utf8"
 
-	"github.com/rwxrob/bonzai/scanner/is"
-	"github.com/rwxrob/bonzai/scanner/tk"
+	"github.com/rwxrob/bonzai/scan/is"
+	"github.com/rwxrob/bonzai/scan/tk"
 )
 
 // Scanner implements a non-linear, rune-centric, buffered data scanner.

@@ -1,15 +1,15 @@
-package scanner_test
+package scan_test
 
 import (
 	"fmt"
 	"strings"
 
-	"github.com/rwxrob/bonzai/scanner"
-	"github.com/rwxrob/bonzai/scanner/is"
+	"github.com/rwxrob/bonzai/scan"
+	"github.com/rwxrob/bonzai/scan/is"
 )
 
 func ExampleNew_string() {
-	s, err := scanner.New("some thing")
+	s, err := scan.New("some thing")
 	if err != nil {
 		fmt.Println(err)
 	}
@@ -22,7 +22,7 @@ func ExampleNew_string() {
 }
 
 func ExampleNew_bytes() {
-	s, err := scanner.New([]byte{'s', 'o', 'm'})
+	s, err := scan.New([]byte{'s', 'o', 'm'})
 	if err != nil {
 		fmt.Println(err)
 	}
@@ -38,7 +38,7 @@ func ExampleNew_bytes() {
 
 func ExampleNew_reader() {
 	r := strings.NewReader("some thing")
-	s, err := scanner.New(r)
+	s, err := scan.New(r)
 	if err != nil {
 		fmt.Println(err)
 	}
@@ -51,7 +51,7 @@ func ExampleNew_reader() {
 }
 
 func ExampleInit() {
-	s, err := scanner.New("some thing")
+	s, err := scan.New("some thing")
 	if err != nil {
 		fmt.Println(err)
 	}
@@ -68,7 +68,7 @@ func ExampleInit() {
 }
 
 func ExampleMark() {
-	s, err := scanner.New("some thing")
+	s, err := scan.New("some thing")
 	if err != nil {
 		fmt.Println(err)
 	}
@@ -81,17 +81,17 @@ func ExampleMark() {
 }
 
 func ExampleJump() {
-	s1, _ := scanner.New("some thing")
+	s1, _ := scan.New("some thing")
 	s1.ScanN(5)
 	s1.Print() // t
 
-	s2, _ := scanner.New("other thing")
+	s2, _ := scan.New("other thing")
 	s2.ScanN(6)
 	s2.Print()      // t
 	s1.Jump(s2.Cur) // WRONG, must be same source buffer
 	s1.Print()
 
-	s3, _ := scanner.New("some thing") // identical
+	s3, _ := scan.New("some thing") // identical
 	s3.ScanN(6)
 	s3.Print() // h
 	s1.Jump(s3.Cur)
@@ -113,7 +113,7 @@ func ExampleJump() {
 }
 
 func ExamplePeek() {
-	s, _ := scanner.New("some thing")
+	s, _ := scan.New("some thing")
 	s.ScanN(6)
 	fmt.Println(s.Peek(3))
 	// Output:
@@ -121,7 +121,7 @@ func ExamplePeek() {
 }
 
 func ExampleLook() {
-	s, _ := scanner.New("some thing")
+	s, _ := scan.New("some thing")
 	s.Scan()
 	m1 := s.Mark()
 	m1.Print()
@@ -140,7 +140,7 @@ func ExampleLook() {
 }
 
 func ExampleLookSlice() {
-	s, _ := scanner.New("some thing")
+	s, _ := scan.New("some thing")
 	s.Scan()
 	m1 := s.Mark()
 	m1.Print()
@@ -155,7 +155,7 @@ func ExampleLookSlice() {
 }
 
 func ExampleNewLine() {
-	s, _ := scanner.New("some thing")
+	s, _ := scan.New("some thing")
 	s.Print()
 	s.NewLine()
 	s.Print()
@@ -165,7 +165,7 @@ func ExampleNewLine() {
 }
 
 func ExampleErrorExpected() {
-	s, _ := scanner.New("some thing")
+	s, _ := scan.New("some thing")
 	fmt.Println(s.ErrorExpected("foo"))
 	fmt.Println(s.ErrorExpected('f'))
 	fmt.Println(s.ErrorExpected([]byte{'f', 'o', 'o'}))
@@ -176,7 +176,7 @@ func ExampleErrorExpected() {
 }
 
 func ExampleExpect_basic() {
-	s, _ := scanner.New("some thing")
+	s, _ := scan.New("some thing")
 	c, _ := s.Expect("some", ' ', "thin")
 	c.Print()
 	fmt.Println(s.Done())
@@ -193,7 +193,7 @@ func ExampleExpect_basic() {
 }
 
 func ExampleCheck() {
-	s, _ := scanner.New("some thing")
+	s, _ := scan.New("some thing")
 	c, _ := s.Check("some", ' ', "thin") // same as Expect ...
 	c.Print()                            // ... with cur return ...
 	s.Print()                            // ... just doesn't advance
@@ -203,7 +203,7 @@ func ExampleCheck() {
 }
 
 func ExampleExpect_not() {
-	s, _ := scanner.New("some thing")
+	s, _ := scan.New("some thing")
 	c1, e1 := s.Expect(is.Not{"foo"})
 	c1.Print()
 	fmt.Println(e1)

@@ -1,9 +1,9 @@
-package scanner_test
+package scan_test
 
-import "github.com/rwxrob/bonzai/scanner"
+import "github.com/rwxrob/bonzai/scan"
 
 func ExampleCur() {
-	m := new(scanner.Cur)
+	m := new(scan.Cur)
 	m.Print()
 	m.NewLine()
 	m.Print()

@@ -1,12 +1,12 @@
 // Copyright 2022 Robert S. Muhlestein.
 // SPDX-License-Identifier: Apache-2.0
 
-package scanner
+package scan
 
 import (
 	"fmt"
 
-	"github.com/rwxrob/bonzai/scanner/tk"
+	"github.com/rwxrob/bonzai/scan/tk"
 )
 
 // Pos contains the user-land position for reporting back when there is
