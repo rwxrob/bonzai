@@ -25,21 +25,27 @@ import (
 	"github.com/rwxrob/bonzai/scan/tk"
 )
 
-// ExtendExpect provides a hook to support additional custom scannable
-// support to both the Expect and Check Scanner methods. Take note of
-// the ErrorExpected errors in order to construct similar errors where
-// returning ErrorExpected itself would not provide clear error
-// messages.
-var ExtendExpect func(s *Scanner, scannable ...any) (*Cur, error)
-
 // Scanner implements a non-linear, rune-centric, buffered data scanner.
 // See New for creating a usable struct that implements Scanner. The
 // buffer and cursor are directly exposed to facilitate
 // higher-performance, direct access when needed.
 type Scanner struct {
-	Buf     []byte
-	Cur     *Cur
+
+	// Buf is the data buffer providing infinite look-ahead and behind.
+	Buf []byte
+
+	// Cur is the active current cursor pointing to the Buf data.
+	Cur *Cur
+
+	// Snapped contains the latest Cur when Snap was called.
 	Snapped *Cur
+
+	// ExtendExpect provides a hook to support additional custom
+	// scannables for both Expect and Check Scanner methods. Take note of
+	// the ErrorExpected errors in order to construct similar errors where
+	// returning ErrorExpected itself would not provide clear error
+	// messages.
+	ExtendExpect func(s *Scanner, scannable ...any) (*Cur, error)
 }
 
 // New returns a newly initialized non-linear, rune-centric, buffered
@@ -357,8 +363,8 @@ func (p *Scanner) Expect(scannables ...any) (*Cur, error) {
 			p.Scan()
 
 		default: // --------------------------------------------------------
-			if ExtendExpect != nil {
-				return ExtendExpect(p, scannables...)
+			if p.ExtendExpect != nil {
+				return p.ExtendExpect(p, scannables...)
 			}
 			return nil, fmt.Errorf("expect: unscannable type (%T)", m)
 		}

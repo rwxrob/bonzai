@@ -327,7 +327,16 @@ func ExampleExpect_in_Range() {
 }
 
 func ExampleExtendExpect() {
-	// TODO
+	s, _ := scan.New("some thing")
+	s.ExtendExpect = func(s *scan.Scanner, a ...any) (*scan.Cur, error) {
+		return s.Cur, fmt.Errorf("custom error for type %T handled at %v",
+			a[0], s.Cur,
+		)
+	}
+	_, e := s.Expect([]byte{'0'})
+	fmt.Println(e)
+	// Output:
+	// custom error for type []uint8 handled at U+0073 's' 1,1-1 (1-1)
 }
 
 func ExampleSnap() {
