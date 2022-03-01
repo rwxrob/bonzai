@@ -29,11 +29,9 @@ func ExampleNew_bytes() {
 	s.Print()
 	s.ScanN(3)
 	s.Print()
-	fmt.Println(s.Done())
 	//Output:
 	// U+0073 's' 1,1-1 (1-1)
 	// <EOD>
-	// true
 }
 
 func ExampleNew_reader() {
@@ -73,8 +71,6 @@ func ExampleMark() {
 		fmt.Println(err)
 	}
 	m := s.Mark()
-	//log.Printf("%p", s.Cur)
-	//log.Printf("%p", m)
 	fmt.Println(s.Cur != m)
 	// Output:
 	// true
@@ -179,17 +175,13 @@ func ExampleExpect_basic() {
 	s, _ := scan.New("some thing")
 	c, _ := s.Expect("some", ' ', "thin")
 	c.Print()
-	fmt.Println(s.Done())
 	s.Print()
 	s.Scan()
 	s.Print()
-	fmt.Println(s.Done())
 	// Output:
 	// U+006E 'n' 1,9-9 (9-9)
-	// false
 	// U+0067 'g' 1,10-10 (10-10)
 	// <EOD>
-	// true
 }
 
 func ExampleCheck() {
@@ -352,4 +344,15 @@ func ExampleSnap() {
 	// U+0065 'e' 1,4-4 (4-4)
 	// U+0069 'i' 1,8-8 (8-8)
 	// U+0065 'e' 1,4-4 (4-4)
+}
+
+func ExampleScan() {
+	s, _ := scan.New(`s😈me thing`)
+	s.Scan()
+	s.Print()
+	s.Scan()
+	s.Print()
+	// Output:
+	// U+1F608 '😈' 1,2-2 (2-2)
+	// U+006D 'm' 1,3-6 (3-6)
 }

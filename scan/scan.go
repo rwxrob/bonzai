@@ -32,7 +32,8 @@ import (
 type Scanner struct {
 
 	// Buf is the data buffer providing infinite look-ahead and behind.
-	Buf []byte
+	Buf    []byte
+	BufLen int
 
 	// Cur is the active current cursor pointing to the Buf data.
 	Cur *Cur
@@ -65,53 +66,69 @@ func New(i any) (*Scanner, error) {
 // scanner appropriately returning an error if anything happens while
 // attempting to read and buffer the data (OOM, etc.).
 func (s *Scanner) Init(i any) error {
+	s.Cur = new(Cur)
+	s.Cur.Pos = Pos{}
+	s.Cur.Pos.Line = 1
+	s.Cur.Pos.LineRune = 1
+	s.Cur.Pos.LineByte = 1
+	s.Cur.Pos.Rune = 1
+
 	if err := s.buffer(i); err != nil {
 		return err
 	}
+
 	r, ln := utf8.DecodeRune(s.Buf) // scan first
 	if ln == 0 {
 		r = tk.EOD
 		return fmt.Errorf("scanner: failed to scan first rune")
 	}
-	s.Cur = new(Cur)
+
 	s.Cur.Rune = r
 	s.Cur.Len = ln
 	s.Cur.Next = ln
-	s.Cur.Pos.Line = 1
-	s.Cur.Pos.LineRune = 1
-	s.Cur.Pos.LineByte = 1
-	s.Cur.Pos.Rune = 1
+
 	return nil
 }
 
 // reads and buffers io.Reader, string, or []byte types
 func (s *Scanner) buffer(i any) error {
 	var err error
-	switch in := i.(type) {
+	switch v := i.(type) {
 	case io.Reader:
-		s.Buf, err = io.ReadAll(in)
+		s.Buf, err = io.ReadAll(v)
 		if err != nil {
 			return err
 		}
 	case string:
-		s.Buf = []byte(in)
+		s.Buf = []byte(v)
 	case []byte:
-		s.Buf = in
+		s.Buf = v
 	default:
 		return fmt.Errorf("scanner: unsupported input type: %t", i)
 	}
-	if len(s.Buf) == 0 {
+	s.BufLen = len(s.Buf)
+	if s.BufLen == 0 {
 		return fmt.Errorf("scanner: no input")
 	}
 	return err
 }
 
 // Scan decodes the next rune and advances the scanner cursor by one.
+// The method of scanning isn't as optimized as other scanner (for
+// example, the scanner from the bonzai/json package), but it is
+// sufficient for most high level needs.
 func (s *Scanner) Scan() {
-	if s.Done() {
+
+	if s.Cur.Next == s.BufLen {
+		s.Cur.Rune = tk.EOD
 		return
 	}
-	r, ln := utf8.DecodeRune(s.Buf[s.Cur.Next:])
+
+	ln := 1
+	r := rune(s.Buf[s.Cur.Next])
+	if r > utf8.RuneSelf {
+		r, ln = utf8.DecodeRune(s.Buf[s.Cur.Next:])
+	}
 	if ln != 0 {
 		s.Cur.Byte = s.Cur.Next
 		s.Cur.Pos.LineByte += s.Cur.Len
@@ -126,17 +143,11 @@ func (s *Scanner) Scan() {
 }
 
 // ScanN scans the next n runes advancing n runes forward or returns
-// s.Done() if attempted after already at end of data.
+// EOD if attempted after already at end of data.
 func (s *Scanner) ScanN(n int) {
 	for i := 0; i < n; i++ {
 		s.Scan()
 	}
-}
-
-// Done returns true if current cursor rune is tk.EOD and the cursor length
-// is also zero.
-func (s *Scanner) Done() bool {
-	return s.Cur.Rune == tk.EOD && s.Cur.Len == 0
 }
 
 // String delegates to internal cursor String.
@@ -378,7 +389,7 @@ func (s *Scanner) Expect(scannables ...any) (*Cur, error) {
 func (s *Scanner) ErrorExpected(this any, args ...any) error {
 	var msg string
 	but := fmt.Sprintf(` at %v`, s)
-	if s.Done() {
+	if s.Cur != nil && s.Cur.Rune == tk.EOD && s.Cur.Len == 0 {
 		runes := `runes`
 		if s.Cur.Pos.Rune == 1 {
 			runes = `rune`
