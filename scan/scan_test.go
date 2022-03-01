@@ -216,3 +216,40 @@ func ExampleExpect_not() {
 	// <nil>
 	// not expecting "some" at U+0073 's' 1,1-1 (1-1)
 }
+
+func ExampleExpect_in() {
+	s, _ := scan.New("some thing")
+	s.Scan()
+	c1, _ := s.Expect(is.In{'O', 'o', "ome"})
+	c1.Print()
+	s.Print()
+	// Output:
+	// U+006F 'o' 1,2-2 (2-2)
+	// U+006D 'm' 1,3-3 (3-3)
+}
+
+func ExampleExpect_in_Range() {
+	s, _ := scan.New("some thing")
+	s.Scan()
+	c1, _ := s.Expect(is.Rng{'l', 'p'})
+	c1.Print()
+	s.Print()
+	// Output:
+	// U+006F 'o' 1,2-2 (2-2)
+	// U+006D 'm' 1,3-3 (3-3)
+}
+
+func ExampleExpect_seq() {
+	s, _ := scan.New("some thing")
+	c1, e1 := s.Expect(is.Seq{"some", "thing"})
+	c1.Print()
+	fmt.Println(e1)
+	c2, e2 := s.Expect(is.Not{is.Seq{"some", "thing"}})
+	c2.Print()
+	fmt.Println(e2)
+	// Output:
+	// U+0073 's' 1,1-1 (1-1)
+	// <nil>
+	// <nil>
+	// not expecting "some" at U+0073 's' 1,1-1 (1-1)
+}

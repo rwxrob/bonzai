@@ -1,6 +1,18 @@
 // Copyright 2022 Robert S. Muhlestein.
 // SPDX-License-Identifier: Apache-2.0
 
+/*
+Package scan implements a non-linear, rune-centric, buffered data
+scanner that includes its own high-level syntax comprised of scannable
+structures from the "is" subpackage making parser generation (by hand or
+code generation) trivial from any structured meta languages such as
+PEGN, PEG, EBNF, ABNF, etc. Most will use the scanner to create parsers
+quickly by hand where a regular expression will not suffice. See the
+"is" and "tk" packages for a growing number of common, centrally
+maintain scannables for your parsing pleasure. Also see the "mark"
+(BonzaiMark) subpackage for a working example of the scanner in action,
+which is used by the included help.Cmd command.
+*/
 package scan
 
 import (
@@ -12,6 +24,13 @@ import (
 	"github.com/rwxrob/bonzai/scan/is"
 	"github.com/rwxrob/bonzai/scan/tk"
 )
+
+// ExtendExpect provides a hook to support additional custom scannable
+// support to both the Expect and Check Scanner methods. Take note of
+// the ErrorExpected errors in order to construct similar errors where
+// returning ErrorExpected itself would not provide clear error
+// messages.
+var ExtendExpect func(s *Scanner, scannable ...any) (*Cur, error)
 
 // Scanner implements a non-linear, rune-centric, buffered data scanner.
 // See New for creating a usable struct that implements Scanner. The
@@ -26,7 +45,7 @@ type Scanner struct {
 // data scanner with support for parsing data from io.Reader, string,
 // and []byte types. Returns nil and the error if any encountered during
 // initialization. Also see the Init method.
-func New(i interface{}) (*Scanner, error) {
+func New(i any) (*Scanner, error) {
 	p := new(Scanner)
 	if err := p.Init(i); err != nil {
 		return nil, err
@@ -38,7 +57,7 @@ func New(i interface{}) (*Scanner, error) {
 // into buffered memory, scans the first rune, and sets the internals of
 // scanner appropriately returning an error if anything happens while
 // attempting to read and buffer the data (OOM, etc.).
-func (p *Scanner) Init(i interface{}) error {
+func (p *Scanner) Init(i any) error {
 	if err := p.buffer(i); err != nil {
 		return err
 	}
@@ -59,7 +78,7 @@ func (p *Scanner) Init(i interface{}) error {
 }
 
 // reads and buffers io.Reader, string, or []byte types
-func (p *Scanner) buffer(i interface{}) error {
+func (p *Scanner) buffer(i any) error {
 	var err error
 	switch in := i.(type) {
 	case io.Reader:
@@ -172,21 +191,35 @@ func (p *Scanner) LookSlice(beg *Cur, end *Cur) string {
 	return string(p.Buf[beg.Byte:end.Next])
 }
 
-// Expect takes a variable list of parsable types including rune,
-// string, is.In, is.Opt, is.Not, is.Seq, is.Min, is.MinMax, is.Count,
-// and all strings from the tk subpackage. This allows for very readable
-// functional grammar parsers to be created quickly without exceptional
-// overhead from additional function calls and indirection. As some have
-// said, "it's regex without the regex."
-func (p *Scanner) Expect(scannable ...interface{}) (*Cur, error) {
+// Expect takes a variable list of parsable types including the
+// following (in order of priority):
+//
+//     string          - "foo" simple string
+//     rune            - 'f' uint32, but "rune" in errors
+//     is.Not{any...}  - negative look-ahead set (slice)
+//     is.In{any...}   - one positive look-ahead from set (slice)
+//     is.Seq{any...}  - required positive look-ahead sequence (slice)
+//     is.Opt{any...}  - optional positive look-ahead set (slice)
+//     is.Min{n,any}   - minimum positive look-aheads
+//     is.MMx{n,m,any} - minimum and maximum positive look-aheads
+//     is.X{n,any}     - exactly n positive look-aheads
+//     is.Rng{n,m}     - inclusive range from rune n to rune m (n,m)
+//
+// Any token string from the tk subpackage can be used as well (and will
+// be noted as special in error out as opposed to simple strings. This
+// allows for very readable functional grammar parsers to be created
+// quickly without exceptional overhead from additional function calls
+// and indirection. As some have said, "it's regex without the regex."
+func (p *Scanner) Expect(scannables ...any) (*Cur, error) {
 	var beg, end *Cur
 	beg = p.Cur
-	for _, m := range scannable {
+
+	for _, m := range scannables {
 
 		// please keep the most common at the top
 		switch v := m.(type) {
 
-		case string:
+		case string: // ----------------------------------------------------
 			if v == "" {
 				return nil, fmt.Errorf("expect: cannot parse empty string")
 			}
@@ -200,7 +233,7 @@ func (p *Scanner) Expect(scannable ...interface{}) (*Cur, error) {
 				p.Scan()
 			}
 
-		case rune:
+		case rune: // ------------------------------------------------------
 			if p.Cur.Rune != v {
 				err := p.ErrorExpected(m)
 				p.Jump(beg)
@@ -209,120 +242,117 @@ func (p *Scanner) Expect(scannable ...interface{}) (*Cur, error) {
 			end = p.Mark()
 			p.Scan()
 
-		case is.Not:
-			if _, e := p.Check(v.This); e == nil {
+		case is.Not: // ----------------------------------------------------
+			for _, i := range v {
+				if _, e := p.Check(i); e == nil {
+					err := p.ErrorExpected(v, i)
+					p.Jump(beg)
+					return nil, err
+				}
+			}
+			end = p.Mark()
+
+		case is.In: // -----------------------------------------------------
+			var m *Cur
+			for _, i := range v {
+				var err error
+				last := p.Mark()
+				m, err = p.Expect(i)
+				if err == nil {
+					break
+				}
+				p.Jump(last)
+			}
+			if m == nil {
+				return nil, p.ErrorExpected(v)
+			}
+			end = m
+
+		case is.Seq: // ----------------------------------------------------
+			m, err := p.Expect(v...)
+			if err != nil {
+				p.Jump(beg)
+				return nil, err
+			}
+			end = m
+
+		case is.Opt: // ----------------------------------------------------
+			var m *Cur
+			for _, i := range v {
+				var err error
+				m, err = p.Expect(is.MMx{0, 1, i})
+				if err != nil {
+					p.Jump(beg)
+					return nil, err
+				}
+			}
+			end = m
+
+		case is.MMx: // ----------------------------------------------------
+			c := 0
+			last := p.Mark()
+			var err error
+			var m *Cur
+			for {
+				m, err = p.Expect(v.This)
+				if err != nil {
+					break
+				}
+				last = m
+				c++
+			}
+			if c == 0 && v.Min == 0 {
+				if end == nil {
+					end = last
+				}
+				continue
+			}
+			if !(v.Min <= c && c <= v.Max) {
+				p.Jump(last)
+				return nil, err
+			}
+			end = last
+
+		case is.Min: // ----------------------------------------------------
+			c := 0
+			last := p.Mark()
+			var err error
+			var m *Cur
+			for {
+				m, err = p.Expect(v.This)
+				if err != nil {
+					break
+				}
+				last = m
+				c++
+			}
+			if c < v.Min {
+				p.Jump(beg)
+				return nil, err
+			}
+			end = last
+
+		case is.X: // ------------------------------------------------------
+			m, err := p.Expect(is.MMx{v.X, v.X, v.This})
+			if err != nil {
+				p.Jump(beg)
+				return nil, err
+			}
+			end = m
+
+		case is.Rng: // ----------------------------------------------------
+			if !(v.First <= p.Cur.Rune && p.Cur.Rune <= v.Last) {
 				err := p.ErrorExpected(v)
 				p.Jump(beg)
 				return nil, err
 			}
 			end = p.Mark()
+			p.Scan()
 
-			/*
-				case Class:
-					if !v.Check(p.Cur.Rune) {
-						err := p.ErrorExpected(v)
-						p.Jump(beg)
-						return nil, err
-					}
-					end = p.Mark()
-					p.Scan()
-
-				case Check:
-					rv, err := v.Check(p)
-					if err != nil {
-						p.Jump(beg)
-						return nil, err
-					}
-					end = rv
-					p.Jump(rv)
-					p.Scan()
-
-				case is.Opt:
-					m, err := p.Expect(is.MinMax{v.This, 0, 1})
-					if err != nil {
-						p.Jump(beg)
-						return nil, err
-					}
-					end = m
-
-				case is.Min:
-					c := 0
-					last := p.Mark()
-					var err error
-					var m *Cur
-					for {
-						m, err = p.Expect(v.Match)
-						if err != nil {
-							break
-						}
-						last = m
-						c++
-					}
-					if c < v.Min {
-						p.Jump(beg)
-						return nil, err
-					}
-					end = last
-
-				case is.Count:
-					m, err := p.Expect(is.MinMax{v.Match, v.Count, v.Count})
-					if err != nil {
-						p.Jump(beg)
-						return nil, err
-					}
-					end = m
-
-				case is.MinMax:
-					c := 0
-					last := p.Mark()
-					var err error
-					var m *Cur
-					for {
-						m, err = p.Expect(v.Match)
-						if err != nil {
-							break
-						}
-						last = m
-						c++
-					}
-					if c == 0 && v.Min == 0 {
-						if end == nil {
-							end = last
-						}
-						continue
-					}
-					if !(v.Min <= c && c <= v.Max) {
-						p.Jump(last)
-						return nil, err
-					}
-					end = last
-
-				case is.Seq:
-					m, err := p.Expect(v...)
-					if err != nil {
-						p.Jump(beg)
-						return nil, err
-					}
-					end = m
-
-				case is.OneOf:
-					var m *Cur
-					var err error
-					for _, i := range v {
-						last := p.Mark()
-						m, err = p.Expect(i)
-						if err == nil {
-							break
-						}
-						p.Jump(last)
-					}
-					if m == nil {
-						return nil, p.ErrorExpected(v)
-					}
-					end = m
-			*/
-
-		default:
+		default: // --------------------------------------------------------
+			if ExtendExpect != nil {
+				return ExtendExpect(p, scannables...)
+			}
 			return nil, fmt.Errorf("expect: unscannable type (%T)", m)
 		}
 	}
@@ -332,7 +362,7 @@ func (p *Scanner) Expect(scannable ...interface{}) (*Cur, error) {
 // ErrorExpected returns a verbose, one-line error describing what was
 // expected when it encountered whatever the scanner last scanned. All
 // scannable types are supported. See Expect.
-func (p *Scanner) ErrorExpected(this interface{}) error {
+func (p *Scanner) ErrorExpected(this any, args ...any) error {
 	var msg string
 	but := fmt.Sprintf(` at %v`, p)
 	if p.Done() {
@@ -347,7 +377,7 @@ func (p *Scanner) ErrorExpected(this interface{}) error {
 	case rune: // otherwise will use uint32
 		msg = fmt.Sprintf(`expected rune %q`, v)
 	case is.Not:
-		msg = fmt.Sprintf(`not expecting %q`, v.This)
+		msg = fmt.Sprintf(`not expecting %q`, args[0])
 	default:
 		msg = fmt.Sprintf(`expected %T %q`, v, v)
 	}
@@ -359,7 +389,7 @@ func (p *Scanner) NewLine() { p.Cur.NewLine() }
 
 // Check behaves exactly like Expect but jumps back to the original
 // cursor position after scanning for expected scannable values.
-func (p *Scanner) Check(scannable ...interface{}) (*Cur, error) {
+func (p *Scanner) Check(scannables ...any) (*Cur, error) {
 	defer p.Jump(p.Mark())
-	return p.Expect(scannable...)
+	return p.Expect(scannables...)
 }
