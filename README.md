@@ -1,18 +1,10 @@
-# Bonzai! Simple CLI Command Trees in Go
+# Bonzai! Dominate the Command Line
 
 [![Go Version](https://img.shields.io/github/go-mod/go-version/rwxrob/bonzai)](https://tip.golang.org/doc/go1.18)
 [![GoDoc](https://godoc.org/github.com/rwxrob/bonzai?status.svg)](https://godoc.org/github.com/rwxrob/bonzai)
 [![License](https://img.shields.io/badge/license-Apache2-brightgreen.svg)](LICENSE)
 [![Go Report
 Card](https://goreportcard.com/badge/github.com/rwxrob/bonzai)](https://goreportcard.com/report/github.com/rwxrob/bonzai)
-
-Bonzai command trees are unlike anything you've probably encountered so
-far, no getopt dashes (we kind of hate them), no ugly commander
-interface to learn, no 12637 lines of shell tab completion bloat to
-source before your command will complete, just well manicured
-nested-tab-complete-with-magical-aliases-enabled commands organized into
-rooted node trees for your command-line enjoyment. Your right-pinky will
-be particularly grateful.
 
 ## Installation
 
@@ -27,6 +19,64 @@ be particularly grateful.
 
 😎 *Yes, we use the wonderful new generics all [over](fn).* 👍
 
+## Welcome to Bonzai
+
+Yes, "banzai" is something people yell going into battle. But isn't
+that what making command line utilities in Go (instead of your favorite
+shell script) actually is? 
+
+And yes, "bonsai" trees are well-manicured, meticulously crafted,
+miniature trees that rival their larger cousins, just like Bonzai
+command and data node trees. They are unlike anything you've probably
+encountered so far, no getopt dashes (we kind of hate them), no ugly
+commander interface to learn, no 12637 lines of shell tab completion
+bloat to source before your command will complete, just well manicured
+nested-tab-complete-with-magical-aliases-enabled commands organized into
+rooted node trees for your command-line enjoyment. Your right-pinky will
+be particularly grateful.
+
+But wait, there's more! What about all those other tasks you need to do
+to make a command line application honorable in anyone's eyes? Tools are
+needed. 
+
+## Create Powerful Parsers Easily with Pseudocode
+
+How about the world's most approachable text scanner API with automatic
+verbose, specific error messages that will make your users bow to your
+attentiveness. Build complex parsers that are easily read and generated
+from any number of meta-languages including PEGN, PEG, EBNF, and ABNF.
+Spend your time working with the beautiful and standardized abstract
+syntax trees instead of grinding out parser code. Domain language
+specifications are a breeze, which is good, because you can customize
+any completer for any nested command node or your application enabling
+powerful, intelligent, and intuitive grammars you enable for your users
+directly from the command line, hell, why not directly from your
+favorite chat integration. After all, Bonzai commands are perfectly
+doable directly from a chat client.
+
+## A JSON Package Without Unnecessary Limitations
+
+The standard Go `json` package is not what most people want. It uses
+reflection which unnecessarily slows everything down, and produces
+marshaled JSON output that escapes *every single Unicode character*
+making the output impossible to read and virtual useless for any use
+with languages that depend heavily on Unicode. It's really unfortunate
+since the JSON standard fully supports Unicode characters as they are.
+Bonzai JSON overcomes these limitations and is used to marshal
+everything in the module and fulfill all `fmt.Stringer` interfaces as
+2-space indented JSON instead of Go's virtually unusable default string
+marshaling format.
+
+## Single Module to Keep Legal Happy
+
+Why have we put all of this stuff into one module? It's simple, if you
+understand how enterprise software legal teams work. They are required
+to track the legal pedigree of every single package that is included
+into any software project. This task is laborious enough and we have
+done everything to simplify it by providing most of the parts and tools
+you would need to create almost any command-line utility, from simple
+bash script port to monoliths with 100s of composed commands, even our
+own BusyBox-like container Linux distro.
 ## Embedded Text or Web Docs FTW!
 
 And, all the documentation for your command tree goes *inside* the
@@ -60,14 +110,23 @@ We know. The domains were taken. Plus, this makes it more unique and
 easier to find once you know the strange spelling we chose to use. Sorry
 if that triggers your OCD.
 
+If you must know, the primary motivator was the similarity to a
+well-manicured tree (since it is for creating trees of commands). And
+Buckaroo Banzai was always a favorite. We like to think he would use
+Bonzai today to make amazing things.
+
 On a lighter note, it just so happens that "banzai" means 'a traditional
 Japanese idiom meaning "ten thousand years" of long life,' a cheer used
 in celebrations. So combining the notion of a happy, little,
 well-manicured, beautiful tree and "ten thousand years of long life"
 works out just fine for us.
 
-Then, of course, there's the image of Buckaroo invoked every time we say
-the name. In fact, I think we have our new theme song.
+It turns out that the "call to war" associated with Bonzai is not
+entirely without merit as well. Bonzai makes short work of creating
+offensive and defensive tool kits all wrapping into one nice Go binary,
+popular for building single-binary Linux container distros (like BusyBox
+and Alpine, watch for Bonzai Linux soon), as well as root kits, and
+other security tools
 
 ## What People Are Saying
 
@@ -146,6 +205,9 @@ with the development of this project, making suggestions about
 everything from my use of init, to the name "bonzai". While all their
 contributions are too numerous to name specifically, they 
 more than deserve a huge thank you here.
+
+* Quint
+* Greg 
 
 ## Legal 
 
