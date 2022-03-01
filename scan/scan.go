@@ -53,131 +53,131 @@ type Scanner struct {
 // and []byte types. Returns nil and the error if any encountered during
 // initialization. Also see the Init method.
 func New(i any) (*Scanner, error) {
-	p := new(Scanner)
-	if err := p.Init(i); err != nil {
+	s := new(Scanner)
+	if err := s.Init(i); err != nil {
 		return nil, err
 	}
-	return p, nil
+	return s, nil
 }
 
 // Init reads all of passed parsable data (io.Reader, string, []byte)
 // into buffered memory, scans the first rune, and sets the internals of
 // scanner appropriately returning an error if anything happens while
 // attempting to read and buffer the data (OOM, etc.).
-func (p *Scanner) Init(i any) error {
-	if err := p.buffer(i); err != nil {
+func (s *Scanner) Init(i any) error {
+	if err := s.buffer(i); err != nil {
 		return err
 	}
-	r, ln := utf8.DecodeRune(p.Buf) // scan first
+	r, ln := utf8.DecodeRune(s.Buf) // scan first
 	if ln == 0 {
 		r = tk.EOD
 		return fmt.Errorf("scanner: failed to scan first rune")
 	}
-	p.Cur = new(Cur)
-	p.Cur.Rune = r
-	p.Cur.Len = ln
-	p.Cur.Next = ln
-	p.Cur.Pos.Line = 1
-	p.Cur.Pos.LineRune = 1
-	p.Cur.Pos.LineByte = 1
-	p.Cur.Pos.Rune = 1
+	s.Cur = new(Cur)
+	s.Cur.Rune = r
+	s.Cur.Len = ln
+	s.Cur.Next = ln
+	s.Cur.Pos.Line = 1
+	s.Cur.Pos.LineRune = 1
+	s.Cur.Pos.LineByte = 1
+	s.Cur.Pos.Rune = 1
 	return nil
 }
 
 // reads and buffers io.Reader, string, or []byte types
-func (p *Scanner) buffer(i any) error {
+func (s *Scanner) buffer(i any) error {
 	var err error
 	switch in := i.(type) {
 	case io.Reader:
-		p.Buf, err = io.ReadAll(in)
+		s.Buf, err = io.ReadAll(in)
 		if err != nil {
 			return err
 		}
 	case string:
-		p.Buf = []byte(in)
+		s.Buf = []byte(in)
 	case []byte:
-		p.Buf = in
+		s.Buf = in
 	default:
 		return fmt.Errorf("scanner: unsupported input type: %t", i)
 	}
-	if len(p.Buf) == 0 {
+	if len(s.Buf) == 0 {
 		return fmt.Errorf("scanner: no input")
 	}
 	return err
 }
 
 // Scan decodes the next rune and advances the scanner cursor by one.
-func (p *Scanner) Scan() {
-	if p.Done() {
+func (s *Scanner) Scan() {
+	if s.Done() {
 		return
 	}
-	r, ln := utf8.DecodeRune(p.Buf[p.Cur.Next:])
+	r, ln := utf8.DecodeRune(s.Buf[s.Cur.Next:])
 	if ln != 0 {
-		p.Cur.Byte = p.Cur.Next
-		p.Cur.Pos.LineByte += p.Cur.Len
+		s.Cur.Byte = s.Cur.Next
+		s.Cur.Pos.LineByte += s.Cur.Len
 	} else {
 		r = tk.EOD
 	}
-	p.Cur.Rune = r
-	p.Cur.Pos.Rune += 1
-	p.Cur.Next += ln
-	p.Cur.Pos.LineRune += 1
-	p.Cur.Len = ln
+	s.Cur.Rune = r
+	s.Cur.Pos.Rune += 1
+	s.Cur.Next += ln
+	s.Cur.Pos.LineRune += 1
+	s.Cur.Len = ln
 }
 
 // ScanN scans the next n runes advancing n runes forward or returns
-// p.Done() if attempted after already at end of data.
-func (p *Scanner) ScanN(n int) {
+// s.Done() if attempted after already at end of data.
+func (s *Scanner) ScanN(n int) {
 	for i := 0; i < n; i++ {
-		p.Scan()
+		s.Scan()
 	}
 }
 
 // Done returns true if current cursor rune is tk.EOD and the cursor length
 // is also zero.
-func (p *Scanner) Done() bool {
-	return p.Cur.Rune == tk.EOD && p.Cur.Len == 0
+func (s *Scanner) Done() bool {
+	return s.Cur.Rune == tk.EOD && s.Cur.Len == 0
 }
 
 // String delegates to internal cursor String.
-func (p *Scanner) String() string { return p.Cur.String() }
+func (s *Scanner) String() string { return s.Cur.String() }
 
 // Print delegates to internal cursor Print.
-func (p *Scanner) Print() { p.Cur.Print() }
+func (s *Scanner) Print() { s.Cur.Print() }
 
 // Mark returns a copy of the current scanner cursor to preserve like
 // a bookmark into the buffer data. See Cur, Look, LookSlice.
-func (p *Scanner) Mark() *Cur {
-	if p.Cur == nil {
+func (s *Scanner) Mark() *Cur {
+	if s.Cur == nil {
 		return nil
 	}
 	// force a copy
-	cp := *p.Cur
+	cp := *s.Cur
 	return &cp
 }
 
 // Snap sets an extra internal cursor to the current cursor. See Mark.
-func (p *Scanner) Snap() { p.Snapped = p.Mark() }
+func (s *Scanner) Snap() { s.Snapped = s.Mark() }
 
 // Back jumps the current cursor to the last Snap (Snapped).
-func (p *Scanner) Back() { p.Jump(p.Snapped) }
+func (s *Scanner) Back() { s.Jump(s.Snapped) }
 
 // Jump replaces the internal cursor with a copy of the one passed
 // effectively repositioning the scanner's current position in the
 // buffered data. Beware, however, that the new cursor must originate
 // from the same (or identical) data buffer or the values will be out of
 // sync.
-func (p *Scanner) Jump(c *Cur) { nc := *c; p.Cur = &nc }
+func (s *Scanner) Jump(c *Cur) { nc := *c; s.Cur = &nc }
 
 // Peek returns a string containing all the runes from the current
 // scanner cursor position forward to the number of runes passed.
 // If end of data is encountered it will return everything up until that
 // point.  Also see Look and LookSlice.
-func (p *Scanner) Peek(n uint) string {
+func (s *Scanner) Peek(n uint) string {
 	buf := ""
-	pos := p.Cur.Byte
+	pos := s.Cur.Byte
 	for c := uint(0); c < n; c++ {
-		r, ln := utf8.DecodeRune(p.Buf[pos:])
+		r, ln := utf8.DecodeRune(s.Buf[pos:])
 		if ln == 0 {
 			break
 		}
@@ -191,17 +191,17 @@ func (p *Scanner) Peek(n uint) string {
 // scanner cursor position ahead or behind to the passed cursor
 // position. Neither the internal nor the passed cursor position is
 // changed. Also see Peek and LookSlice.
-func (p *Scanner) Look(to *Cur) string {
-	if to.Byte < p.Cur.Byte {
-		return string(p.Buf[to.Byte:p.Cur.Next])
+func (s *Scanner) Look(to *Cur) string {
+	if to.Byte < s.Cur.Byte {
+		return string(s.Buf[to.Byte:s.Cur.Next])
 	}
-	return string(p.Buf[p.Cur.Byte:to.Next])
+	return string(s.Buf[s.Cur.Byte:to.Next])
 }
 
 // LookSlice returns a string containing all the bytes from the first
 // cursor up to the second cursor. Neither cursor position is changed.
-func (p *Scanner) LookSlice(beg *Cur, end *Cur) string {
-	return string(p.Buf[beg.Byte:end.Next])
+func (s *Scanner) LookSlice(beg *Cur, end *Cur) string {
+	return string(s.Buf[beg.Byte:end.Next])
 }
 
 // Expect takes a variable list of parsable types including the
@@ -223,9 +223,9 @@ func (p *Scanner) LookSlice(beg *Cur, end *Cur) string {
 // allows for very readable functional grammar parsers to be created
 // quickly without exceptional overhead from additional function calls
 // and indirection. As some have said, "it's regex without the regex."
-func (p *Scanner) Expect(scannables ...any) (*Cur, error) {
+func (s *Scanner) Expect(scannables ...any) (*Cur, error) {
 	var beg, end *Cur
-	beg = p.Cur
+	beg = s.Cur
 
 	for _, m := range scannables {
 
@@ -237,54 +237,54 @@ func (p *Scanner) Expect(scannables ...any) (*Cur, error) {
 				return nil, fmt.Errorf("expect: cannot parse empty string")
 			}
 			for _, r := range []rune(v) {
-				if p.Cur.Rune != r {
-					err := p.ErrorExpected(r)
-					p.Jump(beg)
+				if s.Cur.Rune != r {
+					err := s.ErrorExpected(r)
+					s.Jump(beg)
 					return nil, err
 				}
-				end = p.Mark()
-				p.Scan()
+				end = s.Mark()
+				s.Scan()
 			}
 
 		case rune: // ------------------------------------------------------
-			if p.Cur.Rune != v {
-				err := p.ErrorExpected(m)
-				p.Jump(beg)
+			if s.Cur.Rune != v {
+				err := s.ErrorExpected(m)
+				s.Jump(beg)
 				return nil, err
 			}
-			end = p.Mark()
-			p.Scan()
+			end = s.Mark()
+			s.Scan()
 
 		case is.Not: // ----------------------------------------------------
 			for _, i := range v {
-				if _, e := p.Check(i); e == nil {
-					err := p.ErrorExpected(v, i)
-					p.Jump(beg)
+				if _, e := s.Check(i); e == nil {
+					err := s.ErrorExpected(v, i)
+					s.Jump(beg)
 					return nil, err
 				}
 			}
-			end = p.Mark()
+			end = s.Mark()
 
 		case is.In: // -----------------------------------------------------
 			var m *Cur
 			for _, i := range v {
 				var err error
-				last := p.Mark()
-				m, err = p.Expect(i)
+				last := s.Mark()
+				m, err = s.Expect(i)
 				if err == nil {
 					break
 				}
-				p.Jump(last)
+				s.Jump(last)
 			}
 			if m == nil {
-				return nil, p.ErrorExpected(v)
+				return nil, s.ErrorExpected(v)
 			}
 			end = m
 
 		case is.Seq: // ----------------------------------------------------
-			m, err := p.Expect(v...)
+			m, err := s.Expect(v...)
 			if err != nil {
-				p.Jump(beg)
+				s.Jump(beg)
 				return nil, err
 			}
 			end = m
@@ -293,21 +293,21 @@ func (p *Scanner) Expect(scannables ...any) (*Cur, error) {
 			var m *Cur
 			for _, i := range v {
 				var err error
-				m, err = p.Expect(is.MMx{0, 1, i})
+				m, err = s.Expect(is.MMx{0, 1, i})
 				if err != nil {
-					p.Jump(beg)
-					return nil, p.ErrorExpected(v)
+					s.Jump(beg)
+					return nil, s.ErrorExpected(v)
 				}
 			}
 			end = m
 
 		case is.MMx: // ----------------------------------------------------
 			c := 0
-			last := p.Mark()
+			last := s.Mark()
 			var err error
 			var m *Cur
 			for {
-				m, err = p.Expect(v.This)
+				m, err = s.Expect(v.This)
 				if err != nil {
 					break
 				}
@@ -321,18 +321,18 @@ func (p *Scanner) Expect(scannables ...any) (*Cur, error) {
 				continue
 			}
 			if !(v.Min <= c && c <= v.Max) {
-				p.Jump(last)
-				return nil, p.ErrorExpected(v)
+				s.Jump(last)
+				return nil, s.ErrorExpected(v)
 			}
 			end = last
 
 		case is.Min: // ----------------------------------------------------
 			c := 0
-			last := p.Mark()
+			last := s.Mark()
 			var err error
 			var m *Cur
 			for {
-				m, err = p.Expect(v.This)
+				m, err = s.Expect(v.This)
 				if err != nil {
 					break
 				}
@@ -340,31 +340,31 @@ func (p *Scanner) Expect(scannables ...any) (*Cur, error) {
 				c++
 			}
 			if c < v.Min {
-				p.Jump(beg)
-				return nil, p.ErrorExpected(v)
+				s.Jump(beg)
+				return nil, s.ErrorExpected(v)
 			}
 			end = last
 
 		case is.X: // ------------------------------------------------------
-			m, err := p.Expect(is.MMx{v.X, v.X, v.This})
+			m, err := s.Expect(is.MMx{v.X, v.X, v.This})
 			if err != nil {
-				p.Jump(beg)
-				return nil, p.ErrorExpected(v)
+				s.Jump(beg)
+				return nil, s.ErrorExpected(v)
 			}
 			end = m
 
 		case is.Rng: // ----------------------------------------------------
-			if !(v.First <= p.Cur.Rune && p.Cur.Rune <= v.Last) {
-				err := p.ErrorExpected(v)
-				p.Jump(beg)
+			if !(v.First <= s.Cur.Rune && s.Cur.Rune <= v.Last) {
+				err := s.ErrorExpected(v)
+				s.Jump(beg)
 				return nil, err
 			}
-			end = p.Mark()
-			p.Scan()
+			end = s.Mark()
+			s.Scan()
 
 		default: // --------------------------------------------------------
-			if p.ExtendExpect != nil {
-				return p.ExtendExpect(p, scannables...)
+			if s.ExtendExpect != nil {
+				return s.ExtendExpect(s, scannables...)
 			}
 			return nil, fmt.Errorf("expect: unscannable type (%T)", m)
 		}
@@ -375,16 +375,16 @@ func (p *Scanner) Expect(scannables ...any) (*Cur, error) {
 // ErrorExpected returns a verbose, one-line error describing what was
 // expected when it encountered whatever the scanner last scanned. All
 // scannable types are supported. See Expect.
-func (p *Scanner) ErrorExpected(this any, args ...any) error {
+func (s *Scanner) ErrorExpected(this any, args ...any) error {
 	var msg string
-	but := fmt.Sprintf(` at %v`, p)
-	if p.Done() {
+	but := fmt.Sprintf(` at %v`, s)
+	if s.Done() {
 		runes := `runes`
-		if p.Cur.Pos.Rune == 1 {
+		if s.Cur.Pos.Rune == 1 {
 			runes = `rune`
 		}
 		but = fmt.Sprintf(`, exceeded data length (%v %v)`,
-			p.Cur.Pos.Rune, runes)
+			s.Cur.Pos.Rune, runes)
 	}
 	switch v := this.(type) {
 	case rune: // otherwise will use uint32
@@ -419,11 +419,11 @@ func (p *Scanner) ErrorExpected(this any, args ...any) error {
 }
 
 // NewLine delegates to interval Curs.NewLine.
-func (p *Scanner) NewLine() { p.Cur.NewLine() }
+func (s *Scanner) NewLine() { s.Cur.NewLine() }
 
 // Check behaves exactly like Expect but jumps back to the original
 // cursor position after scanning for expected scannable values.
-func (p *Scanner) Check(scannables ...any) (*Cur, error) {
-	defer p.Jump(p.Mark())
-	return p.Expect(scannables...)
+func (s *Scanner) Check(scannables ...any) (*Cur, error) {
+	defer s.Jump(s.Mark())
+	return s.Expect(scannables...)
 }
