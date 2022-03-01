@@ -1,3 +1,6 @@
+// Copyright 2022 Robert S. Muhlestein.
+// SPDX-License-Identifier: Apache-2.0
+
 package scanner
 
 import (
@@ -6,6 +9,7 @@ import (
 	"io"
 	"unicode/utf8"
 
+	"github.com/rwxrob/bonzai/scanner/is"
 	"github.com/rwxrob/bonzai/scanner/tk"
 )
 
@@ -20,13 +24,14 @@ type Scanner struct {
 
 // New returns a newly initialized non-linear, rune-centric, buffered
 // data scanner with support for parsing data from io.Reader, string,
-// and []byte types. Also see the Init method.
-func New(i interface{}) *Scanner {
+// and []byte types. Returns nil and the error if any encountered during
+// initialization. Also see the Init method.
+func New(i interface{}) (*Scanner, error) {
 	p := new(Scanner)
 	if err := p.Init(i); err != nil {
-		return p
+		return nil, err
 	}
-	return nil
+	return p, nil
 }
 
 // Init reads all of passed parsable data (io.Reader, string, []byte)
@@ -114,8 +119,9 @@ func (p *Scanner) String() string { return p.Cur.String() }
 // Print delegates to internal cursor Print.
 func (p *Scanner) Print() { p.Cur.Print() }
 
-// CopyCur returns a copy of the current scanner cursor. See Cur.
-func (p *Scanner) CopyCur() *Cur {
+// Mark returns a copy of the current scanner cursor to preserve like
+// a bookmark into the buffer data. See Cur, Look, LookSlice.
+func (p *Scanner) Mark() *Cur {
 	if p.Cur == nil {
 		return nil
 	}
@@ -126,13 +132,33 @@ func (p *Scanner) CopyCur() *Cur {
 
 // Jump replaces the internal cursor with a copy of the one passed
 // effectively repositioning the scanner's current position in the
-// buffered data.
+// buffered data. Beware, however, that the new cursor must originate
+// from the same (or identical) data buffer or the values will be out of
+// sync.
 func (p *Scanner) Jump(c *Cur) { nc := *c; p.Cur = &nc }
 
+// Peek returns a string containing all the runes from the current
+// scanner cursor position forward to the number of runes passed.
+// If end of data is countered will everything up until that point.
+// Also so Look and LookSlice.
+func (p *Scanner) Peek(n uint) string {
+	buf := ""
+	pos := p.Cur.Byte
+	for c := uint(0); c < n; c++ {
+		r, ln := utf8.DecodeRune(p.Buf[pos:])
+		if ln == 0 {
+			break
+		}
+		buf += string(r)
+		pos += ln
+	}
+	return buf
+}
+
 // Look returns a string containing all the bytes from the current
-// scanner cursor position up to the passed cursor position, forward or
-// backward. Neither the internal nor the passed  cursor position is
-// changed.
+// scanner cursor position ahead or behind to the passed cursor
+// position. Neither the internal nor the passed cursor position is
+// changed. Also see Peek and LookSlice.
 func (p *Scanner) Look(to *Cur) string {
 	if to.Byte < p.Cur.Byte {
 		return string(p.Buf[to.Byte:p.Cur.Next])
@@ -147,23 +173,18 @@ func (p *Scanner) LookSlice(beg *Cur, end *Cur) string {
 }
 
 // Expect takes a variable list of parsable types including rune,
-// string, Class, Check, Opt, Not, Seq, One, Min, MinMax, Count. This
-// allows grammars to be represented simply and parsed easily without
-// exceptional overhead from additional function calls and indirection.
+// string, is.In, is.Opt, is.Not, is.Seq, is.Min, is.MinMax, is.Count,
+// and all strings from the tk subpackage. This allows for very readable
+// functional grammar parsers to be created quickly without exceptional
+// overhead from additional function calls and indirection. As some have
+// said, "it's regex without the regex."
 func (p *Scanner) Expect(scannable ...interface{}) (*Cur, error) {
 	var beg, end *Cur
 	beg = p.Cur
 	for _, m := range scannable {
-		switch v := m.(type) {
 
-		case rune:
-			if p.Cur.Rune != v {
-				err := p.ErrorExpected(m)
-				p.Jump(beg)
-				return nil, err
-			}
-			end = p.CopyCur()
-			p.Scan()
+		// please keep the most common at the top
+		switch v := m.(type) {
 
 		case string:
 			if v == "" {
@@ -175,9 +196,27 @@ func (p *Scanner) Expect(scannable ...interface{}) (*Cur, error) {
 					p.Jump(beg)
 					return nil, err
 				}
-				end = p.CopyCur()
+				end = p.Mark()
 				p.Scan()
 			}
+
+		case rune:
+			if p.Cur.Rune != v {
+				err := p.ErrorExpected(m)
+				p.Jump(beg)
+				return nil, err
+			}
+			end = p.Mark()
+			p.Scan()
+
+		case is.Not:
+			if _, e := p.Check(v.This); e == nil {
+				err := p.ErrorExpected(v)
+				p.Jump(beg)
+				return nil, err
+			}
+			end = p.Mark()
+
 			/*
 				case Class:
 					if !v.Check(p.Cur.Rune) {
@@ -185,7 +224,7 @@ func (p *Scanner) Expect(scannable ...interface{}) (*Cur, error) {
 						p.Jump(beg)
 						return nil, err
 					}
-					end = p.CopyCur()
+					end = p.Mark()
 					p.Scan()
 
 				case Check:
@@ -206,17 +245,9 @@ func (p *Scanner) Expect(scannable ...interface{}) (*Cur, error) {
 					}
 					end = m
 
-				case is.Not:
-					if _, e := p.Check(v.This); e == nil {
-						err := p.ErrorExpected(v)
-						p.Jump(beg)
-						return nil, err
-					}
-					end = p.CopyCur()
-
 				case is.Min:
 					c := 0
-					last := p.CopyCur()
+					last := p.Mark()
 					var err error
 					var m *Cur
 					for {
@@ -243,7 +274,7 @@ func (p *Scanner) Expect(scannable ...interface{}) (*Cur, error) {
 
 				case is.MinMax:
 					c := 0
-					last := p.CopyCur()
+					last := p.Mark()
 					var err error
 					var m *Cur
 					for {
@@ -278,7 +309,7 @@ func (p *Scanner) Expect(scannable ...interface{}) (*Cur, error) {
 					var m *Cur
 					var err error
 					for _, i := range v {
-						last := p.CopyCur()
+						last := p.Mark()
 						m, err = p.Expect(i)
 						if err == nil {
 							break
@@ -292,34 +323,33 @@ func (p *Scanner) Expect(scannable ...interface{}) (*Cur, error) {
 			*/
 
 		default:
-			return nil, fmt.Errorf("expect: unsupported argument type (%T)", m)
+			return nil, fmt.Errorf("expect: unscannable type (%T)", m)
 		}
 	}
 	return end, nil
 }
 
+// ErrorExpected returns a verbose, one-line error describing what was
+// expected when it encountered whatever the scanner last scanned. All
+// scannable types are supported. See Expect.
 func (p *Scanner) ErrorExpected(this interface{}) error {
 	var msg string
-	but := fmt.Sprintf(` but got %v`, p)
+	but := fmt.Sprintf(` at %v`, p)
 	if p.Done() {
 		runes := `runes`
 		if p.Cur.Pos.Rune == 1 {
 			runes = `rune`
 		}
-		but = fmt.Sprintf(` but exceeded data length (%v %v)`, p.Cur.Pos.Rune, runes)
+		but = fmt.Sprintf(`, exceeded data length (%v %v)`,
+			p.Cur.Pos.Rune, runes)
 	}
-	// TODO add verbose errors for *all* types in Grammar
 	switch v := this.(type) {
-	case string:
-		msg = fmt.Sprintf(`expected string %q`, v)
-	case rune:
+	case rune: // otherwise will use uint32
 		msg = fmt.Sprintf(`expected rune %q`, v)
-		/*
-			case Class:
-				msg = fmt.Sprintf(`expected class %v (%v)`, v.Ident(), v.Desc())
-			default:
-				msg = fmt.Sprintf(`expected %T %q`, v, v)
-		*/
+	case is.Not:
+		msg = fmt.Sprintf(`not expecting %q`, v.This)
+	default:
+		msg = fmt.Sprintf(`expected %T %q`, v, v)
 	}
 	return errors.New(msg + but)
 }
@@ -327,7 +357,9 @@ func (p *Scanner) ErrorExpected(this interface{}) error {
 // NewLine delegates to interval Curs.NewLine.
 func (p *Scanner) NewLine() { p.Cur.NewLine() }
 
-func (p *Scanner) Check(ms ...interface{}) (*Cur, error) {
-	defer p.Jump(p.CopyCur())
-	return p.Expect(ms...)
+// Check behaves exactly like Expect but jumps back to the original
+// cursor position after scanning for expected scannable values.
+func (p *Scanner) Check(scannable ...interface{}) (*Cur, error) {
+	defer p.Jump(p.Mark())
+	return p.Expect(scannable...)
 }
