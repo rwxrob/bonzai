@@ -1,41 +1,123 @@
+/*
+Package json contains the PrintAsJSON interface and functions for
+marshaling and unmarshaling that are exact port of the Go json package
+without reflection and the completely unnecessary escaping of every
+single Unicode character making the output readable by anyone speaking
+or writing languages that depend heavily on Unicode The standard package
+output is completely unreadable, which is really unfortunate since the
+JSON standard fully supports Unicode characters as-is within strings.
+The Bonzai json package overcomes these limitations and is used to
+marshal everything in the module and fulfill all `fmt.Stringer`
+interfaces as 2-space indented JSON instead of Go's virtually unusable
+default string marshaling format.
+*/
 package json
 
-// String returns an escaped version of the string suitable for
-// inclusion as a JSON string value. Unlike Go's standard MarshalJSON,
-// this function leaves Unicode as is without escaping it. It also does
-// not dubiously escape HTML characters unnecessarily.
+// PrintAsJSON provides a consistent representation of any structure
+// such that it an easily be read and compared during testing. Sadly,
+// the default string representations for most types in Go are virtually
+// unusable for consistent, structured representations of any structure.
 //
-// The following PEGN describes the formal specification of a JSON
-// string:
+// PrintAsJSON implementations must fulfill their marshaling to any
+// textual/printable representation by producing parsable, shareable
+// JSON() data, either in a multi-line (strictly 2-space indented) or
+// a compressed single line form (JSONL) with no spacing.
+//
+// All implementations must also implement the fmt.Stringer interface by
+// calling the JSON() multi-line (pretty) form. Thankfully, Go does
+// ensure that the order of elements in any type will appear
+// consistently in that same order during testing even though they
+// should never be relied upon for such ordering other than in testing.
+//
+// All implementations must promise they will never escape any string
+// character that is not specifically required to be escaped by the JSON
+// standard as described in this PEGN specification:
 //
 //     String  <-- DQ (Escaped / [x20-x21] / [x23-x5B]
 //               / [x5D-x10FFFF])* DQ
 //     Escaped  <- BKSLASH ("b" / "f" / "n" / "r"
 //               / "t" / "u" hex{4} / DQ / BKSLASH / SLASH)
 //
+// This means that binary data will never be represented as Unicode
+// escapes of any kind and should always be converted to base64 encoding
+// and expressed as a string value.
+//
+// For some, this means that MarshalJSON might need to be be implemented
+// since the standard json.Marshal package unnecessarily escapes HTML
+// and other characters unnecessarily even though they are a perfectly
+// safe and accepted standard (and always have been). PrintAsJSON
+// implementers promise those using their implementations will produce
+// JSON output that is highly consistent. To facilitate this,
+// implementations may implement MarshalJSON methods that delegatet to
+// bonzai/json.Marshal as a quick fix.
+//
+// In general, implementers of PrintAsJSON should not depend on
+// structure tagging and reflection for unmarshaling instead
+// implementing their own consistent UnmarshalJSON method. This allows
+// for better error checking as the default does nothing to ensure that
+// unmarshaled values are within acceptable ranges. Errors are only
+// generated if the actual JSON syntax itself is incorrect.
+type PrintAsJSON interface {
+	JSON() string   // multi-line, 2-space indent, never escape unicode
+	JSONL() string  // single line, no spacing, never escape unicode
+	String() string // must call JSON()
+	Print() string  // must call String()
+}
+
+// WS contains all JSON valid whitespace values.
+const WS uint64 = 1<<'\t' | 1<<'\n' | 1<<'\r' | 1<<' '
+
+const (
+	EOF = -(iota + 1)
+	TYPE
+	PSTRING
+	LBRACKET
+	RBRACKET
+	ESC
+	COMMA
+	INVALID
+)
+
+var Token = map[rune]string{
+	EOF:      `EOF`,
+	TYPE:     `TYPE`,
+	PSTRING:  `PSTRING`,
+	LBRACKET: `LBRACKET`,
+	RBRACKET: `RBRACKET`,
+	ESC:      `ESC`,
+	COMMA:    `COMMA`,
+	INVALID:  `INVALID`,
+}
+
+// Escape returns an escaped version of the string suitable for
+// inclusion as a JSON string value. Unlike Go's standard MarshalJSON,
+// this function leaves Unicode as is without escaping it. It also does
+// not dubiously escape HTML characters unnecessarily.
+//
+
 // Unicode and SLASH are not escaped here because they are considered
 // valid JSON string data without the escape.
 //
 // Note that this function follows the mapf format and can be used with
-// fn.Map and other mapping functions.
+// fn.Map and other mapping functions (see json_test.go for examples).
 func Escape(in string) string {
-	out := ""
+	out := ``
 	for _, r := range in {
 		switch r {
 		case '\t':
-			out += "\\t"
+			out += `\t`
 		case '\b':
-			out += "\\b"
+			out += `\b`
 		case '\f':
-			out += "\\f"
+			out += `\f`
 		case '\n':
-			out += "\\n"
+			out += `\n`
 		case '\r':
-			out += "\\r"
+			out += `\r`
 		case '\\':
-			out += "\\\\"
+			out += `\\`
 		case '"':
-			out += "\\\""
+			out += `\"`
 		default:
 			out += string(r)
 		}
@@ -44,85 +126,65 @@ func Escape(in string) string {
 }
 
 /*
-// Whitespace value selects the white space characters
-const Whitespace uint64 = 1<<'\t' | 1<<'\n' | 1<<'\r' | 1<<' '
+func isnum(r rune) bool { return '0' <= r && r <= '9' }
 
-// The result of Token is one of these tokens
-const (
-	EOF = -(iota + 1)
-	Type
-	PString
-	LeftBracket
-	RightBracket
-	Escape
-	Comma
-	Invalid
-)
-
-var tokenTypeString = map[rune]string{
-	EOF:          "EOF",
-	Type:         "Type",
-	PString:      "PString",
-	LeftBracket:  "LeftBracket",
-	RightBracket: "RightBracket",
-	Escape:       "Escape",
-	Comma:        "Comma",
-	Invalid:      "Invalid",
+// Scanner scans JSON similar to the standard JSON package.
+type Scanner struct {
+	buf  []byte // input buffer of data
+	beg  int    // beg position in buf
+	end  int    // end position in buf
+	tbuf []byte // output buffer of tokens
+	tbeg int    // token text beg in sbuf
+	tend int    // token text end in sbuf
+	r    rune   // last scanned rune (before sbeg)
+	rlen int    // current rune length
+	line int    // line for error reporting
+	col  int    // col for error reporting
 }
 
-func isNumber(ch rune) bool { return '0' <= ch && ch <= '9' }
+// NewScanner returns a newly initialized scanner from any string,
+// []byte, or io.Reader. See Init.
+func NewScanner(in any) (*Scanner, error) {
+	s := new(Scanner)
+	err := s.Init(in)
+	return s, err
+}
 
-// tokenTypeAsString returns a printable string for a token or Unicode character.
-func tokenTypeAsString(tok rune) string {
-	if s, found := tokenTypeString[tok]; found {
-		return s
+// Init (re)initializes scanner and loads the data from a string,
+// []byte, or io.Reader returning nil and an error if any are
+// encountered during loading of the input data buffer.
+func (s *Scanner) Init(in any) error {
+	switch v := in.(type) {
+	case string:
+		s.buf = []byte(v)
+	case []byte:
+		s.buf = v
+	case io.Reader:
+		var err error
+		if s.buf, err = io.ReadAll(v); err != nil {
+			return err
+		}
 	}
-	return fmt.Sprintf("%q", string(tok))
+	s.beg = 0
+	s.end = len(s.buf) - 1
+	s.rlen = 0
+	s.tbeg = -1
+	s.r = -2
+	s.line = 0
+	s.col = 0
+	return nil
 }
 
-// A JsonParser implements the parsing of a JSON string to a pegn/Node
-type JsonParser struct {
-	srcBuf []byte // Input
-	srcPos int    // The current position in the source buffer
-	srcEnd int    // ending position of the source buffer
+const error_form = `scanner: %s (line:%v col:%v)`
 
-	lastCharLen int //length of last character in bytes
-
-	tokPos int          // token text tail position (srcBuf index)
-	tokEnd int          // token text tail end (srcBuf index)
-	tokBuf bytes.Buffer // token text
-
-	ch rune // character before current srcPos
-
-	line   int // current line for error reportin
-	column int // current column for error reporting
-
-	types    []string
-	typesMap map[string]int
+// Errorf returns an error updated with the parser position.
+func (s *Scanner) Errorf(e string, a ...any) error {
+	return fmt.Errorf(error_form, fmt.Sprintf(e, a...), s.line, s.col)
 }
+*/
 
-// Report error with position
-func (j *JsonParser) Errorf(str string, a ...interface{}) error {
-	return fmt.Errorf("jsonparser: %s line: %v, col: %v", fmt.Sprintf(str, a...), j.line, j.column)
-}
+/*
 
-// Init initializes the JSON parser and takes the byte array to be parsed.
-func (j *JsonParser) Init(b []byte) *JsonParser {
-	j.srcBuf = b
-	j.srcPos = 0
-	j.srcEnd = len(j.srcBuf) - 1
-
-	j.lastCharLen = 0
-
-	j.tokPos = -1
-
-	j.ch = -2
-
-	j.line = 0
-	j.column = 0
-
-	return j
-}
 
 // next returns the next rune in the source byte array.
 func (j *JsonParser) next() rune {
@@ -209,7 +271,7 @@ func (j *JsonParser) token() (rune, error) {
 
 	j.tokPos = -1
 
-	for Whitespace&(1<<uint(ch)) != 0 {
+	for WS&(1<<uint(ch)) != 0 {
 		ch = j.next()
 	}
 
@@ -219,7 +281,7 @@ func (j *JsonParser) token() (rune, error) {
 	var err error
 
 	switch {
-	case isNumber(ch):
+	case isnum(ch):
 		tok = Type
 		ch = j.tokenizeType()
 	default:
@@ -228,29 +290,27 @@ func (j *JsonParser) token() (rune, error) {
 			return EOF, nil
 		case '[':
 			ch = j.next()
-			tok = LeftBracket
+			tok = LBRACKET
 		case ']':
 			ch = j.next()
-			tok = RightBracket
+			tok = RBRACKET
 		case '"':
 			ch, err = j.tokenizeString()
 			if err != nil {
 				return Invalid, err
 			}
-			tok = PString
+			tok = PSTRING
 		case ',':
 			ch = j.next()
-			tok = Comma
+			tok = COMMA
 		default:
-			return Invalid, j.Errorf("invalid token")
+			return INVALID, j.Errorf("invalid token")
 		}
 	}
 
 	j.tokEnd = j.srcPos - j.lastCharLen
 
 	j.ch = ch
-
-	// fmt.Printf("%v - %v\n", tokenTypeAsString(tok), string(ch))
 
 	return tok, nil
 }
@@ -374,7 +434,7 @@ func (j *JsonParser) parseValueOrChildren(n *Node) error {
 func (j *JsonParser) tokenizeType() rune {
 	ch := j.next()
 
-	for isNumber(ch) {
+	for isnum(ch) {
 		ch = j.next()
 	}
 	return ch

@@ -6,15 +6,33 @@ import (
 )
 
 func ExampleEscape() {
-	fn.A[string]{
+	set := fn.A[string]{
+		`<`, `>`, `&`, `"`, `'`,
 		"\t", "\b", "\f", "\n", "\r",
 		"\\", "\"", "💢", "д",
-	}.Map(json.Escape).Print()
+	}
+	set.Map(json.Escape).Print()
+
+	/*
+		// uncomment to see how bad the default is
+		set.Map(func(i string) string {
+			byt, _ := bork.Marshal(i)
+			return string(byt)
+		}).Print()
+	*/
+
 	// Output:
-	// \t\b\f\n\r\\\"💢д
+	// <>&\"'\t\b\f\n\r\\\"💢д
 }
 
 /*
+func ExampleScanner_Errorf() {
+	s, _ := json.NewScanner(`{"some": "thing"}`)
+	fmt.Println(s.Errorf("oh no"))
+	// Output:
+	// scanner: oh no (line:0 col:0)
+}
+
 func ExampleJsonParser_EmptyString() {
 	n := new(pegn.Node)
 	s := ""
