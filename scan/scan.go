@@ -37,8 +37,9 @@ var ExtendExpect func(s *Scanner, scannable ...any) (*Cur, error)
 // buffer and cursor are directly exposed to facilitate
 // higher-performance, direct access when needed.
 type Scanner struct {
-	Buf []byte
-	Cur *Cur
+	Buf     []byte
+	Cur     *Cur
+	Snapped *Cur
 }
 
 // New returns a newly initialized non-linear, rune-centric, buffered
@@ -149,6 +150,12 @@ func (p *Scanner) Mark() *Cur {
 	return &cp
 }
 
+// Snap sets an extra internal cursor to the current cursor. See Mark.
+func (p *Scanner) Snap() { p.Snapped = p.Mark() }
+
+// Back jumps the current cursor to the last Snap (Snapped).
+func (p *Scanner) Back() { p.Jump(p.Snapped) }
+
 // Jump replaces the internal cursor with a copy of the one passed
 // effectively repositioning the scanner's current position in the
 // buffered data. Beware, however, that the new cursor must originate
@@ -158,8 +165,8 @@ func (p *Scanner) Jump(c *Cur) { nc := *c; p.Cur = &nc }
 
 // Peek returns a string containing all the runes from the current
 // scanner cursor position forward to the number of runes passed.
-// If end of data is countered will everything up until that point.
-// Also so Look and LookSlice.
+// If end of data is encountered it will return everything up until that
+// point.  Also see Look and LookSlice.
 func (p *Scanner) Peek(n uint) string {
 	buf := ""
 	pos := p.Cur.Byte
@@ -283,7 +290,7 @@ func (p *Scanner) Expect(scannables ...any) (*Cur, error) {
 				m, err = p.Expect(is.MMx{0, 1, i})
 				if err != nil {
 					p.Jump(beg)
-					return nil, err
+					return nil, p.ErrorExpected(v)
 				}
 			}
 			end = m
@@ -309,7 +316,7 @@ func (p *Scanner) Expect(scannables ...any) (*Cur, error) {
 			}
 			if !(v.Min <= c && c <= v.Max) {
 				p.Jump(last)
-				return nil, err
+				return nil, p.ErrorExpected(v)
 			}
 			end = last
 
@@ -328,7 +335,7 @@ func (p *Scanner) Expect(scannables ...any) (*Cur, error) {
 			}
 			if c < v.Min {
 				p.Jump(beg)
-				return nil, err
+				return nil, p.ErrorExpected(v)
 			}
 			end = last
 
@@ -336,7 +343,7 @@ func (p *Scanner) Expect(scannables ...any) (*Cur, error) {
 			m, err := p.Expect(is.MMx{v.X, v.X, v.This})
 			if err != nil {
 				p.Jump(beg)
-				return nil, err
+				return nil, p.ErrorExpected(v)
 			}
 			end = m
 
@@ -377,7 +384,28 @@ func (p *Scanner) ErrorExpected(this any, args ...any) error {
 	case rune: // otherwise will use uint32
 		msg = fmt.Sprintf(`expected rune %q`, v)
 	case is.Not:
-		msg = fmt.Sprintf(`not expecting %q`, args[0])
+		msg = fmt.Sprintf(`unexpected %q`, args[0])
+	case is.In:
+		str := `expected one of %q`
+		msg = fmt.Sprintf(str, v)
+	case is.Seq:
+		str := `expected %q in sequence %q`
+		msg = fmt.Sprintf(str, args[0], v)
+	case is.Opt:
+		str := `expected an optional %v`
+		msg = fmt.Sprintf(str, v)
+	case is.Min:
+		str := `expected min %v of %q`
+		msg = fmt.Sprintf(str, v.Min, v.This)
+	case is.MMx:
+		str := `expected min %v, max %v of %q`
+		msg = fmt.Sprintf(str, v.Min, v.Max, v.This)
+	case is.X:
+		str := `expected exactly %v of %q`
+		msg = fmt.Sprintf(str, v.X, v.This)
+	case is.Rng:
+		str := `expected range [%v-%v]`
+		msg = fmt.Sprintf(str, string(v.First), string(v.Last))
 	default:
 		msg = fmt.Sprintf(`expected %T %q`, v, v)
 	}

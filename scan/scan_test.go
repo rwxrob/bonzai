@@ -214,18 +214,105 @@ func ExampleExpect_not() {
 	// U+0073 's' 1,1-1 (1-1)
 	// <nil>
 	// <nil>
-	// not expecting "some" at U+0073 's' 1,1-1 (1-1)
+	// unexpected "some" at U+0073 's' 1,1-1 (1-1)
 }
 
 func ExampleExpect_in() {
 	s, _ := scan.New("some thing")
 	s.Scan()
-	c1, _ := s.Expect(is.In{'O', 'o', "ome"})
-	c1.Print()
+	c, _ := s.Expect(is.In{'O', 'o', "ome"})
+	c.Print()
 	s.Print()
+	_, err := s.Expect(is.In{'x', 'y', "zee"})
+	fmt.Println(err)
 	// Output:
 	// U+006F 'o' 1,2-2 (2-2)
 	// U+006D 'm' 1,3-3 (3-3)
+	// expected one of ['x' 'y' "zee"] at U+006D 'm' 1,3-3 (3-3)
+}
+
+func ExampleExpect_seq() {
+	s, _ := scan.New("some thing")
+	s.Snap()
+	s.Expect(is.Seq{"some", ' ', "thing"})
+	s.Print()
+	s.Back()
+	s.Print()
+	_, err := s.Expect(is.Seq{"some", "thing"})
+	fmt.Println(err)
+	// Output:
+	// <EOD>
+	// U+0073 's' 1,1-1 (1-1)
+	// expected rune 't' at U+0020 ' ' 1,5-5 (5-5)
+}
+
+func ExampleExpect_opt() {
+	s, _ := scan.New("some thing")
+	c, _ := s.Expect(is.Opt{"thing", "some"})
+	c.Print()
+	s.Print()
+	c, _ = s.Expect(is.Opt{"foo"})
+	s.Print() // no change
+	// Output:
+	// U+0065 'e' 1,4-4 (4-4)
+	// U+0020 ' ' 1,5-5 (5-5)
+	// U+0020 ' ' 1,5-5 (5-5)
+}
+
+func ExampleExpect_min() {
+	s, _ := scan.New("sommme thing")
+	start := s.Mark()
+	s.ScanN(2)
+	c, _ := s.Expect(is.Min{2, 'm'}) // goggles up all three
+	c.Print()
+	s.Print()
+	s.Jump(start)
+	_, e := s.Expect(is.Min{2, 's'}) // nope, only one found
+	fmt.Println(e)
+	s.Print()
+	// Output:
+	// U+006D 'm' 1,5-5 (5-5)
+	// U+0065 'e' 1,6-6 (6-6)
+	// expected min 2 of 's' at U+006F 'o' 1,2-2 (2-2)
+	// U+006F 'o' 1,2-2 (2-2)
+}
+
+func ExampleExpect_min_Max() {
+	s, _ := scan.New("sommme thing")
+	s.Snap()
+	s.ScanN(2)
+	s.Print()
+	s.Expect(is.MMx{1, 3, 'm'}) // goggles up all three
+	s.Print()
+	s.Back()
+	s.Expect(is.MMx{1, 3, 's'}) // yep, at least one
+	s.Print()
+	_, err := s.Expect(is.MMx{1, 3, 'X'}) // nope
+	fmt.Println(err)
+	// Output:
+	// U+006D 'm' 1,3-3 (3-3)
+	// U+0065 'e' 1,6-6 (6-6)
+	// U+006F 'o' 1,2-2 (2-2)
+	// expected min 1, max 3 of 'X' at U+006F 'o' 1,2-2 (2-2)
+}
+
+func ExampleExpect_count() {
+	s, _ := scan.New("sommme thing")
+	s.Snap()
+	s.ScanN(2)
+	s.Print()
+	s.Expect(is.X{3, 'm'}) // goggles up all three
+	s.Print()
+	s.Back()
+	s.Expect(is.X{1, 's'}) // yes, but silly since 's' is easier
+	s.Print()
+	_, err := s.Expect(is.X{3, 'X'}) // nope
+	fmt.Println(err)
+	// Output:
+	// U+006D 'm' 1,3-3 (3-3)
+	// U+0065 'e' 1,6-6 (6-6)
+	// U+006F 'o' 1,2-2 (2-2)
+	// expected exactly 3 of 'X' at U+006F 'o' 1,2-2 (2-2)
 }
 
 func ExampleExpect_in_Range() {
@@ -239,17 +326,21 @@ func ExampleExpect_in_Range() {
 	// U+006D 'm' 1,3-3 (3-3)
 }
 
-func ExampleExpect_seq() {
+func ExampleExtendExpect() {
+	// TODO
+}
+
+func ExampleSnap() {
 	s, _ := scan.New("some thing")
-	c1, e1 := s.Expect(is.Seq{"some", "thing"})
-	c1.Print()
-	fmt.Println(e1)
-	c2, e2 := s.Expect(is.Not{is.Seq{"some", "thing"}})
-	c2.Print()
-	fmt.Println(e2)
+	s.ScanN(3)
+	s.Snap()
+	s.Print()
+	s.ScanN(4)
+	s.Print()
+	s.Back()
+	s.Print()
 	// Output:
-	// U+0073 's' 1,1-1 (1-1)
-	// <nil>
-	// <nil>
-	// not expecting "some" at U+0073 's' 1,1-1 (1-1)
+	// U+0065 'e' 1,4-4 (4-4)
+	// U+0069 'i' 1,8-8 (8-8)
+	// U+0065 'e' 1,4-4 (4-4)
 }
