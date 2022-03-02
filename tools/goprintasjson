@@ -1,0 +1,29 @@
+#!/usr/bin/env bash
+# filter for use from vi/m
+# type name on any line in vim, then !!goprintasjson (tab comp works)
+
+read -r name
+
+echo "
+
+// ---------------------------- PrintAsJSON ---------------------------
+
+func (s *$name) MarshalJSON() ([]byte, error) {
+    buf := ""
+    // TODO
+    return []byte(buf),nil
+}
+
+// JSON implements PrintAsJSON multi-line, 2-space indent JSON output.
+func (s *$name) JSON() string {b,_ :=s.MarshalJSON();return string(b)}
+func (s *$name) JSON() string {b,_ :=json.Marshal(s);return string(b)}
+
+// String implements PrintAsJSON and fmt.Stringer interface as JSON.
+func (s $name) String() string {return s.JSON()}
+
+// Print implements PrintAsJSON.
+func (s *$name) Print() { fmt.Println(s.JSON()) }
+
+// Log implements PrintAsJSON.
+func (s $name) Log() { log.Print(s.JSON()) }
+"
