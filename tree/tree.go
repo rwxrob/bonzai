@@ -9,7 +9,9 @@ import (
 	"log"
 	"strings"
 
+	"github.com/rwxrob/bonzai/each"
 	"github.com/rwxrob/bonzai/json"
+	"github.com/rwxrob/bonzai/util"
 )
 
 // Tree is an encapsulating struct to contain the Trunk of Nodes and
@@ -20,6 +22,20 @@ import (
 type Tree struct {
 	Trunk Node
 	Types []string
+}
+
+// Seed returns new detached Node from the same Tree
+func (t *Tree) Seed(i ...any) *Node {
+	leaf := new(Node)
+	switch len(i) {
+	case 2:
+		leaf.V = i[1].(string)
+		fallthrough
+	case 1:
+		leaf.T = i[0].(int)
+	}
+	leaf.tree = t
+	return leaf
 }
 
 const (
@@ -153,7 +169,7 @@ func (n *Node) IsNull() bool { return n.first == nil && n.V == "" }
 // use when debugging. Remember to log.SetOutput(os.Stdout) and
 // log.SetFlags(0) when using this in Go example tests.
 func (n *Node) Info() {
-	log.Printf(`------
+	each.Log(util.Lines(fmt.Sprintf(`------
 Type:       %v
 Value:      %q
 IsRoot:     %v
@@ -162,7 +178,7 @@ IsLeaf:     %v
 IsBranch:   %v 
 IsNull:     %v`,
 		n.T, n.V, n.IsRoot(), n.IsDetached(),
-		n.IsLeaf(), n.IsBranch(), n.IsNull())
+		n.IsLeaf(), n.IsBranch(), n.IsNull())))
 }
 
 // ----------------- Node PrintAsJSON interface (plus) ----------------
@@ -240,25 +256,11 @@ func (s Node) Log() { log.Print(s.JSON()) }
 
 // ------------------------------- Nodes ------------------------------
 
-// Spawn spawns new orphan Node for this same Tree
-func (n *Node) spawn(i []any) *Node {
-	leaf := new(Node)
-	switch len(i) {
-	case 2:
-		leaf.V = i[1].(string)
-		fallthrough
-	case 1:
-		leaf.T = i[0].(int)
-	}
-	leaf.tree = n.tree
-	return leaf
-}
-
 // NewRight creates a new Node and grafts it to the right of the current
 // one on the same branch. The type and initial value can optionally be
 // passed as arguments.
 func (n *Node) NewRight(i ...any) *Node {
-	leaf := n.spawn(i)
+	leaf := n.tree.Seed(i...)
 	n.GraftRight(leaf)
 	return leaf
 }
@@ -267,7 +269,7 @@ func (n *Node) NewRight(i ...any) *Node {
 // on the same branch. The type and initial value can optionally be
 // passed as arguments.
 func (n *Node) NewLeft(i ...any) *Node {
-	leaf := n.spawn(i)
+	leaf := n.tree.Seed(i...)
 	n.GraftLeft(leaf)
 	return leaf
 }
@@ -276,32 +278,41 @@ func (n *Node) NewLeft(i ...any) *Node {
 // adding it to the left of other branches and leaves below. The type
 // and initial value can optionally be passed as arguments.
 func (n *Node) NewUnder(i ...any) *Node {
-	leaf := n.spawn(i)
+	leaf := n.tree.Seed(i...)
 	n.GraftUnder(leaf)
 	return leaf
 }
 
-// Graft replaces current node with a completely new Node and returns it
+// Graft replaces current node with a completely new Node and returns
+// it. Anything under the grafted node will remain and anything under
+// the node being replaced will go with it.
 func (n *Node) Graft(c *Node) *Node {
 	c.up = n.up
 	c.left = n.left
 	c.right = n.right
+
+	// update branch parent
 	if n.up.last == n {
 		n.up.last = c
 	}
 	if n.up.first == n {
 		n.up.first = c
 	}
+
+	// update peers
 	if n.left != nil {
 		n.left.right = c
 	}
 	if n.right != nil {
 		n.right.left = c
 	}
+
+	// detach
 	n.up = nil
 	n.right = nil
 	n.left = nil
-	return n
+
+	return c
 }
 
 // GraftRight adds existing Node to the right of itself as a peer and
@@ -350,7 +361,7 @@ func (n *Node) GraftUnder(c *Node) *Node {
 		n.last = c
 		return c
 	}
-	return n.first.GraftRight(c)
+	return n.last.GraftRight(c)
 }
 
 // Prune removes and returns itself and grafts everything together to
@@ -386,14 +397,19 @@ func (n *Node) Take(from *Node) {
 	n.Take(from)
 }
 
-/*
-
-/*
 // Action is a first-class function type used when Visiting each Node.
 // The return value will be sent to a channel as each Action completes.
 // It can be an error or anything else.
-type Action func(n *Node) interface{}
+type Action func(n *Node) any
 
+// Visit will call the Action function passing it every node traversing
+// in the most predictable way, from top to bottom and left to right on
+// each level of depth. If the optional rvals channel is passed the
+// return values for the actions will be sent to it synchronously. This
+// may be preferable for gathering data from the node tree in some
+// cases. The Action could also be implemented as a closure function
+// enclosing some state variable. If the rvals channel is nil it will
+// not be opened.
 func (n *Node) Visit(act Action, rvals chan interface{}) {
 	if rvals == nil {
 		act(n)
@@ -403,7 +419,7 @@ func (n *Node) Visit(act Action, rvals chan interface{}) {
 	if n.first == nil {
 		return
 	}
-	for _, c := range n.Children() {
+	for _, c := range n.AllUnder() {
 		c.Visit(act, rvals)
 	}
 	return
@@ -415,15 +431,21 @@ func (n *Node) Visit(act Action, rvals chan interface{}) {
 // set the maximum number of simultaneous goroutines (which can usually
 // be in the thousands) and must be 2 or more or will panic. If the
 // channel of return values is not nil it will be sent all return values
-// as Actions complete.
-func (n *Node) VisitAsync(act Action, lim int, rvals chan interface{}) {
+// as Actions complete. Note that this method uses twice the memory of
+// the synchronous version and requires slightly more startup time as
+// the node collection is done (which actually calls Visit in order to
+// build the flattened list of all nodes). Therefore, VisitAsync should
+// only be used when the action is likely to take a non-trivial amount
+// of time to execute, for example, when there is significant IO
+// involved (disk, Internet, etc.).
+func (n *Node) VisitAsync(act Action, lim int, rvals chan any) {
 	nodes := []*Node{}
 
 	if lim < 2 {
-		panic("visitasync: limit must be 2 or more")
+		panic("limit must be 2 or more")
 	}
 
-	add := func(node *Node) interface{} {
+	add := func(node *Node) any {
 		nodes = append(nodes, node)
 		return nil
 	}
@@ -459,5 +481,3 @@ func (n *Node) VisitAsync(act Action, lim int, rvals chan interface{}) {
 	}
 
 }
-
-*/
