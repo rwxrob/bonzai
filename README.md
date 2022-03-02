@@ -188,6 +188,16 @@ other security tools
   to keep it as a struct with tight coupling to the scanner.Cur and
   scanner.Pos structs as well.
 
+* **Decided to use branch/leaf instead of parent/child.** The
+  anthropomorphic metaphor breaks down when choosing names for
+  "children" who don't have any any children of their own. What, are we
+  going to call them "barren"? The only other option is "terminal" (the
+  mathematically correct term) and mixing that just should bad. "This
+  child is 'terminal'" while the others are not. Besides, the bonsai
+  tree is one of our namesakes and you cannot have a branch and a leaf
+  in the same node. Every node is one or the other. Trees are much
+  simper to grok and walk this way.
+
 ## Style Guidelines
 
 * Everything through `go fmt` or equiv, no exceptions
