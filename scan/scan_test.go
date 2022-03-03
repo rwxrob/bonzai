@@ -196,6 +196,26 @@ func ExampleCheck() {
 	// U+0073 's' 1,1-1 (1-1)
 }
 
+func ExampleExpect_lk() {
+	s, _ := scan.New("some thing")
+	_, e := s.Expect(is.Lk{"foo"})
+	fmt.Println(e)
+	c, _ := s.Expect(is.Lk{"foo", 's'})
+	c.Print()
+	s.ScanN(2)
+	s.Print()
+	c, _ = s.Expect(is.Lk{is.Rng{'l', 'p'}})
+	s.Print() // not advanced
+	c, _ = s.Expect(is.In{is.Rng{'l', 'p'}})
+	s.Print() // advanced
+	// Output:
+	// expected ["foo"] at U+0073 's' 1,1-1 (1-1)
+	// U+0073 's' 1,1-1 (1-1)
+	// U+006D 'm' 1,3-3 (3-3)
+	// U+006D 'm' 1,3-3 (3-3)
+	// U+0065 'e' 1,4-4 (4-4)
+}
+
 func ExampleExpect_not() {
 	s, _ := scan.New("some thing")
 	c1, e1 := s.Expect(is.Not{"foo"})

@@ -15,8 +15,13 @@ editor warnings, is entirely supported by Go and always will be).
 */
 package is
 
-// Not scannable slice represents set of negative lookahead expressions.
-// If any are seen at the current cursor position the scan will fail.
+// Lk is a set of positive lookahead expressions.  If any are seen at
+// the current cursor position the scan will proceed without consuming
+// them. Otherwise, it will fail.
+type Lk []any
+
+// Not is a set of negative lookahead expressions.  If any are seen at
+// the current cursor position the scan will fail.
 type Not []any
 
 // In scannable slice represents a set group of scannables. If any

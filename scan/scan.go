@@ -269,6 +269,19 @@ func (s *Scanner) Expect(scannables ...any) (*Cur, error) {
 			end = s.Mark()
 			s.Scan()
 
+		case is.Lk: // ----------------------------------------------------
+			var m *Cur
+			for _, i := range v {
+				m, _ = s.Check(i)
+				if m != nil {
+					break
+				}
+			}
+			if m == nil {
+				return nil, s.ErrorExpected(v)
+			}
+			end = s.Mark()
+
 		case is.Not: // ----------------------------------------------------
 			for _, i := range v {
 				if _, e := s.Check(i); e == nil {
@@ -411,6 +424,8 @@ func (s *Scanner) ErrorExpected(this any, args ...any) error {
 	switch v := this.(type) {
 	case rune: // otherwise will use uint32
 		msg = fmt.Sprintf(`expected rune %q`, v)
+	case is.Lk:
+		msg = fmt.Sprintf(`expected %q`, v)
 	case is.Not:
 		msg = fmt.Sprintf(`unexpected %q`, args[0])
 	case is.In:
