@@ -49,6 +49,9 @@ type Min struct {
 	This any
 }
 
+// Mn1 scannable struct is shorthand for Min{1,This}.
+type Mn1 struct{ This any }
+
 // N scannable struct represents exactly X number of the given scannable
 // items (This).
 type N struct {

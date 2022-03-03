@@ -340,6 +340,14 @@ func (s *Scanner) Expect(scannables ...any) (*Cur, error) {
 			}
 			end = last
 
+		case is.Mn1: // ----------------------------------------------------
+			m, err := s.Expect(is.Min{1, v.This})
+			if err != nil {
+				s.Jump(beg)
+				return nil, s.ErrorExpected(v)
+			}
+			end = m
+
 		case is.Min: // ----------------------------------------------------
 			c := 0
 			last := s.Mark()
@@ -414,6 +422,9 @@ func (s *Scanner) ErrorExpected(this any, args ...any) error {
 	case is.Opt:
 		str := `expected an optional %v`
 		msg = fmt.Sprintf(str, v)
+	case is.Mn1:
+		str := `expected at least one of %q`
+		msg = fmt.Sprintf(str, v.This)
 	case is.Min:
 		str := `expected min %v of %q`
 		msg = fmt.Sprintf(str, v.Min, v.This)

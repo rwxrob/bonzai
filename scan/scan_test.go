@@ -253,6 +253,24 @@ func ExampleExpect_opt() {
 	// U+0020 ' ' 1,5-5 (5-5)
 }
 
+func ExampleExpect_mn1() {
+	s, _ := scan.New("sommme thing")
+	start := s.Mark()
+	s.ScanN(2)
+	c, _ := s.Expect(is.Mn1{'m'}) // goggles up all three
+	c.Print()
+	s.Print()
+	s.Jump(start)
+	c, _ = s.Expect(is.Mn1{'s'}) // yep, just one
+	c.Print()
+	s.Print()
+	// Output:
+	// U+006D 'm' 1,5-5 (5-5)
+	// U+0065 'e' 1,6-6 (6-6)
+	// U+0073 's' 1,1-1 (1-1)
+	// U+006F 'o' 1,2-2 (2-2)
+}
+
 func ExampleExpect_min() {
 	s, _ := scan.New("sommme thing")
 	start := s.Mark()
@@ -295,12 +313,12 @@ func ExampleExpect_count() {
 	s.Snap()
 	s.ScanN(2)
 	s.Print()
-	s.Expect(is.X{3, 'm'}) // goggles up all three
+	s.Expect(is.N{3, 'm'}) // goggles up all three
 	s.Print()
 	s.Back()
-	s.Expect(is.X{1, 's'}) // yes, but silly since 's' is easier
+	s.Expect(is.N{1, 's'}) // yes, but silly since 's' is easier
 	s.Print()
-	_, err := s.Expect(is.X{3, 'X'}) // nope
+	_, err := s.Expect(is.N{3, 'X'}) // nope
 	fmt.Println(err)
 	// Output:
 	// U+006D 'm' 1,3-3 (3-3)
