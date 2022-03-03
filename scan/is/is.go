@@ -2,12 +2,16 @@
 // SPDX-License-Identifier: Apache-2.0
 
 /*
-Package is contains the scannable structs recognized as a pseudo-grammar
-accepted by the scan.Expect and scan.Check methods. These structs are
-guaranteed never to have their structure order change in any way
-allowing them to be used in key-less, in-line composable syntax notation
-(which, despite the many editor warnings, is entirely supported by Go
-and always will be).
+Package is defines the Bonzai Parsing Expression Grammar Notation
+(BPEGN) implemented entirely using Go types (mostly slices and structs).
+BPEGN can be 100% transpiled to and from the Parsing Expression Grammer
+Notation (PEGN). Code in one and use "bonzai pegn" command to easily
+generate the other. BPEGN is sometimes referred to informally as "Bonzai
+Scanner Expect" language as well since it is passed directly to
+scan.Expect or scan.Check. These structs are guaranteed never to have
+their structure order change in any way allowing them to be used in
+key-less, in-line composable syntax notation (which, despite the many
+editor warnings, is entirely supported by Go and always will be).
 */
 package is
 

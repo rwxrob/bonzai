@@ -39,20 +39,21 @@ But wait, there's more! What about all those other tasks you need to do
 to make a command line application honorable in anyone's eyes? Tools are
 needed. 
 
-## Create Powerful Parsers Easily with Pseudocode
+## BPEGN: Generate Powerful Parsers Easily
 
-How about the world's most approachable text scanner API with automatic
-verbose, specific error messages that will make your users bow to your
-attentiveness. Build complex parsers that are easily read and generated
-from any number of meta-languages including PEGN, PEG, EBNF, and ABNF.
-Spend your time working with the beautiful and standardized abstract
-syntax trees instead of grinding out parser code. Domain language
-specifications are a breeze, which is good, because you can customize
-any completer for any nested command node or your application enabling
-powerful, intelligent, and intuitive grammars you enable for your users
-directly from the command line, hell, why not directly from your
-favorite chat integration. After all, Bonzai commands are perfectly
-doable directly from a chat client.
+BPEGN is a PEGN syntax implementation in pure Go using mostly slices and
+structs. The Bonzai scan.Expect function produces verbose, specific
+error messages that will make your users bow to your attentiveness.
+Build complex parsers that are easily read and generated from any number
+of meta-languages including PEGN, PEG, EBNF, and ABNF. Spend your time
+working with the beautiful and standardized abstract syntax trees
+instead of grinding out parser code. Domain language specifications are
+a breeze, which is good, because you can customize any completer for any
+nested command node or your application enabling powerful, intelligent,
+and intuitive grammars you enable for your users directly from the
+command line, hell, why not directly from your favorite chat
+integration. After all, Bonzai commands are perfectly doable directly
+from a chat client.
 
 ## A JSON Package Without Unnecessary Limitations
 
