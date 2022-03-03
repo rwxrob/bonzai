@@ -62,3 +62,8 @@ type Rng struct {
 	First rune
 	Last  rune
 }
+
+// ---------------------------- composites ----------------------------
+//                    (keep most common to the left)
+
+var WS = In{' ', '\n', '\t', '\r'}

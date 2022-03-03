@@ -5,6 +5,7 @@ package scan
 
 import (
 	"fmt"
+	"log"
 
 	"github.com/rwxrob/bonzai/scan/tk"
 )
@@ -70,3 +71,6 @@ func (c *Cur) String() string {
 
 // Print prints the cursor itself in String form. See String.
 func (c *Cur) Print() { fmt.Println(c.String()) }
+
+// Log calls log.Println on the cursor itself in String form. See String.
+func (c *Cur) Log() { log.Println(c.String()) }

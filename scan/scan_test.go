@@ -2,6 +2,8 @@ package scan_test
 
 import (
 	"fmt"
+	"log"
+	"os"
 	"strings"
 
 	"github.com/rwxrob/bonzai/scan"
@@ -347,12 +349,18 @@ func ExampleSnap() {
 }
 
 func ExampleScan() {
+	defer log.SetOutput(os.Stderr)
+	defer log.SetFlags(log.Flags())
+	log.SetOutput(os.Stdout)
+	log.SetFlags(0)
 	s, _ := scan.New(`s😈me thing`)
 	s.Scan()
 	s.Print()
 	s.Scan()
 	s.Print()
+	s.Log()
 	// Output:
 	// U+1F608 '😈' 1,2-2 (2-2)
+	// U+006D 'm' 1,3-6 (3-6)
 	// U+006D 'm' 1,3-6 (3-6)
 }

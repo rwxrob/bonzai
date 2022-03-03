@@ -156,6 +156,9 @@ func (s *Scanner) String() string { return s.Cur.String() }
 // Print delegates to internal cursor Print.
 func (s *Scanner) Print() { s.Cur.Print() }
 
+// Log delegates to internal cursor Log.
+func (s *Scanner) Log() { s.Cur.Log() }
+
 // Mark returns a copy of the current scanner cursor to preserve like
 // a bookmark into the buffer data. See Cur, Look, LookSlice.
 func (s *Scanner) Mark() *Cur {
