@@ -23,13 +23,30 @@ import (
 
 	"github.com/rwxrob/bonzai/scan/is"
 	"github.com/rwxrob/bonzai/scan/tk"
+	"github.com/rwxrob/bonzai/util"
 )
 
-// Scanner implements a non-linear, rune-centric, buffered data scanner.
-// See New for creating a usable struct that implements Scanner. The
-// buffer and cursor are directly exposed to facilitate
-// higher-performance, direct access when needed.
-type Scanner struct {
+// Hook is a function expression that accepts a reference to the current
+// scanner and simply returns true or false. Hook functions are allowed
+// to do whatever they need and must advance the scan.R themselves (if
+// necessary) and should not be abused and are given the lowest priority
+// when searching for expressions. Static scanning expressions will
+// usually be faster than any Hook. Hook allows PEGN (and others) to
+// indicate Hook names for executable code that must be run during the
+// scanning of a specific grammar (indicated as "rhetorical" in some
+// grammars). In fact, scan.Rs can be converted into parsers relatively
+// easily simply by implementing a set of Hook functions to capture or
+// render scanned data at specific points during the scan process. Since
+// only the name of the Hook function is required BPEGN remains
+// compatible with PEGN one-for-one transpiling.
+type Hook func(s *R) bool
+
+// R (as in scan.R or "scanner") implements a non-linear, rune-centric,
+// buffered data scanner and provides full support for BPEGN. See New
+// for creating a usable struct that implements scan.R. The buffer and
+// cursor are directly exposed to facilitate higher-performance, direct
+// access when needed.
+type R struct {
 
 	// Buf is the data buffer providing infinite look-ahead and behind.
 	Buf    []byte
@@ -40,21 +57,14 @@ type Scanner struct {
 
 	// Snapped contains the latest Cur when Snap was called.
 	Snapped *Cur
-
-	// ExtendExpect provides a hook to support additional custom
-	// scannables for both Expect and Check Scanner methods. Take note of
-	// the ErrorExpected errors in order to construct similar errors where
-	// returning ErrorExpected itself would not provide clear error
-	// messages.
-	ExtendExpect func(s *Scanner, scannable ...any) (*Cur, error)
 }
 
 // New returns a newly initialized non-linear, rune-centric, buffered
 // data scanner with support for parsing data from io.Reader, string,
 // and []byte types. Returns nil and the error if any encountered during
 // initialization. Also see the Init method.
-func New(i any) (*Scanner, error) {
-	s := new(Scanner)
+func New(i any) (*R, error) {
+	s := new(R)
 	if err := s.Init(i); err != nil {
 		return nil, err
 	}
@@ -65,7 +75,7 @@ func New(i any) (*Scanner, error) {
 // into buffered memory, scans the first rune, and sets the internals of
 // scanner appropriately returning an error if anything happens while
 // attempting to read and buffer the data (OOM, etc.).
-func (s *Scanner) Init(i any) error {
+func (s *R) Init(i any) error {
 	s.Cur = new(Cur)
 	s.Cur.Pos = Pos{}
 	s.Cur.Pos.Line = 1
@@ -91,7 +101,7 @@ func (s *Scanner) Init(i any) error {
 }
 
 // reads and buffers io.Reader, string, or []byte types
-func (s *Scanner) buffer(i any) error {
+func (s *R) buffer(i any) error {
 	var err error
 	switch v := i.(type) {
 	case io.Reader:
@@ -117,7 +127,7 @@ func (s *Scanner) buffer(i any) error {
 // The method of scanning isn't as optimized as other scanner (for
 // example, the scanner from the bonzai/json package), but it is
 // sufficient for most high level needs.
-func (s *Scanner) Scan() {
+func (s *R) Scan() {
 
 	if s.Cur.Next == s.BufLen {
 		s.Cur.Rune = tk.EOD
@@ -144,24 +154,24 @@ func (s *Scanner) Scan() {
 
 // ScanN scans the next n runes advancing n runes forward or returns
 // EOD if attempted after already at end of data.
-func (s *Scanner) ScanN(n int) {
+func (s *R) ScanN(n int) {
 	for i := 0; i < n; i++ {
 		s.Scan()
 	}
 }
 
 // String delegates to internal cursor String.
-func (s *Scanner) String() string { return s.Cur.String() }
+func (s *R) String() string { return s.Cur.String() }
 
 // Print delegates to internal cursor Print.
-func (s *Scanner) Print() { s.Cur.Print() }
+func (s *R) Print() { s.Cur.Print() }
 
 // Log delegates to internal cursor Log.
-func (s *Scanner) Log() { s.Cur.Log() }
+func (s *R) Log() { s.Cur.Log() }
 
 // Mark returns a copy of the current scanner cursor to preserve like
 // a bookmark into the buffer data. See Cur, Look, LookSlice.
-func (s *Scanner) Mark() *Cur {
+func (s *R) Mark() *Cur {
 	if s.Cur == nil {
 		return nil
 	}
@@ -171,23 +181,23 @@ func (s *Scanner) Mark() *Cur {
 }
 
 // Snap sets an extra internal cursor to the current cursor. See Mark.
-func (s *Scanner) Snap() { s.Snapped = s.Mark() }
+func (s *R) Snap() { s.Snapped = s.Mark() }
 
 // Back jumps the current cursor to the last Snap (Snapped).
-func (s *Scanner) Back() { s.Jump(s.Snapped) }
+func (s *R) Back() { s.Jump(s.Snapped) }
 
 // Jump replaces the internal cursor with a copy of the one passed
 // effectively repositioning the scanner's current position in the
 // buffered data. Beware, however, that the new cursor must originate
 // from the same (or identical) data buffer or the values will be out of
 // sync.
-func (s *Scanner) Jump(c *Cur) { nc := *c; s.Cur = &nc }
+func (s *R) Jump(c *Cur) { nc := *c; s.Cur = &nc }
 
 // Peek returns a string containing all the runes from the current
 // scanner cursor position forward to the number of runes passed.
 // If end of data is encountered it will return everything up until that
 // point.  Also see Look and LookSlice.
-func (s *Scanner) Peek(n uint) string {
+func (s *R) Peek(n uint) string {
 	buf := ""
 	pos := s.Cur.Byte
 	for c := uint(0); c < n; c++ {
@@ -205,7 +215,7 @@ func (s *Scanner) Peek(n uint) string {
 // scanner cursor position ahead or behind to the passed cursor
 // position. Neither the internal nor the passed cursor position is
 // changed. Also see Peek and LookSlice.
-func (s *Scanner) Look(to *Cur) string {
+func (s *R) Look(to *Cur) string {
 	if to.Byte < s.Cur.Byte {
 		return string(s.Buf[to.Byte:s.Cur.Next])
 	}
@@ -214,7 +224,7 @@ func (s *Scanner) Look(to *Cur) string {
 
 // LookSlice returns a string containing all the bytes from the first
 // cursor up to the second cursor. Neither cursor position is changed.
-func (s *Scanner) LookSlice(beg *Cur, end *Cur) string {
+func (s *R) LookSlice(beg *Cur, end *Cur) string {
 	return string(s.Buf[beg.Byte:end.Next])
 }
 
@@ -224,7 +234,7 @@ func (s *Scanner) LookSlice(beg *Cur, end *Cur) string {
 //     string          - "foo" simple string
 //     rune            - 'f' uint32, but "rune" in errors
 //     is.Not{any...}  - negative look-ahead set (slice)
-//     is.In{any...}   - one positive look-ahead from set (slice)
+//     is.Any{any...}   - one positive look-ahead from set (slice)
 //     is.Seq{any...}  - required positive look-ahead sequence (slice)
 //     is.Opt{any...}  - optional positive look-ahead set (slice)
 //     is.Min{n,any}   - minimum positive look-aheads
@@ -237,7 +247,7 @@ func (s *Scanner) LookSlice(beg *Cur, end *Cur) string {
 // allows for very readable functional grammar parsers to be created
 // quickly without exceptional overhead from additional function calls
 // and indirection. As some have said, "it's regex without the regex."
-func (s *Scanner) Expect(scannables ...any) (*Cur, error) {
+func (s *R) Expect(scannables ...any) (*Cur, error) {
 	var beg, end *Cur
 	beg = s.Cur
 
@@ -272,7 +282,7 @@ func (s *Scanner) Expect(scannables ...any) (*Cur, error) {
 		case is.Lk: // ----------------------------------------------------
 			var m *Cur
 			for _, i := range v {
-				m, _ = s.Check(i)
+				m, _ = s.check(i)
 				if m != nil {
 					break
 				}
@@ -284,7 +294,7 @@ func (s *Scanner) Expect(scannables ...any) (*Cur, error) {
 
 		case is.Not: // ----------------------------------------------------
 			for _, i := range v {
-				if _, e := s.Check(i); e == nil {
+				if _, e := s.check(i); e == nil {
 					err := s.ErrorExpected(v, i)
 					s.Jump(beg)
 					return nil, err
@@ -292,7 +302,7 @@ func (s *Scanner) Expect(scannables ...any) (*Cur, error) {
 			}
 			end = s.Mark()
 
-		case is.In: // -----------------------------------------------------
+		case is.Any: // -----------------------------------------------------
 			var m *Cur
 			for _, i := range v {
 				var err error
@@ -397,11 +407,29 @@ func (s *Scanner) Expect(scannables ...any) (*Cur, error) {
 			end = s.Mark()
 			s.Scan()
 
-		default: // --------------------------------------------------------
-			if s.ExtendExpect != nil {
-				return s.ExtendExpect(s, scannables...)
+		case is.Esc: // ----------------------------------------------------
+		// TODO
+
+		case Hook: // ------------------------------------------------------
+			if !v(s) {
+				return nil, fmt.Errorf(
+					"expect: hook function failed (%v)",
+					util.FuncName(v),
+				)
 			}
-			return nil, fmt.Errorf("expect: unscannable type (%T)", m)
+			end = s.Mark()
+
+		case func(r *R) bool:
+			if !v(s) {
+				return nil, fmt.Errorf(
+					"expect: hook function failed (%v)",
+					util.FuncName(v),
+				)
+			}
+			end = s.Mark()
+
+		default: // --------------------------------------------------------
+			return nil, fmt.Errorf("expect: unscannable expression (%T)", m)
 		}
 	}
 	return end, nil
@@ -410,7 +438,7 @@ func (s *Scanner) Expect(scannables ...any) (*Cur, error) {
 // ErrorExpected returns a verbose, one-line error describing what was
 // expected when it encountered whatever the scanner last scanned. All
 // scannable types are supported. See Expect.
-func (s *Scanner) ErrorExpected(this any, args ...any) error {
+func (s *R) ErrorExpected(this any, args ...any) error {
 	var msg string
 	but := fmt.Sprintf(` at %v`, s)
 	if s.Cur != nil && s.Cur.Rune == tk.EOD && s.Cur.Len == 0 {
@@ -428,7 +456,7 @@ func (s *Scanner) ErrorExpected(this any, args ...any) error {
 		msg = fmt.Sprintf(`expected %q`, v)
 	case is.Not:
 		msg = fmt.Sprintf(`unexpected %q`, args[0])
-	case is.In:
+	case is.Any:
 		str := `expected one of %q`
 		msg = fmt.Sprintf(str, v)
 	case is.Seq:
@@ -459,11 +487,11 @@ func (s *Scanner) ErrorExpected(this any, args ...any) error {
 }
 
 // NewLine delegates to interval Curs.NewLine.
-func (s *Scanner) NewLine() { s.Cur.NewLine() }
+func (s *R) NewLine() { s.Cur.NewLine() }
 
-// Check behaves exactly like Expect but jumps back to the original
+// check behaves exactly like Expect but jumps back to the original
 // cursor position after scanning for expected scannable values.
-func (s *Scanner) Check(scannables ...any) (*Cur, error) {
+func (s *R) check(scannables ...any) (*Cur, error) {
 	defer s.Jump(s.Mark())
 	return s.Expect(scannables...)
 }

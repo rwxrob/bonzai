@@ -186,16 +186,6 @@ func ExampleExpect_basic() {
 	// <EOD>
 }
 
-func ExampleCheck() {
-	s, _ := scan.New("some thing")
-	c, _ := s.Check("some", ' ', "thin") // same as Expect ...
-	c.Print()                            // ... with cur return ...
-	s.Print()                            // ... just doesn't advance
-	// Output:
-	// U+006E 'n' 1,9-9 (9-9)
-	// U+0073 's' 1,1-1 (1-1)
-}
-
 func ExampleExpect_lk() {
 	s, _ := scan.New("some thing")
 	_, e := s.Expect(is.Lk{"foo"})
@@ -206,7 +196,7 @@ func ExampleExpect_lk() {
 	s.Print()
 	c, _ = s.Expect(is.Lk{is.Rng{'l', 'p'}})
 	s.Print() // not advanced
-	c, _ = s.Expect(is.In{is.Rng{'l', 'p'}})
+	c, _ = s.Expect(is.Any{is.Rng{'l', 'p'}})
 	s.Print() // advanced
 	// Output:
 	// expected ["foo"] at U+0073 's' 1,1-1 (1-1)
@@ -231,13 +221,13 @@ func ExampleExpect_not() {
 	// unexpected "some" at U+0073 's' 1,1-1 (1-1)
 }
 
-func ExampleExpect_in() {
+func ExampleExpect_any() {
 	s, _ := scan.New("some thing")
 	s.Scan()
-	c, _ := s.Expect(is.In{'O', 'o', "ome"})
+	c, _ := s.Expect(is.Any{'O', 'o', "ome"})
 	c.Print()
 	s.Print()
-	_, err := s.Expect(is.In{'x', 'y', "zee"})
+	_, err := s.Expect(is.Any{'x', 'y', "zee"})
 	fmt.Println(err)
 	// Output:
 	// U+006F 'o' 1,2-2 (2-2)
@@ -309,7 +299,7 @@ func ExampleExpect_min() {
 	// U+006F 'o' 1,2-2 (2-2)
 }
 
-func ExampleExpect_min_Max() {
+func ExampleExpect_mMx() {
 	s, _ := scan.New("sommme thing")
 	s.Snap()
 	s.ScanN(2)
@@ -328,7 +318,7 @@ func ExampleExpect_min_Max() {
 	// expected min 1, max 3 of 'X' at U+006F 'o' 1,2-2 (2-2)
 }
 
-func ExampleExpect_count() {
+func ExampleExpect_n() {
 	s, _ := scan.New("sommme thing")
 	s.Snap()
 	s.ScanN(2)
@@ -347,7 +337,7 @@ func ExampleExpect_count() {
 	// expected exactly 3 of 'X' at U+006F 'o' 1,2-2 (2-2)
 }
 
-func ExampleExpect_in_Range() {
+func ExampleExpect_rng() {
 	s, _ := scan.New("some thing")
 	s.Scan()
 	c1, _ := s.Expect(is.Rng{'l', 'p'})
@@ -358,18 +348,42 @@ func ExampleExpect_in_Range() {
 	// U+006D 'm' 1,3-3 (3-3)
 }
 
-func ExampleExtendExpect() {
+func FailHook(s *scan.R) bool { return false }
+
+func ExampleExpect_hook() {
+
+	// plain function signature
+	WouldSave := scan.Hook(func(s *scan.R) bool {
+		fmt.Println("would save")
+		return true
+	})
+
+	// as scan.Hook
+	WouldScan := scan.Hook(func(s *scan.R) bool {
+		s.Scan()
+		return true
+	})
+
+	// FailHook defined outside of Example function (see source)
+
 	s, _ := scan.New("some thing")
-	s.ExtendExpect = func(s *scan.Scanner, a ...any) (*scan.Cur, error) {
-		return s.Cur, fmt.Errorf("custom error for type %T handled at %v",
-			a[0], s.Cur,
-		)
-	}
-	_, e := s.Expect([]byte{'0'})
+	s.Scan()
+	s.Expect(WouldSave)
+	s.Print() // hook didn't advance
+	s.Expect(WouldScan)
+	s.Print() // hook advanced scan by one
+	_, e := s.Expect(FailHook)
 	fmt.Println(e)
+
 	// Output:
-	// custom error for type []uint8 handled at U+0073 's' 1,1-1 (1-1)
+	// would save
+	// U+006F 'o' 1,2-2 (2-2)
+	// U+006D 'm' 1,3-3 (3-3)
+	// expect: hook function failed (FailHook)
+
 }
+
+// TODO Esc
 
 func ExampleSnap() {
 	s, _ := scan.New("some thing")

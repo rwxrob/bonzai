@@ -33,7 +33,16 @@ Composites
 
 Composites are compound expressions composed of others. They represent
 the tokens and classes from PEGN and other grammars and are designed to
-simplify grammar development at a higher level. Pull requests are welcome for missing, commonly used composite candidates.
+simplify grammar development at a higher level. Pull requests are
+welcome for missing, commonly used composite candidates.
+
+Hooks
+
+Hooks are not strictly an expression type and are declared in the scan
+package itself (to avoid a cyclical import dependency since it is passed
+a scan.R). A Hook is passed only the scanner struct and must return a bool
+indicating if the scan should proceed.  See scan.Hook for more
+information.
 */
 package is
 
@@ -68,7 +77,7 @@ type Opt []any
 
 // --------------------------- parameterized --------------------------
 
-// MMx parameterized advancing expression scans for the inclusive
+// MMx is a parameterized advancing expression that matches an inclusive
 // minimum and maximum count of the given expression (This). Use within
 // is.Lk to disable advancement.
 type MMx struct {
@@ -77,34 +86,39 @@ type MMx struct {
 	This any
 }
 
-// Min parameterized advancing expression scans for the inclusive minimum
-// number of the given expression item (This). Use within is.Lk to
-// disable advancement.
+// Min is a parameterized advancing expression that matches an inclusive
+// minimum number of the given expression item (This). Use within is.Lk
+// to disable advancement.
 type Min struct {
 	Min  int
 	This any
 }
 
-// Mn1 parameterized advancing expression is shorthand for is.Min{1,This}.
+// Mn1 is shorthand for is.Min{1,This}.
 type Mn1 struct{ This any }
 
-// N parameterized advancing expression scans for exactly N number of
-// the given expression (This). Use within is.Lk to disable advancement.
+// N is a parameterized advancing expression that matches exactly
+// N number of the given expression (This). Use within is.Lk to disable
+// advancement.
 type N struct {
 	N    int
 	This any
 }
 
-// Rng parameterized advancing expression scans for a single Unicode
-// code point (rune, uint32) from an inclusive consecutive set from
-// First to Last (First,Last). Use within is.Lk to disable advancement.
+// Rng is a parameterized advancing expression that matches a single
+// Unicode code point (rune, uint32) from an inclusive consecutive set
+// from First to Last (First,Last). Use within is.Lk to disable
+// advancement.
 type Rng struct {
 	First rune
 	Last  rune
 }
 
-// ---------------------------- composites ----------------------------
-//                    (keep most common to the left)
-
-var WS = In{' ', '\n', '\t', '\r'}
-var Digit = Rng{0, 9}
+// Esc is a parameterized advancing expression that matches everything
+// in the given expression (This) except for an expression (Not) that
+// requires being immediately preceded by the escape expression (Esc).
+type Esc struct {
+	Not  any
+	Esc  any
+	This any
+}
