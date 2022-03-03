@@ -359,8 +359,8 @@ func (s *Scanner) Expect(scannables ...any) (*Cur, error) {
 			}
 			end = last
 
-		case is.X: // ------------------------------------------------------
-			m, err := s.Expect(is.MMx{v.X, v.X, v.This})
+		case is.N: // ------------------------------------------------------
+			m, err := s.Expect(is.MMx{v.N, v.N, v.This})
 			if err != nil {
 				s.Jump(beg)
 				return nil, s.ErrorExpected(v)
@@ -420,9 +420,9 @@ func (s *Scanner) ErrorExpected(this any, args ...any) error {
 	case is.MMx:
 		str := `expected min %v, max %v of %q`
 		msg = fmt.Sprintf(str, v.Min, v.Max, v.This)
-	case is.X:
+	case is.N:
 		str := `expected exactly %v of %q`
-		msg = fmt.Sprintf(str, v.X, v.This)
+		msg = fmt.Sprintf(str, v.N, v.This)
 	case is.Rng:
 		str := `expected range [%v-%v]`
 		msg = fmt.Sprintf(str, string(v.First), string(v.Last))

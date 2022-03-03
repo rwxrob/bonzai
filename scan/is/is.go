@@ -49,10 +49,10 @@ type Min struct {
 	This any
 }
 
-// X scannable struct represents exactly X number of the given scannable
+// N scannable struct represents exactly X number of the given scannable
 // items (This).
-type X struct {
-	X    int
+type N struct {
+	N    int
 	This any
 }
 
@@ -67,3 +67,4 @@ type Rng struct {
 //                    (keep most common to the left)
 
 var WS = In{' ', '\n', '\t', '\r'}
+var Digit = Rng{0, 9}
