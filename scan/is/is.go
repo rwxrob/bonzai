@@ -75,7 +75,29 @@ type Any []any
 // found the scan is advanced (unlike Lk, which does not advance).
 type Opt []any
 
+// To is a set of advancing expressions that mark an exclusive boundary
+// at which the scan should stop. The matching expression itself will
+// not be advanced.
+//
+// In order to work with escaped boundaries use a negative
+// look-ahead sequence combined with the boundary:
+//
+//     is.To{s.Seq{is.Not{`\\`,`"`}}}
+//
+type To []any
+
+// Inc is a set of advancing expressions that mark an inclusive boundary
+// after which the scan should stop. The matching expression will be
+// included in the advance (unlike is.To).
+type Inc []any
+
 // --------------------------- parameterized --------------------------
+
+// EscTo is identical to is.To{s.Seq{is.Not{E,To}}}.
+type EscTo struct {
+	E  any
+	To any
+}
 
 // MMx is a parameterized advancing expression that matches an inclusive
 // minimum and maximum count of the given expression (This). Use within
@@ -112,13 +134,4 @@ type N struct {
 type Rng struct {
 	First rune
 	Last  rune
-}
-
-// Esc is a parameterized advancing expression that matches everything
-// in the given expression (This) except for an expression (Not) that
-// requires being immediately preceded by the escape expression (Esc).
-type Esc struct {
-	Not  any
-	Esc  any
-	This any
 }

@@ -279,6 +279,40 @@ func (s *R) Expect(scannables ...any) (*Cur, error) {
 			end = s.Mark()
 			s.Scan()
 
+		case is.Inc: // -----------------------------------------------------
+			var m *Cur
+			for m == nil && s.Cur.Rune != tk.EOD {
+				for _, i := range v {
+					m, _ = s.check(i)
+				}
+				s.Scan()
+			}
+			if m == nil {
+				err := s.ErrorExpected(v)
+				s.Jump(beg)
+				return nil, err
+			}
+			end = m
+
+		case is.To: // -----------------------------------------------------
+			var m *Cur
+		OUT:
+			for s.Cur.Rune != tk.EOD {
+				for _, i := range v {
+					m, _ = s.check(i)
+					if m != nil {
+						break OUT
+					}
+				}
+				s.Scan()
+			}
+			if m == nil {
+				err := s.ErrorExpected(v)
+				s.Jump(beg)
+				return nil, err
+			}
+			end = m
+
 		case is.Lk: // ----------------------------------------------------
 			var m *Cur
 			for _, i := range v {
@@ -407,9 +441,6 @@ func (s *R) Expect(scannables ...any) (*Cur, error) {
 			end = s.Mark()
 			s.Scan()
 
-		case is.Esc: // ----------------------------------------------------
-		// TODO
-
 		case Hook: // ------------------------------------------------------
 			if !v(s) {
 				return nil, fmt.Errorf(
@@ -480,6 +511,9 @@ func (s *R) ErrorExpected(this any, args ...any) error {
 	case is.Rng:
 		str := `expected range [%v-%v]`
 		msg = fmt.Sprintf(str, string(v.First), string(v.Last))
+	case is.To, is.Inc:
+		str := `%q not found`
+		msg = fmt.Sprintf(str, v)
 	default:
 		msg = fmt.Sprintf(`expected %T %q`, v, v)
 	}

@@ -383,7 +383,24 @@ func ExampleExpect_hook() {
 
 }
 
-// TODO Esc
+func ExampleExpect_inc() {
+	s, _ := scan.New("some thing")
+	s.Expect(is.Inc{`i`})
+	s.Print()
+	// Output:
+	// U+006E 'n' 1,9-9 (9-9)
+}
+
+func ExampleExpect_to() {
+	s, _ := scan.New("some thing")
+	s.Expect(is.To{`i`})
+	s.Print()
+	_, err := s.Expect(is.To{`z`})
+	fmt.Println(err)
+	// Output:
+	// U+0069 'i' 1,8-8 (8-8)
+	// ["z"] not found at <EOD>
+}
 
 func ExampleSnap() {
 	s, _ := scan.New("some thing")
