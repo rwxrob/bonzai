@@ -174,37 +174,94 @@ func ExampleErrorExpected() {
 	// expected []uint8 "foo" at U+0073 's' 1,1-1 (1-1)
 }
 
-func ExampleExpect_basic() {
+func ExampleExpect_rune_Success() {
 	s, _ := scan.New("some thing")
-	c, _ := s.Expect("some", ' ', "thin")
-	c.Print() // pointing to 'n' since last match
-	s.Print() // pointing to next after 'n' ('g')
-	s.Scan()  // advance one
-	s.Print() // <EOD> since no more data
+	c, _ := s.Expect('s')
+	c.Print() // just one so end and beg same
+	s.Print() // point to next scan 'o'
+	// Output:
+	// U+0073 's' 1,1-1 (1-1)
+	// U+006F 'o' 1,2-2 (2-2)
+}
+
+func ExampleExpect_rune_Fail() {
+	s, _ := scan.New("some thing")
+	_, err := s.Expect('S')
+	fmt.Println(err)
+	s.Print() // not advanced
+	// Output:
+	// expected rune 'S' at U+0073 's' 1,1-1 (1-1)
+	// U+0073 's' 1,1-1 (1-1)
+}
+
+func ExampleExpect_string() {
+	s, _ := scan.New("some thing")
+	c, _ := s.Expect("som")
+	c.Print() // same as s.ScanN(2), last is 'm'
+	s.Print() // point to next scan 'e'
+	// Output:
+	// U+006D 'm' 1,3-3 (3-3)
+	// U+0065 'e' 1,4-4 (4-4)
+}
+
+func ExampleExpect_compound_Expr_String() {
+	s, _ := scan.New("some thing")
+	c, _ := s.Expect(is.X{"some ", "thin"})
+	c.Print()
+	s.Print()
 	// Output:
 	// U+006E 'n' 1,9-9 (9-9)
 	// U+0067 'g' 1,10-10 (10-10)
-	// <EOD>
 }
 
-func ExampleExpect_lk() {
+func ExampleExpect_compound_Expr_Rune() {
 	s, _ := scan.New("some thing")
-	_, e := s.Expect(is.It{"foo"})
-	fmt.Println(e)
-	c, _ := s.Expect(is.It{"foo", 's'})
+	c, _ := s.Expect(is.X{"some", ' ', "thin"})
 	c.Print()
-	s.ScanN(2)
 	s.Print()
-	c, _ = s.Expect(is.It{is.Rng{'l', 'p'}})
-	s.Print() // not advanced
-	c, _ = s.Expect(is.Rng{'l', 'p'})
-	s.Print() // advanced
 	// Output:
-	// expected ["foo"] at U+0073 's' 1,1-1 (1-1)
+	// U+006E 'n' 1,9-9 (9-9)
+	// U+0067 'g' 1,10-10 (10-10)
+}
+
+func ExampleExpect_it_Success() {
+	s, _ := scan.New("some thing")
+	c, _ := s.Expect(is.It{"some"})
+	c.Print() // even though true, not moved
+	s.Print() // scanner also not moved
+	// Output:
 	// U+0073 's' 1,1-1 (1-1)
-	// U+006D 'm' 1,3-3 (3-3)
-	// U+006D 'm' 1,3-3 (3-3)
-	// U+0065 'e' 1,4-4 (4-4)
+	// U+0073 's' 1,1-1 (1-1)
+}
+
+func ExampleExpect_it_Success_Middle() {
+	s, _ := scan.New("some thing")
+	c, _ := s.Expect(is.X{"some", is.It{' '}})
+	c.Print() // advanced up to (but not including) ' '
+	s.Print() // scanner also not moved
+	// Output:
+	// U+0020 ' ' 1,5-5 (5-5)
+	// U+0020 ' ' 1,5-5 (5-5)
+}
+
+func ExampleExpect_it_Fail() {
+	s, _ := scan.New("some thing")
+	_, err := s.Expect(is.X{"some", is.It{"thing"}})
+	fmt.Println(err)
+	s.Print() // but scanner did get "some" so advanced
+	// Output:
+	// expected "thing" at U+0020 ' ' 1,5-5 (5-5)
+	// U+0073 's' 1,1-1 (1-1)
+}
+
+func ExampleExpect_it_Fail_X() {
+	s, _ := scan.New("some thing")
+	_, err := s.Expect(is.X{"some", is.It{"thing"}})
+	fmt.Println(err)
+	s.Print() // but scanner did get "some" so advanced
+	// Output:
+	// expected "thing" at U+0020 ' ' 1,5-5 (5-5)
+	// U+0073 's' 1,1-1 (1-1)
 }
 
 func ExampleExpect_not_Success() {
@@ -227,19 +284,19 @@ func ExampleExpect_not_Fail() {
 	// U+0073 's' 1,1-1 (1-1)
 }
 
-func ExampleExpect_not_Seq_Fail() {
+func ExampleExpect_not_X_Fail() {
 	s, _ := scan.New("some thing wonderful")
-	_, err := s.Expect(is.Seq{is.Not{`s`}, `o`})
+	_, err := s.Expect(is.X{is.Not{'s'}, 'o'})
 	fmt.Println(err) // sees the s so fails
 	s.Print()        // not advanced
 	// Output:
-	// unexpected "s" at U+0073 's' 1,1-1 (1-1)
+	// unexpected 's' at U+0073 's' 1,1-1 (1-1)
 	// U+0073 's' 1,1-1 (1-1)
 }
 
-func ExampleExpect_not_Seq_Success() {
+func ExampleExpect_not_X_Success() {
 	s, _ := scan.New("some thing wonderful")
-	c, _ := s.Expect(is.Seq{is.Not{`n`}, is.In{`som`}})
+	c, _ := s.Expect(is.X{is.Not{`n`}, is.In{`som`}})
 	c.Print() // pointing to last in match 'm'
 	s.Print() // advanced to next after match 'e'
 	// Output:
@@ -247,18 +304,15 @@ func ExampleExpect_not_Seq_Success() {
 	// U+0065 'e' 1,4-4 (4-4)
 }
 
-/*
-func ExampleExpect_not_To_Seq_Success() {
+func ExampleExpect_to_Success_Mid() {
 	s, _ := scan.New("some thing wonderful")
-	//c, _ := s.Expect(is.To{is.Seq{is.Not{`s`}, `o`}})
 	c, _ := s.Expect(is.To{"wo"})
-	c.Print() // pointing to only 'o' not preceeded by s
-	s.Print() // advanced to next after second 'o' ('n')
+	c.Print() // "wo" not inc, same as "some thing ", so ' '
+	s.Print() // advances to 'w'
 	// Output:
-	// U+006F 'o' 1,13-13 (13-13)
-	//
+	// U+0020 ' ' 1,11-11 (11-11)
+	// U+0077 'w' 1,12-12 (12-12)
 }
-*/
 
 func ExampleExpect_in() {
 	s, _ := scan.New("some thing")
@@ -281,8 +335,8 @@ func ExampleExpect_avoid_Not_with_In() {
 	c.Print() // unexpected success
 	s.Print() // advanced to 'o'
 	s.Back()
-	// use is.Seq instead
-	_, err := s.Expect(is.Seq{is.Not{'s'}, is.Rng{'a', 'z'}})
+	// use is.X instead
+	_, err := s.Expect(is.X{is.Not{'s'}, is.Rng{'a', 'z'}})
 	fmt.Println(err)
 	s.Print() // not advanced
 	// Output:
@@ -294,7 +348,7 @@ func ExampleExpect_avoid_Not_with_In() {
 
 func ExampleExpect_seq_Success() {
 	s, _ := scan.New("some thing")
-	c, _ := s.Expect(is.Seq{"some", ' ', "thin"})
+	c, _ := s.Expect(is.X{"some", ' ', "thin"})
 	c.Print() // same as "some thin", points at 'n'
 	s.Print() // advanced to 'g'
 	// Output:
@@ -304,7 +358,7 @@ func ExampleExpect_seq_Success() {
 
 func ExampleExpect_seq_Fail() {
 	s, _ := scan.New("some thing")
-	_, err := s.Expect(is.Seq{"some", "thin"})
+	_, err := s.Expect(is.X{"some", "thin"})
 	fmt.Println(err)
 	s.Print() // not advanced at all
 	// Output:
@@ -314,7 +368,7 @@ func ExampleExpect_seq_Fail() {
 
 func ExampleExpect_seq_Not_Success() {
 	s, _ := scan.New("some thing")
-	c, _ := s.Expect(is.Seq{"some", ` `, is.Not{`T`}, "thin"})
+	c, _ := s.Expect(is.X{"some", ` `, is.Not{`T`}, "thin"})
 	c.Print() // same as "some thin"
 	s.Print() // advanced to next after ('g')
 	// Output:
@@ -324,7 +378,7 @@ func ExampleExpect_seq_Not_Success() {
 
 func ExampleExpect_seq_Not_Fail() {
 	s, _ := scan.New("some Thing")
-	_, err := s.Expect(is.Seq{"some", ` `, is.Not{`T`}, "ignored"})
+	_, err := s.Expect(is.X{"some", ' ', is.Not{`T`}, "ignored"})
 	fmt.Println(err)
 	s.Print() // not advanced at all
 	// Output:
@@ -342,16 +396,6 @@ func ExampleExpect_token_ANY() {
 	// U+006F 'o' 1,2-2 (2-2)
 }
 
-func ExampleExpect_token_EOD() {
-	s, _ := scan.New("some thing")
-	c, _ := s.Expect("some", tk.EOD, "ignored")
-	c.Print() // same as "some"
-	s.Print() // advances
-	// Output:
-	// <EOD>
-	// <EOD>
-}
-
 func ExampleExpect_any_Success() {
 	s, _ := scan.New("some thing")
 	c, _ := s.Expect(is.Any{5})
@@ -362,16 +406,14 @@ func ExampleExpect_any_Success() {
 	// U+0068 'h' 1,7-7 (7-7)
 }
 
-func ExampleExpect_opt() {
+func ExampleExpect_o_Optional_Success() {
 	s, _ := scan.New("some thing")
-	c, _ := s.Expect(is.Opt{"thing", "some"})
-	c.Print()
-	s.Print()
-	c, _ = s.Expect(is.Opt{"foo"})
-	s.Print() // no change
+	//c, _ := s.Expect(is.O{"thing", "some"})
+	c, _ := s.Expect("some")
+	c.Print() // same as "some", points to 'e'
+	s.Print() // advances to space ' '
 	// Output:
 	// U+0065 'e' 1,4-4 (4-4)
-	// U+0020 ' ' 1,5-5 (5-5)
 	// U+0020 ' ' 1,5-5 (5-5)
 }
 
@@ -394,21 +436,13 @@ func ExampleExpect_mn1() {
 }
 
 func ExampleExpect_min() {
-	s, _ := scan.New("sommme thing")
-	start := s.Mark()
-	s.ScanN(2)
-	c, _ := s.Expect(is.Min{2, 'm'}) // goggles up all three
-	c.Print()
-	s.Print()
-	s.Jump(start)
-	_, e := s.Expect(is.Min{2, 's'}) // nope, only one found
-	fmt.Println(e)
-	s.Print()
+	s, _ := scan.New("sssoommme thing")
+	c, _ := s.Expect(is.Min{2, 's'})
+	c.Print() // needs 2, but will consume all three to last 's'
+	s.Print() // advances to next after ('o')
 	// Output:
-	// U+006D 'm' 1,5-5 (5-5)
-	// U+0065 'e' 1,6-6 (6-6)
-	// expected min 2 of 's' at U+006F 'o' 1,2-2 (2-2)
-	// U+006F 'o' 1,2-2 (2-2)
+	// U+0073 's' 1,3-3 (3-3)
+	// U+006F 'o' 1,4-4 (4-4)
 }
 
 func ExampleExpect_mMx() {
@@ -497,17 +531,7 @@ func ExampleExpect_hook() {
 
 func ExampleExpect_to_Success() {
 	s, _ := scan.New("some thing")
-	c, _ := s.Expect(is.To{`e`})
-	c.Print() // same as "som", points to 'm'
-	s.Print() // scanned next after ('e')
-	// Output:
-	// U+006D 'm' 1,3-3 (3-3)
-	// U+0065 'e' 1,4-4 (4-4)
-}
-
-func ExampleExpect_to_Seq_Success() {
-	s, _ := scan.New("some thing")
-	c, _ := s.Expect(is.To{is.Seq{`e`}})
+	c, _ := s.Expect(is.To{'e'})
 	c.Print() // same as "som", points to 'm'
 	s.Print() // scanned next after ('e')
 	// Output:
@@ -517,7 +541,7 @@ func ExampleExpect_to_Seq_Success() {
 
 func ExampleExpect_toi() {
 	s, _ := scan.New("some thing")
-	c, _ := s.Expect(is.Toi{`e`})
+	c, _ := s.Expect(is.Toi{'e'})
 	c.Print() // same as "some", points to 'e'
 	s.Print() // scanned next after (' ')
 	// Output:

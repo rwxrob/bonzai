@@ -10,6 +10,11 @@ generate the other. BPEGN is sometimes referred to informally as "Bonzai
 Scanner Expect" language as well since it is passed directly to
 scan.Expect or scan.Check.
 
+Tokens
+
+The BPEGN token strings are contained in the "tk" package can be used as
+is. See the "tk" package for details.
+
 Parameterized Struct and Set Slice Expressions
 
 BPEGN uses Go structs and slices to represent scannable expressions with
@@ -48,14 +53,14 @@ package is
 
 // ------------------------------- sets -------------------------------
 
-// Seq groups expressions into a sequence. It ensures that all
+// X (the slice) groups expressions into a sequence. It ensures that all
 // expressions appears in that specific order. If any are not the scan
 // fails. (Equal to parenthesis in PEGN.)
-type Seq []any
+type X []any
 
 // It (the slice) is a set of positive lookahead expressions. If any are
 // seen at the current cursor position the scan will proceed without
-// consuming them (unlike is.Opt and is.In). If none are found the scan
+// consuming them (unlike is.O and is.In). If none are found the scan
 // fails. This is useful when everything from one expression is wanted
 // except for a few positive exceptions. (Equal to ampersand (&) in
 // PEGN.) Also see the tk.IS token.
@@ -76,9 +81,9 @@ type Not []any
 // of the slice.
 type In []any
 
-// Opt is a set of optional advancing expressions. If any expression is
+// O is a set of optional advancing expressions. If any expression is
 // found the scan is advanced (unlike is.It, which does not advance).
-type Opt []any
+type O []any
 
 // To is a set of advancing expressions that mark an exclusive boundary
 // at which the scan should stop. The matching expression itself will
@@ -87,7 +92,7 @@ type Opt []any
 // In order to work with escaped boundaries use a negative
 // look-ahead sequence combined with the boundary:
 //
-//     is.To{s.Seq{is.Not{`\\`,`"`}}}
+//     is.To{s.X{is.Not{`\\`,`"`}}}
 //
 type To []any
 

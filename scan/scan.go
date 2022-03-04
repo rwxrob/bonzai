@@ -56,9 +56,22 @@ type R struct {
 	// Cur is the active current cursor pointing to the Buf data.
 	Cur *Cur
 
+	// Last contains the previous Cur value when Scan was called.
+	Last *Cur
+
 	// Snapped contains the latest Cur when Snap was called.
 	Snapped *Cur
+
+	// State contains scanner state bitfield using a combination of the
+	// different constants. Currently, only EOD is used but others may be
+	// added as more state-modifying single-token expressions are
+	// considered (like tk.IS and tk.NOT now).
+	State int
 }
+
+const (
+	EOD = 1 << iota // reached EOD, current rune is tk.EOD
+)
 
 // New returns a newly initialized non-linear, rune-centric, buffered
 // data scanner with support for parsing data from io.Reader, string,
@@ -91,6 +104,7 @@ func (s *R) Init(i any) error {
 	r, ln := utf8.DecodeRune(s.Buf) // scan first
 	if ln == 0 {
 		r = tk.EOD
+		s.State |= EOD
 		return fmt.Errorf("scanner: failed to scan first rune")
 	}
 
@@ -124,11 +138,10 @@ func (s *R) buffer(i any) error {
 	return err
 }
 
-// Scan decodes the next rune and advances the scanner cursor by one.
-// The method of scanning isn't as optimized as other scanner (for
-// example, the scanner from the bonzai/json package), but it is
-// sufficient for most high level needs.
+// Scan decodes the next rune and advances the scanner cursor by one
+// saving the last cursor into s.Last.
 func (s *R) Scan() {
+	s.Last = s.Mark()
 
 	if s.Cur.Next == s.BufLen {
 		s.Cur.Rune = tk.EOD
@@ -181,6 +194,9 @@ func (s *R) Mark() *Cur {
 	return &cp
 }
 
+// Rewind Jumps to Last.
+func (s *R) Rewind() { s.Jump(s.Last) }
+
 // Snap sets an extra internal cursor to the current cursor. See Mark.
 func (s *R) Snap() { s.Snapped = s.Mark() }
 
@@ -229,82 +245,135 @@ func (s *R) LookSlice(beg *Cur, end *Cur) string {
 	return string(s.Buf[beg.Byte:end.Next])
 }
 
-// Expect takes a variable list of parsable types including the
-// following (in order of priority):
+// The Expect method is primarily designed for ease of use quickly by
+// allowing BPEGN expressions to be coded much faster than traditional
+// parser functions. In fact, entire applications can be generated
+// automatically from BPEGN, PEGN, ABNF, EBNF, or any other meta syntax
+// language by adding additional scan.Hooks to do work besides just
+// parsing what is scanned. Generate the BPEGN Go expressions to pass to
+// Expect and code the hook callbacks. That's it. Coding in BPEGN comes
+// naturally when putting together a parser quickly and without the
+// cognitive overhead of switching between grammars. The BPEGN
+// expressions passed to Expect are 100% Go. For full documentation of
+// BPEGN expressions see the "is" package and the source of this Expect
+// method.
 //
-//     string          - "foo" simple string
-//     rune            - 'f' uint32, but "rune" in errors
-//     is.Not{any...}  - negative look-ahead set (slice)
-//     is.In{any...}   - one positive look-ahead from set (slice)
-//     is.Seq{any...}  - required positive look-ahead sequence (slice)
-//     is.Opt{any...}  - optional positive look-ahead set (slice)
-//     is.Min{n,any}   - minimum positive look-aheads
-//     is.MMx{n,m,any} - minimum and maximum positive look-aheads
-//     is.X{n,any}     - exactly n positive look-aheads
-//     is.Rng{n,m}     - inclusive range from rune n to rune m (n,m)
-//
-// Any token string from the tk subpackage can be used as well (and will
-// be noted as special in error out as opposed to simple strings. This
-// allows for very readable functional grammar parsers to be created
-// quickly without exceptional overhead from additional function calls
-// and indirection. As some have said, "it's regex without the regex."
-func (s *R) Expect(expr ...any) (*Cur, error) {
-	var beg, end *Cur
-	beg = s.Cur
+// Warning: While it is nothing for most developers to be concerned
+// with, the Expect method does do a fair amount of functional recursion
+// for the sake of simplicity and to support BPEGN syntax. Those wishing
+// to gain the maximum performance should consider using other scan.R
+// methods instead in such cases. Developers are encouraged to do their
+// own benchmarking and perhaps start with BPEGN until they can create
+// more optimized parsers when and if necessary. Most will discover
+// other more substantial bottlenecks. The Bonzai project places
+// priority is on speed and quality of developer delivery over run-time
+// performance. Delivery time is far more costly than the minimal gains
+// in run-time performance. "Premature optimization is the root of all
+// evil," as they say.
+func (s *R) Expect(expr any) (*Cur, error) {
+	s.Last = s.Cur
 
-	for _, m := range expr {
+	// please keep the most common expressions types at the top
 
-		// please keep the most common at the top
-		switch v := m.(type) {
+	switch v := expr.(type) {
 
-		case rune: // ------------------------------------------------------
-			if v != tk.ANY && s.Cur.Rune != v {
-				if v == tk.EOD {
-					s.Cur.Rune = tk.EOD
-					return s.Mark(), nil
-				}
-				err := s.ErrorExpected(m)
-				s.Jump(beg)
-				return nil, err
+	case rune: // ------------------------------------------------------
+		if v != tk.ANY && s.Cur.Rune != v {
+			err := s.ErrorExpected(v)
+			return nil, err
+		}
+		s.Scan()
+		return s.Last, nil
+
+	case string: // ----------------------------------------------------
+		if v == "" {
+			return s.Mark(), nil
+		}
+		// avoid the temptation to look directly at bytes since it would
+		// allow none runes to be passed within "strings"
+		for _, v := range []rune(v) {
+			if v != s.Cur.Rune {
+				return nil, s.ErrorExpected(v)
 			}
-			end = s.Mark()
 			s.Scan()
+		}
+		return s.Last, nil
 
-		case string: // ----------------------------------------------------
-			if v == "" {
-				return nil, fmt.Errorf("expect: cannot parse empty string")
-			}
-			for _, r := range []rune(v) {
-				if s.Cur.Rune != r {
-					err := s.ErrorExpected(r)
-					s.Jump(beg)
-					return nil, err
-				}
-				end = s.Mark()
-				s.Scan()
-			}
-
-		case is.Toi: // -----------------------------------------------------
-			var m *Cur
-			for m == nil && s.Cur.Rune != tk.EOD {
-				for _, i := range v {
-					m, _ = s.check(i)
-				}
-				s.Scan()
-			}
-			if m == nil {
-				err := s.ErrorExpected(v)
-				s.Jump(beg)
+	case is.X: // -----------------------------------------------------
+		var err error
+		b := s.Mark()
+		m := s.Mark()
+		for _, i := range v {
+			m, err = s.Expect(i)
+			if err != nil {
+				s.Jump(b)
 				return nil, err
 			}
-			end = m
+		}
+		return m, nil
 
-		case is.To: // -----------------------------------------------------
+	case is.O: // -------------------------------------------------------
+		for _, i := range v {
+			m, _ := s.Expect(i)
+			if m != nil {
+				return m, nil
+			}
+		}
+
+	case is.Toi: // -----------------------------------------------------
+		back := s.Mark()
+		for s.Cur.Rune != tk.EOD {
+			for _, i := range v {
+				m, _ := s.Expect(i)
+				if m != nil {
+					return m, nil
+				}
+			}
+			s.Scan()
+		}
+		s.Jump(back)
+		return nil, s.ErrorExpected(v)
+
+	case is.To: // -----------------------------------------------------
+		m := s.Mark()
+		b4 := s.Mark()
+		for s.Cur.Rune != tk.EOD {
+			for _, i := range v {
+				b := s.Mark()
+				c, _ := s.Expect(i)
+				if c != nil {
+					s.Jump(b)
+					return b4, nil
+				}
+			}
+			b4 = s.Mark()
+			s.Scan()
+		}
+		s.Jump(m)
+		return nil, s.ErrorExpected(v)
+		/*
+			back := s.Mark()
+			b4 := s.Mark()
+			for s.Cur.Rune != tk.EOD {
+				for _, i := range v {
+					m, _ := s.Expect(i)
+					if m != nil {
+						return b4, nil
+					}
+				}
+				b4 = s.Mark()
+				s.Scan()
+			}
+			s.Jump(back)
+			return nil, s.ErrorExpected(v)
+		*/
+
+	/*
 			var m, b4 *Cur
 		OUT:
 			for s.Cur.Rune != tk.EOD {
 				for _, i := range v {
-					m, _ = s.check(i)
+					m, _ = s.Expect(i)
 					if m != nil {
 						break OUT
 					}
@@ -316,167 +385,149 @@ func (s *R) Expect(expr ...any) (*Cur, error) {
 				err := s.ErrorExpected(v)
 				return nil, err
 			}
-			end = b4
+			return b4, nil
+	*/
 
-		case is.It: // ----------------------------------------------------
-			var m *Cur
-			for _, i := range v {
-				m, _ = s.check(i)
-				if m != nil {
-					break
-				}
+	case is.It: // ----------------------------------------------------
+		var m *Cur
+		b := s.Mark()
+		for _, i := range v {
+			m, _ = s.Expect(i)
+			if m != nil {
+				break
 			}
-			if m == nil {
-				return nil, s.ErrorExpected(v)
-			}
-			end = s.Mark()
-
-		case is.Not: // ----------------------------------------------------
-			m := s.Mark()
-			for _, i := range v {
-				if c, _ := s.check(i); c != nil {
-					err := s.ErrorExpected(v, i)
-					return nil, err
-				}
-			}
-			end = m
-
-		case is.In: // -----------------------------------------------------
-			var m *Cur
-			for _, i := range v {
-				var err error
-				last := s.Mark()
-				m, err = s.Expect(i)
-				if err == nil {
-					break
-				}
-				s.Jump(last)
-			}
-			if m == nil {
-				return nil, s.ErrorExpected(v)
-			}
-			end = m
-
-		case is.Seq: // ----------------------------------------------------
-			m := s.Mark()
-			c, err := s.Expect(v...)
-			if err != nil {
-				s.Jump(m)
-				return nil, err
-			}
-			end = c
-
-		case is.Opt: // ----------------------------------------------------
-			var m *Cur
-			for _, i := range v {
-				var err error
-				m, err = s.Expect(is.MMx{0, 1, i})
-				if err != nil {
-					s.Jump(beg)
-					return nil, s.ErrorExpected(v)
-				}
-			}
-			end = m
-
-		case is.MMx: // ----------------------------------------------------
-			c := 0
-			last := s.Mark()
-			var err error
-			var m *Cur
-			for {
-				m, err = s.Expect(v.This)
-				if err != nil {
-					break
-				}
-				last = m
-				c++
-			}
-			if c == 0 && v.Min == 0 {
-				if end == nil {
-					end = last
-				}
-				continue
-			}
-			if !(v.Min <= c && c <= v.Max) {
-				s.Jump(last)
-				return nil, s.ErrorExpected(v)
-			}
-			end = last
-
-		case is.Mn1: // ----------------------------------------------------
-			m, err := s.Expect(is.Min{1, v.This})
-			if err != nil {
-				s.Jump(beg)
-				return nil, s.ErrorExpected(v)
-			}
-			end = m
-
-		case is.Min: // ----------------------------------------------------
-			c := 0
-			last := s.Mark()
-			var err error
-			var m *Cur
-			for {
-				m, err = s.Expect(v.This)
-				if err != nil {
-					break
-				}
-				last = m
-				c++
-			}
-			if c < v.Min {
-				s.Jump(beg)
-				return nil, s.ErrorExpected(v)
-			}
-			end = last
-
-		case is.N: // ------------------------------------------------------
-			m, err := s.Expect(is.MMx{v.N, v.N, v.This})
-			if err != nil {
-				s.Jump(beg)
-				return nil, s.ErrorExpected(v)
-			}
-			end = m
-
-		case is.Any: // ----------------------------------------------------
-			for n := 0; n < v.N; n++ {
-				s.Scan()
-			}
-			end = s.Mark()
-			s.Scan()
-
-		case is.Rng: // ----------------------------------------------------
-			if !(v.First <= s.Cur.Rune && s.Cur.Rune <= v.Last) {
-				err := s.ErrorExpected(v)
-				s.Jump(beg)
-				return nil, err
-			}
-			end = s.Mark()
-			s.Scan()
-
-		case Hook: // ------------------------------------------------------
-			if !v(s) {
-				return nil, fmt.Errorf(
-					"expect: hook function failed (%v)",
-					util.FuncName(v),
-				)
-			}
-			end = s.Mark()
-
-		case func(r *R) bool:
-			if !v(s) {
-				return nil, fmt.Errorf(
-					"expect: hook function failed (%v)",
-					util.FuncName(v),
-				)
-			}
-			end = s.Mark()
-
-		default: // --------------------------------------------------------
-			return nil, fmt.Errorf("expect: unexpr expression (%T)", m)
 		}
+		if m == nil {
+			return nil, s.ErrorExpected(v)
+		}
+		s.Jump(b)
+		return b, nil
+
+	case is.Not: // ----------------------------------------------------
+		m := s.Mark()
+		for _, i := range v {
+			if c, _ := s.Expect(i); c != nil {
+				s.Jump(m)
+				err := s.ErrorExpected(v, i)
+				return nil, err
+			}
+		}
+		return m, nil
+
+	case is.In: // -----------------------------------------------------
+		var m *Cur
+		for _, i := range v {
+			var err error
+			last := s.Mark()
+			m, err = s.Expect(i)
+			if err == nil {
+				break
+			}
+			s.Jump(last)
+		}
+		if m == nil {
+			return nil, s.ErrorExpected(v)
+		}
+		return m, nil
+
+	case is.MMx: // ----------------------------------------------------
+		c := 0
+		last := s.Mark()
+		var err error
+		var m, end *Cur
+		for {
+			m, err = s.Expect(v.This)
+			if err != nil {
+				break
+			}
+			last = m
+			c++
+		}
+		if c == 0 && v.Min == 0 {
+			if end == nil {
+				end = last
+			}
+		}
+		if !(v.Min <= c && c <= v.Max) {
+			s.Jump(last)
+			return nil, s.ErrorExpected(v)
+		}
+		return end, nil
+
+	case is.Mn1: // ----------------------------------------------------
+		m := s.Mark()
+		c, err := s.Expect(is.Min{1, v.This})
+		if err != nil {
+			s.Jump(m)
+			return nil, s.ErrorExpected(v)
+		}
+		return c, nil
+
+	case is.Min: // ----------------------------------------------------
+		c := 0
+		last := s.Mark()
+		var err error
+		var m *Cur
+		for {
+			m, err = s.Expect(v.This)
+			if err != nil {
+				break
+			}
+			last = m
+			c++
+		}
+		if c < v.Min {
+			s.Jump(last)
+			return nil, s.ErrorExpected(v)
+		}
+		return last, nil
+
+	case is.N: // ------------------------------------------------------
+		b := s.Mark()
+		m, err := s.Expect(is.MMx{v.N, v.N, v.This})
+		if err != nil {
+			s.Jump(b)
+			return nil, s.ErrorExpected(v)
+		}
+		return m, nil
+
+	case is.Any: // ----------------------------------------------------
+		for n := 0; n < v.N; n++ {
+			s.Scan()
+		}
+		m := s.Mark()
+		s.Scan()
+		return m, nil
+
+	case is.Rng: // ----------------------------------------------------
+		if !(v.First <= s.Cur.Rune && s.Cur.Rune <= v.Last) {
+			err := s.ErrorExpected(v)
+			return nil, err
+		}
+		m := s.Mark()
+		s.Scan()
+		return m, nil
+
+	case Hook: // ------------------------------------------------------
+		if !v(s) {
+			return nil, fmt.Errorf(
+				"expect: hook function failed (%v)",
+				util.FuncName(v),
+			)
+		}
+		return s.Cur, nil
+
+	case func(r *R) bool:
+		if !v(s) {
+			return nil, fmt.Errorf(
+				"expect: hook function failed (%v)",
+				util.FuncName(v),
+			)
+		}
+		return s.Cur, nil
+
 	}
-	return end, nil
+	return nil, fmt.Errorf("unknown expression (%T)", expr)
 }
 
 // ErrorExpected returns a verbose, one-line error describing what was
@@ -497,16 +548,22 @@ func (s *R) ErrorExpected(this any, args ...any) error {
 	case rune: // otherwise will use uint32
 		msg = fmt.Sprintf(`expected rune %q`, v)
 	case is.It:
-		msg = fmt.Sprintf(`expected %q`, v)
+		if len(v) > 1 {
+			msg = fmt.Sprintf(`expected one of %q`, v)
+		} else {
+			msg = fmt.Sprintf(`expected %q`, v[0])
+		}
 	case is.Not:
 		msg = fmt.Sprintf(`unexpected %q`, args[0])
 	case is.In:
 		str := `expected one of %q`
 		msg = fmt.Sprintf(str, v)
-	case is.Seq:
-		str := `expected %q in sequence %q`
-		msg = fmt.Sprintf(str, args[0], v)
-	case is.Opt:
+	case is.X:
+		//str := `expected %q in sequence %q at %v beginning`
+		//msg = fmt.Sprintf(str, args[0], v, args[1])
+		str := `expected %q in sequence`
+		msg = fmt.Sprintf(str, v)
+	case is.O:
 		str := `expected an optional %v`
 		msg = fmt.Sprintf(str, v)
 	case is.Mn1:
@@ -524,9 +581,14 @@ func (s *R) ErrorExpected(this any, args ...any) error {
 	case is.Rng:
 		str := `expected range [%v-%v]`
 		msg = fmt.Sprintf(str, string(v.First), string(v.Last))
-	case is.To, is.Toi:
+	case is.Toi:
 		str := `%q not found`
+		if len(v) > 1 {
+			str = `none of %q found`
+		}
 		msg = fmt.Sprintf(str, v)
+	case is.To:
+		msg = fmt.Sprintf(`none of %q found`, v)
 	default:
 		msg = fmt.Sprintf(`expected %T %q`, v, v)
 	}
@@ -535,10 +597,3 @@ func (s *R) ErrorExpected(this any, args ...any) error {
 
 // NewLine delegates to interval Curs.NewLine.
 func (s *R) NewLine() { s.Cur.NewLine() }
-
-// check behaves exactly like Expect but jumps back to the original
-// cursor position after scanning for expected expression values.
-func (s *R) check(expr ...any) (*Cur, error) {
-	defer s.Jump(s.Mark())
-	return s.Expect(expr...)
-}
