@@ -4,24 +4,47 @@
 package tree
 
 import (
+	"encoding/json"
 	_json "encoding/json"
 	"fmt"
 	"log"
-	"strings"
 
-	"github.com/rwxrob/bonzai/each"
-	"github.com/rwxrob/bonzai/json"
-	"github.com/rwxrob/bonzai/util"
+	"github.com/rwxrob/bonzai/scan"
+	"github.com/rwxrob/bonzai/scan/is"
 )
 
-// Tree is an encapsulating struct to contain the Trunk of Nodes and
-// their Types. The New method also ensures that every Node knows about
-// the Tree to which it belongs. Most designs will then fetch the
-// t.Trunk (root Node) and use that. As with most Bonzai structs, Tree
-// implements the PrintAsJSON interface.
+const UNKNOWN = 0
+
+// Tree is an encapsulating struct to contain the Root Node and all
+// possible Types for any Node. The tree.New method should be called
+// (rather than new(Tree)) to ensure that every Node knows about the
+// Tree to which it belongs. Most users of a Tree will make direct use
+// of Tree.Root (which can safely be swapped out for a root Node
+// reference at any time). Tree implements the PrintAsJSON interface and
+// uses custom methods for MarshalJSON and UnmarshalJSON to facilitate
+// storage, transfer, and documentation.
 type Tree struct {
-	Trunk Node
+	Root   *Node
+	types  []string
+	typesm map[string]int
+}
+
+// used to Marshal/Unmarshal
+type _Tree struct {
+	Root  *Node
 	Types []string
+}
+
+// SetTypes sets the internal types slice and index map corresponding to
+// the given integer. It is normally called from New when creating a new
+// Tree.
+func (t *Tree) SetTypes(types []string) {
+	t.types = []string{"UNKNOWN"}
+	t.types = append(t.types, types...)
+	t.typesm = map[string]int{"UNKNOWN": 0}
+	for n, v := range types {
+		t.typesm[v] = n + 1
+	}
 }
 
 // Seed returns new detached Node from the same Tree
@@ -38,24 +61,20 @@ func (t *Tree) Seed(i ...any) *Node {
 	return leaf
 }
 
-const (
-	UNKNOWN = 0
-)
-
-// New creates and initializes a new tree creating it's Trunk (root
-// Node) and assigning it the type of 1 (0 is reserved for UNKNOWN),
-// which corresponds to the first Type string.  Calling this constructor
-// is preferred over creating Tree references directly since it requires
-// specifying the types used in the tree.  Some uses, however, may not
-// know the types in advance and need to assign them later to
-// Tree.Types. Most will proceed to use the t.Trunk (root node) after
+// New creates and initializes a new tree creating it's Root Node
+// reference and assigning it the type of 1 (0 is reserved for UNKNOWN),
+// which corresponds to the first Type string (index 0).  Calling this
+// constructor is preferred over creating Tree references directly since
+// it requires specifying the types used in the tree.  Some uses,
+// however, may not know the types in advance and need to assign them
+// later to Tree.Types. Most will proceed to use the t.Root after
 // calling New.
 func New(types []string) *Tree {
 	t := new(Tree)
-	t.Types = []string{"UNKNOWN"}
-	t.Types = append(t.Types, types...)
-	t.Trunk.T = 1
-	t.Trunk.tree = t
+	t.SetTypes(types)
+	t.Root = new(Node)
+	t.Root.T = 1
+	t.Root.tree = t
 	return t
 }
 
@@ -73,411 +92,50 @@ func (s *Tree) Print() { fmt.Println(s.JSON()) }
 // Log implements PrintAsJSON.
 func (s *Tree) Log() { log.Print(s.JSON()) }
 
-// ------------------------------- Node -------------------------------
-
-// Nodes are for constructing rooted node trees of typed strings based
-// on the tenet of the UNIX philosophy that suggests to focus on
-// parsable text above all and converting when needed later. Usually,
-// you will start with the Trunk (root Node) of a new Tree so that you
-// can specify the types of your Nodes.
-//
-// Branch or Leaf
-//
-// A Node can either be a "branch" or a "leaf" but not both. Branches
-// have other leaves and branches under them. Leaves do not. A leaf can
-// transform into a branch if a branch or leaf is added under it.  For
-// the same of efficiency, any method that transforms a leaf into
-// a branch for any reason will automatically discard its value without
-// warning.
-//
-// Types
-//
-// An empty Node has type of 0 and must display as "[]". Types must have
-// both a positive integer and a consistent name or tag to go with it.
-// A new Tree will always assign the type 1 to the root Node. Types will
-// Print as integers when printing in short form and provide the fastest
-// parsing. Type names and whitespace are added when PrettyPrint is
-// called.
-type Node struct {
-	T int    // type
-	V string // value, zero-ed out when anything added under
-
-	tree  *Tree // source of Types, etc.
-	up    *Node // branch
-	left  *Node // previous
-	right *Node // next
-	first *Node // first sub
-	last  *Node // last sub
-	types *[]string
+// MarshalJSON implements the json.Marshaler interface to include the
+// otherwise private Types list.
+func (s *Tree) MarshalJSON() ([]byte, error) {
+	return json.Marshal(_Tree{s.Root, s.types})
 }
 
-// Branch returns the current branch this Node is on, or nil.
-func (n *Node) Branch() *Node { return n.up }
-
-// Left returns the Node to immediate left or nil.
-func (n *Node) Left() *Node { return n.left }
-
-// Right returns the Node to immediate right or nil.
-func (n *Node) Right() *Node { return n.right }
-
-// FirstUnder returns the first Node under current Node.
-func (n *Node) FirstUnder() *Node { return n.first }
-
-// LastUnder returns the last Node under current Node.
-func (n *Node) LastUnder() *Node { return n.last }
-
-// AllUnder returns all Nodes under the current Node or nil.
-func (n *Node) AllUnder() []*Node {
-	if n.first == nil {
-		return nil
+// UnmarshalJSON implements the json.Unmarshaler interface to include
+// the otherwise private Types list.
+func (s *Tree) UnmarshalJSON(in []byte) error {
+	m := new(_Tree)
+	if err := json.Unmarshal(in, m); err != nil {
+		return err
 	}
-	cur := n.first
-	c := []*Node{cur}
-	for {
-		cur = cur.right
-		if cur == nil {
-			break
-		}
-		c = append(c, cur)
-	}
-	return c
+	s.Root = m.Root
+	s.types = m.Types
+	return nil
 }
 
-// IsRoot is not currently on any branch even though it might be
-// associated still with a given Tree.
-func (n *Node) IsRoot() bool { return n.up == nil }
+// ------------------------------- parse ------------------------------
 
-// IsDetached returns true if Node has no attachments to any other Node.
-func (n *Node) IsDetached() bool {
-	return n.up == nil && n.first == nil &&
-		n.last == nil && n.left == nil && n.right == nil
-}
-
-// IsLeaf returns true if Node has no branch of its own but does have
-// a value. Note that a leaf can transform into a branch once a leaf or
-// branch is added under it.
-func (n *Node) IsLeaf() bool { return n.first == nil && n.V != "" }
-
-// IsBranch returns true if Node has anything under it at all
-func (n *Node) IsBranch() bool { return n.first != nil }
-
-// IsNull returns true if Node has no value and nothing under it but is
-// OnBranch.
-func (n *Node) IsNull() bool { return n.first == nil && n.V == "" }
-
-// Info logs a summary of the properties of the Node mostly for
-// use when debugging. Remember to log.SetOutput(os.Stdout) and
-// log.SetFlags(0) when using this in Go example tests.
-func (n *Node) Info() {
-	each.Log(util.Lines(fmt.Sprintf(`------
-Type:       %v
-Value:      %q
-IsRoot:     %v
-IsDetached: %v
-IsLeaf:     %v 
-IsBranch:   %v 
-IsNull:     %v`,
-		n.T, n.V, n.IsRoot(), n.IsDetached(),
-		n.IsLeaf(), n.IsBranch(), n.IsNull())))
-}
-
-// ----------------- Node PrintAsJSON interface (plus) ----------------
-
-// MarshalJSON fulfills the interface and avoids use of slower
-// reflection-based parsing. Nodes must be either branches ([1,[]]) or
-// leafs ([1,"foo"]). Branches are allowed to have nothing on them but
-// usually have other branches and leaves. This design means that every
-// possible Node can be represented by a highly efficient two-element
-// array. This MarshalJSON implementation uses the Bonzai json package
-// which more closely follows the JSON standard for acceptable string
-// data, notably Unicode characters are not escaped and remain readable.
-func (n *Node) MarshalJSON() ([]byte, error) {
-	list := n.AllUnder()
-	if len(list) == 0 {
-		if n.V == "" {
-			if n.T == 0 {
-				return []byte("[]"), nil
-			}
-			return []byte(fmt.Sprintf(`[%d]`, n.T)), nil
-		}
-		return []byte(fmt.Sprintf(`[%d,"%v"]`, n.T, json.Escape(n.V))), nil
-	}
-	byt, _ := list[0].MarshalJSON()
-	buf := "[" + string(byt)
-	for _, u := range list[1:] {
-		byt, _ = u.MarshalJSON() // no error ever returned
-		buf += "," + string(byt)
-	}
-	buf += "]"
-	return []byte(fmt.Sprintf(`[%d,%v]`, n.T, buf)), nil
-}
-
-// PrettyPrint uses type names instead of their integer
-// equivalents and adds indentation and whitespace.
-func (n *Node) PrettyPrint() {
-	fmt.Println(n.pretty(0))
-}
-
-// called recursively to build the JSONL string
-func (n *Node) pretty(depth int) string {
-	buf := ""
-	indent := strings.Repeat(" ", depth*2)
-	depth++
-	buf += fmt.Sprintf(`%v["%v", `, indent, n.tree.Types[n.T])
-	if n.first != nil {
-		buf += "[\n"
-		under := n.AllUnder()
-		for i, c := range under {
-			buf += c.pretty(depth)
-			if i != len(under)-1 {
-				buf += ",\n"
-			} else {
-				buf += fmt.Sprintf("\n%v]", indent)
-			}
-		}
-		buf += "]"
-	} else {
-		buf += fmt.Sprintf(`"%v"]`, json.Escape(n.V))
-	}
-	return buf
-}
-
-// JSON implements PrintAsJSON multi-line, 2-space indent JSON output.
-func (s *Node) JSON() string { b, _ := s.MarshalJSON(); return string(b) }
-
-// String implements PrintAsJSON and fmt.Stringer interface as JSON.
-func (s Node) String() string { return s.JSON() }
-
-// Print implements PrintAsJSON.
-func (s *Node) Print() { fmt.Println(s.JSON()) }
-
-// Log implements PrintAsJSON.
-func (s Node) Log() { log.Print(s.JSON()) }
-
-// ------------------------------- Nodes ------------------------------
-
-// NewRight creates a new Node and grafts it to the right of the current
-// one on the same branch. The type and initial value can optionally be
-// passed as arguments.
-func (n *Node) NewRight(i ...any) *Node {
-	leaf := n.tree.Seed(i...)
-	n.GraftRight(leaf)
-	return leaf
-}
-
-// NewLeft creates a new Node and grafts it to the left of current one
-// on the same branch. The type and initial value can optionally be
-// passed as arguments.
-func (n *Node) NewLeft(i ...any) *Node {
-	leaf := n.tree.Seed(i...)
-	n.GraftLeft(leaf)
-	return leaf
-}
-
-// NewUnder creates a new Node and grafts it down below the current one
-// adding it to the left of other branches and leaves below. The type
-// and initial value can optionally be passed as arguments.
-func (n *Node) NewUnder(i ...any) *Node {
-	leaf := n.tree.Seed(i...)
-	n.GraftUnder(leaf)
-	return leaf
-}
-
-// Graft replaces current node with a completely new Node and returns
-// it. Anything under the grafted node will remain and anything under
-// the node being replaced will go with it.
-func (n *Node) Graft(c *Node) *Node {
-	c.up = n.up
-	c.left = n.left
-	c.right = n.right
-
-	// update branch parent
-	if n.up.last == n {
-		n.up.last = c
-	}
-	if n.up.first == n {
-		n.up.first = c
+// Parse takes a string, []byte, or io.Reader of compressed or "pretty"
+// JSON data and returns a new tree. See Node.MarshalJSON for more.
+func Parse(in any, types []string) (*Tree, error) {
+	t := New(types)
+	s, err := scan.New(in)
+	if err != nil {
+		return nil, err
 	}
 
-	// update peers
-	if n.left != nil {
-		n.left.right = c
-	}
-	if n.right != nil {
-		n.right.left = c
-	}
+	// shortcuts
+	ws := is.Opt{is.WS}
+	dq := is.Seq{'\\', '"'}
 
-	// detach
-	n.up = nil
-	n.right = nil
-	n.left = nil
+	// nodes
+	jstrc := is.Seq{is.Esc{'\\', '"', is.Ugraphic}}
+	jstr := is.Seq{'"', is.Mn1{jstrc}, '"'}
+	ntype := is.Seq{is.Not{'"'}, is.Uletter}
+	ntyp := is.In{is.Mn1{is.Digit}}
+	null := is.Seq{'[', ws, ntyp, ws, ']'}
+	leaf := is.Seq{'[', ws, ntyp, ws, jstr, ']'}
 
-	return c
-}
+	// consume optional initial whitespace
+	s.Expect(ws)
+	s.Log()
 
-// GraftRight adds existing Node to the right of itself as a peer and
-// returns it.
-func (n *Node) GraftRight(r *Node) *Node {
-	r.up = n.up
-	if n.right == nil {
-		r.left = n
-		n.right = r
-		if n.up != nil {
-			n.up.last = r
-		}
-		return r
-	}
-	r.right = n.right
-	r.left = n
-	n.right.left = r
-	n.right = r
-	return r
-}
-
-// GraftLeft adds existing Node to the left of itself and returns it.
-func (n *Node) GraftLeft(l *Node) *Node {
-	l.up = n.up
-	if n.left == nil {
-		l.right = n
-		n.left = l
-		if n.up != nil {
-			n.up.first = l
-		}
-		return l
-	}
-	l.left = n.left
-	l.right = n
-	n.left.right = l
-	n.left = l
-	return l
-}
-
-// GraftUnder adds existing node under current node to the right of
-// others already underneath and returns it.
-func (n *Node) GraftUnder(c *Node) *Node {
-	c.up = n
-	if n.first == nil {
-		n.first = c
-		n.last = c
-		return c
-	}
-	return n.last.GraftRight(c)
-}
-
-// Prune removes and returns itself and grafts everything together to
-// fill void.
-func (n *Node) Prune() *Node {
-	if n.up != nil {
-		if n.up.first == n {
-			n.up.first = n.right
-		}
-		if n.up.last == n {
-			n.up.last = n.left
-		}
-	}
-	if n.left != nil {
-		n.left.right = n.right
-	}
-	if n.right != nil {
-		n.right.left = n.left
-	}
-	n.up = nil
-	n.right = nil
-	n.left = nil
-	return n
-}
-
-// Take takes everything under target Node and adds underneath itself.
-func (n *Node) Take(from *Node) {
-	if from.first == nil {
-		return
-	}
-	c := from.first.Prune()
-	n.GraftUnder(c)
-	n.Take(from)
-}
-
-// Action is a first-class function type used when Visiting each Node.
-// The return value will be sent to a channel as each Action completes.
-// It can be an error or anything else.
-type Action func(n *Node) any
-
-// Visit will call the Action function passing it every node traversing
-// in the most predictable way, from top to bottom and left to right on
-// each level of depth. If the optional rvals channel is passed the
-// return values for the actions will be sent to it synchronously. This
-// may be preferable for gathering data from the node tree in some
-// cases. The Action could also be implemented as a closure function
-// enclosing some state variable. If the rvals channel is nil it will
-// not be opened.
-func (n *Node) Visit(act Action, rvals chan interface{}) {
-	if rvals == nil {
-		act(n)
-	} else {
-		rvals <- act(n)
-	}
-	if n.first == nil {
-		return
-	}
-	for _, c := range n.AllUnder() {
-		c.Visit(act, rvals)
-	}
-	return
-}
-
-// VisitAsync walks a parent Node and all its Children asynchronously by
-// flattening the Node tree into a one-dimensional array and then
-// sending each Node its own goroutine Action call. The limit must
-// set the maximum number of simultaneous goroutines (which can usually
-// be in the thousands) and must be 2 or more or will panic. If the
-// channel of return values is not nil it will be sent all return values
-// as Actions complete. Note that this method uses twice the memory of
-// the synchronous version and requires slightly more startup time as
-// the node collection is done (which actually calls Visit in order to
-// build the flattened list of all nodes). Therefore, VisitAsync should
-// only be used when the action is likely to take a non-trivial amount
-// of time to execute, for example, when there is significant IO
-// involved (disk, Internet, etc.).
-func (n *Node) VisitAsync(act Action, lim int, rvals chan any) {
-	nodes := []*Node{}
-
-	if lim < 2 {
-		panic("limit must be 2 or more")
-	}
-
-	add := func(node *Node) any {
-		nodes = append(nodes, node)
-		return nil
-	}
-
-	n.Visit(add, nil)
-
-	// use buffered channel to throttle
-	sem := make(chan interface{}, lim)
-	for _, node := range nodes {
-		sem <- true
-		if rvals == nil {
-			go func(node *Node) {
-				defer func() { <-sem }()
-				act(node)
-			}(node)
-			continue
-		} else {
-			go func(node *Node) {
-				defer func() { <-sem }()
-				rvals <- act(node)
-			}(node)
-		}
-	}
-
-	// waits for all (keeps filling until full again)
-	for i := 0; i < cap(sem); i++ {
-		sem <- true
-	}
-
-	// all goroutines have now finished
-	if rvals != nil {
-		close(rvals)
-	}
-
+	return t, nil
 }

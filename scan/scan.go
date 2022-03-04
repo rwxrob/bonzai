@@ -2,16 +2,17 @@
 // SPDX-License-Identifier: Apache-2.0
 
 /*
-Package scan implements a non-linear, rune-centric, buffered data
-scanner that includes its own high-level syntax comprised of scannable
-structures from the "is" subpackage making parser generation (by hand or
-code generation) trivial from any structured meta languages such as
-PEGN, PEG, EBNF, ABNF, etc. Most will use the scanner to create parsers
-quickly by hand where a regular expression will not suffice. See the
-"is" and "tk" packages for a growing number of common, centrally
-maintain scannables for your parsing pleasure. Also see the "mark"
-(BonzaiMark) subpackage for a working example of the scanner in action,
-which is used by the included help.Cmd command.
+Package scan implements a non-linear, rune-centric, buffered data,
+extendable scanner that includes its own high-level parsing expression
+grammar (BPEGN) comprised of Go slices and structs used as expressions
+from the "is" subpackage making parser generation (by hand or code)
+trivial from any structured meta languages such as PEGN, PEG, EBNF,
+ABNF, etc. Most will use the scanner to create parsers quickly where
+a regular expression will not suffice. See the "is" and "tk" packages
+for a growing number of common, centrally maintain expressions for your
+parsing pleasure. Also see the "mark" (BonzaiMark) subpackage for
+a working examples of the scanner in action, which is used by the
+included Bonzai help.Cmd command and others.
 */
 package scan
 
@@ -234,7 +235,7 @@ func (s *R) LookSlice(beg *Cur, end *Cur) string {
 //     string          - "foo" simple string
 //     rune            - 'f' uint32, but "rune" in errors
 //     is.Not{any...}  - negative look-ahead set (slice)
-//     is.Any{any...}   - one positive look-ahead from set (slice)
+//     is.In{any...}   - one positive look-ahead from set (slice)
 //     is.Seq{any...}  - required positive look-ahead sequence (slice)
 //     is.Opt{any...}  - optional positive look-ahead set (slice)
 //     is.Min{n,any}   - minimum positive look-aheads
@@ -247,14 +248,23 @@ func (s *R) LookSlice(beg *Cur, end *Cur) string {
 // allows for very readable functional grammar parsers to be created
 // quickly without exceptional overhead from additional function calls
 // and indirection. As some have said, "it's regex without the regex."
-func (s *R) Expect(scannables ...any) (*Cur, error) {
+func (s *R) Expect(expr ...any) (*Cur, error) {
 	var beg, end *Cur
 	beg = s.Cur
 
-	for _, m := range scannables {
+	for _, m := range expr {
 
 		// please keep the most common at the top
 		switch v := m.(type) {
+
+		case rune: // ------------------------------------------------------
+			if v != tk.ANY && s.Cur.Rune != v {
+				err := s.ErrorExpected(m)
+				s.Jump(beg)
+				return nil, err
+			}
+			end = s.Mark()
+			s.Scan()
 
 		case string: // ----------------------------------------------------
 			if v == "" {
@@ -270,16 +280,7 @@ func (s *R) Expect(scannables ...any) (*Cur, error) {
 				s.Scan()
 			}
 
-		case rune: // ------------------------------------------------------
-			if s.Cur.Rune != v {
-				err := s.ErrorExpected(m)
-				s.Jump(beg)
-				return nil, err
-			}
-			end = s.Mark()
-			s.Scan()
-
-		case is.Inc: // -----------------------------------------------------
+		case is.Toi: // -----------------------------------------------------
 			var m *Cur
 			for m == nil && s.Cur.Rune != tk.EOD {
 				for _, i := range v {
@@ -295,7 +296,7 @@ func (s *R) Expect(scannables ...any) (*Cur, error) {
 			end = m
 
 		case is.To: // -----------------------------------------------------
-			var m *Cur
+			var m, b4 *Cur
 		OUT:
 			for s.Cur.Rune != tk.EOD {
 				for _, i := range v {
@@ -304,14 +305,14 @@ func (s *R) Expect(scannables ...any) (*Cur, error) {
 						break OUT
 					}
 				}
+				b4 = s.Mark()
 				s.Scan()
 			}
 			if m == nil {
 				err := s.ErrorExpected(v)
-				s.Jump(beg)
 				return nil, err
 			}
-			end = m
+			end = b4
 
 		case is.Lk: // ----------------------------------------------------
 			var m *Cur
@@ -327,16 +328,16 @@ func (s *R) Expect(scannables ...any) (*Cur, error) {
 			end = s.Mark()
 
 		case is.Not: // ----------------------------------------------------
+			m := s.Mark()
 			for _, i := range v {
-				if _, e := s.check(i); e == nil {
+				if c, _ := s.check(i); c != nil {
 					err := s.ErrorExpected(v, i)
-					s.Jump(beg)
 					return nil, err
 				}
 			}
-			end = s.Mark()
+			end = m
 
-		case is.Any: // -----------------------------------------------------
+		case is.In: // -----------------------------------------------------
 			var m *Cur
 			for _, i := range v {
 				var err error
@@ -353,12 +354,13 @@ func (s *R) Expect(scannables ...any) (*Cur, error) {
 			end = m
 
 		case is.Seq: // ----------------------------------------------------
-			m, err := s.Expect(v...)
+			m := s.Mark()
+			c, err := s.Expect(v...)
 			if err != nil {
-				s.Jump(beg)
+				s.Jump(m)
 				return nil, err
 			}
-			end = m
+			end = c
 
 		case is.Opt: // ----------------------------------------------------
 			var m *Cur
@@ -432,6 +434,13 @@ func (s *R) Expect(scannables ...any) (*Cur, error) {
 			}
 			end = m
 
+		case is.Any: // ----------------------------------------------------
+			for n := 0; n < v.N; n++ {
+				s.Scan()
+			}
+			end = s.Mark()
+			s.Scan()
+
 		case is.Rng: // ----------------------------------------------------
 			if !(v.First <= s.Cur.Rune && s.Cur.Rune <= v.Last) {
 				err := s.ErrorExpected(v)
@@ -460,7 +469,7 @@ func (s *R) Expect(scannables ...any) (*Cur, error) {
 			end = s.Mark()
 
 		default: // --------------------------------------------------------
-			return nil, fmt.Errorf("expect: unscannable expression (%T)", m)
+			return nil, fmt.Errorf("expect: unexpr expression (%T)", m)
 		}
 	}
 	return end, nil
@@ -468,7 +477,7 @@ func (s *R) Expect(scannables ...any) (*Cur, error) {
 
 // ErrorExpected returns a verbose, one-line error describing what was
 // expected when it encountered whatever the scanner last scanned. All
-// scannable types are supported. See Expect.
+// expression types are supported. See Expect.
 func (s *R) ErrorExpected(this any, args ...any) error {
 	var msg string
 	but := fmt.Sprintf(` at %v`, s)
@@ -487,7 +496,7 @@ func (s *R) ErrorExpected(this any, args ...any) error {
 		msg = fmt.Sprintf(`expected %q`, v)
 	case is.Not:
 		msg = fmt.Sprintf(`unexpected %q`, args[0])
-	case is.Any:
+	case is.In:
 		str := `expected one of %q`
 		msg = fmt.Sprintf(str, v)
 	case is.Seq:
@@ -497,7 +506,7 @@ func (s *R) ErrorExpected(this any, args ...any) error {
 		str := `expected an optional %v`
 		msg = fmt.Sprintf(str, v)
 	case is.Mn1:
-		str := `expected at least one of %q`
+		str := `expected one or more %q`
 		msg = fmt.Sprintf(str, v.This)
 	case is.Min:
 		str := `expected min %v of %q`
@@ -511,7 +520,7 @@ func (s *R) ErrorExpected(this any, args ...any) error {
 	case is.Rng:
 		str := `expected range [%v-%v]`
 		msg = fmt.Sprintf(str, string(v.First), string(v.Last))
-	case is.To, is.Inc:
+	case is.To, is.Toi:
 		str := `%q not found`
 		msg = fmt.Sprintf(str, v)
 	default:
@@ -524,8 +533,8 @@ func (s *R) ErrorExpected(this any, args ...any) error {
 func (s *R) NewLine() { s.Cur.NewLine() }
 
 // check behaves exactly like Expect but jumps back to the original
-// cursor position after scanning for expected scannable values.
-func (s *R) check(scannables ...any) (*Cur, error) {
+// cursor position after scanning for expected expression values.
+func (s *R) check(expr ...any) (*Cur, error) {
 	defer s.Jump(s.Mark())
-	return s.Expect(scannables...)
+	return s.Expect(expr...)
 }

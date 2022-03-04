@@ -55,21 +55,21 @@ type Seq []any
 
 // Lk is a set of positive lookahead expressions. If any are seen at
 // the current cursor position the scan will proceed without consuming
-// them (unlike is.Opt and is.Any). If none are found the scan fails.
+// them (unlike is.Opt and is.In). If none are found the scan fails.
 type Lk []any
 
 // Not is a set of negative lookahead expressions. If any are seen at
-// the current cursor position the scan will fail. Otherwise, the scan
-// proceeds from that same position.
+// the current cursor position the scan will fail and the scan is never
+// advanced.
 type Not []any
 
-// Any is a set of advancing expressions. If any scannable in the slice
+// In is a set of advancing expressions. If any expression in the slice
 // is found the scan advances to the end of that expression and
 // continues. If none of the expressions is found the scan fails.
-// Evaluation of expressions is always left to right allowing allowing
+// Evaluation of expressions is always left to right allowing
 // parser developers to prioritize common expressions at the beginning
 // of the slice.
-type Any []any
+type In []any
 
 // Opt is a set of optional advancing expressions. If any expression is
 // found the scan is advanced (unlike Lk, which does not advance).
@@ -86,18 +86,12 @@ type Opt []any
 //
 type To []any
 
-// Inc is a set of advancing expressions that mark an inclusive boundary
+// Toi is a set of advancing expressions that mark an inclusive boundary
 // after which the scan should stop. The matching expression will be
 // included in the advance (unlike is.To).
-type Inc []any
+type Toi []any
 
 // --------------------------- parameterized --------------------------
-
-// EscTo is identical to is.To{s.Seq{is.Not{E,To}}}.
-type EscTo struct {
-	E  any
-	To any
-}
 
 // MMx is a parameterized advancing expression that matches an inclusive
 // minimum and maximum count of the given expression (This). Use within
@@ -125,6 +119,11 @@ type Mn1 struct{ This any }
 type N struct {
 	N    int
 	This any
+}
+
+// Any is short for is.N{tk.ANY}.
+type Any struct {
+	N int
 }
 
 // Rng is a parameterized advancing expression that matches a single
