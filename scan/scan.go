@@ -278,11 +278,34 @@ func (s *R) Expect(expr any) (*Cur, error) {
 	switch v := expr.(type) {
 
 	case rune: // ------------------------------------------------------
-		if v != tk.ANY && s.Cur.Rune != v {
+		if s.Cur.Rune != v {
 			err := s.ErrorExpected(v)
 			return nil, err
 		}
 		s.Scan()
+		return s.Last, nil
+
+	case tk.Token: // --------------------------------------------------
+		switch v {
+		case tk.ANY: // A, A1
+			s.Scan()
+		case tk.A2:
+			s.ScanN(2)
+		case tk.A3:
+			s.ScanN(3)
+		case tk.A4:
+			s.ScanN(4)
+		case tk.A5:
+			s.ScanN(5)
+		case tk.A6:
+			s.ScanN(6)
+		case tk.A7:
+			s.ScanN(7)
+		case tk.A8:
+			s.ScanN(8)
+		case tk.A9:
+			s.ScanN(9)
+		}
 		return s.Last, nil
 
 	case string: // ----------------------------------------------------
@@ -450,18 +473,17 @@ func (s *R) Expect(expr any) (*Cur, error) {
 		for n := 0; n < v.N; n++ {
 			s.Scan()
 		}
-		m := s.Mark()
 		s.Scan()
-		return m, nil
+		return s.Last, nil
+		// see rune for A2-9
 
 	case z.R: // ----------------------------------------------------
 		if !(v.First <= s.Cur.Rune && s.Cur.Rune <= v.Last) {
 			err := s.ErrorExpected(v)
 			return nil, err
 		}
-		m := s.Mark()
 		s.Scan()
-		return m, nil
+		return s.Last, nil
 
 	case z.C: // ------------------------------------------------------
 		return s.expcount(v.N, v.This)

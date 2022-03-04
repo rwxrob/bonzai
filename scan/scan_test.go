@@ -387,13 +387,25 @@ func ExampleExpect_seq_Not_Fail() {
 }
 
 func ExampleExpect_token_ANY() {
-	s, _ := scan.New("some thing")
+	s, _ := scan.New("some thing wonderful")
 	c, _ := s.Expect(tk.ANY)
 	c.Print() // same as `s` or s.Scan()
 	s.Print() // advances
+	c, _ = s.Expect(tk.A)
+	c.Print() // same as `o` or s.Scan()
+	s.Print() // advances
+	c, _ = s.Expect(tk.A1)
+	// we'll skip tk.A2 - tk.A8
+	s.Print()
+	c, _ = s.Expect(tk.A9)
+	s.Print() // should advance 9 to pos 13
 	// Output:
 	// U+0073 's' 1,1-1 (1-1)
 	// U+006F 'o' 1,2-2 (2-2)
+	// U+006F 'o' 1,2-2 (2-2)
+	// U+006D 'm' 1,3-3 (3-3)
+	// U+0065 'e' 1,4-4 (4-4)
+	// U+006F 'o' 1,13-13 (13-13)
 }
 
 func ExampleExpect_any_Success() {
