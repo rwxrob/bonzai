@@ -266,7 +266,7 @@ func ExampleExpect_it_Fail_X() {
 
 func ExampleExpect_not_Success() {
 	s, _ := scan.New("some thing")
-	c, _ := s.Expect(z.Not{"foo"})
+	c, _ := s.Expect(z.N{"foo"})
 	c.Print() // not advanced, but also not <nil>
 	s.Print() // not advanced at all
 	// Output:
@@ -276,7 +276,7 @@ func ExampleExpect_not_Success() {
 
 func ExampleExpect_not_Fail() {
 	s, _ := scan.New("some thing")
-	_, err := s.Expect(z.Not{"some"})
+	_, err := s.Expect(z.N{"some"})
 	fmt.Println(err)
 	s.Print() // not advanced at all
 	// Output:
@@ -286,7 +286,7 @@ func ExampleExpect_not_Fail() {
 
 func ExampleExpect_not_X_Fail() {
 	s, _ := scan.New("some thing wonderful")
-	_, err := s.Expect(z.X{z.Not{'s'}, 'o'})
+	_, err := s.Expect(z.X{z.N{'s'}, 'o'})
 	fmt.Println(err) // sees the s so fails
 	s.Print()        // not advanced
 	// Output:
@@ -296,7 +296,7 @@ func ExampleExpect_not_X_Fail() {
 
 func ExampleExpect_not_X_Success() {
 	s, _ := scan.New("some thing wonderful")
-	c, _ := s.Expect(z.X{z.Not{`n`}, z.In{`som`}})
+	c, _ := s.Expect(z.X{z.N{`n`}, z.In{`som`}})
 	c.Print() // pointing to last in match 'm'
 	s.Print() // advanced to next after match 'e'
 	// Output:
@@ -331,12 +331,12 @@ func ExampleExpect_in() {
 func ExampleExpect_avoid_Not_with_In() {
 	s, _ := scan.New("some thing")
 	s.Snap()
-	c, _ := s.Expect(z.In{z.Not{'s'}, z.R{'a', 'z'}})
+	c, _ := s.Expect(z.In{z.N{'s'}, z.R{'a', 'z'}})
 	c.Print() // unexpected success
 	s.Print() // advanced to 'o'
 	s.Back()
 	// use z.X instead
-	_, err := s.Expect(z.X{z.Not{'s'}, z.R{'a', 'z'}})
+	_, err := s.Expect(z.X{z.N{'s'}, z.R{'a', 'z'}})
 	fmt.Println(err)
 	s.Print() // not advanced
 	// Output:
@@ -368,7 +368,7 @@ func ExampleExpect_seq_Fail() {
 
 func ExampleExpect_seq_Not_Success() {
 	s, _ := scan.New("some thing")
-	c, _ := s.Expect(z.X{"some", ` `, z.Not{`T`}, "thin"})
+	c, _ := s.Expect(z.X{"some", ` `, z.N{`T`}, "thin"})
 	c.Print() // same as "some thin"
 	s.Print() // advanced to next after ('g')
 	// Output:
@@ -378,7 +378,7 @@ func ExampleExpect_seq_Not_Success() {
 
 func ExampleExpect_seq_Not_Fail() {
 	s, _ := scan.New("some Thing")
-	_, err := s.Expect(z.X{"some", ' ', z.Not{`T`}, "ignored"})
+	_, err := s.Expect(z.X{"some", ' ', z.N{`T`}, "ignored"})
 	fmt.Println(err)
 	s.Print() // not advanced at all
 	// Output:

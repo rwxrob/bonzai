@@ -367,7 +367,7 @@ func (s *R) Expect(expr any) (*Cur, error) {
 		s.Jump(b)
 		return b, nil
 
-	case z.Not: // ----------------------------------------------------
+	case z.N: // ----------------------------------------------------
 		m := s.Mark()
 		for _, i := range v {
 			if c, _ := s.Expect(i); c != nil {
@@ -517,7 +517,7 @@ func (s *R) ErrorExpected(this any, args ...any) error {
 		} else {
 			msg = fmt.Sprintf(`expected %q`, v[0])
 		}
-	case z.Not:
+	case z.N:
 		msg = fmt.Sprintf(`unexpected %q`, args[0])
 	case z.In:
 		str := `expected one of %q`

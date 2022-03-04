@@ -11,10 +11,12 @@ easily generate the other.
 
 Nodes and Expressions
 
-Nodes (z.N) indicate something to be captured as a part of the resulting
+Nodes (z.Nd) indicate something to be captured as a part of the resulting
 abstract syntax tree. They are functionally equivalent to parenthesis in
 regular expressions but with the obvious advantage of capturing a rooted
-node tree instead of an array. Expressions (z.X) indicate a sequence to be scanned but not captured unless the expression itself is within a node (z.N).
+node tree instead of an array. Expressions (z.X) indicate a sequence to
+be scanned but not captured unless the expression itself is within
+a node (z.Nd).
 
 Tokens
 
@@ -59,16 +61,16 @@ package z
 
 // ------------------------------- core -------------------------------
 
-// N ("node") is a named sequence of expressions that will be captured
+// Nd ("node") is a named sequence of expressions that will be captured
 // into a node. The first string must always be the name which can be
 // any valid Go string. If any expression fails to match the scan fails.
 // Otherwise, a new tree.Node is added under the current node and the
 // scan proceeds. Nodes must either contain other nodes or no nodes at
 // all. If the first item in the sequence after the name is not also
-// a node (z.N) then the node is marked as "edge" (or "leaf") and any
+// a node (z.Nd) then the node is marked as "edge" (or "leaf") and any
 // nodes detected further in the sequence will cause the scan to fail
 // with a syntax error.
-type N []any
+type Nd []any
 
 // X ("expression") is a sequence of expressions.  If any are not the
 // scan fails. (Equal to (?foo) in regular expressions.)
@@ -76,20 +78,20 @@ type X []any
 
 // ------------------------------- sets -------------------------------
 
-// It (the slice) is a set of positive lookahead expressions. If any are
+// It ("is it") is a set of positive lookahead expressions. If any are
 // seen at the current cursor position the scan will proceed without
 // consuming them (unlike is.O and is.In). If none are found the scan
 // fails. This is useful when everything from one expression is wanted
 // except for a few positive exceptions. (Equal to ampersand (&) in
-// PEGN.) Also see the tk.IS token.
+// PEGN.)
 type It []any
 
-// Not (the slice) is a set of negative lookahead expressions. If any
-// are seen at the current cursor position the scan will fail and the
-// scan is never advanced. This is useful when everything from one
-// expression is wanted except for a few negative exceptions. (Equal to
-// exclamation point (!) in PEGN.) Also see the tk.NOT token.
-type Not []any
+// N ("not") is a set of negative lookahead expressions. If any are seen
+// at the current cursor position the scan will fail and the scan is
+// never advanced. This is useful when everything from one expression is
+// wanted except for a few negative exceptions. (Equal to exclamation
+// point (!) in PEGN.)
+type N []any
 
 // In is a set of advancing expressions. If any expression in the slice
 // is found the scan advances to the end of that expression and
