@@ -4,15 +4,15 @@
 /*
 Package scan implements a non-linear, rune-centric, buffered data,
 extendable scanner that includes its own high-level parsing expression
-grammar (BPEGN) comprised of Go slices and structs used as expressions
-from the "is" subpackage making parser generation (by hand or code)
-trivial from any structured meta languages such as PEGN, PEG, EBNF,
-ABNF, etc. Most will use the scanner to create parsers quickly where
-a regular expression will not suffice. See the "is" and "tk" packages
-for a growing number of common, centrally maintain expressions for your
-parsing pleasure. Also see the "mark" (BonzaiMark) subpackage for
-a working examples of the scanner in action, which is used by the
-included Bonzai help.Cmd command and others.
+grammar (BPEGN) comprised of Go constants, slices, and structs used as
+expressions from the z ("is") subpackage making parser generation (by
+hand or code) trivial from any structured meta languages such as PEGN,
+PEG, EBNF, ABNF, etc. Most will use the scanner to create parsers
+quickly where a regular expression will not suffice. See the z ("is")
+and tk packages for a growing number of common, centrally maintain
+expressions for your parsing pleasure. Also see the mark (BonzaiMark)
+subpackage for a working examples of the scanner in action, which is
+used by the included Bonzai help.Cmd command and others.
 */
 package scan
 
@@ -22,7 +22,7 @@ import (
 	"io"
 	"unicode/utf8"
 
-	is "github.com/rwxrob/bonzai/scan/is"
+	z "github.com/rwxrob/bonzai/scan/is"
 	"github.com/rwxrob/bonzai/scan/tk"
 	"github.com/rwxrob/bonzai/util"
 )
@@ -255,8 +255,8 @@ func (s *R) LookSlice(beg *Cur, end *Cur) string {
 // naturally when putting together a parser quickly and without the
 // cognitive overhead of switching between grammars. The BPEGN
 // expressions passed to Expect are 100% Go. For full documentation of
-// BPEGN expressions see the "is" package and the source of this Expect
-// method.
+// BPEGN expressions see the z ("is") package and the source of this
+// Expect method.
 //
 // Warning: While it is nothing for most developers to be concerned
 // with, the Expect method does do a fair amount of functional recursion
@@ -266,7 +266,7 @@ func (s *R) LookSlice(beg *Cur, end *Cur) string {
 // own benchmarking and perhaps start with BPEGN until they can create
 // more optimized parsers when and if necessary. Most will discover
 // other more substantial bottlenecks. The Bonzai project places
-// priority is on speed and quality of developer delivery over run-time
+// priority on speed and quality of developer delivery over run-time
 // performance. Delivery time is far more costly than the minimal gains
 // in run-time performance. "Premature optimization is the root of all
 // evil," as they say.
@@ -299,7 +299,7 @@ func (s *R) Expect(expr any) (*Cur, error) {
 		}
 		return s.Last, nil
 
-	case is.X: // -----------------------------------------------------
+	case z.X: // -----------------------------------------------------
 		var err error
 		b := s.Mark()
 		m := s.Mark()
@@ -312,7 +312,7 @@ func (s *R) Expect(expr any) (*Cur, error) {
 		}
 		return m, nil
 
-	case is.O: // -------------------------------------------------------
+	case z.O: // -------------------------------------------------------
 		for _, i := range v {
 			m, _ := s.Expect(i)
 			if m != nil {
@@ -320,7 +320,7 @@ func (s *R) Expect(expr any) (*Cur, error) {
 			}
 		}
 
-	case is.Toi: // -----------------------------------------------------
+	case z.Toi: // -----------------------------------------------------
 		back := s.Mark()
 		for s.Cur.Rune != tk.EOD {
 			for _, i := range v {
@@ -334,7 +334,7 @@ func (s *R) Expect(expr any) (*Cur, error) {
 		s.Jump(back)
 		return nil, s.ErrorExpected(v)
 
-	case is.To: // -----------------------------------------------------
+	case z.To: // -----------------------------------------------------
 		m := s.Mark()
 		b4 := s.Mark()
 		for s.Cur.Rune != tk.EOD {
@@ -352,7 +352,7 @@ func (s *R) Expect(expr any) (*Cur, error) {
 		s.Jump(m)
 		return nil, s.ErrorExpected(v)
 
-	case is.It: // ----------------------------------------------------
+	case z.It: // ----------------------------------------------------
 		var m *Cur
 		b := s.Mark()
 		for _, i := range v {
@@ -367,7 +367,7 @@ func (s *R) Expect(expr any) (*Cur, error) {
 		s.Jump(b)
 		return b, nil
 
-	case is.Not: // ----------------------------------------------------
+	case z.Not: // ----------------------------------------------------
 		m := s.Mark()
 		for _, i := range v {
 			if c, _ := s.Expect(i); c != nil {
@@ -378,7 +378,7 @@ func (s *R) Expect(expr any) (*Cur, error) {
 		}
 		return m, nil
 
-	case is.In: // -----------------------------------------------------
+	case z.In: // -----------------------------------------------------
 		var m *Cur
 		for _, i := range v {
 			var err error
@@ -394,7 +394,7 @@ func (s *R) Expect(expr any) (*Cur, error) {
 		}
 		return m, nil
 
-	case is.MMx: // ----------------------------------------------------
+	case z.MMx: // ----------------------------------------------------
 		c := 0
 		last := s.Mark()
 		var err error
@@ -418,16 +418,16 @@ func (s *R) Expect(expr any) (*Cur, error) {
 		}
 		return end, nil
 
-	case is.Mn1: // ----------------------------------------------------
+	case z.Mn1: // ----------------------------------------------------
 		m := s.Mark()
-		c, err := s.Expect(is.Min{1, v.This})
+		c, err := s.Expect(z.Min{1, v.This})
 		if err != nil {
 			s.Jump(m)
 			return nil, s.ErrorExpected(v)
 		}
 		return c, nil
 
-	case is.Min: // ----------------------------------------------------
+	case z.Min: // ----------------------------------------------------
 		c := 0
 		last := s.Mark()
 		var err error
@@ -446,16 +446,16 @@ func (s *R) Expect(expr any) (*Cur, error) {
 		}
 		return last, nil
 
-	case is.C: // ------------------------------------------------------
+	case z.C: // ------------------------------------------------------
 		b := s.Mark()
-		m, err := s.Expect(is.MMx{v.N, v.N, v.This})
+		m, err := s.Expect(z.MMx{v.N, v.N, v.This})
 		if err != nil {
 			s.Jump(b)
 			return nil, s.ErrorExpected(v)
 		}
 		return m, nil
 
-	case is.Any: // ----------------------------------------------------
+	case z.Any: // ----------------------------------------------------
 		for n := 0; n < v.N; n++ {
 			s.Scan()
 		}
@@ -463,7 +463,7 @@ func (s *R) Expect(expr any) (*Cur, error) {
 		s.Scan()
 		return m, nil
 
-	case is.Rng: // ----------------------------------------------------
+	case z.Rng: // ----------------------------------------------------
 		if !(v.First <= s.Cur.Rune && s.Cur.Rune <= v.Last) {
 			err := s.ErrorExpected(v)
 			return nil, err
@@ -511,47 +511,47 @@ func (s *R) ErrorExpected(this any, args ...any) error {
 	switch v := this.(type) {
 	case rune: // otherwise will use uint32
 		msg = fmt.Sprintf(`expected rune %q`, v)
-	case is.It:
+	case z.It:
 		if len(v) > 1 {
 			msg = fmt.Sprintf(`expected one of %q`, v)
 		} else {
 			msg = fmt.Sprintf(`expected %q`, v[0])
 		}
-	case is.Not:
+	case z.Not:
 		msg = fmt.Sprintf(`unexpected %q`, args[0])
-	case is.In:
+	case z.In:
 		str := `expected one of %q`
 		msg = fmt.Sprintf(str, v)
-	case is.X:
+	case z.X:
 		//str := `expected %q in sequence %q at %v beginning`
 		//msg = fmt.Sprintf(str, args[0], v, args[1])
 		str := `expected %q in sequence`
 		msg = fmt.Sprintf(str, v)
-	case is.O:
+	case z.O:
 		str := `expected an optional %v`
 		msg = fmt.Sprintf(str, v)
-	case is.Mn1:
+	case z.Mn1:
 		str := `expected one or more %q`
 		msg = fmt.Sprintf(str, v.This)
-	case is.Min:
+	case z.Min:
 		str := `expected min %v of %q`
 		msg = fmt.Sprintf(str, v.Min, v.This)
-	case is.MMx:
+	case z.MMx:
 		str := `expected min %v, max %v of %q`
 		msg = fmt.Sprintf(str, v.Min, v.Max, v.This)
-	case is.C:
+	case z.C:
 		str := `expected exactly %v of %q`
 		msg = fmt.Sprintf(str, v.N, v.This)
-	case is.Rng:
+	case z.Rng:
 		str := `expected range [%v-%v]`
 		msg = fmt.Sprintf(str, string(v.First), string(v.Last))
-	case is.Toi:
+	case z.Toi:
 		str := `%q not found`
 		if len(v) > 1 {
 			str = `none of %q found`
 		}
 		msg = fmt.Sprintf(str, v)
-	case is.To:
+	case z.To:
 		msg = fmt.Sprintf(`none of %q found`, v)
 	default:
 		msg = fmt.Sprintf(`expected %T %q`, v, v)
