@@ -334,7 +334,7 @@ func (s *R) Expect(expr any) (*Cur, error) {
 		s.Jump(back)
 		return nil, s.ErrorExpected(v)
 
-	case z.To: // -----------------------------------------------------
+	case z.T: // -----------------------------------------------------
 		m := s.Mark()
 		b4 := s.Mark()
 		for s.Cur.Rune != tk.EOD {
@@ -551,7 +551,7 @@ func (s *R) ErrorExpected(this any, args ...any) error {
 			str = `none of %q found`
 		}
 		msg = fmt.Sprintf(str, v)
-	case z.To:
+	case z.T:
 		msg = fmt.Sprintf(`none of %q found`, v)
 	default:
 		msg = fmt.Sprintf(`expected %T %q`, v, v)

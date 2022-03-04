@@ -103,12 +103,12 @@ type In []any
 // found the scan is advanced (unlike is.It, which does not advance).
 type O []any
 
-// To is a set of advancing expressions that mark an exclusive boundary
-// at which the scan should stop returning a cursor just before the
-// boundary.
-type To []any
+// T ("to") is a set of advancing expressions that mark an exclusive
+// boundary at which the scan should stop returning a cursor just before
+// the boundary.
+type T []any
 
-// Ti ("to inclusive") is an inclusive version of is.To returning
+// Ti ("to inclusive") is an inclusive version of z.T returning
 // a cursor that points to the last rune of the boundary itself.
 type Ti []any
 

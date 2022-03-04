@@ -306,7 +306,7 @@ func ExampleExpect_not_X_Success() {
 
 func ExampleExpect_to_Success_Mid() {
 	s, _ := scan.New("some thing wonderful")
-	c, _ := s.Expect(z.To{"wo"})
+	c, _ := s.Expect(z.T{"wo"})
 	c.Print() // "wo" not inc, same as "some thing ", so ' '
 	s.Print() // advances to 'w'
 	// Output:
@@ -531,7 +531,7 @@ func ExampleExpect_hook() {
 
 func ExampleExpect_to_Success() {
 	s, _ := scan.New("some thing")
-	c, _ := s.Expect(z.To{'e'})
+	c, _ := s.Expect(z.T{'e'})
 	c.Print() // same as "som", points to 'm'
 	s.Print() // scanned next after ('e')
 	// Output:
