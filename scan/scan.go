@@ -394,7 +394,7 @@ func (s *R) Expect(expr any) (*Cur, error) {
 		}
 		return m, nil
 
-	case z.MMx: // ----------------------------------------------------
+	case z.MM: // ----------------------------------------------------
 		c := 0
 		last := s.Mark()
 		var err error
@@ -448,7 +448,7 @@ func (s *R) Expect(expr any) (*Cur, error) {
 
 	case z.C: // ------------------------------------------------------
 		b := s.Mark()
-		m, err := s.Expect(z.MMx{v.N, v.N, v.This})
+		m, err := s.Expect(z.MM{v.N, v.N, v.This})
 		if err != nil {
 			s.Jump(b)
 			return nil, s.ErrorExpected(v)
@@ -536,7 +536,7 @@ func (s *R) ErrorExpected(this any, args ...any) error {
 	case z.Min:
 		str := `expected min %v of %q`
 		msg = fmt.Sprintf(str, v.Min, v.This)
-	case z.MMx:
+	case z.MM:
 		str := `expected min %v, max %v of %q`
 		msg = fmt.Sprintf(str, v.Min, v.Max, v.This)
 	case z.C:

@@ -104,25 +104,19 @@ type In []any
 type O []any
 
 // To is a set of advancing expressions that mark an exclusive boundary
-// at which the scan should stop. The matching expression itself will
-// not be advanced.
-//
-// In order to work with escaped boundaries use a negative
-// look-ahead sequence combined with the boundary:
-//
-//     is.To{s.X{is.Not{`\\`,`"`}}}
-//
+// at which the scan should stop returning a cursor just before the
+// boundary.
 type To []any
 
-// Toi is an inclusive version of is.To.
+// Toi is an inclusive version of is.To returning a cursor that points
+// to the last rune of the boundary itself.
 type Toi []any
 
 // --------------------------- parameterized --------------------------
 
-// MMx is a parameterized advancing expression that matches an inclusive
-// minimum and maximum count of the given expression (This). Use within
-// is.is.It to disable advancement.
-type MMx struct {
+// MM is a parameterized advancing expression that matches an inclusive
+// minimum and maximum count of the given expression (This).
+type MM struct {
 	Min  int
 	Max  int
 	This any

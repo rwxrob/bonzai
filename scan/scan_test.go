@@ -450,12 +450,12 @@ func ExampleExpect_mMx() {
 	s.Snap()
 	s.ScanN(2)
 	s.Print()
-	s.Expect(z.MMx{1, 3, 'm'}) // goggles up all three
+	s.Expect(z.MM{1, 3, 'm'}) // goggles up all three
 	s.Print()
 	s.Back()
-	s.Expect(z.MMx{1, 3, 's'}) // yep, at least one
+	s.Expect(z.MM{1, 3, 's'}) // yep, at least one
 	s.Print()
-	_, err := s.Expect(z.MMx{1, 3, 'X'}) // nope
+	_, err := s.Expect(z.MM{1, 3, 'X'}) // nope
 	fmt.Println(err)
 	// Output:
 	// U+006D 'm' 1,3-3 (3-3)
