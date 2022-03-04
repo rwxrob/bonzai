@@ -351,42 +351,6 @@ func (s *R) Expect(expr any) (*Cur, error) {
 		}
 		s.Jump(m)
 		return nil, s.ErrorExpected(v)
-		/*
-			back := s.Mark()
-			b4 := s.Mark()
-			for s.Cur.Rune != tk.EOD {
-				for _, i := range v {
-					m, _ := s.Expect(i)
-					if m != nil {
-						return b4, nil
-					}
-				}
-				b4 = s.Mark()
-				s.Scan()
-			}
-			s.Jump(back)
-			return nil, s.ErrorExpected(v)
-		*/
-
-	/*
-			var m, b4 *Cur
-		OUT:
-			for s.Cur.Rune != tk.EOD {
-				for _, i := range v {
-					m, _ = s.Expect(i)
-					if m != nil {
-						break OUT
-					}
-				}
-				b4 = s.Mark()
-				s.Scan()
-			}
-			if m == nil {
-				err := s.ErrorExpected(v)
-				return nil, err
-			}
-			return b4, nil
-	*/
 
 	case is.It: // ----------------------------------------------------
 		var m *Cur
