@@ -78,13 +78,13 @@ type X []any
 
 // ------------------------------- sets -------------------------------
 
-// It ("is it") is a set of positive lookahead expressions. If any are
+// P ("positive") is a set of positive lookahead expressions. If any are
 // seen at the current cursor position the scan will proceed without
-// consuming them (unlike is.O and is.In). If none are found the scan
+// consuming them (unlike z.O and z.I). If none are found the scan
 // fails. This is useful when everything from one expression is wanted
 // except for a few positive exceptions. (Equal to ampersand (&) in
 // PEGN.)
-type It []any
+type P []any
 
 // N ("not") is a set of negative lookahead expressions. If any are seen
 // at the current cursor position the scan will fail and the scan is

@@ -352,7 +352,7 @@ func (s *R) Expect(expr any) (*Cur, error) {
 		s.Jump(m)
 		return nil, s.ErrorExpected(v)
 
-	case z.It: // ----------------------------------------------------
+	case z.P: // ----------------------------------------------------
 		var m *Cur
 		b := s.Mark()
 		for _, i := range v {
@@ -511,7 +511,7 @@ func (s *R) ErrorExpected(this any, args ...any) error {
 	switch v := this.(type) {
 	case rune: // otherwise will use uint32
 		msg = fmt.Sprintf(`expected rune %q`, v)
-	case z.It:
+	case z.P:
 		if len(v) > 1 {
 			msg = fmt.Sprintf(`expected one of %q`, v)
 		} else {

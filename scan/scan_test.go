@@ -226,7 +226,7 @@ func ExampleExpect_compound_Expr_Rune() {
 
 func ExampleExpect_it_Success() {
 	s, _ := scan.New("some thing")
-	c, _ := s.Expect(z.It{"some"})
+	c, _ := s.Expect(z.P{"some"})
 	c.Print() // even though true, not moved
 	s.Print() // scanner also not moved
 	// Output:
@@ -236,7 +236,7 @@ func ExampleExpect_it_Success() {
 
 func ExampleExpect_it_Success_Middle() {
 	s, _ := scan.New("some thing")
-	c, _ := s.Expect(z.X{"some", z.It{' '}})
+	c, _ := s.Expect(z.X{"some", z.P{' '}})
 	c.Print() // advanced up to (but not including) ' '
 	s.Print() // scanner also not moved
 	// Output:
@@ -246,7 +246,7 @@ func ExampleExpect_it_Success_Middle() {
 
 func ExampleExpect_it_Fail() {
 	s, _ := scan.New("some thing")
-	_, err := s.Expect(z.X{"some", z.It{"thing"}})
+	_, err := s.Expect(z.X{"some", z.P{"thing"}})
 	fmt.Println(err)
 	s.Print() // but scanner did get "some" so advanced
 	// Output:
@@ -256,7 +256,7 @@ func ExampleExpect_it_Fail() {
 
 func ExampleExpect_it_Fail_X() {
 	s, _ := scan.New("some thing")
-	_, err := s.Expect(z.X{"some", z.It{"thing"}})
+	_, err := s.Expect(z.X{"some", z.P{"thing"}})
 	fmt.Println(err)
 	s.Print() // but scanner did get "some" so advanced
 	// Output:
