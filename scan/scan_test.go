@@ -480,7 +480,7 @@ func ExampleExpect_c() {
 	// U+006D 'm' 1,3-3 (3-3)
 	// U+0065 'e' 1,6-6 (6-6)
 	// U+006F 'o' 1,2-2 (2-2)
-	// expected exactly 3 of 'X' at U+006F 'o' 1,2-2 (2-2)
+	// expected rune 'X' at U+006F 'o' 1,2-2 (2-2)
 }
 
 func ExampleExpect_rng() {

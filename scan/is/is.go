@@ -143,6 +143,30 @@ type C struct {
 	This any
 }
 
+// C2 is shorthand for z.C{2,This}.
+type C2 struct{ This any }
+
+// C3 is shorthand for z.C{3,This}.
+type C3 struct{ This any }
+
+// C4 is shorthand for z.C{4,This}.
+type C4 struct{ This any }
+
+// C5 is shorthand for z.C{5,This}.
+type C5 struct{ This any }
+
+// C6 is shorthand for z.C{6,This}.
+type C6 struct{ This any }
+
+// C7 is shorthand for z.C{7,This}.
+type C7 struct{ This any }
+
+// C8 is shorthand for z.C{8,This}.
+type C8 struct{ This any }
+
+// C9 is shorthand for z.C{9,This}.
+type C9 struct{ This any }
+
 // A is short for z.C{tk.ANY}. (Mnemonic: "any", "asterisk")
 type A struct {
 	N int

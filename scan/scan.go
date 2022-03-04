@@ -446,15 +446,6 @@ func (s *R) Expect(expr any) (*Cur, error) {
 		}
 		return last, nil
 
-	case z.C: // ------------------------------------------------------
-		b := s.Mark()
-		m, err := s.Expect(z.MM{v.N, v.N, v.This})
-		if err != nil {
-			s.Jump(b)
-			return nil, s.ErrorExpected(v)
-		}
-		return m, nil
-
 	case z.A: // ----------------------------------------------------
 		for n := 0; n < v.N; n++ {
 			s.Scan()
@@ -471,6 +462,25 @@ func (s *R) Expect(expr any) (*Cur, error) {
 		m := s.Mark()
 		s.Scan()
 		return m, nil
+
+	case z.C: // ------------------------------------------------------
+		return s.expcount(v.N, v.This)
+	case z.C2:
+		return s.expcount(2, v.This)
+	case z.C3:
+		return s.expcount(3, v.This)
+	case z.C4:
+		return s.expcount(4, v.This)
+	case z.C5:
+		return s.expcount(5, v.This)
+	case z.C6:
+		return s.expcount(6, v.This)
+	case z.C7:
+		return s.expcount(7, v.This)
+	case z.C8:
+		return s.expcount(8, v.This)
+	case z.C9:
+		return s.expcount(9, v.This)
 
 	case Hook: // ------------------------------------------------------
 		if !v(s) {
@@ -492,6 +502,20 @@ func (s *R) Expect(expr any) (*Cur, error) {
 
 	}
 	return nil, fmt.Errorf("unknown expression (%T)", expr)
+}
+
+// handles all C* expressions
+func (s *R) expcount(n int, expr any) (*Cur, error) {
+	b := s.Mark()
+	m := s.Mark()
+	for i := 0; i < n; i++ {
+		m, _ := s.Expect(expr)
+		if m == nil {
+			s.Jump(b)
+			return nil, s.ErrorExpected(expr)
+		}
+	}
+	return m, nil
 }
 
 // ErrorExpected returns a verbose, one-line error describing what was
@@ -539,9 +563,6 @@ func (s *R) ErrorExpected(this any, args ...any) error {
 	case z.MM:
 		str := `expected min %v, max %v of %q`
 		msg = fmt.Sprintf(str, v.Min, v.Max, v.This)
-	case z.C:
-		str := `expected exactly %v of %q`
-		msg = fmt.Sprintf(str, v.N, v.This)
 	case z.R:
 		str := `expected range [%v-%v]`
 		msg = fmt.Sprintf(str, string(v.First), string(v.Last))
