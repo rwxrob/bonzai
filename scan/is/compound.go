@@ -1,4 +1,4 @@
-package is
+package z
 
 // keep only compound expressions here
 

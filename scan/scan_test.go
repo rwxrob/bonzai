@@ -7,7 +7,7 @@ import (
 	"strings"
 
 	"github.com/rwxrob/bonzai/scan"
-	"github.com/rwxrob/bonzai/scan/is"
+	is "github.com/rwxrob/bonzai/scan/is"
 	"github.com/rwxrob/bonzai/scan/tk"
 )
 
@@ -464,17 +464,17 @@ func ExampleExpect_mMx() {
 	// expected min 1, max 3 of 'X' at U+006F 'o' 1,2-2 (2-2)
 }
 
-func ExampleExpect_n() {
+func ExampleExpect_c() {
 	s, _ := scan.New("sommme thing")
 	s.Snap()
 	s.ScanN(2)
 	s.Print()
-	s.Expect(is.N{3, 'm'}) // goggles up all three
+	s.Expect(is.C{3, 'm'}) // goggles up all three
 	s.Print()
 	s.Back()
-	s.Expect(is.N{1, 's'}) // yes, but silly since 's' is easier
+	s.Expect(is.C{1, 's'}) // yes, but silly since 's' is easier
 	s.Print()
-	_, err := s.Expect(is.N{3, 'X'}) // nope
+	_, err := s.Expect(is.C{3, 'X'}) // nope
 	fmt.Println(err)
 	// Output:
 	// U+006D 'm' 1,3-3 (3-3)

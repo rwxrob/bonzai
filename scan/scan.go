@@ -22,7 +22,7 @@ import (
 	"io"
 	"unicode/utf8"
 
-	"github.com/rwxrob/bonzai/scan/is"
+	is "github.com/rwxrob/bonzai/scan/is"
 	"github.com/rwxrob/bonzai/scan/tk"
 	"github.com/rwxrob/bonzai/util"
 )
@@ -446,7 +446,7 @@ func (s *R) Expect(expr any) (*Cur, error) {
 		}
 		return last, nil
 
-	case is.N: // ------------------------------------------------------
+	case is.C: // ------------------------------------------------------
 		b := s.Mark()
 		m, err := s.Expect(is.MMx{v.N, v.N, v.This})
 		if err != nil {
@@ -539,7 +539,7 @@ func (s *R) ErrorExpected(this any, args ...any) error {
 	case is.MMx:
 		str := `expected min %v, max %v of %q`
 		msg = fmt.Sprintf(str, v.Min, v.Max, v.This)
-	case is.N:
+	case is.C:
 		str := `expected exactly %v of %q`
 		msg = fmt.Sprintf(str, v.N, v.This)
 	case is.Rng:

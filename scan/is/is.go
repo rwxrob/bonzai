@@ -2,13 +2,19 @@
 // SPDX-License-Identifier: Apache-2.0
 
 /*
-Package is defines the Bonzai Parsing Expression Grammar Notation
-(BPEGN) implemented entirely using Go types (mostly slices and structs).
-BPEGN can be 100% transpiled to and from the Parsing Expression Grammer
-Notation (PEGN). Code in one and use "bonzai pegn" command to easily
-generate the other. BPEGN is sometimes referred to informally as "Bonzai
-Scanner Expect" language as well since it is passed directly to
-scan.Expect or scan.Check.
+Package z (often imported as "is") defines the Bonzai Parsing Expression
+Grammar Notation (BPEGN) (aka "Bonzai Scanner Expect" language)
+implemented entirely using Go types (mostly slices and structs).  BPEGN
+can be 100% transpiled to and from the Parsing Expression Grammer
+Notation (PEGN). Code in one grammar and use the bonzai command to
+easily generate the other.
+
+Nodes and Expressions
+
+Nodes (z.N) indicate something to be captured as a part of the resulting
+abstract syntax tree. They are functionally equivalent to parenthesis in
+regular expressions but with the obvious advantage of capturing a rooted
+node tree instead of an array. Expressions (z.X) indicate a sequence to be scanned but not captured unless the expression itself is within a node (z.N).
 
 Tokens
 
@@ -49,14 +55,26 @@ a scan.R). A Hook is passed only the scanner struct and must return a bool
 indicating if the scan should proceed.  See scan.Hook for more
 information.
 */
-package is
+package z
+
+// ------------------------------- core -------------------------------
+
+// N ("node") is a named sequence of expressions that will be captured
+// into a node. The first string must always be the name which can be
+// any valid Go string. If any expression fails to match the scan fails.
+// Otherwise, a new tree.Node is added under the current node and the
+// scan proceeds. Nodes must either contain other nodes or no nodes at
+// all. If the first item in the sequence after the name is not also
+// a node (z.N) then the node is marked as "edge" (or "leaf") and any
+// nodes detected further in the sequence will cause the scan to fail
+// with a syntax error.
+type N []any
+
+// X ("expression") is a sequence of expressions.  If any are not the
+// scan fails. (Equal to (?foo) in regular expressions.)
+type X []any
 
 // ------------------------------- sets -------------------------------
-
-// X (the slice) groups expressions into a sequence. It ensures that all
-// expressions appears in that specific order. If any are not the scan
-// fails. (Equal to parenthesis in PEGN.)
-type X []any
 
 // It (the slice) is a set of positive lookahead expressions. If any are
 // seen at the current cursor position the scan will proceed without
@@ -121,15 +139,15 @@ type Min struct {
 // Mn1 is shorthand for is.Min{1,This}.
 type Mn1 struct{ This any }
 
-// N is a parameterized advancing expression that matches exactly
-// N number of the given expression (This). Use within is.It to disable
+// C is a parameterized advancing expression that matches an exact count
+// of the given expression (This). Use within is.It to disable
 // advancement.
-type N struct {
+type C struct {
 	N    int
 	This any
 }
 
-// Any is short for is.N{tk.ANY}.
+// Any is short for is.C{tk.ANY}.
 type Any struct {
 	N int
 }
