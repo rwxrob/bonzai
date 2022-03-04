@@ -108,24 +108,24 @@ type O []any
 // boundary.
 type To []any
 
-// Toi is an inclusive version of is.To returning a cursor that points
-// to the last rune of the boundary itself.
-type Toi []any
+// Ti ("to inclusive") is an inclusive version of is.To returning
+// a cursor that points to the last rune of the boundary itself.
+type Ti []any
 
 // --------------------------- parameterized --------------------------
 
-// MM is a parameterized advancing expression that matches an inclusive
-// minimum and maximum count of the given expression (This).
+// MM ("minmax") is a parameterized advancing expression that matches an
+// inclusive minimum and maximum count of the given expression (This).
 type MM struct {
 	Min  int
 	Max  int
 	This any
 }
 
-// Min is a parameterized advancing expression that matches an inclusive
-// minimum number of the given expression item (This). Use within is.It
-// to disable advancement.
-type Min struct {
+// M ("min") is a parameterized advancing expression that matches an
+// inclusive minimum number of the given expression item (This). Use
+// within is.It to disable advancement.
+type M struct {
 	Min  int
 	This any
 }

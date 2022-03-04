@@ -435,9 +435,9 @@ func ExampleExpect_mn1() {
 	// U+006F 'o' 1,2-2 (2-2)
 }
 
-func ExampleExpect_min() {
+func ExampleExpect_minimum() {
 	s, _ := scan.New("sssoommme thing")
-	c, _ := s.Expect(z.Min{2, 's'})
+	c, _ := s.Expect(z.M{2, 's'})
 	c.Print() // needs 2, but will consume all three to last 's'
 	s.Print() // advances to next after ('o')
 	// Output:
@@ -539,9 +539,9 @@ func ExampleExpect_to_Success() {
 	// U+0065 'e' 1,4-4 (4-4)
 }
 
-func ExampleExpect_toi() {
+func ExampleExpect_to_Inclusive() {
 	s, _ := scan.New("some thing")
-	c, _ := s.Expect(z.Toi{'e'})
+	c, _ := s.Expect(z.Ti{'e'})
 	c.Print() // same as "some", points to 'e'
 	s.Print() // scanned next after (' ')
 	// Output:

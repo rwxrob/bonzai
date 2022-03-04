@@ -320,7 +320,7 @@ func (s *R) Expect(expr any) (*Cur, error) {
 			}
 		}
 
-	case z.Toi: // -----------------------------------------------------
+	case z.Ti: // -----------------------------------------------------
 		back := s.Mark()
 		for s.Cur.Rune != tk.EOD {
 			for _, i := range v {
@@ -420,14 +420,14 @@ func (s *R) Expect(expr any) (*Cur, error) {
 
 	case z.Mn1: // ----------------------------------------------------
 		m := s.Mark()
-		c, err := s.Expect(z.Min{1, v.This})
+		c, err := s.Expect(z.M{1, v.This})
 		if err != nil {
 			s.Jump(m)
 			return nil, s.ErrorExpected(v)
 		}
 		return c, nil
 
-	case z.Min: // ----------------------------------------------------
+	case z.M: // ----------------------------------------------------
 		c := 0
 		last := s.Mark()
 		var err error
@@ -533,7 +533,7 @@ func (s *R) ErrorExpected(this any, args ...any) error {
 	case z.Mn1:
 		str := `expected one or more %q`
 		msg = fmt.Sprintf(str, v.This)
-	case z.Min:
+	case z.M:
 		str := `expected min %v of %q`
 		msg = fmt.Sprintf(str, v.Min, v.This)
 	case z.MM:
@@ -545,7 +545,7 @@ func (s *R) ErrorExpected(this any, args ...any) error {
 	case z.Rng:
 		str := `expected range [%v-%v]`
 		msg = fmt.Sprintf(str, string(v.First), string(v.Last))
-	case z.Toi:
+	case z.Ti:
 		str := `%q not found`
 		if len(v) > 1 {
 			str = `none of %q found`
