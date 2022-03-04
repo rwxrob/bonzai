@@ -342,6 +342,16 @@ func ExampleExpect_token_ANY() {
 	// U+006F 'o' 1,2-2 (2-2)
 }
 
+func ExampleExpect_token_EOD() {
+	s, _ := scan.New("some thing")
+	c, _ := s.Expect("some", tk.EOD, "ignored")
+	c.Print() // same as "some"
+	s.Print() // advances
+	// Output:
+	// <EOD>
+	// <EOD>
+}
+
 func ExampleExpect_any_Success() {
 	s, _ := scan.New("some thing")
 	c, _ := s.Expect(is.Any{5})

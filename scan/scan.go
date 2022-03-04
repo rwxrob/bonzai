@@ -259,6 +259,10 @@ func (s *R) Expect(expr ...any) (*Cur, error) {
 
 		case rune: // ------------------------------------------------------
 			if v != tk.ANY && s.Cur.Rune != v {
+				if v == tk.EOD {
+					s.Cur.Rune = tk.EOD
+					return s.Mark(), nil
+				}
 				err := s.ErrorExpected(m)
 				s.Jump(beg)
 				return nil, err
