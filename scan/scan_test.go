@@ -296,7 +296,7 @@ func ExampleExpect_not_X_Fail() {
 
 func ExampleExpect_not_X_Success() {
 	s, _ := scan.New("some thing wonderful")
-	c, _ := s.Expect(z.X{z.N{`n`}, z.In{`som`}})
+	c, _ := s.Expect(z.X{z.N{`n`}, z.I{`som`}})
 	c.Print() // pointing to last in match 'm'
 	s.Print() // advanced to next after match 'e'
 	// Output:
@@ -317,10 +317,10 @@ func ExampleExpect_to_Success_Mid() {
 func ExampleExpect_in() {
 	s, _ := scan.New("some thing")
 	s.Scan()
-	c, _ := s.Expect(z.In{'O', 'o', "ome"})
+	c, _ := s.Expect(z.I{'O', 'o', "ome"})
 	c.Print()
 	s.Print()
-	_, err := s.Expect(z.In{'x', 'y', "zee"})
+	_, err := s.Expect(z.I{'x', 'y', "zee"})
 	fmt.Println(err)
 	// Output:
 	// U+006F 'o' 1,2-2 (2-2)
@@ -331,7 +331,7 @@ func ExampleExpect_in() {
 func ExampleExpect_avoid_Not_with_In() {
 	s, _ := scan.New("some thing")
 	s.Snap()
-	c, _ := s.Expect(z.In{z.N{'s'}, z.R{'a', 'z'}})
+	c, _ := s.Expect(z.I{z.N{'s'}, z.R{'a', 'z'}})
 	c.Print() // unexpected success
 	s.Print() // advanced to 'o'
 	s.Back()

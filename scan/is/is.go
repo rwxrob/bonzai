@@ -93,13 +93,13 @@ type P []any
 // point (!) in PEGN.)
 type N []any
 
-// In is a set of advancing expressions. If any expression in the slice
-// is found the scan advances to the end of that expression and
-// continues. If none of the expressions is found the scan fails.
-// Evaluation of expressions is always left to right allowing
-// parser developers to prioritize common expressions at the beginning
-// of the slice.
-type In []any
+// I ("in","include") is a set of advancing expressions. If any
+// expression in the slice is found the scan advances to the end of that
+// expression and continues. If none of the expressions is found the
+// scan fails.  Evaluation of expressions is always left to right
+// allowing parser developers to prioritize common expressions at the
+// beginning of the slice.
+type I []any
 
 // O is a set of optional advancing expressions. If any expression is
 // found the scan is advanced (unlike is.It, which does not advance).
