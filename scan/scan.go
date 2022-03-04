@@ -418,7 +418,7 @@ func (s *R) Expect(expr any) (*Cur, error) {
 		}
 		return end, nil
 
-	case z.Mn1: // ----------------------------------------------------
+	case z.M1: // ----------------------------------------------------
 		m := s.Mark()
 		c, err := s.Expect(z.M{1, v.This})
 		if err != nil {
@@ -530,7 +530,7 @@ func (s *R) ErrorExpected(this any, args ...any) error {
 	case z.O:
 		str := `expected an optional %v`
 		msg = fmt.Sprintf(str, v)
-	case z.Mn1:
+	case z.M1:
 		str := `expected one or more %q`
 		msg = fmt.Sprintf(str, v.This)
 	case z.M:

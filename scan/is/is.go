@@ -130,8 +130,8 @@ type M struct {
 	This any
 }
 
-// Mn1 is shorthand for is.Min{1,This}.
-type Mn1 struct{ This any }
+// M1 is shorthand for z.M{1,This}.
+type M1 struct{ This any }
 
 // C is a parameterized advancing expression that matches an exact count
 // of the given expression (This). Use within is.It to disable

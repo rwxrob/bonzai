@@ -417,15 +417,15 @@ func ExampleExpect_o_Optional_Success() {
 	// U+0020 ' ' 1,5-5 (5-5)
 }
 
-func ExampleExpect_mn1() {
+func ExampleExpect_minimum_One() {
 	s, _ := scan.New("sommme thing")
 	start := s.Mark()
 	s.ScanN(2)
-	c, _ := s.Expect(z.Mn1{'m'}) // goggles up all three
+	c, _ := s.Expect(z.M1{'m'}) // goggles up all three
 	c.Print()
 	s.Print()
 	s.Jump(start)
-	c, _ = s.Expect(z.Mn1{'s'}) // yep, just one
+	c, _ = s.Expect(z.M1{'s'}) // yep, just one
 	c.Print()
 	s.Print()
 	// Output:
