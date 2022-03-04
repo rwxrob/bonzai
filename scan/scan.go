@@ -314,7 +314,7 @@ func (s *R) Expect(expr ...any) (*Cur, error) {
 			}
 			end = b4
 
-		case is.Lk: // ----------------------------------------------------
+		case is.It: // ----------------------------------------------------
 			var m *Cur
 			for _, i := range v {
 				m, _ = s.check(i)
@@ -492,7 +492,7 @@ func (s *R) ErrorExpected(this any, args ...any) error {
 	switch v := this.(type) {
 	case rune: // otherwise will use uint32
 		msg = fmt.Sprintf(`expected rune %q`, v)
-	case is.Lk:
+	case is.It:
 		msg = fmt.Sprintf(`expected %q`, v)
 	case is.Not:
 		msg = fmt.Sprintf(`unexpected %q`, args[0])

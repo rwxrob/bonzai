@@ -189,13 +189,13 @@ func ExampleExpect_basic() {
 
 func ExampleExpect_lk() {
 	s, _ := scan.New("some thing")
-	_, e := s.Expect(is.Lk{"foo"})
+	_, e := s.Expect(is.It{"foo"})
 	fmt.Println(e)
-	c, _ := s.Expect(is.Lk{"foo", 's'})
+	c, _ := s.Expect(is.It{"foo", 's'})
 	c.Print()
 	s.ScanN(2)
 	s.Print()
-	c, _ = s.Expect(is.Lk{is.Rng{'l', 'p'}})
+	c, _ = s.Expect(is.It{is.Rng{'l', 'p'}})
 	s.Print() // not advanced
 	c, _ = s.Expect(is.Rng{'l', 'p'})
 	s.Print() // advanced

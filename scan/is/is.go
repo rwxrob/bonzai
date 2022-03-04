@@ -50,17 +50,22 @@ package is
 
 // Seq groups expressions into a sequence. It ensures that all
 // expressions appears in that specific order. If any are not the scan
-// fails.
+// fails. (Equal to parenthesis in PEGN.)
 type Seq []any
 
-// Lk is a set of positive lookahead expressions. If any are seen at
-// the current cursor position the scan will proceed without consuming
-// them (unlike is.Opt and is.In). If none are found the scan fails.
-type Lk []any
+// It (the slice) is a set of positive lookahead expressions. If any are
+// seen at the current cursor position the scan will proceed without
+// consuming them (unlike is.Opt and is.In). If none are found the scan
+// fails. This is useful when everything from one expression is wanted
+// except for a few positive exceptions. (Equal to ampersand (&) in
+// PEGN.) Also see the tk.IS token.
+type It []any
 
-// Not is a set of negative lookahead expressions. If any are seen at
-// the current cursor position the scan will fail and the scan is never
-// advanced.
+// Not (the slice) is a set of negative lookahead expressions. If any
+// are seen at the current cursor position the scan will fail and the
+// scan is never advanced. This is useful when everything from one
+// expression is wanted except for a few negative exceptions. (Equal to
+// exclamation point (!) in PEGN.) Also see the tk.NOT token.
 type Not []any
 
 // In is a set of advancing expressions. If any expression in the slice
@@ -72,7 +77,7 @@ type Not []any
 type In []any
 
 // Opt is a set of optional advancing expressions. If any expression is
-// found the scan is advanced (unlike Lk, which does not advance).
+// found the scan is advanced (unlike is.It, which does not advance).
 type Opt []any
 
 // To is a set of advancing expressions that mark an exclusive boundary
@@ -86,16 +91,14 @@ type Opt []any
 //
 type To []any
 
-// Toi is a set of advancing expressions that mark an inclusive boundary
-// after which the scan should stop. The matching expression will be
-// included in the advance (unlike is.To).
+// Toi is an inclusive version of is.To.
 type Toi []any
 
 // --------------------------- parameterized --------------------------
 
 // MMx is a parameterized advancing expression that matches an inclusive
 // minimum and maximum count of the given expression (This). Use within
-// is.Lk to disable advancement.
+// is.is.It to disable advancement.
 type MMx struct {
 	Min  int
 	Max  int
@@ -103,7 +106,7 @@ type MMx struct {
 }
 
 // Min is a parameterized advancing expression that matches an inclusive
-// minimum number of the given expression item (This). Use within is.Lk
+// minimum number of the given expression item (This). Use within is.It
 // to disable advancement.
 type Min struct {
 	Min  int
@@ -114,7 +117,7 @@ type Min struct {
 type Mn1 struct{ This any }
 
 // N is a parameterized advancing expression that matches exactly
-// N number of the given expression (This). Use within is.Lk to disable
+// N number of the given expression (This). Use within is.It to disable
 // advancement.
 type N struct {
 	N    int
@@ -128,7 +131,7 @@ type Any struct {
 
 // Rng is a parameterized advancing expression that matches a single
 // Unicode code point (rune, uint32) from an inclusive consecutive set
-// from First to Last (First,Last). Use within is.Lk to disable
+// from First to Last (First,Last). Use within is.It to disable
 // advancement.
 type Rng struct {
 	First rune
