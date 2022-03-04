@@ -331,12 +331,12 @@ func ExampleExpect_in() {
 func ExampleExpect_avoid_Not_with_In() {
 	s, _ := scan.New("some thing")
 	s.Snap()
-	c, _ := s.Expect(z.In{z.Not{'s'}, z.Rng{'a', 'z'}})
+	c, _ := s.Expect(z.In{z.Not{'s'}, z.R{'a', 'z'}})
 	c.Print() // unexpected success
 	s.Print() // advanced to 'o'
 	s.Back()
 	// use z.X instead
-	_, err := s.Expect(z.X{z.Not{'s'}, z.Rng{'a', 'z'}})
+	_, err := s.Expect(z.X{z.Not{'s'}, z.R{'a', 'z'}})
 	fmt.Println(err)
 	s.Print() // not advanced
 	// Output:
@@ -486,7 +486,7 @@ func ExampleExpect_c() {
 func ExampleExpect_rng() {
 	s, _ := scan.New("some thing")
 	s.Scan()
-	c1, _ := s.Expect(z.Rng{'l', 'p'})
+	c1, _ := s.Expect(z.R{'l', 'p'})
 	c1.Print()
 	s.Print()
 	// Output:

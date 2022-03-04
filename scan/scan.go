@@ -463,7 +463,7 @@ func (s *R) Expect(expr any) (*Cur, error) {
 		s.Scan()
 		return m, nil
 
-	case z.Rng: // ----------------------------------------------------
+	case z.R: // ----------------------------------------------------
 		if !(v.First <= s.Cur.Rune && s.Cur.Rune <= v.Last) {
 			err := s.ErrorExpected(v)
 			return nil, err
@@ -542,7 +542,7 @@ func (s *R) ErrorExpected(this any, args ...any) error {
 	case z.C:
 		str := `expected exactly %v of %q`
 		msg = fmt.Sprintf(str, v.N, v.This)
-	case z.Rng:
+	case z.R:
 		str := `expected range [%v-%v]`
 		msg = fmt.Sprintf(str, string(v.First), string(v.Last))
 	case z.Ti:

@@ -141,16 +141,16 @@ type C struct {
 	This any
 }
 
-// A is short for is.C{tk.ANY}. (Mnemonic: "any", "asterisk")
+// A is short for z.C{tk.ANY}. (Mnemonic: "any", "asterisk")
 type A struct {
 	N int
 }
 
-// Rng is a parameterized advancing expression that matches a single
-// Unicode code point (rune, uint32) from an inclusive consecutive set
-// from First to Last (First,Last). Use within is.It to disable
-// advancement.
-type Rng struct {
+// R ("range") is a parameterized advancing expression that matches
+// a single Unicode code point (rune, int32) from an inclusive
+// consecutive set from First to Last (First,Last). (Mnemonic: "range",
+// "rune")
+type R struct {
 	First rune
 	Last  rune
 }
