@@ -141,8 +141,8 @@ type C struct {
 	This any
 }
 
-// Any is short for is.C{tk.ANY}.
-type Any struct {
+// A is short for is.C{tk.ANY}. (Mnemonic: "any", "asterisk")
+type A struct {
 	N int
 }
 

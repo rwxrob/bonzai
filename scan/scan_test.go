@@ -398,7 +398,7 @@ func ExampleExpect_token_ANY() {
 
 func ExampleExpect_any_Success() {
 	s, _ := scan.New("some thing")
-	c, _ := s.Expect(z.Any{5})
+	c, _ := s.Expect(z.A{5})
 	c.Print() // same as "some "
 	s.Print() // advanced to next after ('t')
 	// Output:
