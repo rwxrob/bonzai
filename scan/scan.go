@@ -20,6 +20,7 @@ import (
 	"errors"
 	"fmt"
 	"io"
+	"log"
 	"strings"
 	"unicode/utf8"
 
@@ -27,6 +28,10 @@ import (
 	"github.com/rwxrob/bonzai/scan/tk"
 	"github.com/rwxrob/bonzai/util"
 )
+
+type TextParser[Text string | rune] interface {
+	S(t Text)
+}
 
 // Hook is a valid Expect (EPEGN) expression that accepts a *scan.R to
 // the current scanner and returns an error or nil. Hooks are
@@ -142,12 +147,10 @@ func (s *R) buffer(i any) error {
 // saving the last cursor into s.Last.
 func (s *R) Scan() {
 	s.Last = s.Mark()
-
 	if s.Cur.Next == s.BufLen {
 		s.Cur.Rune = tk.EOD
 		return
 	}
-
 	ln := 1
 	r := rune(s.Buf[s.Cur.Next])
 	if r > utf8.RuneSelf {
@@ -617,3 +620,51 @@ func (s *R) ErrorExpected(this any, args ...any) error {
 
 // NewLine delegates to interval Curs.NewLine.
 func (s *R) NewLine() { s.Cur.NewLine() }
+
+// --------------------------- new functions --------------------------
+
+func (s *R) Any(n int) bool {
+	for i := 0; i < n; i++ {
+		s.Scan()
+	}
+	return true
+}
+
+func (s *R) Str(strs ...string) {
+	for _, it := range strs {
+		for _, r := range []rune(it) {
+			if r != s.Cur.Rune {
+				panic(fmt.Sprintf("expecting %q", r))
+			}
+			s.Scan()
+		}
+	}
+}
+
+func (s *R) Opt(strs ...string) {
+	s.Snap()
+OUT:
+	for _, it := range strs {
+		for _, r := range []rune(it) {
+			if r != s.Cur.Rune {
+				s.Back()
+				continue OUT
+			}
+			s.Scan()
+		}
+	}
+}
+
+func (s *R) LogPanic() {
+	r := recover()
+	if r != nil {
+		log.Printf("%v at %v", r, s)
+	}
+}
+
+func (s *R) PrintPanic() {
+	r := recover()
+	if r != nil {
+		fmt.Printf("%v at %v", r, s)
+	}
+}

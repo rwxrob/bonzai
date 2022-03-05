@@ -163,28 +163,57 @@ func ExampleNewLine() {
 	// U+0073 's' 2,1-1 (1-1)
 }
 
-func ExampleR_Parse() {
+/*
+func ExampleR_Expect_parse_Single_Success() {
+	const FOO = `FOO`
 	s, _ := scan.New("some thing")
-	s.Snap()
-	s.ScanN(5)
-	m := s.Mark()
-	s.Back()
-	n := s.Parse(m)
-	n.Print()
+	//c, _ := s.Expect(z.P{"some", ' ', z.I{'t', 'T'}})//  FIXME
+	c, _ := s.Expect(z.P{FOO, "some", ' ', 't'})
+	c.Print() // same as "some t", points at 'h'
+	s.Print()
 	// Output:
-	// {"V":"some t"}
+	// U+0074 't' 1,6-6 (6-6)
+	// U+0068 'h' 1,7-7 (7-7)
+
+}
+*/
+
+/*
+
+func ExampleR_Expect_parse_Success_One_Deep() {
+	const P = `PHRASE`
+	const S = `STRING`
+	const R = `RUNE`
+	s, _ := scan.New("some thing")
+	c, _ := s.Expect(z.P{P, z.P{S, "some"}, z.P{R, ' '}, z.P{R, 't'}})
+	c.Print() // same as "some t", points at 't'
+	//s.Print() // advances to 'h
+	for _, v := range s.Nodes {
+		fmt.Println(v)
+	}
+	// Output:
+	// U+0074 't' 1,6-6 (6-6)
+	// U+0068 'h' 1,7-7 (7-7)
+	// not null
 }
 
-func ExampleR_ParseSlice() {
+func ExampleR_Expect_parse_Succes_Mixed() {
+	const P = `PHRASE`
+	const R = `RUNE`
 	s, _ := scan.New("some thing")
-	b := s.Mark()
-	s.ScanN(5)
-	e := s.Mark()
-	n := s.ParseSlice(b, e)
-	n.Print()
+	c, e := s.Expect(z.P{P, "some", z.P{R, ' '}, "thing"})
+	fmt.Println(e)
+	c.Print() // same as "some t", points at 'h'
+	s.Print()
+	//s.CurNode.Print()
+	//fmt.Println(s.CurNode == s.Nodes[0])
 	// Output:
-	// {"V":"some t"}
+	// U+0068 'h' 1,7-7 (7-7)
+	// U+0068 'h' 1,7-7 (7-7)
+	// {"T":"FOO","V":"some t"}
+	// true
 }
+*/
 
 func ExampleErrorExpected() {
 	s, _ := scan.New("some thing")
@@ -369,15 +398,17 @@ func ExampleExpect_avoid_Not_with_In() {
 	// U+0073 's' 1,1-1 (1-1)
 }
 
+/*
 func ExampleExpect_seq_Success() {
 	s, _ := scan.New("some thing")
-	c, _ := s.Expect(z.X{"some", ' ', "thin"})
+	c, _ := s.Expect(z.P{"some", ' ', "thin"})
 	c.Print() // same as "some thin", points at 'n'
 	s.Print() // advanced to 'g'
 	// Output:
 	// U+006E 'n' 1,9-9 (9-9)
 	// U+0067 'g' 1,10-10 (10-10)
 }
+*/
 
 func ExampleExpect_seq_Fail() {
 	s, _ := scan.New("some thing")
@@ -614,4 +645,43 @@ func ExampleScan() {
 	// U+1F608 '😈' 1,2-2 (2-2)
 	// U+006D 'm' 1,3-6 (3-6)
 	// U+006D 'm' 1,3-6 (3-6)
+}
+
+func ExampleStr() {
+	s, _ := scan.New("some thing")
+	s.Str("some")
+	s.Print()
+	s.Str(" ", "th")
+	s.Print()
+	// Output:
+	// U+0020 ' ' 1,5-5 (5-5)
+	// U+0069 'i' 1,8-8 (8-8)
+}
+
+func ExampleAny() {
+	s, _ := scan.New("some thing")
+	s.Any(4)
+	s.Print()
+	// Output:
+	// U+0020 ' ' 1,5-5 (5-5)
+}
+
+func ExampleOpt() {
+	s, _ := scan.New("some thing")
+	defer s.PrintPanic()
+	s.Opt("S", "s")
+	s.Print()
+	// Output:
+	// U+006F 'o' 1,2-2 (2-2)
+}
+
+func Example_all() {
+	s, _ := scan.New("some thing")
+	defer s.PrintPanic()
+	s.Opt("S", "s")
+	s.Str("ome", " ", "thi")
+	s.Print()
+
+	// Output:
+	// U+006E 'n' 1,9-9 (9-9)
 }
