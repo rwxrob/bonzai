@@ -63,6 +63,10 @@ type R struct {
 	// added as more state-modifying single-token expressions are
 	// considered (like tk.IS and tk.NOT now).
 	State int
+
+	// Nodes contains a collection of Nodes parsed when a z.P expression
+	// is scanned by Expect.
+	Nodes []*Node
 }
 
 const (
@@ -224,6 +228,21 @@ func (s *R) Peek(n uint) string {
 	return buf
 }
 
+// Parse creates a new Node reference from the string returned by Look.
+func (s *R) Parse(to *Cur) *Node {
+	n := new(Node)
+	n.V = s.Look(to)
+	return n
+}
+
+// ParseSlice creates a new Node reference from the string returned by
+// LookSlice.
+func (s *R) ParseSlice(b *Cur, e *Cur) *Node {
+	n := new(Node)
+	n.V = s.LookSlice(b, e)
+	return n
+}
+
 // Look returns a string containing all the bytes from the current
 // scanner cursor position ahead or behind to the passed cursor
 // position. Neither the internal nor the passed cursor position is
@@ -371,7 +390,7 @@ func (s *R) Expect(expr any) (*Cur, error) {
 		s.Jump(m)
 		return nil, s.ErrorExpected(v)
 
-	case z.P: // ----------------------------------------------------
+	case z.Y: // ----------------------------------------------------
 		var m *Cur
 		b := s.Mark()
 		for _, i := range v {
@@ -547,7 +566,7 @@ func (s *R) ErrorExpected(this any, args ...any) error {
 	switch v := this.(type) {
 	case rune: // otherwise will use uint32
 		msg = fmt.Sprintf(`expected rune %q`, v)
-	case z.P:
+	case z.Y:
 		if len(v) > 1 {
 			msg = fmt.Sprintf(`expected one of %q`, v)
 		} else {

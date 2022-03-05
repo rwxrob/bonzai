@@ -60,17 +60,18 @@ package z
 
 // ------------------------------- core -------------------------------
 
-// Nd ("node") is a named sequence of expressions that will be captured
-// as a new Node and added to the scan.R.Nodes field effectively turning
-// the scan.R into a parser as well. The first string must always be the
-// name which can be any valid Go string. If any expression fails to
-// match the scan fails.  Otherwise, a new tree.Node is added under the
-// current node and the scan proceeds. Nodes must either contain other
-// nodes or no nodes at all. If the first item in the sequence after the
-// name is not also a node (z.Nd) then the node is marked as "edge" (or
-// "leaf") and any nodes detected further in the sequence will cause the
-// scan to fail with a syntax error.
-type Nd []any
+// P ("parse") is a named sequence of expressions that will be parsed
+// and captured as a new Node and added to the scan.R.Nodes field
+// effectively turning the scan.R into a parser as well. The first
+// string must always be the name which can be any valid Go string. If
+// any expression fails to match the scan fails.  Otherwise, a new
+// scan.Node is added under the current node and the scan proceeds.
+// Nodes must either contain other nodes or no nodes at all. If the
+// first item in the sequence after the name is not also a node (z.P)
+// then the node is marked as "edge" (or "leaf") and any nodes detected
+// further in the sequence will cause the scan to fail with a syntax
+// error.
+type P []any
 
 // X ("expression") is a sequence of expressions.  If any are not the
 // scan fails. (Equal to (?foo) in regular expressions.)
@@ -78,13 +79,12 @@ type X []any
 
 // ------------------------------- sets -------------------------------
 
-// P ("positive") is a set of positive lookahead expressions. If any are
+// Y ("yes") is a set of positive lookahead expressions. If any are
 // seen at the current cursor position the scan will proceed without
 // consuming them (unlike z.O and z.I). If none are found the scan
-// fails. This is useful when everything from one expression is wanted
-// except for a few positive exceptions. (Equal to ampersand (&) in
+// fails. (Equal to ampersand (&) in
 // PEGN.)
-type P []any
+type Y []any
 
 // N ("not") is a set of negative lookahead expressions. If any are seen
 // at the current cursor position the scan will fail and the scan is

@@ -11,7 +11,11 @@ import (
 	"github.com/rwxrob/bonzai/comp"
 	"github.com/rwxrob/bonzai/filt"
 	"github.com/rwxrob/bonzai/maps"
+	"github.com/rwxrob/bonzai/term"
 )
+
+var OBracketed = term.Under
+var CBracketed = term.Reset
 
 // Cmd provides help documentation for the caller allowing the specific
 // section of help wanted to be passed as a tab-completable parameter.
@@ -57,4 +61,28 @@ func helpCompleter(x comp.Command, args ...string) []string {
 	}
 
 	return filt.HasPrefix(list, args[0])
+}
+
+// Render renders the incoming Help markup string for a curses terminal
+// detecting if the terminal is interactive and if not rendering as
+// plain text instead.
+func Render(in string) string {
+	out := ""
+	for i := 0; i < len([]rune(in)); i++ {
+		cur := in[i]
+		switch cur {
+
+		// <bracketed>
+		case '<':
+			out += OBracketed
+			for {
+
+			}
+			out += CBracketed
+		}
+	}
+	return string(out)
+}
+
+func parseBracketed() {
 }
