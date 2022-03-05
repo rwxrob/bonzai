@@ -14,8 +14,6 @@ func ExampleFiles() {
 	// testdata/files/bar
 	// testdata/files/blah
 	// testdata/files/dir1/
-	// testdata/files/dir2/
-	// testdata/files/dir3/
 	// testdata/files/foo
 	// testdata/files/other
 	// testdata/files/some
@@ -35,8 +33,6 @@ func ExampleFiles_empty() {
 	// bar
 	// blah
 	// dir1/
-	// dir2/
-	// dir3/
 	// foo
 	// other
 	// some
