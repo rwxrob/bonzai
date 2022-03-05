@@ -49,27 +49,27 @@ the tokens and classes from PEGN and other grammars and are designed to
 simplify grammar development at a higher level. Pull requests are
 welcome for missing, commonly used composite candidates.
 
-Hooks
+Hook Functions
 
-Hooks are not strictly an expression type and are declared in the scan
-package itself (to avoid a cyclical import dependency since it is passed
-a scan.R). A Hook is passed only the scanner struct and must return a bool
-indicating if the scan should proceed.  See scan.Hook for more
-information.
+Hook functions are not strictly an expression type and are declared in
+the scan package itself (to avoid a cyclical import dependency since it
+is passed a scan.R). A Hook is passed the *scan.R and can return an error.
+See scan.Hook for more information.
 */
 package z
 
 // ------------------------------- core -------------------------------
 
 // Nd ("node") is a named sequence of expressions that will be captured
-// into a node. The first string must always be the name which can be
-// any valid Go string. If any expression fails to match the scan fails.
-// Otherwise, a new tree.Node is added under the current node and the
-// scan proceeds. Nodes must either contain other nodes or no nodes at
-// all. If the first item in the sequence after the name is not also
-// a node (z.Nd) then the node is marked as "edge" (or "leaf") and any
-// nodes detected further in the sequence will cause the scan to fail
-// with a syntax error.
+// as a new Node and added to the scan.R.Nodes field effectively turning
+// the scan.R into a parser as well. The first string must always be the
+// name which can be any valid Go string. If any expression fails to
+// match the scan fails.  Otherwise, a new tree.Node is added under the
+// current node and the scan proceeds. Nodes must either contain other
+// nodes or no nodes at all. If the first item in the sequence after the
+// name is not also a node (z.Nd) then the node is marked as "edge" (or
+// "leaf") and any nodes detected further in the sequence will cause the
+// scan to fail with a syntax error.
 type Nd []any
 
 // X ("expression") is a sequence of expressions.  If any are not the

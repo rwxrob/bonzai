@@ -506,20 +506,20 @@ func ExampleExpect_rng() {
 	// U+006D 'm' 1,3-3 (3-3)
 }
 
-func FailHook(s *scan.R) bool { return false }
+func FailHook(s *scan.R) error { return fmt.Errorf("imma fail") }
 
 func ExampleExpect_hook() {
 
 	// plain function signature
-	WouldSave := scan.Hook(func(s *scan.R) bool {
+	WouldSave := scan.Hook(func(s *scan.R) error {
 		fmt.Println("would save")
-		return true
+		return nil
 	})
 
 	// as scan.Hook
-	WouldScan := scan.Hook(func(s *scan.R) bool {
+	WouldScan := scan.Hook(func(s *scan.R) error {
 		s.Scan()
-		return true
+		return nil
 	})
 
 	// FailHook defined outside of Example function (see source)
@@ -537,7 +537,7 @@ func ExampleExpect_hook() {
 	// would save
 	// U+006F 'o' 1,2-2 (2-2)
 	// U+006D 'm' 1,3-3 (3-3)
-	// expect: hook function failed (FailHook)
+	// failhook: imma fail at U+006D 'm' 1,3-3 (3-3)
 
 }
 

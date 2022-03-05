@@ -20,6 +20,7 @@ import (
 	"errors"
 	"fmt"
 	"io"
+	"strings"
 	"unicode/utf8"
 
 	z "github.com/rwxrob/bonzai/scan/is"
@@ -27,20 +28,15 @@ import (
 	"github.com/rwxrob/bonzai/util"
 )
 
-// Hook is a function expression that accepts a reference to the current
-// scanner and simply returns true or false. Hook functions are allowed
-// to do whatever they need and must advance the scan.R themselves (if
-// necessary) and should not be abused and are given the lowest priority
-// when searching for expressions. Static scanning expressions will
-// usually be faster than any Hook. Hook allows PEGN (and others) to
-// indicate Hook names for executable code that must be run during the
-// scanning of a specific grammar (indicated as "rhetorical" in some
-// grammars). In fact, scan.Rs can be converted into parsers relatively
-// easily simply by implementing a set of Hook functions to capture or
-// render scanned data at specific points during the scan process. Since
-// only the name of the Hook function is required BPEGN remains
-// compatible with PEGN one-for-one transpiling.
-type Hook func(s *R) bool
+// Hook is a valid Expect (EPEGN) expression that accepts a *scan.R to
+// the current scanner and returns an error or nil. Hooks are
+// allowed to do whatever they need and must advance the *scan.R
+// themselves (if necessary) and should not be abused. Hooks are given
+// the lowest priority when searching for expressions. Static scanning
+// expressions will usually be faster than any Hook. Hook allows EPEGN
+// authors (and others) to indicate Hook names simply by writing
+// a function and putting the name in the expression passed to Expect.
+type Hook func(s *R) error
 
 // R (as in scan.R or "scanner") implements a non-linear, rune-centric,
 // buffered data scanner and provides full support for BPEGN. See New
@@ -505,20 +501,14 @@ func (s *R) Expect(expr any) (*Cur, error) {
 		return s.expcount(9, v.This)
 
 	case Hook: // ------------------------------------------------------
-		if !v(s) {
-			return nil, fmt.Errorf(
-				"expect: hook function failed (%v)",
-				util.FuncName(v),
-			)
+		if err := v(s); err != nil {
+			return nil, s.ErrorExpected(v, err)
 		}
 		return s.Cur, nil
 
-	case func(r *R) bool:
-		if !v(s) {
-			return nil, fmt.Errorf(
-				"expect: hook function failed (%v)",
-				util.FuncName(v),
-			)
+	case func(r *R) error:
+		if err := v(s); err != nil {
+			return nil, s.ErrorExpected(v, err)
 		}
 		return s.Cur, nil
 
@@ -596,6 +586,10 @@ func (s *R) ErrorExpected(this any, args ...any) error {
 		msg = fmt.Sprintf(str, v)
 	case z.T:
 		msg = fmt.Sprintf(`none of %q found`, v)
+	case Hook:
+		msg = fmt.Sprintf("%v: %v", strings.ToLower(util.FuncName(v)), args[0])
+	case func(s *R) error:
+		msg = fmt.Sprintf("%v: %v", strings.ToLower(util.FuncName(v)), args[0])
 	default:
 		msg = fmt.Sprintf(`expected %T %q`, v, v)
 	}
