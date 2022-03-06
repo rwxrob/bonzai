@@ -1,5 +1,7 @@
 # Bonzai! Dominate the Command Line
 
+🚧 *under construction* 🚧
+
 [![Go Version](https://img.shields.io/github/go-mod/go-version/rwxrob/bonzai)](https://tip.golang.org/doc/go1.18)
 [![GoDoc](https://godoc.org/github.com/rwxrob/bonzai?status.svg)](https://godoc.org/github.com/rwxrob/bonzai)
 [![License](https://img.shields.io/badge/license-Apache2-brightgreen.svg)](LICENSE)
