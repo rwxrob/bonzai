@@ -60,7 +60,7 @@ var Exe string
 // will be fetched from sumurl and used to validate the download before
 // making the replacement. For security reasons, no backup copy of the
 // replaced executable is kept. Also see AutoUpdate.
-func ReplaceSelf(url, sumurl, string) error {
+func ReplaceSelf(url, sumurl string) error {
 	exe, err := os.Executable()
 	if err != nil {
 		return err
