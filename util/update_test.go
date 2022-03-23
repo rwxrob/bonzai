@@ -8,7 +8,7 @@ import (
 	"github.com/rwxrob/bonzai/util"
 )
 
-func ExampleCheckUpdated() {
+func ExampleCompareUpdated() {
 
 	handler := http.HandlerFunc(
 		func(w http.ResponseWriter, r *http.Request) {
@@ -31,14 +31,49 @@ func ExampleCheckUpdated() {
 	same := ht.NewServer(handler)
 	defer same.Close()
 
-	fmt.Println(util.NeedsUpdate(20220322080542, older.URL))
-	fmt.Println(util.NeedsUpdate(20220322080542, newer.URL))
-	fmt.Println(util.NeedsUpdate(20220322080542, same.URL))
-	fmt.Println(util.NeedsUpdate(20220322080542, "foobar"))
+	fmt.Println(util.CompareUpdated(20220322080542, older.URL))
+	fmt.Println(util.CompareUpdated(20220322080542, newer.URL))
+	fmt.Println(util.CompareUpdated(20220322080542, same.URL))
+	fmt.Println(util.CompareUpdated(20220322080542, "foobar"))
 
 	// Output:
-	// 0
+	// -1
 	// 1
 	// 0
+	// -2
+}
+
+func ExampleCompareVersions() {
+
+	handler := http.HandlerFunc(
+		func(w http.ResponseWriter, r *http.Request) {
+			fmt.Fprintf(w, `"v0.0.1"`)
+		})
+	older := ht.NewServer(handler)
+	defer older.Close()
+
+	handler = http.HandlerFunc(
+		func(w http.ResponseWriter, r *http.Request) {
+			fmt.Fprintf(w, `"v0.1.0"`)
+		})
+	newer := ht.NewServer(handler)
+	defer newer.Close()
+
+	handler = http.HandlerFunc(
+		func(w http.ResponseWriter, r *http.Request) {
+			fmt.Fprintf(w, `"v0.0.2"`)
+		})
+	same := ht.NewServer(handler)
+	defer same.Close()
+
+	fmt.Println(util.CompareVersions(`v0.0.2`, older.URL))
+	fmt.Println(util.CompareVersions(`v0.0.2`, newer.URL))
+	fmt.Println(util.CompareVersions(`v0.0.2`, same.URL))
+	fmt.Println(util.CompareVersions(`v0.0.2`, "foobar"))
+
+	// Output:
+	// 1
 	// -1
+	// 0
+	// -2
 }
