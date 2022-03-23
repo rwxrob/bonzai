@@ -1,14 +1,110 @@
 // Copyright 2022 Robert S. Muhlestein.
 // SPDX-License-Identifier: Apache-2.0
 
+/*
+Package bonzai provides a rooted node tree of commands and singular
+parameters making tab completion a breeze and complicated applications
+much easier to intuit without reading all the docs. Documentation is
+embedded with each command removing the need for separate man pages and
+such and can be viewed as text or a locally served web page.
+
+Rooted Node Tree
+
+Commands and parameters are linked to create a rooted node tree of the
+following types of nodes:
+
+    * Leaves with a method and optional parameters
+		* Branches with leaves, other branches, and a optional method
+		* Parameters, single words that are passed to a leaf command
+
+*/
 package bonzai
 
 import (
 	"fmt"
 	"log"
 	"os"
+	"path/filepath"
 	"strings"
+
+	"github.com/rwxrob/fn/maps"
+	"github.com/rwxrob/fs/file"
 )
+
+func init() {
+	var err error
+	// get the full path to current running process executable
+	Exe, err = os.Executable()
+	if err != nil {
+		log.Print(err)
+		return
+	}
+	Exe, err = filepath.EvalSymlinks(Exe)
+	if err != nil {
+		log.Print(err)
+	}
+}
+
+// Exe holds the full path to the current running process executable
+// which is determined at init() time by calling os.Executable and
+// passing it to path/filepath.EvalSymlinks to ensure it is the actual
+// binary executable file. Errors are reported to stderr, but there
+// should never be an error logged unless something is wrong with the Go
+// runtime environment.
+var Exe string
+
+// ReplaceSelf replaces the current running executable at its current
+// location with the successfully retrieved file at the specified URL or
+// file path and duplicates the original files permissions. Only http
+// and https URLs are currently supported. If not empty, a checksum file
+// will be fetched from sumurl and used to validate the download before
+// making the replacement. For security reasons, no backup copy of the
+// replaced executable is kept. Also see AutoUpdate.
+func ReplaceSelf(url, sumurl, string) error {
+	exe, err := os.Executable()
+	if err != nil {
+		return err
+	}
+	exe, err = filepath.EvalSymlinks(exe)
+	if err != nil {
+		return err
+	}
+	// TODO validate sum
+	return file.Replace(exe, url)
+}
+
+// AutoUpdate automatically updates the current process executable (see
+// Exe) by starting a goroutine that checks the current version against
+// a remote one and calling ReplaceSelf if needed.
+//
+// If cur is an int assumes it is an isosec (see uniq.IsoSecond) and
+// that newURL will return just a single line with an isosec in the body
+// (usually a file named UPDATED).
+//
+// If cur is a string assumes it is a valid semantic version (beginning
+// with a 'v') and will expect a single JSON string (don't forget the
+// wrapping double-quotes) from newURL (usually in a file named VERSION)
+// which will be compared using the Compare function from
+// golang.org/x/mod/semver.
+//
+// If a URL to a checksum file (sum) is not empty will optionally
+// validate the new version downloaded against the checksum before
+// replace the currently running process executable with the new one.
+// The format of the checksum file is the same as that output by any of
+// the major checksum commands (sha512sum, for example) with one or more
+// lines beginning with the checksum, whitespace, and then the name of
+// the file. A single checksum file can be used for multiple versions
+// but the most recent should always be at the top. When the update
+// completes a message notifying of the update is logged to stderr.
+//
+// Since AutoUpdate happens in the background no return value is
+// provided. This means that failed Internet connections and other
+// common reasons blocking the update silently fail. To enable logging
+// of the update process (presumably for debugging) add the AutoUpdate
+// flag to the Trace flags (trace.Flags|=trace.AutoUpdate).
+func AutoUpdate[T int | string](cur T, newURL, sum, exe string) {
+	// TODO
+}
 
 // Method defines the main code to execute for a command (Cmd). By
 // convention the parameter list should be named "args" if there are
@@ -74,4 +170,28 @@ func ArgsFrom(line string) []string {
 		args = append(args, "")
 	}
 	return args
+}
+
+// Files returns a slice of strings matching the names of the files
+// within the given directory adding a slash to the end of any
+// directories and escaping any spaces by adding backslash.  Note that
+// this function assumes forward slash path separators since completion
+// is only supported on operating systems where such is the case.
+func Files(dir string) []string {
+	if dir == "" {
+		dir = "."
+	}
+	files := []string{}
+	entries, err := os.ReadDir(dir)
+	if err != nil {
+		return files
+	}
+	names := maps.MarkDirs(entries)
+	if dir == "." {
+		return names
+	}
+	if dir[len(dir)-1] != '/' {
+		dir += "/"
+	}
+	return maps.EscSpace(maps.Prefix(names, dir))
 }

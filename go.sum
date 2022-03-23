@@ -1,0 +1,8 @@
+github.com/rwxrob/fn v0.1.0 h1:vlQOPxZ77IlXSIDu2eIkuQgMtInlMNRHqwgKfkNAHAA=
+github.com/rwxrob/fn v0.1.0/go.mod h1:omPqOqEB+dDna09z5pi5YFxq4IZqDvv3wFPUCES5LvY=
+github.com/rwxrob/json v0.4.1 h1:b4ToZe4mrQO8rRL/kRFglzZszyZZnGv6JRHj6jrI3f4=
+github.com/rwxrob/json v0.4.1/go.mod h1:DU3TQKCWY4bK7sQ0wu80cRmTs96b6M//OYvT7Eg2mJA=
+github.com/rwxrob/to v0.1.1 h1:/nHpuP6nNn44Gl+oa50M79AxslxZiBwlNhvY2UdNphA=
+github.com/rwxrob/to v0.1.1/go.mod h1:8qdgCWkh50Avs8sRpV6/P7lAQgVf3KLRSKMZahV/W48=
+golang.org/x/mod v0.5.1 h1:OJxoQ/rynoF0dcCdI7cLPktw/hR2cueqYfjm43oqK38=
+golang.org/x/mod v0.5.1/go.mod h1:5OXOZSfqPIIbmVBIIKWRFfZjPR0E5r58TLhUjH0a2Ro=

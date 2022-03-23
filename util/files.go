@@ -3,7 +3,7 @@ package util
 import (
 	"os"
 
-	"github.com/rwxrob/bonzai/maps"
+	"github.com/rwxrob/fn/maps"
 )
 
 // Files returns a slice of strings matching the names of the files

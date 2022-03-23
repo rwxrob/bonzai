@@ -4,8 +4,8 @@ import (
 	"fmt"
 	"os"
 
-	"github.com/rwxrob/bonzai/each"
 	"github.com/rwxrob/bonzai/util"
+	"github.com/rwxrob/fn/each"
 )
 
 func ExampleFiles() {

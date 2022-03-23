@@ -4,8 +4,8 @@
 package comp
 
 import (
-	"github.com/rwxrob/bonzai/filt"
-	"github.com/rwxrob/bonzai/set"
+	"github.com/rwxrob/fn/filt"
+	"github.com/rwxrob/structs/set/text/set"
 )
 
 // Standard completion is resolved as follows:
@@ -37,7 +37,7 @@ func Standard(x Command, args ...string) []string {
 	list := []string{}
 	list = append(list, x.GetCommands()...)
 	list = append(list, x.GetParams()...)
-	list = set.Minus(list, x.GetHidden())
+	list = set.Minus[string, string](list, x.GetHidden())
 
 	if len(args) == 0 {
 		return list

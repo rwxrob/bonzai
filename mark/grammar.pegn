@@ -1,0 +1,26 @@
+# BonzaiMark (v1.0.0-alpha) mark.bonzai.dev
+# Copyright 2022 Robert S. Muhlestein
+# SPDX-License-Identifier: Apache-2.0
+
+# <-- "contains nodes"
+# <-  "does not contain nodes"
+
+Grammar     <--  Block EndLine
+Block       <--  (Bulleted / Numbered / Paragraph /
+                  Verbatim) EndBlock
+EndBlock     <-  EndLine{2,} / EOD
+Bulleted    <--  (!EndLine '*' SP ListItem*)+
+Numbered    <--  (!EndLine '1.' SP ListItem*)+
+ListItem    <--  <Span*>
+VerbMark     <-  (!EndLine SP{4} Verbatim)+
+Verbatim    <--  (ugraphic* EndLine)+
+Paragraph   <--  (!(Endline{2} / EOD) Span)+ 
+Span         <-  BoldItalic / Bold / Italic / Bracketed / Plain
+BoldItalic  <--  ('***' !ws) (!'***' ugraphic)+ (!ws '***')
+Bold        <--  ('**' !ws) (!'**' ugraphic)+ (!ws '**')
+Italic      <--  ('*' !ws) (!'*' ugraphic)+ (!ws '*')
+Bracketed   <--  ('<' !ws) <(!'>' ugraphic)+> (!ws '>')
+Plain       <--   ugraphic+
+EndLine      <-  LF / CRLF / CR
+EOD          <-  # end of document
+

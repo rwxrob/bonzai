@@ -8,7 +8,7 @@ import (
 	"os"
 
 	"github.com/rwxrob/bonzai/comp"
-	"github.com/rwxrob/bonzai/each"
+	"github.com/rwxrob/fn/each"
 )
 
 // Cmd is a struct the easier to use and read when creating
@@ -26,6 +26,7 @@ type Cmd struct {
 	Summary     string            `json:"summary,omitempty"`
 	Usage       string            `json:"usage,omitempty"`
 	Version     string            `json:"version,omitempty"`
+	Updated     int               `json:"updated,omitempty"` // isosec
 	Copyright   string            `json:"copyright,omitempty"`
 	License     string            `json:"license,omitempty"`
 	Description string            `json:"description,omitempty"`

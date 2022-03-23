@@ -7,11 +7,10 @@ import (
 	"log"
 
 	"github.com/rwxrob/bonzai"
-	"github.com/rwxrob/bonzai/check"
 	"github.com/rwxrob/bonzai/comp"
-	"github.com/rwxrob/bonzai/filt"
-	"github.com/rwxrob/bonzai/maps"
-	"github.com/rwxrob/bonzai/term"
+	"github.com/rwxrob/fn/filt"
+	"github.com/rwxrob/fn/maps"
+	"github.com/rwxrob/term"
 )
 
 var OBracketed = term.Under
@@ -49,7 +48,7 @@ func helpCompleter(x comp.Command, args ...string) []string {
 
 	// if the caller has other sections get those
 	caller := x.GetCaller()
-	if !check.IsNil(caller) {
+	if caller != nil {
 		other := caller.GetOther()
 		if other != nil {
 			list = append(list, maps.Keys(other)...)

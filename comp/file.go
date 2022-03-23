@@ -6,9 +6,9 @@ package comp
 import (
 	"path/filepath"
 
-	"github.com/rwxrob/bonzai/check"
-	"github.com/rwxrob/bonzai/filt"
-	"github.com/rwxrob/bonzai/util"
+	"github.com/rwxrob/fn/filt"
+	"github.com/rwxrob/fs"
+	"github.com/rwxrob/fs/dir"
 )
 
 // File returns all file names for the directory and file prefix
@@ -29,16 +29,16 @@ func File(x Command, args ...string) []string {
 		if x != nil {
 			return []string{x.GetName()} // will add tailing space
 		}
-		return util.Files("")
+		return dir.Entries("")
 	}
 
 	// no prefix of any kind, just a space following command
 	if args[0] == "" {
-		return util.Files("")
+		return dir.Entries("")
 	}
 
-	dir, pre := filepath.Split(args[0])
-	list := filt.BaseHasPrefix(util.Files(dir), pre)
+	d, pre := filepath.Split(args[0])
+	list := filt.BaseHasPrefix(dir.Entries(d), pre)
 
 	for {
 
@@ -46,8 +46,8 @@ func File(x Command, args ...string) []string {
 			return list
 		}
 
-		if len(list) == 1 && check.IsDir(list[0]) {
-			list = util.Files(list[0])
+		if len(list) == 1 && fs.IsDir(list[0]) {
+			list = dir.Entries(list[0])
 			continue
 		}
 
