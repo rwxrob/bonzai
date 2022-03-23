@@ -132,12 +132,35 @@ other security tools
   including tab completion in runtime environments that do not have
   `complete -C foo foo` enabled. 
 
+* **One major use case is to replace shell scripts in "dot files"
+  collections.** By creating a `cmd` subdirectory of a dot files repo a
+  multi-call Bonzai command named `cmd` can be easily maintained and
+  added to just as quickly as any shell script. This has the added bonus
+  of allowing others to quickly add one of your little commands with
+  just a simple import (for example, `import github.com/rwxrob/dot/cmd`
+  and then `cmd.Isosec`) from their own `cmd` monoliths. This also
+  enables the fastest possible prototyping of code that would otherwise
+  require significant, problematic mocks. Developers can work out the
+  details of a thing just as fast as with shell scripting --- but with
+  the power of all the Go standard library --- and then factor out their
+  favorites as they grow into their own Bonzai command repos. This
+  approach keeps "Go on the brain" (instead of having to port a bunch of
+  bash later) and promotes the massive benefits of rapid applications
+  development the fullest extent.
+
+* **Use either `foo.Cmd` or `cmd.Foo` convention.** People may decide to
+  put all their Bonzai commands into a single `cmd` package or to put
+  each command into its own package. Both are perfectly acceptable and
+  allow the developer making the import to alias the packages as needed
+  using Go's excellent package import design.
+
 ## Style Guidelines
 
 * Everything through `go fmt` or equiv, no exceptions
 * In Vim `set textwidth=72` (not 80 to line numbers fit)
 * Use `/* */` for package documentation comment, `//` elsewhere
 * Smallest possible names for given scope while still clear
+* Favor additional packages (possibly in `internal`) over long names
 * Package globals that will be used a lot can be single capital
 * Must be good reason to use more than 4 character pkg name
 * Avoid unnecessary comments
@@ -150,10 +173,7 @@ everything from my use of init, to the name "bonzai". While all their
 contributions are too numerous to name specifically, they 
 more than deserve a huge thank you here.
 
-* Quint
-* Greg 
-
-## Legal 
+## Legal
 
 Copyright 2022 Robert S. Muhlestein (<mailto:rob@rwx.gg>)  
 SPDX-License-Identifier: Apache-2.0
