@@ -95,24 +95,36 @@ other security tools
 
 ## Design Considerations
 
-* **Promote high-level package library API calls over Cmd bloat.** Code
-  belongs in package libraries, not Cmds. While Bonzai allows for rapid
-  applications development by putting everything initially in Cmd
-  Methods, Cmds are most designed for documentation and completion, not
-  heavy Method implementations. Eventually, most Method implementations
-  should be moved into their own package libraries, perhaps even in the
-  same Go module. Cmds should *never* be communicating with each other
-  directly. While the idea of adding a Channel attribute was intriguing,
-  it quickly became clear that doing so would promote too much code and
-  tight coupling --- even with channels --- between specific commands.
-  Cmds should be *very* light. In fact, most Cmds should assign their
-  Method directly from one matching the Method function signature in a
-  callable, high-level library.
+* **Promote high-level package library API calls over Cmd bloat.**
 
-* **Only bash completion planned.** If it doesn't work with `complete
-  -C` or equivalent then just run the monolith as a temporary shell
-  ("the Bonzai shell) and use its cross-platform support for tab
-  completion.
+  Code belongs in package libraries, not Cmds.
+
+  While Bonzai allows for rapid applications development by putting
+  everything initially in Cmd Call first-class function, Cmds are most
+  designed for documentation and completion, not heavy Call
+  implementations (even though many will organically start there from
+  people's personal Bonzai trees).
+
+  Eventually, most Call implementations should be moved into their own
+  package libraries, perhaps even in the same Go module. Cmds should
+  *never* communicate with each other directly (other than calling one
+  another on occasion). While the idea of adding a Channel attribute was
+  intriguing, it quickly became clear that doing so would promote 
+  undesirable tight coupling --- even with channels --- between
+  specific commands.
+
+* **Cmds should be very light.** 
+
+  Most Cmds should assign their first-class Call function to one that
+  lightly wraps a similar function signature in a callable, high-level
+  library that works entirely independently from the bonzai package.
+  It's best to promote strong support for sustainable API packages.
+
+* **Only bash completion and shell.Cmd planned.**
+
+  If it doesn't work with `complete -C` or equivalent then just run the
+  Bonzai command tree monolith as a temporary shell (shell.Cmd) and use
+  its cross-platform support for tab completion.
 
   Zsh, Powershell, and Fish have no equivalent to `complete -C` (which
   allows any executable to provide its own completion). This forces
@@ -135,32 +147,39 @@ other security tools
   shortcut aliases when completion is not available (h|help, for
   example).
 
-* **Bonzai commands may default to `shell.Cmd` or `help.Cmd`** These
-  provide help information and optional interactive assistance
+* **Bonzai commands may default to `shell.Cmd` or `help.Cmd`** 
+
+  These provide help information and optional interactive assistance
   including tab completion in runtime environments that do not have
   `complete -C foo foo` enabled. 
 
-* **One major use case is to replace shell scripts in "dot files"
-  collections.** By creating a `cmd` subdirectory of a dot files repo a
-  multi-call Bonzai command named `cmd` can be easily maintained and
-  added to just as quickly as any shell script. This has the added bonus
-  of allowing others to quickly add one of your little commands with
-  just a simple import (for example, `import github.com/rwxrob/dot/cmd`
-  and then `cmd.Isosec`) from their own `cmd` monoliths. This also
-  enables the fastest possible prototyping of code that would otherwise
-  require significant, problematic mocks. Developers can work out the
-  details of a thing just as fast as with shell scripting --- but with
-  the power of all the Go standard library --- and then factor out their
-  favorites as they grow into their own Bonzai command repos. This
-  approach keeps "Go on the brain" (instead of having to port a bunch of
-  bash later) and promotes the massive benefits of rapid applications
-  development the fullest extent.
+  *shell.Cmd is still under development and likely will be for a while*
 
-* **Use either `foo.Cmd` or `cmd.Foo` convention.** People may decide to
-  put all their Bonzai commands into a single `cmd` package or to put
-  each command into its own package. Both are perfectly acceptable and
-  allow the developer making the import to alias the packages as needed
-  using Go's excellent package import design.
+* **One major use case is to replace shell scripts in "dot files"
+  collections.**
+
+  By creating a `cmd` subdirectory of a dot files repo a multi-call
+  Bonzai command named `cmd` can be easily maintained and added to just
+  as quickly as any shell script. This has the added bonus of allowing
+  others to quickly add one of your little commands with just a simple
+  import (for example, `import github.com/rwxrob/dot/cmd` and then
+  `cmd.Isosec`) from their own `cmd` monoliths. This also enables the
+  fastest possible prototyping of code that would otherwise require
+  significant, problematic mocks. Developers can work out the details of
+  a thing just as fast as with shell scripting --- but with the power of
+  all the Go standard library --- and then factor out their favorites as
+  they grow into their own Bonzai command repos. This approach keeps "Go
+  on the brain" (instead of having to port a bunch of bash later) and
+  promotes the massive benefits of rapid applications development the
+  fullest extent.
+
+* **Use either `foo.Cmd` or `cmd.Foo` convention.**
+
+  People may decide to put all their Bonzai commands into a single `cmd`
+  package or to put each command into its own package. Both are
+  perfectly acceptable and allow the developer making the import to
+  alias the packages as needed using Go's excellent package import
+  design.
 
 ## Style Guidelines
 
