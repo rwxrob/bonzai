@@ -101,7 +101,7 @@ operating system. Any Bonzai command can provide its own completion
 algorithm or use one of the many already provided. Cobra can never do
 this.
 
-Corba is also not design to be a command compositor at all, which is
+Corba is also not designed to be a command compositor at all, which is
 really unfortunate because they missed a golden opportunity there.
 Bonzai branches can be imported and composed into other branches and
 monoliths with just a few lines of Go. Registries of Bonzai commands can
@@ -133,10 +133,10 @@ documentation is as easy to read as the documentation itself.
 
 In short, Cobra got us a long way, but has proved to be so laden with
 crushing technical debt from failed base design decisions that it simply
-is not sustainable given current modern expectations good user
+is not sustainable given current modern expectations for good user
 interfaces and documentation. Bonzai is a fresh, extensible,
-sustainable, human-friendly command compositor to take us into 2023 and
-beyond.
+sustainable, human-friendly command compositor to take us into the
+future of command line interfaces, for everyone.
 
 ## What People Are Saying
 
