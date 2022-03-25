@@ -79,6 +79,65 @@ popular for building single-binary Linux container distros (like BusyBox
 and Alpine, watch for Bonzai Linux soon), as well as root kits, and
 other security tools
 
+## "Why not just use Cobra?"
+
+Just because something is popular (or first) doesn't mean it was well
+designed. In fact, often inferior designs are rushed to market just to
+gain adoption. Cobra seems to suffer from this. Discerning developers
+and engineers have been not-so-quietly complaining about Cobra's
+horrible design for years. It's time for something new.
+
+Cobra requires wasteful and error-prone sourcing of thousands of lines
+of shell code every time you create a new shell that needs to use a
+Cobra command with shell tab completion (`kubectl` requires 12637). It
+is not uncommon for operations people to be sourcing 100s of thousands
+of lines of shell code just to enable basic completion that could have
+been enabled easily with `complete -C` instead. Bonzai manages all
+completion in Go instead of shell and therefore allows the modular
+addition of any number of Completers including the standard file
+completion as well as calculators, dates, and anything anyone can
+conceive of completing. Completion is not dependent on any underlying
+operating system. Any Bonzai command can provide its own completion
+algorithm or use one of the many already provided. Cobra can never do
+this.
+
+Corba is also not design to be a command compositor at all, which is
+really unfortunate because they missed a golden opportunity there.
+Bonzai branches can be imported and composed into other branches and
+monoliths with just a few lines of Go. Registries of Bonzai commands can
+be easily inferred from dependencies on the `bonzai` package and
+creators are free to compose their monoliths from a rich eco-system of
+Bonzai branches and commands. Bonzai allows creation of Go multicall
+binary monoliths (like BusyBox) to be made easily, and from a diverse,
+modular, importable, composable sources. Such is simply not possible
+with Cobra and never will be.
+
+Cobra buys into the broken boomer "getopt" view of the world requiring
+people to remember all sorts of ungodly different combinations of dashes
+and equals signs hoping things will just work. Bonzai takes a no-dashes
+approach promoting much cleaner command lines with context and promotion
+of domain specific languages (created with PEGN, scan.X, or others) that
+easily translate directly to chat and other command-line interfaces for
+most humans without much need to look up the documentation, which, by
+the way, is embedded in the Bonzai command tree.
+
+Cobra provides minimal, unappealing command documentation that is
+virtually unreadable in source form. And Cobra provides no means of markup
+or use of color and doesn't even promote the same look and feel of
+manual page documentation. Bonzai has its own subset of Markdown,
+BonzaiMark, respects the well established readability of manual pages,
+and allows for the creation of elegant documentation that can be viewed
+from the command line or easily from a local browser on the same
+computer running the command. And the source containing the
+documentation is as easy to read as the documentation itself.
+
+In short, Cobra got us a long way, but has proved to be so laden with
+crushing technical debt from failed base design decisions that it simply
+is not sustainable given current modern expectations good user
+interfaces and documentation. Bonzai is a fresh, extensible,
+sustainable, human-friendly command compositor to take us into 2023 and
+beyond.
+
 ## What People Are Saying
 
 > "It's like a modular, multicall BusyBox builder for Go with built in
