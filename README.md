@@ -91,7 +91,7 @@ other security tools
 
 ## Example GitHub Template
 
-<https://github.com/rwxrob/bonzai-template>
+<https://github.com/rwxrob/foo>
 
 ## Design Considerations
 
@@ -109,25 +109,31 @@ other security tools
   Method directly from one matching the Method function signature in a
   callable, high-level library.
 
-* **Only bash completion planned.** Zsh, Powershell, and Fish have no
-  equivalent to `complete -C` (which allows any executable to provide
-  its own completion) This forces inferior dependencies on overly verbose
-  external "completer" scripts written in only those languages for
-  those specific shells. This dependency completely negates any
-  possibility of providing modular completers and composable commands
-  that carry their own completion logic. This one objective fact alone
-  should give every pause before opting to use one of these inferior
-  shells for their command line interactions. Bonzai commands leverage
-  this best-of-breed completion functionality of bash to provide an
-  unlimited number of completion methods and combinations. The
-  equivalent implementations, perhaps as an export collected from all
-  composed commands providing their shell equivalent of completion
-  scripts, would be preposterously large (even though `kubectl` requires
-  12637 lines of bash just for its basic completion). Bonzai uses Go
-  itself to manage that completion --- drawing on a rich collection of
-  completers included in the standard Bonzai module --- and provides
-  documented shortcut aliases when completion is not available (h|help,
-  for example). 
+* **Only bash completion planned.** If it doesn't work with `complete
+  -C` or equivalent then just run the monolith as a temporary shell
+  ("the Bonzai shell) and use its cross-platform support for tab
+  completion.
+
+  Zsh, Powershell, and Fish have no equivalent to `complete -C` (which
+  allows any executable to provide its own completion). This forces
+  inferior dependencies on overly verbose external "completer" scripts
+  written in only those languages for those specific shells. This
+  dependency completely negates any possibility of providing modular
+  completers and composable commands that carry their own completion
+  logic. This one objective fact alone should give everyone pause before
+  opting to use one of these inferior shells for their command line
+  interactions. 
+
+  Bonzai commands leverage this best-of-breed completion functionality
+  of bash to provide an unlimited number of completion methods and
+  combinations. The equivalent implementations, perhaps as an export
+  collected from all composed commands providing their shell equivalent
+  of completion scripts, would be preposterously large just for its
+  basic completion tree). Instead, Bonzai uses Go itself to manage
+  that completion --- drawing on a rich collection of completers
+  included in the standard Bonzai module --- and provides documented
+  shortcut aliases when completion is not available (h|help, for
+  example).
 
 * **Bonzai commands may default to `shell.Cmd` or `help.Cmd`** These
   provide help information and optional interactive assistance
@@ -181,7 +187,7 @@ Copyright 2022 Robert S. Muhlestein (<mailto:rob@rwx.gg>)
 SPDX-License-Identifier: Apache-2.0
 
 "Bonzai" and "bonzai" are legal trademarks of Robert S. Muhlestein but
-can be used freely to refer to the Bonzai project
+can be used freely to refer to the Bonzai™ project
 <https://github.com/rwxrob/bonzai> without limitation. To avoid
 potential developer confusion, intentionally using these trademarks to
 refer to other projects --- free or proprietary --- is prohibited.
