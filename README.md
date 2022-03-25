@@ -1,4 +1,6 @@
-# Bonzai! Dominate the Command Line
+# Bonzai™ Command Compositor
+
+Dominate the command line, on *any* device.
 
 🚧 *under construction* 🚧
 
