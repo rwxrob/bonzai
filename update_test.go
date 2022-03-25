@@ -1,11 +1,11 @@
-package util_test
+package bonzai_test
 
 import (
 	"fmt"
 	"net/http"
 	ht "net/http/httptest"
 
-	"github.com/rwxrob/bonzai/util"
+	"github.com/rwxrob/bonzai"
 )
 
 func ExampleCompareUpdated() {
@@ -31,10 +31,10 @@ func ExampleCompareUpdated() {
 	same := ht.NewServer(handler)
 	defer same.Close()
 
-	fmt.Println(util.CompareUpdated(20220322080542, older.URL))
-	fmt.Println(util.CompareUpdated(20220322080542, newer.URL))
-	fmt.Println(util.CompareUpdated(20220322080542, same.URL))
-	fmt.Println(util.CompareUpdated(20220322080542, "foobar"))
+	fmt.Println(bonzai.CompareUpdated(20220322080542, older.URL))
+	fmt.Println(bonzai.CompareUpdated(20220322080542, newer.URL))
+	fmt.Println(bonzai.CompareUpdated(20220322080542, same.URL))
+	fmt.Println(bonzai.CompareUpdated(20220322080542, "foobar"))
 
 	// Output:
 	// -1
@@ -66,10 +66,10 @@ func ExampleCompareVersions() {
 	same := ht.NewServer(handler)
 	defer same.Close()
 
-	fmt.Println(util.CompareVersions(`v0.0.2`, older.URL))
-	fmt.Println(util.CompareVersions(`v0.0.2`, newer.URL))
-	fmt.Println(util.CompareVersions(`v0.0.2`, same.URL))
-	fmt.Println(util.CompareVersions(`v0.0.2`, "foobar"))
+	fmt.Println(bonzai.CompareVersions(`v0.0.2`, older.URL))
+	fmt.Println(bonzai.CompareVersions(`v0.0.2`, newer.URL))
+	fmt.Println(bonzai.CompareVersions(`v0.0.2`, same.URL))
+	fmt.Println(bonzai.CompareVersions(`v0.0.2`, "foobar"))
 
 	// Output:
 	// 1

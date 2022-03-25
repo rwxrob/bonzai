@@ -1,4 +1,4 @@
-package util
+package bonzai
 
 import (
 	"log"
