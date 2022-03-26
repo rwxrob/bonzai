@@ -34,24 +34,30 @@ import (
 func init() {
 	var err error
 	// get the full path to current running process executable
-	Exe, err = os.Executable()
+	ExePath, err = os.Executable()
 	if err != nil {
 		log.Print(err)
 		return
 	}
-	Exe, err = filepath.EvalSymlinks(Exe)
+	ExePath, err = filepath.EvalSymlinks(ExePath)
 	if err != nil {
 		log.Print(err)
 	}
+	ExeName = strings.TrimSuffix(
+		filepath.Base(ExePath), filepath.Ext(ExePath))
 }
 
-// Exe holds the full path to the current running process executable
+// ExePath holds the full path to the current running process executable
 // which is determined at init() time by calling os.Executable and
 // passing it to path/filepath.EvalSymlinks to ensure it is the actual
 // binary executable file. Errors are reported to stderr, but there
 // should never be an error logged unless something is wrong with the Go
 // runtime environment.
-var Exe string
+var ExePath string
+
+// ExeName holds just the base name of the executable without any suffix
+// (ex: .exe).
+var ExeName string
 
 // ReplaceSelf replaces the current running executable at its current
 // location with the successfully retrieved file at the specified URL or

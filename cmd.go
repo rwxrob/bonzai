@@ -95,21 +95,18 @@ func (x *Cmd) Run() {
 
 	// default to first Command if no Call defined
 	if cmd.Call == nil {
-		if cmd.Commands != nil {
-			def := cmd.Commands[0]
-			if def.Call == nil {
-				ExitError("default command \"%v\" must be callable", def.Name)
-			}
-			if err := def.Call(x, args...); err != nil {
-				ExitError(err)
-			}
-			Exit()
+		if len(cmd.Commands) > 0 {
+			os.Args = append(os.Args, cmd.Commands[0].Name)
+			cmd.Commands[0].Caller = cmd
+			cmd.Commands[0].Run()
+			return
+		} else {
+			ExitError(x.Unimplemented())
 		}
-		ExitError(x.UsageError())
 	}
 
 	// delegate
-	if err := cmd.Call(x, args...); err != nil {
+	if err := cmd.Call(cmd, args...); err != nil {
 		ExitError(err)
 	}
 	Exit()
@@ -118,6 +115,11 @@ func (x *Cmd) Run() {
 // UsageError returns an error with a single-line usage string.
 func (x *Cmd) UsageError() error {
 	return fmt.Errorf("usage: %v %v\n", x.Name, x.Usage)
+}
+
+// Unimplemented returns an error with a single-line usage string.
+func (x *Cmd) Unimplemented() error {
+	return fmt.Errorf("%q has not yet been implemented", x.Name)
 }
 
 // Add creates a new Cmd and sets the name and aliases and adds to

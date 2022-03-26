@@ -8,7 +8,6 @@ import (
 	"os"
 
 	"github.com/rwxrob/bonzai"
-	"github.com/rwxrob/bonzai/util"
 	"github.com/rwxrob/fn/each"
 )
 
@@ -21,7 +20,7 @@ func ExampleArgsFrom() {
 }
 
 func ExampleFiles() {
-	each.Println(util.Files("testdata/files"))
+	each.Println(bonzai.Files("testdata/files"))
 	// Output:
 	// testdata/files/bar
 	// testdata/files/blah
@@ -32,7 +31,7 @@ func ExampleFiles() {
 }
 
 func ExampleFiles_spaces() {
-	each.Println(util.Files("testdata/files/dir1"))
+	each.Println(bonzai.Files("testdata/files/dir1"))
 	// Output:
 	// testdata/files/dir1/some\ thing
 }
@@ -40,7 +39,7 @@ func ExampleFiles_spaces() {
 func ExampleFiles_empty() {
 	os.Chdir("testdata/files")
 	defer os.Chdir("../..")
-	each.Println(util.Files(""))
+	each.Println(bonzai.Files(""))
 	// Output:
 	// bar
 	// blah
@@ -51,7 +50,7 @@ func ExampleFiles_empty() {
 }
 
 func ExampleFiles_not_Directory() {
-	fmt.Println(util.Files("none"))
+	fmt.Println(bonzai.Files("none"))
 	// Output:
 	// []
 }
