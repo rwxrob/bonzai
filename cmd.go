@@ -5,6 +5,7 @@ package bonzai
 
 import (
 	"fmt"
+	"log"
 	"os"
 	"strings"
 
@@ -42,7 +43,7 @@ type Cmd struct {
 	Hidden      []string          `json:"hide,omitempty"`
 
 	Completer comp.Completer  `json:"-"`
-	Config    conf.Configurer `json:"-"`
+	Conf      conf.Configurer `json:"-"`
 	// Cache cache.Cacher `json:"-"`
 
 	Root   *Cmd   `json:"-"`
@@ -96,7 +97,7 @@ func (x *Cmd) Run() {
 	}
 
 	x.Root = x
-	x.Config = DefaultConfigurer
+	x.Conf = DefaultConfigurer
 
 	// seek should never fail to return something, but ...
 	cmd, args := x.Seek(os.Args[1:])
@@ -212,6 +213,7 @@ func (x *Cmd) Seek(args []string) (*Cmd, []string) {
 		}
 		next.Caller = cur
 		next.Root = x
+		next.Conf = DefaultConfigurer
 		cur = next
 	}
 	return cur, args[n:]
@@ -231,6 +233,15 @@ func (x *Cmd) Branch() string {
 	callers.Shift()
 	return strings.Join(callers.Items(), ".")
 }
+
+// Q is a shorter version of x.Conf.Query(x.Root.Name,x.Branch()+"."+q) for convenience.
+func (x *Cmd) Q(q string) string {
+	log.Print(x.Conf)
+	return ""
+	//return x.Conf.Query(x.Root.Name, x.Branch()+"."+q)
+}
+
+// TODO C for Cache lookups
 
 // ---------------------- comp.Command interface ----------------------
 
