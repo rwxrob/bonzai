@@ -9,6 +9,7 @@ import (
 	"strings"
 
 	"github.com/rwxrob/bonzai/comp"
+	"github.com/rwxrob/bonzai/conf"
 	"github.com/rwxrob/fn/each"
 	"github.com/rwxrob/structs/qstack"
 )
@@ -39,9 +40,14 @@ type Cmd struct {
 	Commands    []*Cmd            `json:"commands,omitempty"`
 	Params      []string          `json:"params,omitempty"`
 	Hidden      []string          `json:"hide,omitempty"`
-	Completer   comp.Completer    `json:"-"`
-	Call        Method            `json:"-"`
-	Caller      *Cmd              `json:"-"`
+
+	Completer comp.Completer  `json:"-"`
+	Config    conf.Configurer `json:"-"`
+	// Cache cache.Cacher `json:"-"`
+
+	Root   *Cmd   `json:"-"`
+	Caller *Cmd   `json:"-"`
+	Call   Method `json:"-"`
 
 	_aliases map[string]*Cmd
 }
@@ -88,6 +94,9 @@ func (x *Cmd) Run() {
 		each.Println(cmd.Completer(cmd, args...))
 		Exit()
 	}
+
+	x.Root = x
+	x.Config = DefaultConfigurer
 
 	// seek should never fail to return something, but ...
 	cmd, args := x.Seek(os.Args[1:])
@@ -202,6 +211,7 @@ func (x *Cmd) Seek(args []string) (*Cmd, []string) {
 			break
 		}
 		next.Caller = cur
+		next.Root = x
 		cur = next
 	}
 	return cur, args[n:]

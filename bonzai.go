@@ -27,6 +27,7 @@ import (
 	"path/filepath"
 	"strings"
 
+	config "github.com/rwxrob/config/pkg"
 	"github.com/rwxrob/fn/maps"
 	"github.com/rwxrob/fs/file"
 )
@@ -58,6 +59,10 @@ var ExePath string
 // ExeName holds just the base name of the executable without any suffix
 // (ex: .exe) and is set at init() time (see ExePath).
 var ExeName string
+
+// DefaultConfigurer is assigned to the Cmd.Root.Config during Cmd.Run.
+// It is conventional for only Cmd.Root to have a Configurer defined.
+var DefaultConfigurer = new(config.Configurer)
 
 // ReplaceSelf replaces the current running executable at its current
 // location with the successfully retrieved file at the specified URL or

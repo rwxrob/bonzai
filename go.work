@@ -5,6 +5,8 @@ use (
 	../fn
 	../fs
 	../json
+  ../config
+  ../yaml2json
 	../scan
 	../structs
 	../term
