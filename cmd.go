@@ -237,9 +237,10 @@ func (x *Cmd) Branch() string {
 	return strings.Join(callers.Items(), ".")
 }
 
-// Q is a shorter version of x.Conf.Query(x.Root.Name,x.Branch()+"."+q) for convenience.
+// Q is a shorter version of x.Conf.Query(x.Root.Name,x.Branch()+"."+q)
+// for convenience.
 func (x *Cmd) Q(q string) string {
-	return x.Conf.Query(x.Root.Name, x.Branch()+"."+q)
+	return x.Conf.Query(x.Root.Name, "."+x.Branch()+"."+q)
 }
 
 // TODO C for Cache lookups
