@@ -6,9 +6,11 @@ package bonzai
 import (
 	"fmt"
 	"os"
+	"strings"
 
 	"github.com/rwxrob/bonzai/comp"
 	"github.com/rwxrob/fn/each"
+	"github.com/rwxrob/structs/qstack"
 )
 
 // Cmd is a struct the easier to use and read when creating
@@ -203,6 +205,21 @@ func (x *Cmd) Seek(args []string) (*Cmd, []string) {
 		cur = next
 	}
 	return cur, args[n:]
+}
+
+// Branch returns the dotted path to this command location within the
+// parent tree. This is useful for associating configuration and other
+// data specifically with this command. The branch path is determined by
+// walking backward from current Caller up rather than depending on
+// anything from the command line used to invoke the composing binary.
+func (x *Cmd) Branch() string {
+	callers := qstack.New[string]()
+	callers.Unshift(x.Name)
+	for p := x.Caller; p != nil; p = p.Caller {
+		callers.Unshift(p.Name)
+	}
+	callers.Shift()
+	return strings.Join(callers.Items(), ".")
 }
 
 // ---------------------- comp.Command interface ----------------------

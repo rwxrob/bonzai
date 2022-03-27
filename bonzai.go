@@ -56,7 +56,7 @@ func init() {
 var ExePath string
 
 // ExeName holds just the base name of the executable without any suffix
-// (ex: .exe).
+// (ex: .exe) and is set at init() time (see ExePath).
 var ExeName string
 
 // ReplaceSelf replaces the current running executable at its current

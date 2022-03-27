@@ -5,6 +5,7 @@ package bonzai_test
 
 import (
 	"fmt"
+	"os"
 
 	"github.com/rwxrob/bonzai"
 	"github.com/rwxrob/bonzai/inc/help"
@@ -40,7 +41,7 @@ func ExampleCmd_Seek() {
 
 	yo := &bonzai.Cmd{
 		Name: `yo`,
-		Call: func(_ *bonzai.Cmd, args ...string) error {
+		Call: func(x *bonzai.Cmd, args ...string) error {
 			fmt.Println("yo")
 			return nil
 		},
@@ -119,4 +120,29 @@ func ExampleCmd_GetParams() {
 	fmt.Println(foo.GetParams())
 	// Output:
 	// [box bing and]
+}
+
+func ExampleCmd_Branch() {
+	bonzai.ExitOff()
+
+	z := new(bonzai.Cmd)
+	c := z.Add("some")
+	//fmt.Print(z.Commands[0].Name)
+	c = c.Add("thing")
+	//fmt.Print(z.Commands[0].Commands[0].Name)
+	c = c.Add("deep")
+	//fmt.Print(z.Commands[0].Commands[0].Commands[0].Name)
+
+	c.Call = func(x *bonzai.Cmd, _ ...string) error {
+		fmt.Println(x.Branch())
+		return nil
+	}
+
+	defer func() { args := os.Args; os.Args = args }()
+	os.Args = []string{"z", "some", "thing", "deep"}
+
+	z.Run()
+
+	// Output:
+	// some.thing.deep
 }
