@@ -114,7 +114,7 @@ func (x *Cmd) Run() {
 
 // UsageError returns an error with a single-line usage string.
 func (x *Cmd) UsageError() error {
-	return fmt.Errorf("usage: %v %v\n", x.Name, x.Usage)
+	return fmt.Errorf("usage: %v %v", x.Name, x.Usage)
 }
 
 // Unimplemented returns an error with a single-line usage string.

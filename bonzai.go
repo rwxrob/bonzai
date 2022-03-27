@@ -66,7 +66,7 @@ var ExeName string
 // will be fetched from sumurl and used to validate the download before
 // making the replacement. For security reasons, no backup copy of the
 // replaced executable is kept. Also see AutoUpdate.
-func ReplaceSelf(url, sumurl string) error {
+func ReplaceSelf(url, checksum string) error {
 	exe, err := os.Executable()
 	if err != nil {
 		return err
@@ -79,23 +79,17 @@ func ReplaceSelf(url, sumurl string) error {
 	return file.Replace(exe, url)
 }
 
-// AutoUpdate automatically updates the current process executable (see
-// Exe) by starting a goroutine that checks the current version against
-// a remote one and calling ReplaceSelf if needed.
+// AutoUpdate automatically updates the current process executable
+// version by starting a goroutine that checks the current semantic
+// version (version) against a remote one (versurl) and calling
+// ReplaceSelf with the URL of the binary (binurl) and checksum (sumurl)
+// if and update is needed. Note that the binary will often be named
+// quite differently than the name of the currently running executable
+// (ex: foo-mac -> foo, foo-linux.
 //
-// If cur is an int assumes it is an isosec (see uniq.IsoSecond) and
-// that newURL will return just a single line with an isosec in the body
-// (usually a file named UPDATED).
-//
-// If cur is a string assumes it is a valid semantic version (beginning
-// with a 'v') and will expect a single JSON string (don't forget the
-// wrapping double-quotes) from newURL (usually in a file named VERSION)
-// which will be compared using the Compare function from
-// golang.org/x/mod/semver.
-//
-// If a URL to a checksum file (sum) is not empty will optionally
+// If a URL to a checksum file (sumurl) is not empty will optionally
 // validate the new version downloaded against the checksum before
-// replace the currently running process executable with the new one.
+// replacing the currently running process executable with the new one.
 // The format of the checksum file is the same as that output by any of
 // the major checksum commands (sha512sum, for example) with one or more
 // lines beginning with the checksum, whitespace, and then the name of
@@ -103,12 +97,18 @@ func ReplaceSelf(url, sumurl string) error {
 // but the most recent should always be at the top. When the update
 // completes a message notifying of the update is logged to stderr.
 //
+// The function will fail silently under any of the following
+// conditions:
+//
+//     * current user does not have write access to executable
+//     * unable to establish a network connection
+//     * checksum provided does not match
+//
 // Since AutoUpdate happens in the background no return value is
-// provided. This means that failed Internet connections and other
-// common reasons blocking the update silently fail. To enable logging
-// of the update process (presumably for debugging) add the AutoUpdate
-// flag to the Trace flags (trace.Flags|=trace.AutoUpdate).
-func AutoUpdate[T int | string](cur T, newURL, sum, exe string) {
+// provided. To enable logging of the update process (presumably for
+// debugging) add the AutoUpdate flag to the Trace flags
+// (trace.Flags|=trace.AutoUpdate). Also see Cmd.AutoUpdate.
+func AutoUpdate(version, versurl, binurl, sumurl string) {
 	// TODO
 }
 
