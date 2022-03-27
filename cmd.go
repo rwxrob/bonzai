@@ -95,9 +95,6 @@ func (x *Cmd) Run() {
 		Exit()
 	}
 
-	x.Root = x
-	x.Conf = DefaultConfigurer
-
 	// seek should never fail to return something, but ...
 	cmd, args := x.Seek(os.Args[1:])
 	if cmd == nil {
@@ -108,8 +105,7 @@ func (x *Cmd) Run() {
 	if cmd.Call == nil {
 		if len(cmd.Commands) > 0 {
 			os.Args = append(os.Args, cmd.Commands[0].Name)
-			cmd.Commands[0].Caller = cmd
-			cmd.Commands[0].Run()
+			x.Run()
 			return
 		} else {
 			ExitError(x.Unimplemented())
@@ -131,6 +127,12 @@ func (x *Cmd) UsageError() error {
 // Unimplemented returns an error with a single-line usage string.
 func (x *Cmd) Unimplemented() error {
 	return fmt.Errorf("%q has not yet been implemented", x.Name)
+}
+
+// MissingConfig returns an error showing the expected configuration
+// entry that is missing from the given path.
+func (x *Cmd) MissingConfig(path string) error {
+	return fmt.Errorf("missing config: %v", x.Branch()+"."+path)
 }
 
 // Add creates a new Cmd and sets the name and aliases and adds to
@@ -204,6 +206,8 @@ func (x *Cmd) Seek(args []string) (*Cmd, []string) {
 		return x, args
 	}
 	cur := x
+	cur.Root = x
+	cur.Conf = DefaultConfigurer
 	n := 0
 	for ; n < len(args); n++ {
 		next := cur.Cmd(args[n])
