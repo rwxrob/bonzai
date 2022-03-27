@@ -5,7 +5,6 @@ package bonzai
 
 import (
 	"fmt"
-	"log"
 	"os"
 	"strings"
 
@@ -236,9 +235,7 @@ func (x *Cmd) Branch() string {
 
 // Q is a shorter version of x.Conf.Query(x.Root.Name,x.Branch()+"."+q) for convenience.
 func (x *Cmd) Q(q string) string {
-	log.Print(x.Conf)
-	return ""
-	//return x.Conf.Query(x.Root.Name, x.Branch()+"."+q)
+	return x.Conf.Query(x.Root.Name, x.Branch()+"."+q)
 }
 
 // TODO C for Cache lookups
