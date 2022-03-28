@@ -8,7 +8,7 @@ import (
 
 	"github.com/rwxrob/bonzai"
 	"github.com/rwxrob/bonzai/comp"
-	"github.com/rwxrob/bonzai/filt"
+	"github.com/rwxrob/fn/filt"
 )
 
 func ExampleStandard() {
