@@ -218,3 +218,12 @@ func Files(dir string) []string {
 	}
 	return maps.EscSpace(maps.Prefix(names, dir))
 }
+
+// Aliases allows Bonzai tree developers to create aliases (similar to
+// shell aliases) that are directly translated into arguments to the
+// Bonzai tree executable by overriding the os.Args in a controlled way.
+// The value of an alias is always a slice of strings that will replace
+// the os.Args[2:]. A slice is used (instead of a string parsed with
+// strings.Fields) to ensure that hard-coded arguments containing
+// whitespace are properly handled.
+var Aliases = make(map[string][]string)

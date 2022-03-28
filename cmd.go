@@ -11,6 +11,7 @@ import (
 	"github.com/rwxrob/bonzai/comp"
 	"github.com/rwxrob/bonzai/conf"
 	"github.com/rwxrob/fn/each"
+	"github.com/rwxrob/fn/maps"
 	"github.com/rwxrob/structs/qstack"
 )
 
@@ -81,13 +82,33 @@ func (x *Cmd) Run() {
 
 	x.cacheAliases()
 
+	// resolve bonzai.Aliases
+	if len(os.Args) > 2 {
+		args := []string{os.Args[0]}
+		alias := Aliases[os.Args[1]]
+		if alias != nil {
+			args = append(args, alias...)
+			args = append(args, os.Args[2:]...)
+			os.Args = args
+		}
+	}
+
 	// bash completion context
 	line := os.Getenv("COMP_LINE")
 	if line != "" {
-		cmd, args := x.Seek(ArgsFrom(line)[1:])
-		if cmd.Completer == nil {
 
-			list := comp.Standard(cmd, args...)
+		var list []string
+		lineargs := ArgsFrom(line)
+
+		// complete aliases first
+		if len(lineargs) > 1 {
+			list = append(list, maps.KeysWithPrefix(Aliases, lineargs[1])...)
+		}
+
+		cmd, args := x.Seek(lineargs[1:])
+
+		if cmd.Completer == nil {
+			list = append(list, comp.Standard(cmd, args...)...)
 			each.Println(list)
 			Exit()
 		}

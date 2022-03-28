@@ -6,7 +6,7 @@ use (
 	../fs
 	../json
   ../config
-  ../yaml2json
+  ../y2j
 	../scan
 	../structs
 	../term
