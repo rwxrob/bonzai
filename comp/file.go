@@ -5,23 +5,28 @@ package comp
 
 import (
 	"path/filepath"
+	"strings"
 
 	"github.com/rwxrob/fn/filt"
 	"github.com/rwxrob/fs"
 	"github.com/rwxrob/fs/dir"
 )
 
-// File returns all file names for the directory and file prefix
-// passed. If nothing is passed assumes the current working directory.
-// This completer is roughly based on the behavior and appearance of the
-// bash shell with forward slashes as separators and escaped spaces. By
-// using this completer (instead of the shell) the command line
-// interface remains consistent across all runtimes.
+// File returns all file names for the directory and file prefix passed.
+// If nothing is passed assumes the current working directory.  This
+// completer is roughly based on the behavior of the bash shell with
+// forward slashes as separators and escaped spaces. By using this
+// completer (instead of the shell) the command line interface remains
+// consistent across all runtimes. Note that unlike bash completion no
+// indication of the type of file is provided.
 func File(x Command, args ...string) []string {
 
-	// no completion if we already have one
 	if len(args) > 1 {
 		return []string{}
+	}
+
+	if args == nil || (len(args) > 0 && args[0] == "") {
+		return dir.EntriesWithSlash(".")
 	}
 
 	// catch edge cases
@@ -29,31 +34,31 @@ func File(x Command, args ...string) []string {
 		if x != nil {
 			return []string{x.GetName()} // will add tailing space
 		}
-		return dir.Entries("")
+		return dir.EntriesWithSlash("")
 	}
 
-	// no prefix of any kind, just a space following command
-	if args[0] == "" {
-		return dir.Entries("")
-	}
+	first := strings.TrimRight(args[0], string(filepath.Separator))
+	d, pre := filepath.Split(first)
 
-	d, pre := filepath.Split(args[0])
-	list := filt.BaseHasPrefix(dir.Entries(d), pre)
+	if d == "" {
+		list := filt.HasPrefix(dir.Entries("."), pre)
+		if len(list) == 1 && fs.IsDir(list[0]) {
+			return dir.EntriesWithSlash(list[0])
+		}
+		return dir.AddSlash(list)
+	}
 
 	for {
-
+		list := filt.BaseHasPrefix(dir.Entries(d), pre)
 		if len(list) > 1 {
-			return list
+			return dir.AddSlash(list)
 		}
-
-		if len(list) == 1 && fs.IsDir(list[0]) {
-			list = dir.Entries(list[0])
+		if fs.IsDir(list[0]) {
+			d = list[0]
 			continue
 		}
-
-		break
+		return dir.AddSlash(list)
 	}
 
-	// just a single file left in the list
-	return list
+	return []string{}
 }
