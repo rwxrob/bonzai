@@ -19,6 +19,38 @@ func ExampleArgsFrom() {
 	// ["greet" "hi" "french" ""]
 }
 
+func ExampleArgsOrIn_read_Nil() {
+
+	orig := os.Stdin
+	defer func() { os.Stdin = orig }()
+	os.Stdin, _ = os.Open(`testdata/in`)
+
+	fmt.Println(bonzai.ArgsOrIn(nil))
+
+	// Output:
+	// some thing
+}
+
+func ExampleArgsOrIn_read_Zero_Args() {
+
+	orig := os.Stdin
+	defer func() { os.Stdin = orig }()
+	os.Stdin, _ = os.Open(`testdata/in`)
+
+	fmt.Println(bonzai.ArgsOrIn([]string{}))
+
+	// Output:
+	// some thing
+}
+
+func ExampleArgsOrIn_args_Joined() {
+
+	fmt.Println(bonzai.ArgsOrIn([]string{"some", "thing"}))
+
+	// Output:
+	// some thing
+}
+
 func ExampleFiles() {
 	each.Println(bonzai.Files("testdata/files"))
 	// Output:

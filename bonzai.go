@@ -30,6 +30,7 @@ import (
 	config "github.com/rwxrob/config/pkg"
 	"github.com/rwxrob/fn/maps"
 	"github.com/rwxrob/fs/file"
+	"github.com/rwxrob/term"
 )
 
 func init() {
@@ -181,6 +182,17 @@ func ArgsFrom(line string) []string {
 		args = append(args, "")
 	}
 	return args
+}
+
+// ArgsOrIn takes an slice or nil as argument and if the slice has any
+// length greater than 0 returns all the argument joined together with
+// a single space between them. Otherwise, will read standard input
+// until end of file reached (Cntl-D).
+func ArgsOrIn(args []string) string {
+	if args == nil || len(args) == 0 {
+		return term.Read()
+	}
+	return strings.Join(args, " ")
 }
 
 // Files returns a slice of strings matching the names of the files
