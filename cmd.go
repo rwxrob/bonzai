@@ -125,9 +125,7 @@ func (x *Cmd) Run() {
 	// default to first Command if no Call defined
 	if cmd.Call == nil {
 		if len(cmd.Commands) > 0 {
-			os.Args = append(os.Args, cmd.Commands[0].Name)
-			x.Run()
-			return
+			cmd = cmd.Commands[0]
 		} else {
 			ExitError(x.Unimplemented())
 		}
