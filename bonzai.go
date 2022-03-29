@@ -28,7 +28,6 @@ import (
 	"strings"
 
 	config "github.com/rwxrob/config/pkg"
-	"github.com/rwxrob/fn/maps"
 	"github.com/rwxrob/fs/file"
 	"github.com/rwxrob/term"
 )
@@ -193,30 +192,6 @@ func ArgsOrIn(args []string) string {
 		return term.Read()
 	}
 	return strings.Join(args, " ")
-}
-
-// Files returns a slice of strings matching the names of the files
-// within the given directory adding a slash to the end of any
-// directories and escaping any spaces by adding backslash.  Note that
-// this function assumes forward slash path separators since completion
-// is only supported on operating systems where such is the case.
-func Files(dir string) []string {
-	if dir == "" {
-		dir = "."
-	}
-	files := []string{}
-	entries, err := os.ReadDir(dir)
-	if err != nil {
-		return files
-	}
-	names := maps.MarkDirs(entries)
-	if dir == "." {
-		return names
-	}
-	if dir[len(dir)-1] != '/' {
-		dir += "/"
-	}
-	return maps.EscSpace(maps.Prefix(names, dir))
 }
 
 // Aliases allows Bonzai tree developers to create aliases (similar to
