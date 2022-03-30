@@ -1,4 +1,6 @@
-# Bonzai™ Command Compositor
+# Go Bonzai™ Command Compositor
+
+![logo](logo.png)
 
 Dominate the command line, on *any* device.
 
