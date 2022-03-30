@@ -60,6 +60,47 @@ var ExePath string
 // (ex: .exe) and is set at init() time (see ExePath).
 var ExeName string
 
+// Commands contains the commands to lookup when Run-ing an executable
+// in "multicall" mode. Each value must begin with a *Cmd and the rest
+// will be assumed to be string arguments to prepend. See Run.
+var Commands map[string][]any
+
+// Run infers the name of the command to run from the ExeName looked up
+// in the Commands delegates accordingly, prepending any arguments
+// provided in the CmdRun. Run produces an "unmapped multicall command"
+// error if no match is found. This is an alternative to the simpler,
+// direct Cmd.Run method from main where only one possible Cmd will ever
+// be the root and allows for BusyBox (https://www.busybox.net)
+// multicall binaries to be used for such things as very light-weight
+// Linux distributions when used "FROM SCRATCH" in containers.
+func Run() {
+	if v, has := Commands[ExeName]; has {
+		if len(v) < 1 {
+			ExitError(fmt.Errorf("multicall command missing"))
+		}
+		cmd, iscmd := v[0].(*Cmd)
+		if !iscmd {
+			ExitError(fmt.Errorf("first value must be *Cmd"))
+		}
+		args := []string{cmd.Name}
+		if len(v) > 1 {
+			rest := os.Args[1:]
+			for _, a := range v[1:] {
+				s, isstring := a.(string)
+				if !isstring {
+					ExitError(fmt.Errorf("only string arguments allowed"))
+				}
+				args = append(args, s)
+			}
+			args = append(args, rest...)
+		}
+		os.Args = args
+		cmd.Run()
+		Exit()
+	}
+	ExitError(fmt.Errorf("unmapped multicall command: %v", ExeName))
+}
+
 // DefaultConfigurer is assigned to the Cmd.Root.Config during Cmd.Run.
 // It is conventional for only Cmd.Root to have a Configurer defined.
 var DefaultConfigurer = new(config.Configurer)
