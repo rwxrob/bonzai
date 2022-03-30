@@ -15,15 +15,6 @@ import (
 	"github.com/rwxrob/structs/qstack"
 )
 
-// Cmd is a struct the easier to use and read when creating
-// implementations of the Command interface.
-//
-// Params
-//
-// Params require a Method. While Methods may receive any number of
-// arguments, Params are a way of helping completion for regular
-// parameters. Standard completion will not recursively complete
-// multiple params, one param per completion.
 type Cmd struct {
 	Name        string            `json:"name,omitempty"`
 	Aliases     []string          `json:"aliases,omitempty"`
@@ -46,9 +37,10 @@ type Cmd struct {
 	Conf      conf.Configurer `json:"-"`
 	// Cache cache.Cacher `json:"-"`
 
-	Root   *Cmd   `json:"-"`
-	Caller *Cmd   `json:"-"`
-	Call   Method `json:"-"`
+	Root    *Cmd   `json:"-"`
+	Caller  *Cmd   `json:"-"`
+	Call    Method `json:"-"`
+	MinArgs int    `json:"-"`
 
 	_aliases map[string]*Cmd
 }
@@ -104,7 +96,7 @@ func (x *Cmd) Run() {
 		cmd, args := x.Seek(lineargs[1:])
 		if cmd.Completer == nil {
 			list = append(list, comp.Standard(cmd, args...)...)
-			if len(list) == 1 {
+			if len(list) == 1 && len(lineargs) == 2 {
 				if v, has := Aliases[list[0]]; has {
 					fmt.Println(strings.Join(v, " "))
 					Exit()
@@ -130,6 +122,10 @@ func (x *Cmd) Run() {
 		} else {
 			ExitError(x.Unimplemented())
 		}
+	}
+
+	if len(args) < cmd.MinArgs {
+		ExitError(cmd.UsageError())
 	}
 
 	// delegate
