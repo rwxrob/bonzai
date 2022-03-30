@@ -99,7 +99,7 @@ func (x *Cmd) Run() {
 			list = append(list, comp.Standard(cmd, args...)...)
 			if len(list) == 1 && len(lineargs) == 2 {
 				if v, has := Aliases[list[0]]; has {
-					fmt.Println(strings.Join(v, " "))
+					fmt.Println(strings.Join(EscAll(v), " "))
 					Exit()
 				}
 			}
