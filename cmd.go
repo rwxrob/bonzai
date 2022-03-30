@@ -76,7 +76,7 @@ func (x *Cmd) Run() {
 	x.cacheAliases()
 
 	// resolve bonzai.Aliases (if completion didn't replace them)
-	if len(os.Args) > 2 {
+	if len(os.Args) > 1 {
 		args := []string{os.Args[0]}
 		alias := Aliases[os.Args[1]]
 		if alias != nil {
