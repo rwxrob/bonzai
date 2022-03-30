@@ -82,7 +82,7 @@ func (x *Cmd) Run() {
 
 	x.cacheAliases()
 
-	// resolve bonzai.Aliases
+	// resolve bonzai.Aliases (if completion didn't replace them)
 	if len(os.Args) > 2 {
 		args := []string{os.Args[0]}
 		alias := Aliases[os.Args[1]]
@@ -96,19 +96,20 @@ func (x *Cmd) Run() {
 	// bash completion context
 	line := os.Getenv("COMP_LINE")
 	if line != "" {
-
 		var list []string
 		lineargs := ArgsFrom(line)
-
-		// complete aliases first
-		if len(lineargs) > 1 {
+		if len(lineargs) == 2 {
 			list = append(list, maps.KeysWithPrefix(Aliases, lineargs[1])...)
 		}
-
 		cmd, args := x.Seek(lineargs[1:])
-
 		if cmd.Completer == nil {
 			list = append(list, comp.Standard(cmd, args...)...)
+			if len(list) == 1 {
+				if v, has := Aliases[list[0]]; has {
+					fmt.Println(strings.Join(v, " "))
+					Exit()
+				}
+			}
 			each.Println(list)
 			Exit()
 		}
