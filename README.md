@@ -2,7 +2,7 @@
 
 ![logo](logo.png)
 
-Maintain meticulously manicured monoliths, on *any* device.
+Meticulously manicured monoliths, on *any* device.
 
 > Have a look at [rwxrob/z](https://github.com/rwxrob/z) for now to get a
 sense of how it's coming along and how to use until the 1.0 release.
