@@ -7,6 +7,9 @@ Dominate the command line, on *any* device.
 > Have a look at [rwxrob/z](https://github.com/rwxrob/z) for now to get a
 sense of how it's coming along and how to use until the 1.0 release.
 
+> Or, you can get started right away by cloning/forking [the sample
+`foo` template repo](https://github.com/rwxrob/foo)
+
 🚧 *under construction* 🚧
 
 [![Go Version](https://img.shields.io/github/go-mod/go-version/rwxrob/bonzai)](https://tip.golang.org/doc/go1.18)
