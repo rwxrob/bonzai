@@ -2,7 +2,12 @@
 
 ![logo](logo.png)
 
-Meticulously manicured monoliths, on *any* device.
+Meticulously manicured monolith and multicall binaries, built from
+imported composite commands, on *any* device, with recursive,
+light-weight tab completion, and colorful embedded documentation from
+terminal or local web browser. Replace messy collections of shell
+scripts ported to clean Go code and compiled into a single, portable `z`
+command.
 
 > Have a look at [rwxrob/z](https://github.com/rwxrob/z) for now to get a
 sense of how it's coming along and how to use until the 1.0 release.
