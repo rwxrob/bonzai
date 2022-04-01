@@ -5,16 +5,26 @@
 # <-- "contains nodes"
 # <-  "does not contain nodes"
 
-Grammar     <--  Block EndLine
-Block       <--  (Bulleted / Numbered / Paragraph /
-                  Verbatim) EndBlock
+# Must be parsed in three passes:
+#
+# 1. Unindent every line
+# 1. Chop into blocks
+# 1. Parse each block
+
+Indented     <--  FirstLine Lines*
+FirstLine     <- Indentation (!EndLine .)*
+_Indent      <-- # number of spaces before first nongraphic 
+
+
+Block       <--  Bulleted / Numbered / Paragraph / Verbatim
+
+
+
 EndBlock     <-  EndLine{2,} / EOD
-Bulleted    <--  (!EndLine '*' SP ListItem*)+
-Numbered    <--  (!EndLine '1.' SP ListItem*)+
-ListItem    <--  <Span*>
-VerbMark     <-  (!EndLine SP{4} Verbatim)+
-Verbatim    <--  (ugraphic* EndLine)+
-Paragraph   <--  (!(Endline{2} / EOD) Span)+ 
+Paragraph   <--  (!EndBlock <Span>)+ EndBlock
+Bulleted    <--  (!EndLine '*' SP <Span*>)+
+Numbered    <--  (!EndLine '1.' SP <Span*>)+
+Verbatim    <--  (!EndLine SP{4} <ugraphic*> EndLine)+
 Span         <-  BoldItalic / Bold / Italic / Bracketed / Plain
 BoldItalic  <--  ('***' !ws) (!'***' ugraphic)+ (!ws '***')
 Bold        <--  ('**' !ws) (!'**' ugraphic)+ (!ws '**')
