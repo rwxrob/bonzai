@@ -310,8 +310,6 @@ everything from my use of init, to the name "bonzai". While all their
 contributions are too numerous to name specifically, they 
 more than deserve a huge thank you here.
 
-* <https://github.com/alessio/shellescape> ([shell.go](shell.go))
-
 ## Legal
 
 Copyright 2022 Robert S. Muhlestein (<mailto:rob@rwx.gg>)  
