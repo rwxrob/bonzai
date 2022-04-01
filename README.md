@@ -10,8 +10,6 @@ sense of how it's coming along and how to use until the 1.0 release.
 > Or, you can get started right away by cloning/forking [the sample
 `foo` template repo](https://github.com/rwxrob/foo)
 
-🚧 *under construction* 🚧
-
 [![Go Version](https://img.shields.io/github/go-mod/go-version/rwxrob/bonzai)](https://tip.golang.org/doc/go1.18)
 [![GoDoc](https://godoc.org/github.com/rwxrob/bonzai?status.svg)](https://godoc.org/github.com/rwxrob/bonzai)
 [![License](https://img.shields.io/badge/license-Apache2-brightgreen.svg)](LICENSE)
@@ -24,7 +22,7 @@ Card](https://goreportcard.com/badge/github.com/rwxrob/bonzai)](https://goreport
 
 1. Install Go 1.18 and the tooling your require for it
 1. `go install github.com/rwxrob/bonzai@latest` 
-1. `import "github.com/rwxrob/bonzai"`
+1. `import Z "github.com/rwxrob/bonzai"`
 1. Consider using the [template][] to get started
 
 [template]: <https://github.com/rwxrob/bonzai-template>
@@ -49,7 +47,7 @@ be particularly grateful.
 
 But wait, there's more! What about all those other tasks you need to do
 to make a command line application honorable in anyone's eyes? Tools are
-needed. 
+needed.
 
 ## Contributors/PRs Welcome
 
@@ -70,22 +68,26 @@ easier to find once you know the strange spelling we chose to use. Sorry
 if that triggers your OCD.
 
 If you must know, the primary motivator was the similarity to a
-well-manicured tree (since it is for creating trees of commands). And
-Buckaroo Banzai was always a favorite. We like to think he would use
-Bonzai today to make amazing things.
+well-manicured tree (since it is for creating trees of composite
+commands).
 
-On a lighter note, it just so happens that "banzai" means 'a traditional
-Japanese idiom meaning "ten thousand years" of long life,' a cheer used
-in celebrations. So combining the notion of a happy, little,
-well-manicured, beautiful tree and "ten thousand years of long life"
-works out just fine for us.
+The misunderstood word "banzai" is 'a traditional Japanese idiom
+meaning "ten thousand years" of long life,' a cheer used in
+celebrations like "Hurrah" or "Viva".' So combining the notion of a
+happy, well-manicured, beautiful tree and "ten thousand years of
+long life" works out just fine for us.
+
+And, yes, Buckaroo Banzai was always a favorite. We like to think he
+would use Bonzai today to make amazing things and last for a long time
+to defeat evil aliens and save the world.
 
 It turns out that the "call to war" associated with Bonzai is not
-entirely without merit as well. Bonzai makes short work of creating
-offensive and defensive tool kits all wrapping into one nice Go binary,
-popular for building single-binary Linux container distros (like BusyBox
-and Alpine, watch for Bonzai Linux soon), as well as root kits, and
-other security tools
+entirely without merit as well. Bonzai is excellent for unorthodox,
+rapid applications development (instead of writing scripts) and makes
+short work of creating offensive and defensive tool kits all wrapping
+into one nice Go multicall binary, popular for building single-binary
+Linux container distros like BusyBox and Alpine, as well as root kits,
+and other security tools
 
 ## "Why not just use Cobra?"
 
@@ -93,58 +95,75 @@ Just because something is popular (or first) doesn't mean it was well
 designed. In fact, often inferior designs are rushed to market just to
 gain adoption. Cobra seems to suffer from this. Discerning developers
 and engineers have been not-so-quietly complaining about Cobra's
-horrible design for years. It's time for something new.
+horrible design for years. It's time for something new. Read on if you
+want the specific reasons.
 
-Cobra requires wasteful and error-prone sourcing of thousands of lines
-of shell code every time you create a new shell that needs to use a
-Cobra command with shell tab completion (`kubectl` requires 12637). It
-is not uncommon for operations people to be sourcing 100s of thousands
-of lines of shell code just to enable basic completion that could have
-been enabled easily with `complete -C` instead. Bonzai manages all
-completion in Go instead of shell and therefore allows the modular
-addition of any number of Completers including the standard file
-completion as well as calculators, dates, and anything anyone can
-conceive of completing. Completion is not dependent on any underlying
-operating system. Any Bonzai command can provide its own completion
-algorithm or use one of the many already provided. Cobra can never do
-this.
+* **Cobra tab completion is wasteful and error-prone.**
 
-Corba is also not designed to be a command compositor at all, which is
-really unfortunate because they missed a golden opportunity there.
-Bonzai branches can be imported and composed into other branches and
-monoliths with just a few lines of Go. Registries of Bonzai commands can
-be easily inferred from dependencies on the `bonzai` package and
-creators are free to compose their monoliths from a rich eco-system of
-Bonzai branches and commands. Bonzai allows creation of Go multicall
-binary monoliths (like BusyBox) to be made easily, and from a diverse,
-modular, importable, composable sources. Such is simply not possible
-with Cobra and never will be.
+  Cobra often requires sourcing thousands of lines of shell code every
+  time you run a new shell that needs to use a Cobra command with shell
+  tab completion (`kubectl` requires 12637). It is not uncommon for
+  operations people to be sourcing 100s of thousands of lines of shell
+  code just to enable basic completion that could have been enabled
+  easily with `complete -C` instead. Bonzai manages all completion in Go
+  instead of shell and therefore allows the modular addition of any
+  number of Completers including the standard file completion as well as
+  calculators, dates, and anything anyone can conceive of completing.
+  Completion is not dependent on any underlying operating system. Any
+  Bonzai command can provide its own completion algorithm or use one of
+  the many already provided. Cobra can never do this.
 
-Cobra buys into the broken boomer "getopt" view of the world requiring
-people to remember all sorts of ungodly different combinations of dashes
-and equals signs hoping things will just work. Bonzai takes a no-dashes
-approach promoting much cleaner command lines with context and promotion
-of domain specific languages (created with PEGN, scan.X, or others) that
-easily translate directly to chat and other command-line interfaces for
-most humans without much need to look up the documentation, which, by
-the way, is embedded in the Bonzai command tree.
+* **Corba is not designed to be a command compositor at all.**
 
-Cobra provides minimal, unappealing command documentation that is
-virtually unreadable in source form. And Cobra provides no means of markup
-or use of color and doesn't even promote the same look and feel of
-manual page documentation. Bonzai has its own subset of Markdown,
-BonzaiMark, respects the well established readability of manual pages,
-and allows for the creation of elegant documentation that can be viewed
-from the command line or easily from a local browser on the same
-computer running the command. And the source containing the
-documentation is as easy to read as the documentation itself.
+  This is really unfortunate because the designers missed a golden
+  opportunity. Bonzai branches can be imported and composed into other
+  branches and monoliths with just a few lines of Go. Registries of
+  Bonzai commands can be easily inferred from dependencies on the
+  `bonzai` package and creators are free to compose their monoliths or
+  multicall binaries from a rich eco-system of Bonzai branches and
+  commands. Bonzai allows creation of Go multicall binary monoliths
+  (like BusyBox) to be made easily, and from a diverse, modular,
+  importable, composable sources. Such is simply not possible with Cobra
+  and never will be.
 
-In short, Cobra got us a long way, but has proved to be so laden with
-crushing technical debt from failed base design decisions that it simply
-is not sustainable given current modern expectations for good user
-interfaces and documentation. Bonzai is a fresh, extensible,
-sustainable, human-friendly command compositor to take us into the
-future of command line interfaces, for everyone.
+* **Cobra suffers from broken boomer "getopt" design.**
+
+  The world if finally realizing how bad dashed arguments and options
+  have always been for *good* human-computer interactions from the
+  command line, perhaps because more people are using chat interfaces as
+  their command line. People simply cannot remember all sorts of ungodly
+  combinations of dashes and equals signs hoping things will
+  just work. Bonzai takes a no-dashes approach with aliases promoting
+  cleaner, understandable command lines with context and promotion of
+  domain specific languages (created with PEGN, scan.X, or others) that
+  easily translate directly to chat and other command-line interfaces
+  that most humans can use without even looking up the documentation,
+  which, by the way, is embedded in any Bonzai command tree.
+
+* **Cobra provides bad, brittle, command documentation.**
+
+  Cobra documentation is virtually unreadable in source form. And Cobra
+  provides no means of markup or use of color and doesn't even promote
+  the same look and feel of manual page documentation. In contrast,
+  Bonzai has its own subset of Markdown, BonzaiMark, respects the well
+  established readability of manual pages, and allows for the creation
+  of elegant documentation that can be viewed from the command line or
+  easily from a local browser on the same computer running the command.
+  Bonzai command documentation is as easy to read in source form as the
+  documentation itself.
+
+* **Cobra suffers from crushing technical debt.**
+
+  The problems listed (and more) are never going to come out of Cobra.
+  Because it is filled with bad design decisions and was rushed to
+  market without serious consideration for its API, it is now doomed to
+  never lose its warts (kinda like JavaScript). There is no possible way
+  it can ever upgrade to address the very reasonable modern expectations
+  for good command line user experiences. No wonder you never see people
+  using Cobra for their replace-my-shell-scripts utilities. Cobra is
+  simply horrible for this. Thankfully, Bonzai is a fresh, extensible,
+  sustainable, human-friendly command compositor to take us into the
+  future of command line interfaces.
 
 ## What People Are Saying
 
@@ -156,9 +175,10 @@ future of command line interfaces, for everyone.
 > various Go modules. Individual commands are isolated and unaware of
 > each other and possibly maintained by other people." (tadasv123)
 
-## Example GitHub Template
+## Examples
 
-<https://github.com/rwxrob/foo>
+* <https://github.com/rwxrob/foo> - clone-able GitHub template
+* <https://github.com/rwxrob/z> - first Bonzai command tree ever made
 
 ## Design Considerations
 
@@ -180,7 +200,7 @@ future of command line interfaces, for everyone.
   undesirable tight coupling --- even with channels --- between
   specific commands.
 
-* **Cmds should be very light.** 
+* **Cmds should be very light.**
 
   Most Cmds should assign their first-class Call function to one that
   lightly wraps a similar function signature in a callable, high-level
@@ -201,7 +221,7 @@ future of command line interfaces, for everyone.
   completers and composable commands that carry their own completion
   logic. This one objective fact alone should give everyone pause before
   opting to use one of these inferior shells for their command line
-  interactions. 
+  interactions.
 
   Bonzai commands leverage this best-of-breed completion functionality
   of bash to provide an unlimited number of completion methods and
@@ -214,11 +234,11 @@ future of command line interfaces, for everyone.
   shortcut aliases when completion is not available (h|help, for
   example).
 
-* **Bonzai commands may default to `shell.Cmd` or `help.Cmd`** 
+* **Bonzai commands may default to `shell.Cmd` or `help.Cmd`**
 
   These provide help information and optional interactive assistance
   including tab completion in runtime environments that do not have
-  `complete -C foo foo` enabled. 
+  `complete -C foo foo` enabled.
 
   *shell.Cmd is still under development and likely will be for a while*
 
@@ -248,6 +268,28 @@ future of command line interfaces, for everyone.
   alias the packages as needed using Go's excellent package import
   design.
 
+* **Use capital "Z" import name.**
+
+  People can easily change the default "Z" import name to whatever else
+  if they don't like it (or worse, if has conflicts). But, we actually
+  want naming conflicts even though this seems counter-intuitive.
+  Developers should be putting most of their code into their own `pkg`
+  libraries and calling into them from their wrapping Bonzai trees and
+  branches that import Z. If someone is importing Z into their package
+  library they are likely doing something they shouldn't. Bonzai should
+  *only* be imported into the composable branch or standalone command
+  (`main`). This is a reminder as well to Bonzai developers not to stuff
+  things into the Z package that would never be used outside a Bonzai
+  command, tree or `main.go` standalone.
+
+* **Promote lower "z" personal Bonzai trees.**
+
+  Just as "dotfiles" has become a convention, use of the simple "z"
+  GitHub repo should be promoted as a common, "ez" way to find people's
+  personal monoliths. Obviously, people can use what they want. This is
+  also consistent with the capital "Z" import name of the `bonzai`
+  package.
+
 ## Style Guidelines
 
 * Everything through `go fmt` or equiv, no exceptions
@@ -258,6 +300,7 @@ future of command line interfaces, for everyone.
 * Package globals that will be used a lot can be single capital
 * Must be good reason to use more than 4 character pkg name
 * Avoid unnecessary comments
+* Use "deciduous tree" emoji 🌳 to mark Bonzai branches and commands
 
 ## Acknowledgements
 
@@ -279,3 +322,19 @@ can be used freely to refer to the Bonzai™ project
 <https://github.com/rwxrob/bonzai> without limitation. To avoid
 potential developer confusion, intentionally using these trademarks to
 refer to other projects --- free or proprietary --- is prohibited.
+
+## TODO
+
+Here is a list of major things that are still needed before a v1.0
+release:
+
+* Complete default `help.Cmd`
+* Complete `bonzai` helper command
+  * Initialize new branch including optional GitHub repo creation
+  * Vet a branch repo for orphan commands, etc.
+  * Cache/search list of package depending on `bonzai` as registry
+* Complete final art
+  * Large logo for landing page
+  * Small logo for lists
+  * Animated emote suitable for Twitch
+* Create a Bonzai™ merch outlet

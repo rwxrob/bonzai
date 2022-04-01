@@ -1,7 +1,7 @@
 // Copyright 2022 Robert S. Muhlestein.
 // SPDX-License-Identifier: Apache-2.0
 
-package bonzai
+package Z
 
 import (
 	"fmt"
@@ -75,7 +75,7 @@ func (x *Cmd) Run() {
 
 	x.cacheAliases()
 
-	// resolve bonzai.Aliases (if completion didn't replace them)
+	// resolve Z.Aliases (if completion didn't replace them)
 	if len(os.Args) > 1 {
 		args := []string{os.Args[0]}
 		alias := Aliases[os.Args[1]]

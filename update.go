@@ -1,4 +1,4 @@
-package bonzai
+package Z
 
 import (
 	"log"

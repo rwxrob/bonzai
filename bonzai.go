@@ -2,7 +2,7 @@
 // SPDX-License-Identifier: Apache-2.0
 
 /*
-Package bonzai provides a rooted node tree of commands and singular
+Package Z (bonzai) provides a rooted node tree of commands and singular
 parameters making tab completion a breeze and complicated applications
 much easier to intuit without reading all the docs. Documentation is
 embedded with each command removing the need for separate man pages and
@@ -18,7 +18,7 @@ following types of nodes:
 		* Parameters, single words that are passed to a leaf command
 
 */
-package bonzai
+package Z
 
 import (
 	"fmt"
@@ -28,6 +28,7 @@ import (
 	"strings"
 
 	config "github.com/rwxrob/config/pkg"
+	"github.com/rwxrob/fn"
 	"github.com/rwxrob/fs/file"
 	"github.com/rwxrob/term"
 )
@@ -243,3 +244,26 @@ func ArgsOrIn(args []string) string {
 // strings.Fields) to ensure that hard-coded arguments containing
 // whitespace are properly handled.
 var Aliases = make(map[string][]string)
+
+// EscThese is set to the default UNIX shell characters which require
+// escaping to be used safely on the terminal. It can be changed to suit
+// the needs of different host shell environments.
+var EscThese = " \r\t\n|&;()<>![]"
+
+// Esc returns a shell-escaped version of the string s. The returned value
+// is a string that can safely be used as one token in a shell command line.
+func Esc(s string) string {
+	var buf []rune
+	for _, r := range s {
+		for _, esc := range EscThese {
+			if r == esc {
+				buf = append(buf, '\\')
+			}
+		}
+		buf = append(buf, r)
+	}
+	return string(buf)
+}
+
+// EscAll calls Esc on all passed strings.
+func EscAll(args []string) []string { return fn.Map(args, Esc) }

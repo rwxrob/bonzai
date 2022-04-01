@@ -6,13 +6,13 @@ package comp_test
 import (
 	"fmt"
 
-	"github.com/rwxrob/bonzai"
+	Z "github.com/rwxrob/bonzai"
 	"github.com/rwxrob/bonzai/comp"
 	"github.com/rwxrob/fn/filt"
 )
 
 func ExampleStandard() {
-	foo := new(bonzai.Cmd)
+	foo := new(Z.Cmd)
 	foo.Params = []string{"box"}
 	foo.Add("bar")
 	foo.Add("blah")

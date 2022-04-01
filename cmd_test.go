@@ -1,22 +1,22 @@
 // Copyright 2022 Robert S. Muhlestein.
 // SPDX-License-Identifier: Apache-2.0
 
-package bonzai_test
+package Z_test
 
 import (
 	"fmt"
 	"os"
 
-	"github.com/rwxrob/bonzai"
+	Z "github.com/rwxrob/bonzai"
 	"github.com/rwxrob/bonzai/inc/help"
 )
 
 func ExampleCmd_Seek() {
 
-	hello := &bonzai.Cmd{
+	hello := &Z.Cmd{
 		Name:   `hello`,
 		Params: []string{"there"},
-		Call: func(_ *bonzai.Cmd, args ...string) error {
+		Call: func(_ *Z.Cmd, args ...string) error {
 			if len(args) > 0 {
 				fmt.Printf("hello %v\n", args[0])
 				return nil
@@ -26,10 +26,10 @@ func ExampleCmd_Seek() {
 		},
 	}
 
-	hi := &bonzai.Cmd{
+	hi := &Z.Cmd{
 		Name:   `hi`,
 		Params: []string{"there", "ya"},
-		Call: func(_ *bonzai.Cmd, args ...string) error {
+		Call: func(_ *Z.Cmd, args ...string) error {
 			if len(args) > 0 {
 				fmt.Printf("hi %v\n", args[0])
 				return nil
@@ -39,18 +39,18 @@ func ExampleCmd_Seek() {
 		},
 	}
 
-	yo := &bonzai.Cmd{
+	yo := &Z.Cmd{
 		Name: `yo`,
-		Call: func(x *bonzai.Cmd, args ...string) error {
+		Call: func(x *Z.Cmd, args ...string) error {
 			fmt.Println("yo")
 			return nil
 		},
 	}
 
-	salut := &bonzai.Cmd{
+	salut := &Z.Cmd{
 		Name:   `salut`,
 		Params: []string{"la"},
-		Call: func(_ *bonzai.Cmd, args ...string) error {
+		Call: func(_ *Z.Cmd, args ...string) error {
 			if len(args) > 0 {
 				fmt.Printf("salut %v\n", args[0])
 				return nil
@@ -60,30 +60,30 @@ func ExampleCmd_Seek() {
 		},
 	}
 
-	french := &bonzai.Cmd{
+	french := &Z.Cmd{
 		Name:     `french`,
 		Aliases:  []string{"fr"},
-		Commands: []*bonzai.Cmd{help.Cmd, salut},
+		Commands: []*Z.Cmd{help.Cmd, salut},
 	}
 
-	greet := &bonzai.Cmd{
+	greet := &Z.Cmd{
 		Name:     `greet`,
-		Commands: []*bonzai.Cmd{help.Cmd, yo, hi, hello, french},
+		Commands: []*Z.Cmd{help.Cmd, yo, hi, hello, french},
 	}
 
-	cmd, args := greet.Seek(bonzai.ArgsFrom(`hi there`))
+	cmd, args := greet.Seek(Z.ArgsFrom(`hi there`))
 	fmt.Printf("%v %q\n", cmd.Name, args)
 
-	cmd, args = greet.Seek(bonzai.ArgsFrom(`french salut`))
+	cmd, args = greet.Seek(Z.ArgsFrom(`french salut`))
 	fmt.Printf("%v %q\n", cmd.Name, args)
 
-	cmd, args = greet.Seek(bonzai.ArgsFrom(`french salut `))
+	cmd, args = greet.Seek(Z.ArgsFrom(`french salut `))
 	fmt.Printf("%v %q\n", cmd.Name, args)
 
-	cmd, args = greet.Seek(bonzai.ArgsFrom(`french h`))
+	cmd, args = greet.Seek(Z.ArgsFrom(`french h`))
 	fmt.Printf("%v %q\n", cmd.Name, args)
 
-	cmd, args = greet.Seek(bonzai.ArgsFrom(`french help`))
+	cmd, args = greet.Seek(Z.ArgsFrom(`french help`))
 	fmt.Printf("%v %q\n", cmd.Name, args)
 
 	// Output:
@@ -95,7 +95,7 @@ func ExampleCmd_Seek() {
 }
 
 func ExampleCmd_CmdNames() {
-	foo := new(bonzai.Cmd)
+	foo := new(Z.Cmd)
 	foo.Add("bar")
 	foo.Add("blah")
 	foo.Add("other")
@@ -105,7 +105,7 @@ func ExampleCmd_CmdNames() {
 }
 
 func ExampleCmd_GetCommands() {
-	foo := new(bonzai.Cmd)
+	foo := new(Z.Cmd)
 	foo.Add("bar")
 	foo.Add("blah")
 	foo.Add("other")
@@ -115,7 +115,7 @@ func ExampleCmd_GetCommands() {
 }
 
 func ExampleCmd_GetParams() {
-	foo := new(bonzai.Cmd)
+	foo := new(Z.Cmd)
 	foo.Params = []string{"box", "bing", "and"}
 	fmt.Println(foo.GetParams())
 	// Output:
@@ -123,9 +123,9 @@ func ExampleCmd_GetParams() {
 }
 
 func ExampleCmd_Branch() {
-	bonzai.ExitOff()
+	Z.ExitOff()
 
-	z := new(bonzai.Cmd)
+	z := new(Z.Cmd)
 	c := z.Add("some")
 	//fmt.Print(z.Commands[0].Name)
 	c = c.Add("thing")
@@ -133,7 +133,7 @@ func ExampleCmd_Branch() {
 	c = c.Add("deep")
 	//fmt.Print(z.Commands[0].Commands[0].Commands[0].Name)
 
-	c.Call = func(x *bonzai.Cmd, _ ...string) error {
+	c.Call = func(x *Z.Cmd, _ ...string) error {
 		fmt.Println(x.Branch())
 		return nil
 	}
