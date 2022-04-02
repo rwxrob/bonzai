@@ -171,6 +171,26 @@ func ExampleCmd_UsageNames() {
 	// (f|FOO|foo)
 }
 
+func ExampleCmd_UsageParams() {
+
+	x := &Z.Cmd{
+		Name:   `foo`,
+		Params: []string{"p1", "p2"},
+	}
+	fmt.Println(x.UsageParams())
+
+	x.MinParm = 1
+	fmt.Println(x.UsageParams())
+
+	x.MaxParm = 1
+	fmt.Println(x.UsageParams())
+
+	//Output:
+	// (p1|p2)?
+	// (p1|p2)+
+	// (p1|p2)
+}
+
 func ExampleCmd_UsageError_commands_with_Aliases() {
 	x := &Z.Cmd{
 		Name: `cmd`,
@@ -206,5 +226,32 @@ func ExampleCmd_UsageError_no_Call_nor_Commands() {
 	fmt.Println(x.UsageError())
 	// Output:
 	// usage: cmd {ERROR: neither Call nor Commands defined}
+
+}
+
+func ExampleCmd_UsageCmdTitles() {
+	x := &Z.Cmd{
+		Name:   `cmd`,
+		Params: []string{"p1", "p2"},
+		Commands: []*Z.Cmd{
+			&Z.Cmd{
+				Name:    "foo",
+				Aliases: []string{"f"},
+				Summary: "foo the things",
+			},
+			&Z.Cmd{
+				Name:    "bar",
+				Summary: "bar the things",
+			},
+			&Z.Cmd{
+				Name: "nosum",
+			},
+		},
+	}
+	fmt.Println(x.UsageCmdTitles())
+	// Output:
+	// f|foo - foo the things
+	//   bar - bar the things
+	// nosum
 
 }

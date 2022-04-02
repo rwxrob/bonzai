@@ -7,14 +7,15 @@ import (
 	"fmt"
 	"log"
 	"os"
+	"strconv"
 	"strings"
 
 	"github.com/rwxrob/bonzai/comp"
 	"github.com/rwxrob/bonzai/conf"
 	"github.com/rwxrob/fn/each"
 	"github.com/rwxrob/fn/maps"
+	"github.com/rwxrob/fn/redu"
 	"github.com/rwxrob/structs/qstack"
-	"github.com/rwxrob/to"
 )
 
 type Cmd struct {
@@ -42,8 +43,9 @@ type Cmd struct {
 	Root    *Cmd   `json:"-"`
 	Caller  *Cmd   `json:"-"`
 	Call    Method `json:"-"`
-	MinArgs int    `json:"-"` // minimum number of arguments required
+	MinArgs int    `json:"-"` // minimum number of args required (including parms)
 	MinParm int    `json:"-"` // minimum number of params required
+	MaxParm int    `json:"-"` // maximum number of params required
 
 	_aliases map[string]*Cmd
 }
@@ -59,11 +61,30 @@ func (x *Cmd) Names() []string {
 
 // UsageNames returns single name, joined Names with bar (|) and wrapped
 // in parentheses, or empty string if no names.
-func (x *Cmd) UsageNames() string { return to.UsageGroup(x.Names()) }
+func (x *Cmd) UsageNames() string { return UsageGroup(x.Names(), 1, 1) }
+
+// UsageParams returns the Params in UsageGroup notation.
+func (x *Cmd) UsageParams() string {
+	return UsageGroup(x.Params, x.MinParm, x.MaxParm)
+}
+
+// UsageCmdNames returns the Names for each of its Commands joined, if
+// more than one, with usage regex notation.
+func (x *Cmd) UsageCmdNames() string {
+	var names []string
+	for _, n := range x.Commands {
+		names = append(names, n.UsageNames())
+	}
+	return UsageGroup(names, 1, 1)
+}
 
 // Title returns a dynamic field of Name and Summary combined (if
-// exists).
+// exists). If the Name field of the commands is not defined will return
+// a "{ERROR}".
 func (x *Cmd) Title() string {
+	if x.Name == "" {
+		return "{ERROR: Name is empty}"
+	}
 	switch {
 	case len(x.Summary) > 0 && len(x.Version) > 0:
 		return x.Name + " (" + x.Version + ")" + " - " + x.Summary
@@ -81,6 +102,8 @@ func (x *Cmd) Title() string {
 // a single output.
 func (x *Cmd) Legal() string {
 	switch {
+	case len(x.Copyright) > 0 && len(x.License) == 0 && len(x.Version) == 0:
+		return x.Name + " " + x.Copyright
 	case len(x.Copyright) > 0 && len(x.License) > 0 && len(x.Version) > 0:
 		return x.Name + " (" + x.Version + ") " +
 			x.Copyright + "\nLicense " + x.License
@@ -221,8 +244,8 @@ func (x *Cmd) Add(name string, aliases ...string) *Cmd {
 	return c
 }
 
-// Cmd looks up a given Command by name or name from Aliases.
-func (x *Cmd) Cmd(name string) *Cmd {
+// Resolve looks up a given Command by name or name from Aliases.
+func (x *Cmd) Resolve(name string) *Cmd {
 	if x.Commands == nil {
 		return nil
 	}
@@ -237,6 +260,7 @@ func (x *Cmd) Cmd(name string) *Cmd {
 	return nil
 }
 
+// CmdNames returns the names of every Command.
 func (x *Cmd) CmdNames() []string {
 	list := []string{}
 	for _, c := range x.Commands {
@@ -246,6 +270,29 @@ func (x *Cmd) CmdNames() []string {
 		list = append(list, c.Name)
 	}
 	return list
+}
+
+// UsageCmdTitles returns a single string with the titles of each
+// subcommand indented and with a maximum title signature length for
+// justification.  Hidden commands are not included. Note that the order
+// of the Commands is preserved (not necessarily alphabetic).
+func (x *Cmd) UsageCmdTitles() string {
+	var set []string
+	var summaries []string
+	for _, c := range x.Commands {
+		set = append(set, strings.Join(c.Names(), "|"))
+		summaries = append(summaries, c.Summary)
+	}
+	longest := redu.Longest(set)
+	var buf string
+	for n := 0; n < len(set); n++ {
+		if len(summaries[n]) > 0 {
+			buf += fmt.Sprintf(`%-`+strconv.Itoa(longest)+"v - %v\n", set[n], summaries[n])
+		} else {
+			buf += fmt.Sprintf(`%-`+strconv.Itoa(longest)+"v\n", set[n])
+		}
+	}
+	return buf
 }
 
 // Param returns Param matching name if found, empty string if not.
@@ -284,7 +331,7 @@ func (x *Cmd) Seek(args []string) (*Cmd, []string) {
 	cur.Conf = DefaultConfigurer
 	n := 0
 	for ; n < len(args); n++ {
-		next := cur.Cmd(args[n])
+		next := cur.Resolve(args[n])
 		if next == nil {
 			break
 		}

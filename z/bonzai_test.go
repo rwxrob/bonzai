@@ -8,6 +8,8 @@ import (
 	"os"
 
 	Z "github.com/rwxrob/bonzai/z"
+	"github.com/rwxrob/term"
+	"github.com/rwxrob/term/esc"
 )
 
 func ExampleArgsFrom() {
@@ -83,7 +85,7 @@ func ExampleInferredUsage_min_One_Param() {
 	}
 	fmt.Println(Z.InferredUsage(x))
 	// Output:
-	// (p1|p2)
+	// (p1|p2)+
 }
 
 func ExampleInferredUsage_min_3_Param() {
@@ -145,6 +147,16 @@ func ExampleInferredUsage_error_Params_without_Call() {
 	// {ERROR: Params without Call: p1, p2}
 }
 
+func ExampleUsageGroup() {
+	fmt.Println(Z.UsageGroup([]string{"", "foo", "", "bar", "with space"}, 1, 1))
+	fmt.Printf("%q\n", Z.UsageGroup([]string{"", ""}, 1, 1))
+	fmt.Println(Z.UsageGroup([]string{"one"}, 1, 1))
+	// Output:
+	// (foo|bar|with space)
+	// ""
+	// one
+}
+
 /*
 func ExampleInferredUsage() {
 
@@ -201,3 +213,67 @@ func ExampleInferredUsage() {
 
 }
 */
+
+func ExampleEmphasize_emphForLess() {
+
+	/*
+	   export LESS_TERMCAP_mb="[35m" # magenta
+	   export LESS_TERMCAP_md="[33m" # yellow
+	   export LESS_TERMCAP_me="" # "0m"
+	   export LESS_TERMCAP_se="" # "0m"
+	   export LESS_TERMCAP_so="[34m" # blue
+	   export LESS_TERMCAP_ue="" # "0m"
+	   export LESS_TERMCAP_us="[4m"  # underline
+	*/
+
+	os.Setenv("LESS_TERMCAP_mb", esc.Magenta)
+	os.Setenv("LESS_TERMCAP_md", esc.Yellow)
+	os.Setenv("LESS_TERMCAP_me", esc.Reset)
+	os.Setenv("LESS_TERMCAP_se", esc.Reset)
+	os.Setenv("LESS_TERMCAP_so", esc.Blue)
+	os.Setenv("LESS_TERMCAP_ue", esc.Reset)
+	os.Setenv("LESS_TERMCAP_us", esc.Under)
+
+	term.EmphFromLess()
+
+	fmt.Printf("%q\n", Z.Emphasize("*italic*"))
+	fmt.Printf("%q\n", Z.Emphasize("**bold**"))
+	fmt.Printf("%q\n", Z.Emphasize("**bolditalic**"))
+	fmt.Printf("%q\n", Z.Emphasize("<under>"))
+
+	// Output:
+	// "\x1b[4mitalic\x1b[0m"
+	// "\x1b[33mbold\x1b[0m"
+	// "\x1b[33mbolditalic\x1b[0m"
+	// "<\x1b[4munder\x1b[0m>"
+}
+
+func ExampleEmphasize_disable_with_Term() {
+	term.AttrOff()
+	fmt.Printf("%q\n", Z.Emphasize("*italic*"))
+	fmt.Printf("%q\n", Z.Emphasize("**bold**"))
+	fmt.Printf("%q\n", Z.Emphasize("**bolditalic**"))
+	fmt.Printf("%q\n", Z.Emphasize("<under>"))
+	// Output:
+	// "italic"
+	// "bold"
+	// "bolditalic"
+	// "<under>"
+}
+
+func ExampleFormat_remove_Initial_Blanks() {
+	fmt.Printf("%q\n", Z.Format("\n   \n\n  \n   some"))
+	// Output:
+	// "some"
+}
+
+func ExampleFormat_wrapping() {
+	fmt.Println(Z.Format(`
+Here is a bunch of stuff just to fill the line beyond 80 columns so that it will wrap when it is supposed to and right now
+as well if there was a hard return in the middle of a line.
+`))
+	// Output:
+	// Here is a bunch of stuff just to fill the line beyond 80 columns so that it will
+	// wrap when it is supposed to and right now
+	// as well if there was a hard return in the middle of a line.
+}
