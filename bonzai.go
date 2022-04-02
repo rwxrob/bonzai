@@ -77,11 +77,11 @@ var Commands map[string][]any
 func Run() {
 	if v, has := Commands[ExeName]; has {
 		if len(v) < 1 {
-			ExitError(fmt.Errorf("multicall command missing"))
+			ExitError(fmt.Errorf(CommandMissing))
 		}
 		cmd, iscmd := v[0].(*Cmd)
 		if !iscmd {
-			ExitError(fmt.Errorf("first value must be *Cmd"))
+			ExitError(fmt.Errorf(FirstValueMustBeCmd))
 		}
 		args := []string{cmd.Name}
 		if len(v) > 1 {
@@ -89,7 +89,7 @@ func Run() {
 			for _, a := range v[1:] {
 				s, isstring := a.(string)
 				if !isstring {
-					ExitError(fmt.Errorf("only string arguments allowed"))
+					ExitError(fmt.Errorf(OnlyStringArgumentsAllowed))
 				}
 				args = append(args, s)
 			}
@@ -99,7 +99,7 @@ func Run() {
 		cmd.Run()
 		Exit()
 	}
-	ExitError(fmt.Errorf("unmapped multicall command: %v", ExeName))
+	ExitError(fmt.Errorf(UnmappedMulticallCommandError, ExeName))
 }
 
 // DefaultConfigurer is assigned to the Cmd.Root.Config during Cmd.Run.
