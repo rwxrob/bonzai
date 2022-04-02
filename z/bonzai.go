@@ -31,6 +31,7 @@ import (
 	"github.com/rwxrob/fn"
 	"github.com/rwxrob/fs/file"
 	"github.com/rwxrob/term"
+	"github.com/rwxrob/to"
 )
 
 func init() {
@@ -65,6 +66,74 @@ var ExeName string
 // in "multicall" mode. Each value must begin with a *Cmd and the rest
 // will be assumed to be string arguments to prepend. See Run.
 var Commands map[string][]any
+
+// UsageText is used for one-line UsageErrors. It's exported to allow
+// for different languages.
+var UsageText = `usage`
+
+// DefaultUsageFunc is the default first-class function assigned to
+// every Cmd that does not already define one. It is used to return
+// a usage summary. Generally, it should only return a single line (even
+// if that line is very long). Developers are encouraged to refer users
+// to their chosen help command rather than producing usually long usage
+// lines. If only the word "usage" needs to be changed (for a given
+// language) consider UsageText instead. Note that most developers will
+// simply change the Usage string when they do not want the default
+// inferred usage string.
+var DefaultUsageFunc = InferredUsage
+
+// InferredUsage returns a single line of text summarizing only the
+// Commands (less any Hidden commands), Params, and Aliases. If a Cmd
+// is currently in an invalid state (Params without Call, no Call and no
+// Commands) a string beginning with ERROR and wrapped in braces ({}) is
+// returned instead. The string depends on the current language (see
+// lang.go). Note that aliases does not include package Z.Aliases.
+func InferredUsage(x *Cmd) string {
+
+	if x.Call == nil && x.Commands == nil {
+		// FIXME: replace with string var from lang.go
+		return "{ERROR: neither Call nor Commands defined}"
+	}
+
+	if x.Call == nil && x.Params != nil {
+		// FIXME: replace with string var from lang.go
+		return "{ERROR: Params without Call: " + strings.Join(x.Params, ", ") + "}"
+	}
+
+	var params string
+	if x.Params != nil {
+		params = to.UsageGroup(x.Params)
+		switch x.MinParm {
+		case 0:
+			params = params + "?"
+		case 1:
+			params = params
+		default:
+			params = fmt.Sprintf("%v{%v,}", params, x.MinParm)
+		}
+	}
+
+	var names string
+	if x.Commands != nil {
+		var snames []string
+		for _, x := range x.Commands {
+			snames = append(snames, x.UsageNames())
+		}
+		if len(snames) > 0 {
+			names = to.UsageGroup(snames)
+		}
+	}
+
+	if params != "" && names != "" {
+		return "(" + params + "|" + names + ")"
+	}
+
+	if params != "" {
+		return params
+	}
+
+	return names
+}
 
 // Run infers the name of the command to run from the ExeName looked up
 // in the Commands delegates accordingly, prepending any arguments

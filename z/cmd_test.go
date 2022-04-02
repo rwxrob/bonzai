@@ -7,8 +7,8 @@ import (
 	"fmt"
 	"os"
 
-	Z "github.com/rwxrob/bonzai"
-	"github.com/rwxrob/bonzai/inc/help"
+	"github.com/rwxrob/bonzai/help"
+	Z "github.com/rwxrob/bonzai/z"
 )
 
 func ExampleCmd_Seek() {
@@ -145,4 +145,66 @@ func ExampleCmd_Branch() {
 
 	// Output:
 	// some.thing.deep
+}
+
+func ExampleCmd_Names() {
+
+	x := &Z.Cmd{
+		Name:    `foo`,
+		Aliases: []string{"f", "FOO"},
+	}
+	fmt.Println(x.Names())
+
+	//Output:
+	// [f FOO foo]
+}
+
+func ExampleCmd_UsageNames() {
+
+	x := &Z.Cmd{
+		Name:    `foo`,
+		Aliases: []string{"f", "FOO"},
+	}
+	fmt.Println(x.UsageNames())
+
+	//Output:
+	// (f|FOO|foo)
+}
+
+func ExampleCmd_UsageError_commands_with_Aliases() {
+	x := &Z.Cmd{
+		Name: `cmd`,
+		Commands: []*Z.Cmd{
+			&Z.Cmd{Name: "foo", Aliases: []string{"f"}},
+			&Z.Cmd{Name: "bar"},
+		},
+	}
+	fmt.Println(x.UsageError())
+	// Output:
+	// usage: cmd ((f|foo)|bar)
+
+}
+
+func ExampleCmd_UsageError_params_but_No_Call() {
+	x := &Z.Cmd{
+		Name:   `cmd`,
+		Params: []string{"p1", "p2"},
+		Commands: []*Z.Cmd{
+			&Z.Cmd{Name: "foo", Aliases: []string{"f"}},
+			&Z.Cmd{Name: "bar"},
+		},
+	}
+	fmt.Println(x.UsageError())
+	// Output:
+	// usage: cmd {ERROR: Params without Call: p1, p2}
+}
+
+func ExampleCmd_UsageError_no_Call_nor_Commands() {
+	x := &Z.Cmd{
+		Name: `cmd`,
+	}
+	fmt.Println(x.UsageError())
+	// Output:
+	// usage: cmd {ERROR: neither Call nor Commands defined}
+
 }

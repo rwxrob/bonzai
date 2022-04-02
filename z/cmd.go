@@ -14,36 +14,85 @@ import (
 	"github.com/rwxrob/fn/each"
 	"github.com/rwxrob/fn/maps"
 	"github.com/rwxrob/structs/qstack"
+	"github.com/rwxrob/to"
 )
 
 type Cmd struct {
-	Name        string            `json:"name,omitempty"`
-	Aliases     []string          `json:"aliases,omitempty"`
-	Summary     string            `json:"summary,omitempty"`
-	Usage       string            `json:"usage,omitempty"`
-	Version     string            `json:"version,omitempty"`
-	Updated     int               `json:"updated,omitempty"` // isosec
-	Copyright   string            `json:"copyright,omitempty"`
-	License     string            `json:"license,omitempty"`
-	Description string            `json:"description,omitempty"`
-	Site        string            `json:"site,omitempty"`
-	Source      string            `json:"source,omitempty"`
-	Issues      string            `json:"issues,omitempty"`
-	Other       map[string]string `json:"issues,omitempty"`
-	Commands    []*Cmd            `json:"commands,omitempty"`
-	Params      []string          `json:"params,omitempty"`
-	Hidden      []string          `json:"hide,omitempty"`
+	Name        string   `json:"name,omitempty"`
+	Aliases     []string `json:"aliases,omitempty"`
+	Summary     string   `json:"summary,omitempty"`
+	Usage       string   `json:"usage,omitempty"`
+	Version     string   `json:"version,omitempty"`
+	Copyright   string   `json:"copyright,omitempty"`
+	License     string   `json:"license,omitempty"`
+	Description string   `json:"description,omitempty"`
+	Site        string   `json:"site,omitempty"`
+	Source      string   `json:"source,omitempty"`
+	Issues      string   `json:"issues,omitempty"`
+	Commands    []*Cmd   `json:"commands,omitempty"`
+	Params      []string `json:"params,omitempty"`
+	Hidden      []string `json:"hidden,omitempty"`
 
-	Completer comp.Completer  `json:"-"`
-	Conf      conf.Configurer `json:"-"`
-	// Cache cache.Cacher `json:"-"`
+	Other map[string]string `json:"other,omitempty"`
+
+	Completer comp.Completer      `json:"-"`
+	Conf      conf.Configurer     `json:"-"`
+	UsageFunc func(x *Cmd) string `json:"-"`
 
 	Root    *Cmd   `json:"-"`
 	Caller  *Cmd   `json:"-"`
 	Call    Method `json:"-"`
-	MinArgs int    `json:"-"`
+	MinArgs int    `json:"-"` // minimum number of arguments required
+	MinParm int    `json:"-"` // minimum number of params required
 
 	_aliases map[string]*Cmd
+}
+
+// Names returns the Name and any Aliases grouped such that the Name is
+// always last.
+func (x *Cmd) Names() []string {
+	var names []string
+	names = append(names, x.Aliases...)
+	names = append(names, x.Name)
+	return names
+}
+
+// UsageNames returns single name, joined Names with bar (|) and wrapped
+// in parentheses, or empty string if no names.
+func (x *Cmd) UsageNames() string { return to.UsageGroup(x.Names()) }
+
+// Title returns a dynamic field of Name and Summary combined (if
+// exists).
+func (x *Cmd) Title() string {
+	switch {
+	case len(x.Summary) > 0 && len(x.Version) > 0:
+		return x.Name + " (" + x.Version + ")" + " - " + x.Summary
+	case len(x.Summary) > 0:
+		return x.Name + " - " + x.Summary
+	default:
+		return x.Name
+	}
+}
+
+// Legal returns a single line with the combined values of the
+// Name, Version, Copyright, and License. If Version is empty or nil an
+// empty string is returned instead. Legal() is used by the
+// version builtin command to aggregate all the version information into
+// a single output.
+func (x *Cmd) Legal() string {
+	switch {
+	case len(x.Copyright) > 0 && len(x.License) > 0 && len(x.Version) > 0:
+		return x.Name + " (" + x.Version + ") " +
+			x.Copyright + "\nLicense " + x.License
+	case len(x.Copyright) > 0 && len(x.License) > 0:
+		return x.Name + " " + x.Copyright + "\nLicense " + x.License
+	case len(x.Copyright) > 0 && len(x.Version) > 0:
+		return x.Name + " (" + x.Version + ") " + x.Copyright
+	case len(x.Copyright) > 0:
+		return x.Name + "\n" + x.Copyright
+	default:
+		return ""
+	}
 }
 
 func (x *Cmd) cacheAliases() {
@@ -136,9 +185,17 @@ func (x *Cmd) Run() {
 	Exit()
 }
 
-// UsageError returns an error with a single-line usage string.
+// UsageError returns an error with a single-line usage string. The word
+// "usage" can be changed by assigning Z.UsageText to something else.
+// The commands own UsageFunc will be used if defined. If undefined, the
+// Z.DefaultUsageFunc will be used instead (which can also be assigned
+// to something else if needed).
 func (x *Cmd) UsageError() error {
-	return fmt.Errorf("usage: %v %v", x.Name, x.Usage)
+	usage := x.UsageFunc
+	if usage == nil {
+		usage = DefaultUsageFunc
+	}
+	return fmt.Errorf("%v: %v %v", UsageText, x.Name, usage(x))
 }
 
 // Unimplemented returns an error with a single-line usage string.

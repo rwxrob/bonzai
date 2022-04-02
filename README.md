@@ -295,6 +295,18 @@ want the specific reasons.
   also consistent with the capital "Z" import name of the `bonzai`
   package.
 
+* **Regular Expressions Over Usage Notation.**
+
+  Bonzai takes a fundamentally different approach to the command line
+  and usage documentation. Any command line is a minimal domain specific
+  language. As such, usage notation simple is not enough. Regular
+  expressions allow the quick understanding of what is allowed and
+  should become mandatory learning in a world of minimal domain specific
+  grammars. Only the most basic regular expressions are required to
+  produce rich usage strings for any Bonzai command. However, those
+  wanting traditional usage notation can easily override the
+  `DefaultUsageFunc` with their own.
+
 ## Style Guidelines
 
 * Everything through `go fmt` or equiv, no exceptions

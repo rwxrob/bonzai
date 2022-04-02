@@ -5,7 +5,7 @@ import (
 	"net/http"
 	ht "net/http/httptest"
 
-	Z "github.com/rwxrob/bonzai"
+	Z "github.com/rwxrob/bonzai/z"
 )
 
 func ExampleCompareUpdated() {
