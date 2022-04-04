@@ -187,7 +187,7 @@ want the specific reasons.
 
 ## Design Considerations
 
-* **Promote high-level package library API calls over Cmd bloat.**
+* **Promote high-level package library API calls over Cmd bloat**
 
   Code belongs in package libraries, not Cmds.
 
@@ -205,14 +205,14 @@ want the specific reasons.
   undesirable tight coupling --- even with channels --- between
   specific commands.
 
-* **Cmds should be very light.**
+* **Cmds should be very light**
 
   Most Cmds should assign their first-class Call function to one that
   lightly wraps a similar function signature in a callable, high-level
   library that works entirely independently from the bonzai package.
   It's best to promote strong support for sustainable API packages.
 
-* **Only bash completion and shell.Cmd planned.**
+* **Only bash completion and shell.Cmd planned**
 
   If it doesn't work with `complete -C` or equivalent then just run the
   Bonzai command tree monolith as a temporary shell (shell.Cmd) and use
@@ -247,8 +247,7 @@ want the specific reasons.
 
   *shell.Cmd is still under development and likely will be for a while*
 
-* **One major use case is to replace shell scripts in "dot files"
-  collections.**
+* **Target users replacing shell scripts in "dot files" collections**
 
   By creating a `cmd` subdirectory of a dot files repo a multi-call
   Bonzai command named `cmd` can be easily maintained and added to just
@@ -265,7 +264,7 @@ want the specific reasons.
   promotes the massive benefits of rapid applications development the
   fullest extent.
 
-* **Use either `foo.Cmd` or `cmd.Foo` convention.**
+* **Use either `foo.Cmd` or `cmd.Foo` convention**
 
   People may decide to put all their Bonzai commands into a single `cmd`
   package or to put each command into its own package. Both are
@@ -273,7 +272,7 @@ want the specific reasons.
   alias the packages as needed using Go's excellent package import
   design.
 
-* **Use capital "Z" import name.**
+* **Default capital "Z" import name**
 
   People can easily change the default "Z" import name to whatever else
   if they don't like it (or worse, if has conflicts). But, we actually
@@ -287,7 +286,7 @@ want the specific reasons.
   things into the Z package that would never be used outside a Bonzai
   command, tree or `main.go` standalone.
 
-* **Promote lower "z" personal Bonzai trees.**
+* **Promote lower "z" personal Bonzai trees**
 
   Just as "dotfiles" has become a convention, use of the simple "z"
   GitHub repo should be promoted as a common, "ez" way to find people's
@@ -295,7 +294,7 @@ want the specific reasons.
   also consistent with the capital "Z" import name of the `bonzai`
   package.
 
-* **Regular Expressions Over Usage Notation.**
+* **Use simple regular expressions for usage**
 
   Bonzai takes a fundamentally different approach to the command line
   and usage documentation. Any command line is a minimal domain specific
@@ -306,6 +305,37 @@ want the specific reasons.
   produce rich usage strings for any Bonzai command. However, those
   wanting traditional usage notation can easily override the
   `DefaultUsageFunc` with their own.
+
+* **Prioritize output to VT100-compatible terminals**
+
+  Every modern terminal supports VT100 compatibility. If it doesn't,
+  people should just not use it. This means emphasis and formatting are
+  dependent on the [`rwxrob/term`](https://github.com/rwxrob/term)
+  package for the main output. Bonzai tree developers will likely want
+  terminal output helpers more than anything (yes even web rendering).
+
+* **Secondary output to local web browser**
+
+  Bonzai will eventually provide the option to enable use of the local
+  web browser instead of terminal output for help and other
+  documentation output. This will allow graphic application executables
+  to simple be double-clicked from graphic desktops. Bonzai will ship
+  with an embedded web template for such applications, but will also
+  allow users to granularly customize their own modifications to the
+  default theme. Bonzai branch creators are encouraged to provide
+  downloadable themes in this regard. In this way, Bonzai will provide
+  the web shell to encapsulate other web applications.
+
+* **Prefer local web apps over other GUI platforms**
+
+  While it is obviously possible to create any graphic application with
+  Bonzai, the creation of localized web applications should be the
+  preferred convention of the Bonzai GUI applications community. This
+  simplifies application development and takes aim at bloated
+  alternatives that embed full GUI web clients (such as Electron) while
+  still providing a rich terminal interface for those who prefer it.
+  Every Bonzai binary is its own local web server which Go's rich
+  standard library to draw on.
 
 ## Style Guidelines
 
