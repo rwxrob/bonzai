@@ -2,6 +2,7 @@ package Z
 
 import (
 	"regexp"
+	"strconv"
 	"unicode"
 
 	"github.com/rwxrob/scan"
@@ -262,7 +263,6 @@ func InWrap(in string) string {
 	return to.Indented(w, IndentBy)
 }
 
-/*
 // Mark parses the input as a string of BonzaiMark, multiple blocks with
 // optional emphasis (see Blocks and Emph).
 func Mark(in string) string {
@@ -275,18 +275,23 @@ func Mark(in string) string {
 		return ""
 	}
 
-	//var out string
-
-	indent := to.Indentation(blocks[0])
+	var out string
 
 	for _, block := range blocks {
+		switch block.T {
+		case Paragraph:
+			out += InWrap(Emph(string(block.V))) + "\n"
+		case Bulleted:
+			out += Indent(Emph(string(block.V))) + "\n"
+		case Numbered:
+			out += Indent(Emph(string(block.V))) + "\n"
+		case Verbatim:
+			out += to.Indented(Indent(string(block.V)), 4) + "\n"
+		default:
+			panic("unknown block type: " + strconv.Itoa(block.T))
+		}
 
 	}
 
-	//out := to.Dedented(markup)
-	//out, _ = to.Wrapped(out, 80)
-	//out = Emph(out)
-	//return out
-	return ""
+	return out
 }
-*/

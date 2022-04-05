@@ -38,9 +38,10 @@ func ExampleEmph_basics() {
 }
 
 func ExampleWrap() {
-	defer func() { Z.Columns = Z.Columns }()
+	col := Z.Columns
 	Z.Columns = 10
 	fmt.Println(Z.Wrap(`some thing here that is more than 10 characters`))
+	Z.Columns = col
 	// Output:
 	// some thing
 	// here that
@@ -50,19 +51,27 @@ func ExampleWrap() {
 }
 
 func ExampleIndent() {
-	defer func() { Z.IndentBy = Z.IndentBy }()
+	indent := Z.IndentBy
+	col := Z.Columns
+	Z.Columns = 10
+	Z.Columns = 10
 	Z.IndentBy = 4
 	fmt.Printf("%q", Z.Indent("some\nthat is \n  indented"))
+	Z.IndentBy = indent
+	Z.Columns = col
 	// Output:
 	// "    some\n    that is \n      indented\n"
 }
 
 func ExampleInWrap() {
 	defer func() { Z.IndentBy = Z.IndentBy }()
-	defer func() { Z.Columns = Z.Columns }()
-	Z.IndentBy = 4
+	indent := Z.IndentBy
+	col := Z.Columns
 	Z.Columns = 10
+	Z.IndentBy = 4
 	fmt.Printf("%q", Z.InWrap("some\nthat is \n  indented"))
+	Z.IndentBy = indent
+	Z.Columns = col
 	// Output:
 	// "    some\n    that\n    is\n    indented\n"
 }
@@ -78,11 +87,10 @@ func ExampleBlocks_bulleted() {
 
 			`
 
-	fmt.Println(Z.Blocks(in)[1])
+	fmt.Printf("%q\n", Z.Blocks(in)[1])
 
 	//Output:
-	// * another block
-	// * here
+	// "* another block\n* here"
 }
 
 func ExampleBlocks_numbered() {
@@ -96,11 +104,10 @@ func ExampleBlocks_numbered() {
 
 			`
 
-	fmt.Println(Z.Blocks(in)[1])
+	fmt.Printf("%q\n", Z.Blocks(in)[1])
 
 	//Output:
-	// 1. another block
-	// 2. here
+	// "1. another block\n2. here"
 }
 
 func ExampleBlocks_paragraph() {
@@ -114,10 +121,10 @@ func ExampleBlocks_paragraph() {
 
 			`
 
-	fmt.Println(Z.Blocks(in)[1])
+	fmt.Printf("%q\n", Z.Blocks(in)[1])
 
 	// Output:
-	// And another one here with just a bit more.
+	// "And another one here with just a bit more."
 }
 
 func ExampleBlocks_verbatim() {
@@ -152,7 +159,6 @@ func ExampleBlocks_verbatim() {
 
 }
 
-/*
 func ExampleMark() {
 
 	in := `
@@ -166,7 +172,7 @@ func ExampleMark() {
 
 			And back to a paragraph block.
 
-			* foo
+			* **foo**
 			* bar
 
 			And a numbered list
@@ -178,9 +184,32 @@ func ExampleMark() {
 
 			`
 
-	fmt.Println(Z.Mark(in))
+	fmt.Println("----------------------")
+	fmt.Print(Z.Mark(in))
+	fmt.Println("----------------------")
 
 	//Output:
+	// ----------------------
+	//        Must have <italic>another<reset> block before verbatim:
+	//
+	//            Now we can start
+	//            a Verbatim
+	//            block.
+	//
+	//            Which can have blank lines, even.
+	//
+	//        And back to a paragraph block.
+	//
+	//        * <bold>foo<reset>
+	//        * bar
+	//
+	//        And a numbered list
+	//
+	//        1. Something
+	//        2. here
+	//
+	//        That's really it.
+	//
+	// ----------------------
 
 }
-*/
