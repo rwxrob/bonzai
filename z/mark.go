@@ -1,6 +1,7 @@
 package Z
 
 import (
+	"fmt"
 	"regexp"
 	"strconv"
 	"unicode"
@@ -156,7 +157,7 @@ MAIN:
 	return blocks
 }
 
-// Emph renders BonzaiMark emphasis spans specifically for
+// Mark renders BonzaiMark emphasis spans specifically for
 // VT100-compatible terminals (which almost all are today):
 //
 //     *Italic*
@@ -294,4 +295,74 @@ func Mark(in string) string {
 	}
 
 	return out
+}
+
+// Emphf calls fmt.Sprintf on the string before passing it to Emph.
+func Emphf(a string, f ...any) string {
+	return Emph(fmt.Sprintf(a, f...))
+}
+
+// Indentf calls fmt.Sprintf on the string before passing it to Indent.
+func Indentf(a string, f ...any) string {
+	return Indent(fmt.Sprintf(a, f...))
+}
+
+// Wrapf calls fmt.Sprintf on the string before passing it to Wrap.
+func Wrapf(a string, f ...any) string {
+	return Wrap(fmt.Sprintf(a, f...))
+}
+
+// InWrapf calls fmt.Sprintf on the string before passing it to InWrap.
+func InWrapf(a string, f ...any) string {
+	return InWrap(fmt.Sprintf(a, f...))
+}
+
+// Markf calls fmt.Sprintf on the string before passing it to Mark.
+func Markf(a string, f ...any) string {
+	return Mark(fmt.Sprintf(a, f...))
+}
+
+// PrintEmph passes string to Emph and prints it.
+func PrintEmph(a string) { fmt.Print(Emph(a)) }
+
+// PrintWrap passes string to Wrap and prints it.
+func PrintWrap(a string) { fmt.Print(Wrap(a)) }
+
+// PrintIndent passes string to Indent and prints it.
+func PrintIndent(a string) { fmt.Print(Indent(a)) }
+
+// PrintInWrap passes string to InWrap and prints it.
+func PrintInWrap(a string) { fmt.Print(InWrap(a)) }
+
+// PrintMark passes string to Mark and prints it.
+func PrintMark(a string) { fmt.Print(Mark(a)) }
+
+// PrintEmphf calls fmt.Sprintf on the string before passing it to Emph
+// and then printing it.
+func PrintEmphf(a string, f ...any) {
+	fmt.Print(Emph(fmt.Sprintf(a, f...)))
+}
+
+// PrintWrapf calls fmt.Sprintf on the string before passing it to Wrap
+// and then printing it.
+func PrintWrapf(a string, f ...any) {
+	fmt.Print(Wrap(fmt.Sprintf(a, f...)))
+}
+
+// PrintIndentf calls fmt.Sprintf on the string before passing it to
+// Indent and then printing it.
+func PrintIndentf(a string, f ...any) {
+	fmt.Print(Indent(fmt.Sprintf(a, f...)))
+}
+
+// PrintInWrapf calls fmt.Sprintf on the string before passing it to
+// InWrap and then printing it.
+func PrintInWrapf(a string, f ...any) {
+	fmt.Print(InWrap(fmt.Sprintf(a, f...)))
+}
+
+// PrintMarkf calls fmt.Sprintf on the string before passing it to Mark
+// and then printing it.
+func PrintMarkf(a string, f ...any) {
+	fmt.Print(Mark(fmt.Sprintf(a, f...)))
 }

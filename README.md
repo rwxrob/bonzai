@@ -372,11 +372,11 @@ want the specific reasons.
 • `Z.PrintInWrap(a string)`     - shorthand for fmt.Print(Z.InWrap(a string))
 • `Z.PrintMark(a string)`     - shorthand for fmt.Print(Z.Mark(a string))
 `
-• `Z.PrintEmphf(a string, f ...any)` - fmt.Print(Z.Emphf(a string, f ...any))
-• `Z.PrintWrapf(a string, f ...any)` - fmt.Print(Z.Wrapf(a string, f ...any))
-• `Z.PrintIndent(a string, f ...any)` - fmt.Print(Z.Indentf(a string, f ...any))
-• `Z.PrintInWrapf(a string, f ...any)` - fmt.Print(Z.InWrapf(a string, f ...any))
-• `Z.PrintMarkf(a string, f ...any)` - fmt.Print(Z.Markf(a string, f ...any))
+• `Z.PrintfEmph(a string, f ...any)` - fmt.Print(Z.Emphf(a string, f ...any))
+• `Z.PrintfWrap(a string, f ...any)` - fmt.Print(Z.Wrapf(a string, f ...any))
+• `Z.PrintfIndent(a string, f ...any)` - fmt.Print(Z.Indentf(a string, f ...any))
+• `Z.PrintfInWrap(a string, f ...any)` - fmt.Print(Z.InWrapf(a string, f ...any))
+• `Z.PrintfMark(a string, f ...any)` - fmt.Print(Z.Markf(a string, f ...any))
 
 ## Acknowledgements
 
