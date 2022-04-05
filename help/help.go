@@ -4,15 +4,10 @@
 package help
 
 import (
-	"fmt"
-	"log"
-	"strings"
-
 	"github.com/rwxrob/bonzai/comp"
 	Z "github.com/rwxrob/bonzai/z"
 	"github.com/rwxrob/fn/filt"
 	"github.com/rwxrob/fn/maps"
-	"github.com/rwxrob/to"
 )
 
 // Cmd provides help documentation for the caller allowing the specific
@@ -38,7 +33,7 @@ var Cmd = &Z.Cmd{
 		if len(args) == 0 {
 			args = append(args, "all")
 		}
-		ForTerminal(x.Caller, args[0])
+		//		ForTerminal(x.Caller, args[0])
 		return nil
 	},
 }
@@ -70,74 +65,75 @@ func helpCompleter(x comp.Command, args ...string) []string {
 	return filt.HasPrefix(list, args[0])
 }
 
+/*
+
+// printIfHave takes any thing with a named field and a value, converts
+// everything to string values (with to.String) and prints it with
+// Print after passing it through Format. If the value is an empty
+// string logs that the thing has no field of that name.
+func printIfHave(thing, name, value any) {
+	if len(to.String(value)) == 0 {
+		log.Printf("%v has no %v\n", to.String(thing), to.String(name))
+		return
+	}
+	fmt.Print(Format(to.String(value)))
+}
+
 // ForTerminal converts the collective help documentation of the given
-// command into curses terminal-friendly output which minics UNIX man
-// pages as much as possible. Documentation text is expected to be in
-// standard BonzaiMark markup (see Z.Format).
-//
-// If the special "all" section is passed all sections will be
-// displayed.
-//
-// If the "less" pager is detected and the terminal is interactive
-// (stdout is to a terminal/tty) will call Z.SysExec to transfer control
-// to it and send the output to it making it virtual indistinguishable
-// from "man" page output.
-//
-// If the terminal is non-interactive, simple prints as
-// 80-column-wrapped plain text.
+// command into curses terminal-friendly output and prints the help for
+// the specified section. If the special "all" section is passed all
+// sections will be displayed. The style is similar to UNIX manual pages
+// and supports terminal formatting including color.. Documentation must
+// be in BonzaiMark markup (see Z.Format). Emphasis is omitted if the
+// terminal is not interactive (see Z.Emph).
 func ForTerminal(x *Z.Cmd, section string) {
 	switch section {
 	case "name":
-		Z.PrintIfHave("command", "name", x.Name)
+		printIfHave("command", "name", x.Name)
 	case "title":
-		Z.PrintIfHave(x.Name, "title", x.Title())
+		printIfHave(x.Name, "title", x.Title())
 	case "summary":
-		Z.PrintIfHave(x.Name, "summary", x.Summary)
+		printIfHave(x.Name, "summary", x.Summary)
 	case "params":
-		Z.PrintIfHave(x.Name, "params", x.UsageParams())
+		printIfHave(x.Name, "params", x.UsageParams())
 	case "commands":
-		Z.PrintIfHave(x.Name, "commands", x.UsageCmdTitles())
+		printIfHave(x.Name, "commands", x.UsageCmdTitles())
 	case "description", "desc":
-		Z.PrintIfHave(x.Name, "description", Z.Format(x.Description))
+		printIfHave(x.Name, "description", Z.Mark(x.Description))
 	case "examples":
 		log.Printf("examples are planned but not yet implemented")
 	case "legal":
-		Z.PrintIfHave(x.Name, "legal", x.Legal())
+		printIfHave(x.Name, "legal", x.Legal())
 	case "copyright":
-		Z.PrintIfHave(x.Name, "copyright", x.Copyright)
+		printIfHave(x.Name, "copyright", x.Copyright)
 	case "license":
-		Z.PrintIfHave(x.Name, "license", x.License)
+		printIfHave(x.Name, "license", x.License)
 	case "version":
-		Z.PrintIfHave(x.Name, "version", x.Version)
+		printIfHave(x.Name, "version", x.Version)
 	case "all":
-		fmt.Println(Z.Format("**NAME**"))
-		fmt.Println(to.IndentWrapped(x.Title(), 7, 80) + "\n")
+		Z.Println("**NAME**")
+		Z.PrintlnInWrap(x.Title() + "\n")
 		// always print a synopsis so we can communicate with command
 		// developers about invalid field combinations through ERRORs
-		fmt.Println(Z.Format("**SYNOPSIS**"))
+		Z.Println("**SYNOPSIS**")
 		switch {
 		case x.Call == nil && x.Params != nil:
 			// FIXME: replace with string var from lang.go
-			fmt.Println(to.IndentWrapped("{ERROR: Params without Call: "+
-				strings.Join(x.Params, ", ")+"}", 7, 80) + "\n")
+			Z.PrintlnInWrap(
+				"{ERROR: Params without Call: "+
+				strings.Join(x.Params, ", ")+"}" + "\n"
+			)
+
 		case len(x.Commands) == 0 && x.Call == nil:
 			// FIXME: replace with string var from lang.go
-			fmt.Println(to.IndentWrapped(
-				"{ERROR: neither Call nor Commands defined}", 7, 80) + "\n")
-		case len(x.Commands) > 0 && x.Call == nil:
-			fmt.Println(
-				to.IndentWrapped(Z.Emphasize("**"+x.Name+"** COMMAND"), 7, 80))
-		case len(x.Commands) > 0 && x.Call != nil && len(x.Params) == 0:
-			fmt.Println(
-				to.IndentWrapped(Z.Emphasize("**"+x.Name+"** COMMAND"), 7, 80),
-			)
+		  Z.PrintlnInWrap("{ERROR: neither Call nor Commands defined}")+"\n"
+
 		case len(x.Commands) > 0 && x.Call != nil && len(x.Params) > 0:
-			fmt.Println(
-				to.IndentWrapped(Z.Emphasize("**"+x.Name+
-					"** (COMMAND|"+x.UsageParams()+")"), 7, 80),
-			)
+			Z.PrintfInWrap("**%v** (COMMAND|%v)",x.Name,x.UsageParams())
+
 		case len(x.Commands) == 0 && x.Call != nil && len(x.Params) > 0:
-			fmt.Println(Z.Emphasize("       **" + x.Name + "** " + x.UsageParams()))
+			Z.PrintfInWrap( "**%v** %v", x.Name,x.UsageParams())
+
 		case len(x.Commands) == 0 && x.Call != nil:
 			fmt.Println(to.IndentWrapped(Z.Emphasize("**"+x.Name+"**"), 7, 80))
 		}
@@ -149,7 +145,7 @@ func ForTerminal(x *Z.Cmd, section string) {
 		}
 		if len(x.Description) > 0 {
 			fmt.Println(Z.Format("**DESCRIPTION**"))
-			body := to.Dedented(x.Description)
+			body := strings.TrimSpace(to.Dedented(x.Description))
 			fmt.Println(to.IndentWrapped(Z.Format(body), 7, 80) + "\n")
 		}
 		legal := x.Legal()
@@ -166,8 +162,9 @@ func ForTerminal(x *Z.Cmd, section string) {
 	default:
 		v, has := x.Other[section]
 		if !has {
-			Z.PrintIfHave(x.Name, section, "")
+			printIfHave(x.Name, section, "")
 		}
-		Z.PrintIfHave(x.Name, section, Z.Format(v))
+		printIfHave(x.Name, section, Z.Format(v))
 	}
 }
+*/

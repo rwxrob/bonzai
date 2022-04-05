@@ -349,6 +349,35 @@ want the specific reasons.
 * Avoid unnecessary comments
 * Use "deciduous tree" emoji 🌳 to mark Bonzai branches and commands
 
+## Printing, Formatting, and Emphasis
+
+* `Z.Lines(a string) []string`
+* `Z.Blocks(a string) []string`
+
+• `Z.Emph(a string) string`   - just emphasis
+• `Z.Wrap(a string) string`   - wraps to Z.Columns
+• `Z.Indent(a string) string` - indents Z.IndentBy
+• `Z.InWrap(a string) string` - indents Z.IndentBy, wraps to Z.Columns
+• `Z.Mark(a string) string`   - block aware, indents, wraps all but verbatim
+
+* `Z.Emphf(a string, f ...any) string`       - Emph with Sprintf first
+* `Z.Indentf(a string, f ...any) string`       - Indent with Sprintf first
+* `Z.Wrapf(a string, f ...any) string`       - Wrap with Sprintf first
+* `Z.InWrapf(a string, f ...any) string`     - InWrap with Sprintf first
+* `Z.Markf(a string, f ...any) string`  - Mark with Sprintf first
+`
+• `Z.PrintEmph(a string)`     - shorthand for fmt.Print(Z.Emph(a string))
+• `Z.PrintWrap(a string)`     - shorthand for fmt.Print(Z.Wrap(a string))
+• `Z.PrintIndent(a string)`     - shorthand for fmt.Print(Z.Indent(a string))
+• `Z.PrintInWrap(a string)`     - shorthand for fmt.Print(Z.InWrap(a string))
+• `Z.PrintMark(a string)`     - shorthand for fmt.Print(Z.Mark(a string))
+`
+• `Z.PrintEmphf(a string, f ...any)` - fmt.Print(Z.Emphf(a string, f ...any))
+• `Z.PrintWrapf(a string, f ...any)` - fmt.Print(Z.Wrapf(a string, f ...any))
+• `Z.PrintIndent(a string, f ...any)` - fmt.Print(Z.Indentf(a string, f ...any))
+• `Z.PrintInWrapf(a string, f ...any)` - fmt.Print(Z.InWrapf(a string, f ...any))
+• `Z.PrintMarkf(a string, f ...any)` - fmt.Print(Z.Markf(a string, f ...any))
+
 ## Acknowledgements
 
 The <https://twitch.tv/rwxrob> community has been constantly involved

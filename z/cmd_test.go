@@ -251,7 +251,7 @@ func ExampleCmd_UsageCmdTitles() {
 	fmt.Println(x.UsageCmdTitles())
 	// Output:
 	// f|foo - foo the things
-	//   bar - bar the things
+	// bar   - bar the things
 	// nosum
 
 }
