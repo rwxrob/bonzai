@@ -7,6 +7,12 @@ import (
 	"github.com/rwxrob/term"
 )
 
+func ExampleLines() {
+	fmt.Printf("%q\n", Z.Lines("line one\nline two"))
+	// Output:
+	// ["line one" "line two"]
+}
+
 func ExampleEmph_basics() {
 
 	// Emph observes the rwxrob/term escapes
@@ -146,51 +152,35 @@ func ExampleBlocks_verbatim() {
 
 }
 
-// Now we can start
-// a Verbatim
-// block.
-//
-// Which can have blank lines, even.
-
 /*
-func ExampleBlocks() {
+func ExampleMark() {
+
 	in := `
+			Must have *another* block before verbatim:
 
-		 Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do
-		 eiusmod tempor incididunt ut labore et dolore magna aliqua.
+			     Now we can start
+			     a Verbatim
+			     block.
 
-		 Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris
-		 nisi ut aliquip ex ea commodo consequat.
+			     Which can have blank lines, even.
 
-		 Duis aute irure dolor in reprehenderit in voluptate velit esse
-		 cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat
-		 cupidatat non proident, sunt in culpa qui officia deserunt mollit
-		 anim id est laborum.
+			And back to a paragraph block.
 
-		 `
+			* foo
+			* bar
 
-	fmt.Println(Z.Blocks(in))
+			And a numbered list
 
-	// Output:
-	// some thing
-}
-*/
+			1. Something
+			2. here
 
-/*
-func ExampleFormat_remove_Initial_Blanks() {
-	fmt.Printf("%q\n", Z.Format("\n   \n\n  \n   some"))
-	// Output:
-	// "some"
-}
+			That's really it.
 
-func ExampleFormat_wrapping() {
-	fmt.Println(Z.Format(`
-Here is a bunch of stuff just to fill the line beyond 80 columns so that it will wrap when it is supposed to and right now
-as well if there was a hard return in the middle of a line.
-`))
-	// Output:
-	// Here is a bunch of stuff just to fill the line beyond 80 columns so that it will
-	// wrap when it is supposed to and right now
-	// as well if there was a hard return in the middle of a line.
+			`
+
+	fmt.Println(Z.Mark(in))
+
+	//Output:
+
 }
 */
