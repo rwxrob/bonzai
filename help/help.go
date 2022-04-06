@@ -79,6 +79,7 @@ func printIfHave(thing, name, value any) {
 		return
 	}
 	Z.PrintEmph(to.String(value))
+	fmt.Println()
 }
 
 // ForTerminal converts the collective help documentation of the given
