@@ -1,0 +1,12 @@
+go 1.19
+
+use (
+	.
+	../fs
+  ../twitch
+  ../fn
+  ../scan
+  ../to
+  ../uniq
+  ../term
+)
