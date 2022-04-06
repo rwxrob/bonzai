@@ -73,33 +73,35 @@ func Blocks(in string) []*Block {
 MAIN:
 	for s.Scan() {
 
-		switch s.Rune {
-
-		case '*': // bulleted list
-			if s.Is(" ") {
-				m := s.Pos - 1
-				for s.Scan() {
-					if s.Is("\n\n") {
-						blocks = append(blocks, &Block{Bulleted, s.Buf[m:s.Pos]})
-						s.Pos += 2
-						continue MAIN
-					}
+		if s.Rune == '*' { // bulleted list
+			if !s.Peek(" ") {
+				goto PARA
+			}
+			m := s.Pos - 1
+			for s.Scan() {
+				if s.Peek("\n\n") {
+					blocks = append(blocks, &Block{Bulleted, s.Buf[m:s.Pos]})
+					s.Pos += 2
+					continue MAIN
 				}
 			}
+		}
 
-		case '1': // numbered list
-			if s.Is(". ") {
-				m := s.Pos - 1
-				for s.Scan() {
-					if s.Is("\n\n") {
-						blocks = append(blocks, &Block{Numbered, s.Buf[m:s.Pos]})
-						s.Pos += 2
-						continue MAIN
-					}
+		if s.Rune == '1' { // numbered list
+			if !s.Peek(". ") {
+				goto PARA
+			}
+			m := s.Pos - 1
+			for s.Scan() {
+				if s.Peek("\n\n") {
+					blocks = append(blocks, &Block{Numbered, s.Buf[m:s.Pos]})
+					s.Pos += 2
+					continue MAIN
 				}
 			}
+		}
 
-		case ' ': // verbatim
+		if s.Rune == ' ' { // verbatim
 			s.Pos -= 1
 			ln := s.Match(verbpre)
 			s.Pos++
@@ -116,7 +118,7 @@ MAIN:
 				if s.Rune == '\n' {
 
 					// add in indented lines
-					if s.Is(string(pre)) {
+					if s.Peek(string(pre)) {
 						block = append(block, '\n')
 						s.Pos += len(pre)
 						continue
@@ -130,28 +132,38 @@ MAIN:
 				block = append(block, []byte(string(s.Rune))...)
 			}
 
-		case '\n', '\r', '\t': // inconsequential white space
-			continue
+		}
 
-		default: // paragraph
+		if s.Rune == '\n' || s.Rune == '\r' || s.Rune == '\t' {
+			continue
+		}
+
+	PARA:
+		{
 			var block []byte
 			block = append(block, []byte(string(s.Rune))...)
 			for s.Scan() {
-				switch s.Rune {
-				case '\n', '\r':
-					block = append(block, ' ')
-				default:
-					block = append(block, []byte(string(s.Rune))...)
-				}
-				if s.Is("\n\n") {
+
+				if s.Peek("\n\n") {
 					blocks = append(blocks, &Block{Paragraph, block})
 					s.Scan()
 					s.Scan()
 					continue MAIN
 				}
+
+				if s.Rune == '\n' || s.Rune == '\r' {
+					block = append(block, ' ')
+					continue
+				}
+
+				block = append(block, []byte(string(s.Rune))...)
 			}
 
-		}
+			if len(block) > 0 {
+				blocks = append(blocks, &Block{Paragraph, block})
+			}
+
+		} // PARA
 
 	}
 	return blocks
@@ -265,7 +277,8 @@ func InWrap(in string) string {
 }
 
 // Mark parses the input as a string of BonzaiMark, multiple blocks with
-// optional emphasis (see Blocks and Emph).
+// optional emphasis (see Blocks and Emph) and applies IndentBy and
+// Columns wrapping to it.
 func Mark(in string) string {
 	if in == "" {
 		return ""

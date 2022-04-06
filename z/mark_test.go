@@ -7,6 +7,14 @@ import (
 	"github.com/rwxrob/term"
 )
 
+func init() {
+	term.Italic = `<italic>`
+	term.Bold = `<bold>`
+	term.BoldItalic = `<bolditalic>`
+	term.Under = `<under>`
+	term.Reset = `<reset>`
+}
+
 func ExampleLines() {
 	fmt.Printf("%q\n", Z.Lines("line one\nline two"))
 	// Output:
@@ -24,12 +32,17 @@ func ExampleBlocks_bulleted() {
 			* another block
 			* here
 
+			*boldnotbullet*
+
 			`
 
-	fmt.Printf("%q\n", Z.Blocks(in)[1])
+	blocks := Z.Blocks(in)
+	fmt.Printf("%v %q\n", blocks[1].T, blocks[1])
+	fmt.Printf("%v %q\n", blocks[2].T, blocks[2])
 
 	//Output:
-	// "* another block\n* here"
+	// 3 "* another block\n* here"
+	// 1 "*boldnotbullet*"
 }
 
 func ExampleBlocks_numbered() {
@@ -161,6 +174,15 @@ func ExampleInWrap() {
 	Z.Columns = col
 	// Output:
 	// "    some\n    that\n    is\n    indented\n"
+}
+
+func ExampleMark_simple() {
+
+	fmt.Print(Z.Mark(`**foo**`))
+
+	//Output:
+	// <bold>foo<reset>
+
 }
 
 func ExampleMark() {
