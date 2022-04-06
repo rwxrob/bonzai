@@ -6,8 +6,8 @@ package comp_test
 import (
 	"fmt"
 
-	Z "github.com/rwxrob/bonzai"
 	"github.com/rwxrob/bonzai/comp"
+	Z "github.com/rwxrob/bonzai/z"
 	"github.com/rwxrob/fn/filt"
 )
 

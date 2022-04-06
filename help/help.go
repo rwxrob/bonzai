@@ -78,7 +78,7 @@ func printIfHave(thing, name, value any) {
 		log.Printf("%v has no %v\n", to.String(thing), to.String(name))
 		return
 	}
-	Z.PrintMark(to.String(value))
+	Z.PrintEmph(to.String(value))
 }
 
 // ForTerminal converts the collective help documentation of the given
