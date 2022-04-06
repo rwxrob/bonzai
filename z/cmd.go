@@ -19,22 +19,21 @@ import (
 )
 
 type Cmd struct {
-	Name        string   `json:"name,omitempty"`
-	Aliases     []string `json:"aliases,omitempty"`
-	Summary     string   `json:"summary,omitempty"`
-	Usage       string   `json:"usage,omitempty"`
-	Version     string   `json:"version,omitempty"`
-	Copyright   string   `json:"copyright,omitempty"`
-	License     string   `json:"license,omitempty"`
-	Description string   `json:"description,omitempty"`
-	Site        string   `json:"site,omitempty"`
-	Source      string   `json:"source,omitempty"`
-	Issues      string   `json:"issues,omitempty"`
-	Commands    []*Cmd   `json:"commands,omitempty"`
-	Params      []string `json:"params,omitempty"`
-	Hidden      []string `json:"hidden,omitempty"`
-
-	Other map[string]string `json:"other,omitempty"`
+	Name        string    `json:"name,omitempty"`
+	Aliases     []string  `json:"aliases,omitempty"`
+	Summary     string    `json:"summary,omitempty"`
+	Usage       string    `json:"usage,omitempty"`
+	Version     string    `json:"version,omitempty"`
+	Copyright   string    `json:"copyright,omitempty"`
+	License     string    `json:"license,omitempty"`
+	Description string    `json:"description,omitempty"`
+	Site        string    `json:"site,omitempty"`
+	Source      string    `json:"source,omitempty"`
+	Issues      string    `json:"issues,omitempty"`
+	Commands    []*Cmd    `json:"commands,omitempty"`
+	Params      []string  `json:"params,omitempty"`
+	Hidden      []string  `json:"hidden,omitempty"`
+	Other       []Section `json:"other,omitempty"`
 
 	Completer comp.Completer      `json:"-"`
 	Conf      conf.Configurer     `json:"-"`
@@ -47,7 +46,16 @@ type Cmd struct {
 	MinParm int    `json:"-"` // minimum number of params required
 	MaxParm int    `json:"-"` // maximum number of params required
 
-	_aliases map[string]*Cmd
+	_aliases  map[string]*Cmd   // see cacheAliases called from Run
+	_sections map[string]string // see cacheSections called from Run
+}
+
+// Section contains the Other sections of a command. Composition
+// notation (without Title and Body) is not only supported but
+// encouraged for clarity when reading the source for documentation.
+type Section struct {
+	Title string
+	Body  string
 }
 
 // Names returns the Name and any Aliases grouped such that the Name is
@@ -86,8 +94,6 @@ func (x *Cmd) Title() string {
 		return "{ERROR: Name is empty}"
 	}
 	switch {
-	case len(x.Summary) > 0 && len(x.Version) > 0:
-		return x.Name + " (" + x.Version + ")" + " - " + x.Summary
 	case len(x.Summary) > 0:
 		return x.Name + " - " + x.Summary
 	default:
@@ -118,6 +124,9 @@ func (x *Cmd) Legal() string {
 	}
 }
 
+// OtherTitles returns just the ordered titles from Other.
+func (x *Cmd) OtherTitles() []string { return maps.Keys(x._sections) }
+
 func (x *Cmd) cacheAliases() {
 	x._aliases = map[string]*Cmd{}
 	if x.Commands == nil {
@@ -130,6 +139,16 @@ func (x *Cmd) cacheAliases() {
 		for _, a := range c.Aliases {
 			x._aliases[a] = c
 		}
+	}
+}
+
+func (x *Cmd) cacheSections() {
+	x._sections = map[string]string{}
+	if len(x.Other) == 0 {
+		return
+	}
+	for _, s := range x.Other {
+		x._sections[s.Title] = s.Body
 	}
 }
 
@@ -146,6 +165,7 @@ func (x *Cmd) cacheAliases() {
 func (x *Cmd) Run() {
 
 	x.cacheAliases()
+	x.cacheSections()
 
 	// resolve Z.Aliases (if completion didn't replace them)
 	if len(os.Args) > 1 {
@@ -389,7 +409,7 @@ func (x *Cmd) GetHidden() []string { return x.Hidden }
 func (x *Cmd) GetParams() []string { return x.Params }
 
 // GetOther fulfills the comp.Command interface.
-func (x *Cmd) GetOther() map[string]string { return x.Other }
+func (x *Cmd) GetOther() []string { return x.OtherTitles() }
 
 // GetCompleter fulfills the Command interface.
 func (x *Cmd) GetCompleter() comp.Completer { return x.Completer }

@@ -337,6 +337,11 @@ want the specific reasons.
   Every Bonzai binary is its own local web server which Go's rich
   standard library to draw on.
 
+* **[]Section instead of map[string]string for Other**
+
+  This allows composition notation and ensures the author has control of
+  how the Other sections appear.
+
 ## Style Guidelines
 
 * Everything through `go fmt` or equiv, no exceptions

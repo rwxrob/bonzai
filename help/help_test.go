@@ -29,7 +29,7 @@ func ExampleCmd_summary() {
 func ExampleCmd_other() {
 	term.AttrOff()
 	x := &Z.Cmd{
-		Other: map[string]string{"foo": `some foo text`},
+		Other: []Z.Section{{"foo", `some foo text`}},
 	}
 	help.ForTerminal(x, "foo")
 	// Output:
@@ -49,6 +49,7 @@ func ExampleCmd_all_Error_No_Call_No_Commands() {
 	//
 	// SYNOPSIS
 	//        {ERROR: neither Call nor Commands defined}
+
 }
 
 func ExampleCmd_all_Error_Params_No_Call() {
@@ -128,7 +129,7 @@ func ExampleCmd_all_Call_With_Optional_Params_and_Commands() {
 	//
 	// COMMANDS
 	//        f|foo - foo the things
-	//          bar - bar the things
+	//        bar   - bar the things
 	//        nosum
 }
 
@@ -198,9 +199,9 @@ func ExampleCmd_all_Other() {
 	x := &Z.Cmd{
 		Name: `cmd`,
 		Call: func(_ *Z.Cmd, _ ...string) error { return nil },
-		Other: map[string]string{
-			"foo": "A whole section dedicated to foo.",
-			"bar": "WTF is a bar anyway",
+		Other: []Z.Section{
+			{"FOO", "A whole section dedicated to foo."},
+			{"bar", "WTF is a bar anyway"},
 		},
 	}
 	help.ForTerminal(x, "all")

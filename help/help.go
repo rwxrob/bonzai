@@ -4,10 +4,14 @@
 package help
 
 import (
+	"fmt"
+	"log"
+	"strings"
+
 	"github.com/rwxrob/bonzai/comp"
 	Z "github.com/rwxrob/bonzai/z"
 	"github.com/rwxrob/fn/filt"
-	"github.com/rwxrob/fn/maps"
+	"github.com/rwxrob/to"
 )
 
 // Cmd provides help documentation for the caller allowing the specific
@@ -33,7 +37,7 @@ var Cmd = &Z.Cmd{
 		if len(args) == 0 {
 			args = append(args, "all")
 		}
-		//		ForTerminal(x.Caller, args[0])
+		ForTerminal(x.Caller, args[0])
 		return nil
 	},
 }
@@ -54,7 +58,7 @@ func helpCompleter(x comp.Command, args ...string) []string {
 	if caller != nil {
 		other := caller.GetOther()
 		if other != nil {
-			list = append(list, maps.Keys(other)...)
+			list = append(list, other...)
 		}
 	}
 
@@ -65,8 +69,6 @@ func helpCompleter(x comp.Command, args ...string) []string {
 	return filt.HasPrefix(list, args[0])
 }
 
-/*
-
 // printIfHave takes any thing with a named field and a value, converts
 // everything to string values (with to.String) and prints it with
 // Print after passing it through Format. If the value is an empty
@@ -76,7 +78,7 @@ func printIfHave(thing, name, value any) {
 		log.Printf("%v has no %v\n", to.String(thing), to.String(name))
 		return
 	}
-	fmt.Print(Format(to.String(value)))
+	Z.PrintMark(to.String(value))
 }
 
 // ForTerminal converts the collective help documentation of the given
@@ -88,83 +90,110 @@ func printIfHave(thing, name, value any) {
 // terminal is not interactive (see Z.Emph).
 func ForTerminal(x *Z.Cmd, section string) {
 	switch section {
+
 	case "name":
 		printIfHave("command", "name", x.Name)
+
 	case "title":
 		printIfHave(x.Name, "title", x.Title())
+
 	case "summary":
 		printIfHave(x.Name, "summary", x.Summary)
+
 	case "params":
 		printIfHave(x.Name, "params", x.UsageParams())
+
 	case "commands":
 		printIfHave(x.Name, "commands", x.UsageCmdTitles())
+
 	case "description", "desc":
 		printIfHave(x.Name, "description", Z.Mark(x.Description))
+
 	case "examples":
 		log.Printf("examples are planned but not yet implemented")
+
 	case "legal":
 		printIfHave(x.Name, "legal", x.Legal())
+
 	case "copyright":
 		printIfHave(x.Name, "copyright", x.Copyright)
+
 	case "license":
 		printIfHave(x.Name, "license", x.License)
+
 	case "version":
 		printIfHave(x.Name, "version", x.Version)
+
 	case "all":
-		Z.Println("**NAME**")
-		Z.PrintlnInWrap(x.Title() + "\n")
+
+		Z.PrintEmph("**NAME**\n")
+		Z.PrintMark(x.Title() + "\n\n")
+
 		// always print a synopsis so we can communicate with command
 		// developers about invalid field combinations through ERRORs
-		Z.Println("**SYNOPSIS**")
+
+		Z.PrintEmph("**SYNOPSIS**\n")
+
 		switch {
+
+		case x.Usage != "":
+			Z.PrintMarkf("%v %v", x.Name, x.Usage)
+
 		case x.Call == nil && x.Params != nil:
-			// FIXME: replace with string var from lang.go
-			Z.PrintlnInWrap(
-				"{ERROR: Params without Call: "+
-				strings.Join(x.Params, ", ")+"}" + "\n"
+			Z.PrintMarkf(
+				"{ERROR: Params without Call: %v}\n\n",
+				strings.Join(x.Params, ", "),
 			)
 
 		case len(x.Commands) == 0 && x.Call == nil:
-			// FIXME: replace with string var from lang.go
-		  Z.PrintlnInWrap("{ERROR: neither Call nor Commands defined}")+"\n"
+			Z.PrintMark("{ERROR: neither Call nor Commands defined}")
+
+		case len(x.Commands) > 0 && x.Call == nil:
+			Z.PrintMarkf("%v COMMAND", x.Name)
 
 		case len(x.Commands) > 0 && x.Call != nil && len(x.Params) > 0:
-			Z.PrintfInWrap("**%v** (COMMAND|%v)",x.Name,x.UsageParams())
+			Z.PrintMarkf("%v (COMMAND|%v)", x.Name, x.UsageParams())
 
 		case len(x.Commands) == 0 && x.Call != nil && len(x.Params) > 0:
-			Z.PrintfInWrap( "**%v** %v", x.Name,x.UsageParams())
+			Z.PrintMarkf("%v %v", x.Name, x.UsageParams())
 
 		case len(x.Commands) == 0 && x.Call != nil:
-			fmt.Println(to.IndentWrapped(Z.Emphasize("**"+x.Name+"**"), 7, 80))
+			Z.PrintMarkf(`%v`, x.Name)
+
+		default:
+			Z.PrintMark("{ERROR: unknown synopsis combination}")
 		}
-		fmt.Println()
 
 		if len(x.Commands) > 0 {
-			fmt.Println(Z.Format("**COMMANDS**"))
-			fmt.Println(to.IndentWrapped(x.UsageCmdTitles(), 7, 80) + "\n")
+			Z.PrintEmph("**COMMANDS**\n")
+			Z.PrintIndent(x.UsageCmdTitles())
+			fmt.Println()
 		}
+
 		if len(x.Description) > 0 {
-			fmt.Println(Z.Format("**DESCRIPTION**"))
-			body := strings.TrimSpace(to.Dedented(x.Description))
-			fmt.Println(to.IndentWrapped(Z.Format(body), 7, 80) + "\n")
+			Z.PrintEmph("**DESCRIPTION**\n")
+			Z.PrintMark(x.Description)
 		}
+
 		legal := x.Legal()
 		if len(legal) > 0 {
-			fmt.Println(Z.Format("**LEGAL**"))
-			fmt.Println(to.IndentWrapped(legal, 7, 80) + "\n")
+			Z.PrintEmph("**LEGAL**\n")
+			Z.PrintIndent(legal)
+			fmt.Println()
 		}
+
 		if len(x.Other) > 0 {
-			for section, text := range x.Other {
-				fmt.Println(Z.Format("**" + strings.ToUpper(section) + "**"))
-				fmt.Println(to.IndentWrapped(text, 7, 80) + "\n")
+			for _, s := range x.Other {
+				Z.PrintEmphf("**%v**\n", strings.ToUpper(s.Title))
+				Z.PrintMark(s.Body)
 			}
 		}
+
 	default:
-		v, has := x.Other[section]
-		if !has {
-			printIfHave(x.Name, section, "")
+		for _, s := range x.Other {
+			if s.Title == section {
+				Z.PrintMark(s.Body)
+			}
 		}
-		printIfHave(x.Name, section, Z.Format(v))
 	}
 }
-*/

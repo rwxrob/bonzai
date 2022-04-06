@@ -17,9 +17,11 @@ import (
 var IndentBy = 7
 
 // Columns is the number of bytes (not runes) at which Wrap will wrap.
-// Default is 80. Bonzai command tree creator can change this for every
-// composite command imported their application in this one place.
-var Columns = 80
+// By default detects the terminal width (if possible) otherwise keeps
+// 80 standard (see rwxrob/term.WinSize). Bonzai command tree creator
+// can change this for every composite command imported their
+// application in this one place.
+var Columns = int(term.WinSize.Col)
 
 // Lines returns the string converted into a slice of lines.
 func Lines(in string) []string { return to.Lines(in) }
@@ -145,6 +147,7 @@ MAIN:
 			for s.Scan() {
 
 				if s.Peek("\n\n") {
+					block = append(block, []byte(string(s.Rune))...)
 					blocks = append(blocks, &Block{Paragraph, block})
 					s.Scan()
 					s.Scan()
@@ -294,11 +297,11 @@ func Mark(in string) string {
 	for _, block := range blocks {
 		switch block.T {
 		case Paragraph:
-			out += InWrap(Emph(string(block.V))) + "\n"
+			out += Emph(InWrap(string(block.V))) + "\n"
 		case Bulleted:
-			out += Indent(Emph(string(block.V))) + "\n"
+			out += Emph(Indent(string(block.V))) + "\n"
 		case Numbered:
-			out += Indent(Emph(string(block.V))) + "\n"
+			out += Emph(Indent(string(block.V))) + "\n"
 		case Verbatim:
 			out += to.Indented(Indent(string(block.V)), 4) + "\n"
 		default:

@@ -66,16 +66,18 @@ func ExampleBlocks_paragraph() {
 	in := `
 			Simple paragraph
 			here on multiple
-			lines
+			lines.
 
 			And another one here
 			with just a bit more.
 
 			`
 
+	fmt.Printf("%q\n", Z.Blocks(in)[0])
 	fmt.Printf("%q\n", Z.Blocks(in)[1])
 
 	// Output:
+	// "Simple paragraph here on multiple lines."
 	// "And another one here with just a bit more."
 }
 
