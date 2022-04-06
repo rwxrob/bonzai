@@ -89,6 +89,7 @@ func printIfHave(thing, name, value any) {
 // be in BonzaiMark markup (see Z.Format). Emphasis is omitted if the
 // terminal is not interactive (see Z.Emph).
 func ForTerminal(x *Z.Cmd, section string) {
+
 	switch section {
 
 	case "name":
@@ -158,6 +159,9 @@ func ForTerminal(x *Z.Cmd, section string) {
 			Z.PrintMarkf("%v %v", x.Name, x.UsageParams())
 
 		case len(x.Commands) == 0 && x.Call != nil:
+			Z.PrintMarkf(`%v`, x.Name)
+
+		case x.Call != nil:
 			Z.PrintMarkf(`%v`, x.Name)
 
 		default:

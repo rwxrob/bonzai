@@ -212,6 +212,9 @@ func (x *Cmd) Run() {
 	if cmd.Call == nil {
 		if len(cmd.Commands) > 0 {
 			cmd = cmd.Commands[0]
+			if cmd.Call == nil {
+				ExitError(fmt.Errorf("default commands require Call function"))
+			}
 		} else {
 			ExitError(x.Unimplemented())
 		}
@@ -222,6 +225,9 @@ func (x *Cmd) Run() {
 	}
 
 	// delegate
+	if cmd.Caller == nil {
+		cmd.Caller = x
+	}
 	if err := cmd.Call(cmd, args...); err != nil {
 		ExitError(err)
 	}
