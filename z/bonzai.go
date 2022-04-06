@@ -300,3 +300,11 @@ func ArgsOrIn(args []string) string {
 // strings.Fields) to ensure that hard-coded arguments containing
 // whitespace are properly handled.
 var Aliases = make(map[string][]string)
+
+// TrapPanic recovers from any panic and more gracefully displays the
+// error as an exit message. Simply add defer TrapPanic() when wanted.
+var TrapPanic = func() {
+	if r := recover(); r != nil {
+		ExitError(r)
+	}
+}
