@@ -302,9 +302,10 @@ func ArgsOrIn(args []string) string {
 var Aliases = make(map[string][]string)
 
 // TrapPanic recovers from any panic and more gracefully displays the
-// error as an exit message. Simply add defer TrapPanic() when wanted.
+// panic by logging it before exiting with a return value of 1.
 var TrapPanic = func() {
 	if r := recover(); r != nil {
-		ExitError(r)
+		log.Println(r)
+		os.Exit(1)
 	}
 }
