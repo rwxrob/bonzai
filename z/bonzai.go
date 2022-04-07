@@ -28,7 +28,6 @@ import (
 	"strings"
 
 	config "github.com/rwxrob/config/pkg"
-	"github.com/rwxrob/fs/file"
 	"github.com/rwxrob/term"
 )
 
@@ -89,12 +88,10 @@ var DefaultUsageFunc = InferredUsage
 func InferredUsage(x *Cmd) string {
 
 	if x.Call == nil && x.Commands == nil {
-		// FIXME: replace with string var from lang.go
 		return "{ERROR: neither Call nor Commands defined}"
 	}
 
 	if x.Call == nil && x.Params != nil {
-		// FIXME: replace with string var from lang.go
 		return "{ERROR: Params without Call: " + strings.Join(x.Params, ", ") + "}"
 	}
 
@@ -124,7 +121,7 @@ func InferredUsage(x *Cmd) string {
 
 // Run infers the name of the command to run from the ExeName looked up
 // in the Commands delegates accordingly, prepending any arguments
-// provided in the CmdRun. Run produces an "unmapped multicall command"
+// provided in the Cmd.Run. Run produces an "unmapped multicall command"
 // error if no match is found. This is an alternative to the simpler,
 // direct Cmd.Run method from main where only one possible Cmd will ever
 // be the root and allows for BusyBox (https://www.busybox.net)
@@ -162,67 +159,12 @@ func Run() {
 // It is conventional for only Cmd.Root to have a Configurer defined.
 var DefaultConfigurer = new(config.Configurer)
 
-// ReplaceSelf replaces the current running executable at its current
-// location with the successfully retrieved file at the specified URL or
-// file path and duplicates the original files permissions. Only http
-// and https URLs are currently supported. If not empty, a checksum file
-// will be fetched from sumurl and used to validate the download before
-// making the replacement. For security reasons, no backup copy of the
-// replaced executable is kept. Also see AutoUpdate.
-func ReplaceSelf(url, checksum string) error {
-	exe, err := os.Executable()
-	if err != nil {
-		return err
-	}
-	exe, err = filepath.EvalSymlinks(exe)
-	if err != nil {
-		return err
-	}
-	// TODO validate sum
-	return file.Replace(exe, url)
-}
-
-// AutoUpdate automatically updates the current process executable
-// version by starting a goroutine that checks the current semantic
-// version (version) against a remote one (versurl) and calling
-// ReplaceSelf with the URL of the binary (binurl) and checksum (sumurl)
-// if and update is needed. Note that the binary will often be named
-// quite differently than the name of the currently running executable
-// (ex: foo-mac -> foo, foo-linux.
-//
-// If a URL to a checksum file (sumurl) is not empty will optionally
-// validate the new version downloaded against the checksum before
-// replacing the currently running process executable with the new one.
-// The format of the checksum file is the same as that output by any of
-// the major checksum commands (sha512sum, for example) with one or more
-// lines beginning with the checksum, whitespace, and then the name of
-// the file. A single checksum file can be used for multiple versions
-// but the most recent should always be at the top. When the update
-// completes a message notifying of the update is logged to stderr.
-//
-// The function will fail silently under any of the following
-// conditions:
-//
-//     * current user does not have write access to executable
-//     * unable to establish a network connection
-//     * checksum provided does not match
-//
-// Since AutoUpdate happens in the background no return value is
-// provided. To enable logging of the update process (presumably for
-// debugging) add the AutoUpdate flag to the Trace flags
-// (trace.Flags|=trace.AutoUpdate). Also see Cmd.AutoUpdate.
-func AutoUpdate(version, versurl, binurl, sumurl string) {
-	// TODO
-}
-
 // Method defines the main code to execute for a command (Cmd). By
 // convention the parameter list should be named "args" if there are
 // args expected and underscore (_) if not. Methods must never write
 // error output to anything but standard error and should almost always
 // use the log package to do so.
 type Method func(caller *Cmd, args ...string) error
-
-// ----------------------- errors, exit, debug -----------------------
 
 // DoNotExit effectively disables Exit and ExitError allowing the
 // program to continue running, usually for test evaluation.
