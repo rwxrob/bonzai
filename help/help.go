@@ -159,6 +159,9 @@ func ForTerminal(x *Z.Cmd, section string) {
 		case len(x.Commands) == 0 && x.Call != nil && len(x.Params) > 0:
 			Z.PrintMarkf("%v %v", x.Name, x.UsageParams())
 
+		case len(x.Commands) > 0 && x.Call != nil:
+			Z.PrintMarkf(`%v [COMMAND]`, x.Name)
+
 		case len(x.Commands) == 0 && x.Call != nil:
 			Z.PrintMarkf(`%v`, x.Name)
 
