@@ -2,6 +2,10 @@
 
 ![logo](logo.png)
 
+Looking to get with
+[https://www.trendhunter.com/trends/amuseable-bonsai-tree] to make a
+plushy mascot.
+
 Meticulously manicured monolith and multicall binaries, built from
 imported composite commands, on *any* device, with recursive,
 light-weight tab completion, and colorful embedded documentation from
