@@ -27,7 +27,7 @@ import (
 	"path/filepath"
 	"strings"
 
-	config "github.com/rwxrob/config/pkg"
+	"github.com/rwxrob/bonzai"
 	"github.com/rwxrob/term"
 )
 
@@ -64,20 +64,40 @@ var ExeName string
 // will be assumed to be string arguments to prepend. See Run.
 var Commands map[string][]any
 
+// Conf may be optionally assigned any implementation of
+// a bonzai.Configurer. Once assigned it should not be reassigned at any
+// later time during runtime. Certain Bonzai branches and commands may
+// require Z.Conf to be defined and those that do generally require the
+// same implementation throughout all of runtime. Commands that require
+// Z.Conf should set ReqConfig to true. Other than the exceptional case
+// of configuration commands that fulfill bonzai.Configurer (and usually
+// assign themselves to Z.Conf at init() time), commands must never
+// require a specific implementation of bonzai.Configurer.  This
+// encourages command creators and Bonzai tree composers to centralize
+// on a single form of configuration without creating brittle
+// dependencies and tight coupling. Configuration persistence can be
+// implemented in any number of ways without a problem and Bonzai trees
+// simply need to be recompiled with a different bonzai.Configurer
+// implementation to switch everything that depends on configuration.
+var Conf bonzai.Configurer
+
 // UsageText is used for one-line UsageErrors. It's exported to allow
 // for different languages.
 var UsageText = `usage`
 
-// DefaultUsageFunc is the default first-class function assigned to
-// every Cmd that does not already define one. It is used to return
-// a usage summary. Generally, it should only return a single line (even
-// if that line is very long). Developers are encouraged to refer users
-// to their chosen help command rather than producing usually long usage
-// lines. If only the word "usage" needs to be changed (for a given
-// language) consider UsageText instead. Note that most developers will
-// simply change the Usage string when they do not want the default
-// inferred usage string.
-var DefaultUsageFunc = InferredUsage
+// UsageFunc is the default first-class function called if a Cmd that
+// does not already define its own when usage information is needed (see
+// bonzai.UsageFunc and Cmd.UsageError for more). By default,
+// InferredUsage is assigned.
+//
+// It is used to return a usage summary. Generally, it should only
+// return a single line (even if that line is very long).  Developers
+// are encouraged to refer users to their chosen help command rather
+// than producing usually long usage lines. If only the word "usage"
+// needs to be changed (for a given language) consider UsageText
+// instead. Note that most developers will simply change the Usage
+// string when they do not want the default inferred usage string.
+var UsageFunc = InferredUsage
 
 // InferredUsage returns a single line of text summarizing only the
 // Commands (less any Hidden commands), Params, and Aliases. If a Cmd
@@ -85,7 +105,12 @@ var DefaultUsageFunc = InferredUsage
 // Commands) a string beginning with ERROR and wrapped in braces ({}) is
 // returned instead. The string depends on the current language (see
 // lang.go). Note that aliases does not include package Z.Aliases.
-func InferredUsage(x *Cmd) string {
+func InferredUsage(cmd bonzai.Command) string {
+
+	x, iscmd := cmd.(*Cmd)
+	if !iscmd {
+		return "{ERROR: not a bonzai.Command}"
+	}
 
 	if x.Call == nil && x.Commands == nil {
 		return "{ERROR: neither Call nor Commands defined}"
@@ -154,10 +179,6 @@ func Run() {
 	}
 	ExitError(fmt.Errorf("unmapped multicall command: %v", ExeName))
 }
-
-// DefaultConfigurer is assigned to the Cmd.Root.Config during Cmd.Run.
-// It is conventional for only Cmd.Root to have a Configurer defined.
-var DefaultConfigurer = new(config.Configurer)
 
 // Method defines the main code to execute for a command (Cmd). By
 // convention the parameter list should be named "args" if there are

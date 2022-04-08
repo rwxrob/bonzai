@@ -1,10 +1,9 @@
-# Go Bonzai™ Command Compositor
+# 🌳 Go Bonzai™ Command Compositor
 
-![logo](logo.png)
-
-Looking to get with
-[https://www.trendhunter.com/trends/amuseable-bonsai-tree] to make a
-plushy mascot.
+[![GoDoc](https://godoc.org/github.com/rwxrob/bonzai?status.svg)](https://godoc.org/github.com/rwxrob/bonzai)
+[![License](https://img.shields.io/badge/license-Apache2-brightgreen.svg)](LICENSE)
+[![Go Report
+Card](https://goreportcard.com/badge/github.com/rwxrob/bonzai)](https://goreportcard.com/report/github.com/rwxrob/bonzai)
 
 Meticulously manicured monolith and multicall binaries, built from
 imported composite commands, on *any* device, with recursive,
@@ -13,17 +12,17 @@ terminal or local web browser. Replace messy collections of shell
 scripts ported to clean Go code and compiled into a single, portable `z`
 command.
 
-> Have a look at [rwxrob/z](https://github.com/rwxrob/z) for now to get a
-sense of how it's coming along and how to use until the 1.0 release.
+## 🤚 TL;DR; 🛑
 
-> Or, you can get started right away by cloning/forking [the sample
-`foo` template repo](https://github.com/rwxrob/foo)
+Just want to see one? Check or clone the sample `foo` template:
 
-[![Go Version](https://img.shields.io/github/go-mod/go-version/rwxrob/bonzai)](https://tip.golang.org/doc/go1.18)
-[![GoDoc](https://godoc.org/github.com/rwxrob/bonzai?status.svg)](https://godoc.org/github.com/rwxrob/bonzai)
-[![License](https://img.shields.io/badge/license-Apache2-brightgreen.svg)](LICENSE)
-[![Go Report
-Card](https://goreportcard.com/badge/github.com/rwxrob/bonzai)](https://goreportcard.com/report/github.com/rwxrob/bonzai)
+👆 <https://github.com/rwxrob/foo>
+
+Or, have a look at the `z` monolith/multicall that started it all:
+
+👆 <https://github.com/rwxrob/z>
+
+![logo](logo.png)
 
 ## Installation
 
@@ -431,6 +430,12 @@ can be used freely to refer to the Bonzai™ project
 <https://github.com/rwxrob/bonzai> without limitation. To avoid
 potential developer confusion, intentionally using these trademarks to
 refer to other projects --- free or proprietary --- is prohibited.
+
+## Shwag
+
+Looking to get with
+[https://www.trendhunter.com/trends/amuseable-bonsai-tree] to make a
+plushy mascot.
 
 ## TODO
 

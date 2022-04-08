@@ -10,42 +10,66 @@ import (
 	"github.com/rwxrob/bonzai/comp"
 )
 
-func ExampleFile() {
+func ExampleFile_nil() {
 	os.Chdir("testdata/file")
 	defer os.Chdir("../..")
-
 	fmt.Println(comp.File(nil))
 	fmt.Println(comp.File(nil, ""))
+	//Output:
+	// [bar/ blah/ come/ foo.go]
+	// [bar/ blah/ come/ foo.go]
+}
+
+func ExampleFile_pre_File() {
+	os.Chdir("testdata/file")
+	defer os.Chdir("../..")
 	fmt.Println(comp.File(nil, "fo"))
-	fmt.Println(comp.File(nil, "foo"))
+	//Output:
+	// [foo.go]
+}
+
+func ExampleFile_pre_Dir_Only() {
+	os.Chdir("testdata/file")
+	defer os.Chdir("../..")
 	fmt.Println(comp.File(nil, "bar"))
 	fmt.Println(comp.File(nil, "bar/"))
-	fmt.Println(comp.File(nil, "bar/fo"))
-	fmt.Println(comp.File(nil, "bar/foo"))
+	//Output:
+	// [bar/foo.go bar/other]
+	// [bar/foo.go bar/other]
+}
+
+func ExampleFile_pre_Dir_or_Files() {
+	os.Chdir("testdata/file")
+	defer os.Chdir("../..")
+	fmt.Println(comp.File(nil, "b"))
+	//Output:
+	// [bar/ blah/]
+}
+
+func ExampleFile_pre_Dir_Specific() {
+	os.Chdir("testdata/file")
+	defer os.Chdir("../..")
+	fmt.Println(comp.File(nil, "blah"))
+	//Output:
+	// [blah/file1 blah/file2]
+}
+
+func ExampleFile_pre_Dir_Recurse() {
+	os.Chdir("testdata/file")
+	defer os.Chdir("../..")
 	fmt.Println(comp.File(nil, "com"))
 	fmt.Println(comp.File(nil, "come/"))
-	fmt.Println(comp.File(nil, "b"))
-	fmt.Println(comp.File(nil, "blah"))
-	fmt.Println(comp.File(nil, "blah/"))
-	fmt.Println(comp.File(nil, "blah/f"))
-	fmt.Println(comp.File(nil, "blah/file1"))
-	fmt.Println(comp.File(nil, "blah/file1", "blah/file1"))
-
 	//Output:
-	// [bar/ blah/ come/ foo/ foo.go other/]
-	// [bar/ blah/ come/ foo/ foo.go other/]
-	// [foo/ foo.go]
-	// [foo/ foo.go]
-	// [bar/foo/ bar/foo.go bar/other]
-	// [bar/foo/ bar/foo.go bar/other]
-	// [bar/foo/ bar/foo.go]
-	// [bar/foo/ bar/foo.go]
 	// [come/one]
 	// [come/one]
-	// [bar/ blah/]
-	// [blah/dir1/ blah/dir2/ blah/file1 blah/file2]
-	// [blah/dir1/ blah/dir2/ blah/file1 blah/file2]
-	// [blah/file1 blah/file2]
-	// [blah/file1]
-	// []
+}
+
+func ExampleFile_dir_File() {
+	os.Chdir("testdata/file")
+	defer os.Chdir("../..")
+	fmt.Println(comp.File(nil, "bar/fo"))
+	fmt.Println(comp.File(nil, "bar/foo"))
+	//Output:
+	// [bar/foo.go]
+	// [bar/foo.go]
 }

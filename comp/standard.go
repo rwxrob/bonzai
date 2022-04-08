@@ -4,6 +4,7 @@
 package comp
 
 import (
+	"github.com/rwxrob/bonzai"
 	"github.com/rwxrob/fn/filt"
 	"github.com/rwxrob/structs/set/text/set"
 )
@@ -20,8 +21,8 @@ import (
 //     4. Otherwise, return every Command or Param that is not in the
 //        Hidden list and HasPrefix matching the first arg
 //
-// See comp.Completer.
-func Standard(x Command, args ...string) []string {
+// See bonzai.Completer.
+func Standard(x bonzai.Command, args ...string) []string {
 
 	// if has completer, delegate
 	if c := x.GetCompleter(); c != nil {
@@ -35,7 +36,7 @@ func Standard(x Command, args ...string) []string {
 
 	// build list of visible commands and params
 	list := []string{}
-	list = append(list, x.GetCommands()...)
+	list = append(list, x.GetCommandNames()...)
 	list = append(list, x.GetParams()...)
 	list = set.Minus[string, string](list, x.GetHidden())
 

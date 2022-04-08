@@ -95,12 +95,12 @@ func ExampleCmd_CmdNames() {
 	// [bar blah other]
 }
 
-func ExampleCmd_GetCommands() {
+func ExampleCmd_GetCommandNames() {
 	foo := new(Z.Cmd)
 	foo.Add("bar")
 	foo.Add("blah")
 	foo.Add("other")
-	fmt.Println(foo.GetCommands())
+	fmt.Println(foo.GetCommandNames())
 	// Output:
 	// [bar blah other]
 }
@@ -113,7 +113,7 @@ func ExampleCmd_GetParams() {
 	// [box bing and]
 }
 
-func ExampleCmd_Branch() {
+func ExampleCmd_PathString() {
 	Z.ExitOff()
 
 	z := new(Z.Cmd)
@@ -125,12 +125,12 @@ func ExampleCmd_Branch() {
 	//fmt.Print(z.Commands[0].Commands[0].Commands[0].Name)
 
 	c.Call = func(x *Z.Cmd, _ ...string) error {
-		fmt.Println(x.Branch())
+		fmt.Println(x.PathString())
 		return nil
 	}
 
 	defer func() { args := os.Args; os.Args = args }()
-	os.Args = []string{"z", "some", "thing", "deep"}
+	os.Args = []string{"z", "some", "thing", "deep"} // first exe name
 
 	z.Run()
 

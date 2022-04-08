@@ -7,6 +7,7 @@ import (
 	"path/filepath"
 	"strings"
 
+	"github.com/rwxrob/bonzai"
 	"github.com/rwxrob/fn/filt"
 	"github.com/rwxrob/fs"
 	"github.com/rwxrob/fs/dir"
@@ -19,7 +20,7 @@ import (
 // completer (instead of the shell) the command line interface remains
 // consistent across all runtimes. Note that unlike bash completion no
 // indication of the type of file is provided.
-func File(x Command, args ...string) []string {
+func File(x bonzai.Command, args ...string) []string {
 
 	if len(args) > 1 {
 		return []string{}

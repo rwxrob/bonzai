@@ -10,8 +10,8 @@ import (
 	"strconv"
 	"strings"
 
+	"github.com/rwxrob/bonzai"
 	"github.com/rwxrob/bonzai/comp"
-	"github.com/rwxrob/bonzai/conf"
 	"github.com/rwxrob/fn/each"
 	"github.com/rwxrob/fn/maps"
 	"github.com/rwxrob/fn/redu"
@@ -35,16 +35,15 @@ type Cmd struct {
 	Hidden      []string  `json:"hidden,omitempty"`
 	Other       []Section `json:"other,omitempty"`
 
-	Completer comp.Completer      `json:"-"`
-	Conf      conf.Configurer     `json:"-"`
-	UsageFunc func(x *Cmd) string `json:"-"`
+	Completer bonzai.Completer `json:"-"`
+	UsageFunc bonzai.UsageFunc `json:"-"`
 
-	Root    *Cmd   `json:"-"`
 	Caller  *Cmd   `json:"-"`
 	Call    Method `json:"-"`
 	MinArgs int    `json:"-"` // minimum number of args required (including parms)
 	MinParm int    `json:"-"` // minimum number of params required
 	MaxParm int    `json:"-"` // maximum number of params required
+	ReqConf bool   `json:"-"` // requires Z.Conf be assigned
 
 	_aliases  map[string]*Cmd   // see cacheAliases called from Run
 	_sections map[string]string // see cacheSections called from Run
@@ -57,6 +56,9 @@ type Section struct {
 	Title string
 	Body  string
 }
+
+func (s Section) GetTitle() string { return s.Title }
+func (s Section) GetBody() string  { return s.Body }
 
 // Names returns the Name and any Aliases grouped such that the Name is
 // always last.
@@ -216,9 +218,7 @@ func (x *Cmd) Run() {
 			if fcmd.Call == nil {
 				ExitError(fmt.Errorf("default commands require Call function"))
 			}
-			fcmd.Root = x
 			fcmd.Caller = cmd
-			fcmd.Conf = DefaultConfigurer
 			cmd = fcmd
 		} else {
 			ExitError(x.Unimplemented())
@@ -227,6 +227,10 @@ func (x *Cmd) Run() {
 
 	if len(args) < cmd.MinArgs {
 		ExitError(cmd.UsageError())
+	}
+
+	if x.ReqConf && Conf == nil {
+		ExitError(cmd.ReqConfError())
 	}
 
 	// delegate
@@ -242,14 +246,25 @@ func (x *Cmd) Run() {
 // UsageError returns an error with a single-line usage string. The word
 // "usage" can be changed by assigning Z.UsageText to something else.
 // The commands own UsageFunc will be used if defined. If undefined, the
-// Z.DefaultUsageFunc will be used instead (which can also be assigned
+// Z.UsageFunc will be used instead (which can also be assigned
 // to something else if needed).
 func (x *Cmd) UsageError() error {
 	usage := x.UsageFunc
 	if usage == nil {
-		usage = DefaultUsageFunc
+		usage = UsageFunc
 	}
 	return fmt.Errorf("%v: %v %v", UsageText, x.Name, usage(x))
+}
+
+// ReqConfError returns stating that the given command requires that
+// Z.Conf be set to something besides null. This is primarily for
+// those composing commands that import a given command to help the
+// develop know about the dependency.
+func (x *Cmd) ReqConfError() error {
+	return fmt.Errorf(
+		"cmd %q requires a configurer (Z.Conf must be assigned)",
+		x.Name,
+	)
 }
 
 // Unimplemented returns an error with a single-line usage string.
@@ -260,7 +275,7 @@ func (x *Cmd) Unimplemented() error {
 // MissingConfig returns an error showing the expected configuration
 // entry that is missing from the given path.
 func (x *Cmd) MissingConfig(path string) error {
-	return fmt.Errorf("missing config: %v", x.Branch()+"."+path)
+	return fmt.Errorf("missing config: %v", x.PathString()+"."+path)
 }
 
 // Add creates a new Cmd and sets the name and aliases and adds to
@@ -355,13 +370,9 @@ func (x *Cmd) IsHidden(name string) bool {
 
 func (x *Cmd) Seek(args []string) (*Cmd, []string) {
 	if args == nil || x.Commands == nil {
-		x.Root = x
-		x.Conf = DefaultConfigurer
 		return x, args
 	}
 	cur := x
-	cur.Root = x
-	cur.Conf = DefaultConfigurer
 	n := 0
 	for ; n < len(args); n++ {
 		next := cur.Resolve(args[n])
@@ -369,37 +380,30 @@ func (x *Cmd) Seek(args []string) (*Cmd, []string) {
 			break
 		}
 		next.Caller = cur
-		next.Root = x
-		next.Conf = DefaultConfigurer
 		cur = next
 	}
 	return cur, args[n:]
 }
 
-// Branch returns the dotted path to this command location within the
-// parent tree. This is useful for associating configuration and other
-// data specifically with this command. The branch path is determined by
-// walking backward from current Caller up rather than depending on
-// anything from the command line used to invoke the composing binary.
-func (x *Cmd) Branch() string {
-	callers := qstack.New[string]()
-	callers.Unshift(x.Name)
+// Path returns the path of command names used to arrive at this
+// command. The path is determined by walking backward from current
+// Caller up rather than depending on anything from the command line
+// used to invoke the composing binary. Also see PathString.
+func (x *Cmd) Path() []string {
+	path := qstack.New[string]()
+	path.Unshift(x.Name)
 	for p := x.Caller; p != nil; p = p.Caller {
-		callers.Unshift(p.Name)
+		path.Unshift(p.Name)
 	}
-	callers.Shift()
-	return strings.Join(callers.Items(), ".")
+	path.Shift()
+	return path.Items()
 }
 
-// Q is a shorter version of x.Conf.Query(x.Root.Name,x.Branch()+"."+q)
-// for convenience. If Seek has not been called (setting Root on the
-// Cmd) then the current Cmd is assumed to be the Root instead and is
-// defined on the receiver.
-func (x *Cmd) Q(q string) string {
-	if x.Root == nil {
-		x.Root = x
-	}
-	return x.Conf.Query(x.Root.Name, "."+x.Branch()+"."+q)
+// PathString returns a dotted notation of the Path. This is useful for
+// associating configuration and other data specifically with this
+// command.
+func (x *Cmd) PathString() string {
+	return strings.Join(x.Path(), ".")
 }
 
 // Log is currently short for log.Printf() but may be supplemented in
@@ -408,29 +412,102 @@ func (x *Cmd) Log(format string, a ...any) {
 	log.Printf(format, a...)
 }
 
-// TODO C for Cache lookups
+// Q is a shorter version of Z.Conf.Query(x.Path()+"."+q) for
+// convenience. Logs the error and returns a blank string if Z.Conf is
+// not defined (see ReqConf).
+func (x *Cmd) Q(q string) string {
+	if Conf == nil {
+		log.Printf("cmd %q requires a configurer (Z.Conf must be assigned)", x.Name)
+		return ""
+	}
+	return Conf.Query(x.PathString() + "." + q)
+}
 
-// ---------------------- comp.Command interface ----------------------
+// --------------------- bonzai.Command interface ---------------------
 
-// mostly to overcome cyclical imports
-
-// GetName fulfills the comp.Command interface.
+// GetName fulfills the bonzai.Command interface.
 func (x *Cmd) GetName() string { return x.Name }
 
-// GetCommands fulfills the comp.Command interface.
-func (x *Cmd) GetCommands() []string { return x.CmdNames() }
+// GetTitle fulfills the bonzai.Command interface.
+func (x *Cmd) GetTitle() string { return x.Title() }
 
-// GetHidden fulfills the comp.Command interface.
+// GetAliases fulfills the bonzai.Command interface.
+func (x *Cmd) GetAliases() []string { return x.Aliases }
+
+// Summary fulfills the bonzai.Command interface.
+func (x *Cmd) GetSummary() string { return x.Summary }
+
+// Usage fulfills the bonzai.Command interface.
+func (x *Cmd) GetUsage() string { return x.Usage }
+
+// Version fulfills the bonzai.Command interface.
+func (x *Cmd) GetVersion() string { return x.Version }
+
+// Copyright fulfills the bonzai.Command interface.
+func (x *Cmd) GetCopyright() string { return x.Copyright }
+
+// License fulfills the bonzai.Command interface.
+func (x *Cmd) GetLicense() string { return x.License }
+
+// Description fulfills the bonzai.Command interface.
+func (x *Cmd) GetDescription() string { return x.Description }
+
+// Site fulfills the bonzai.Command interface.
+func (x *Cmd) GetSite() string { return x.Site }
+
+// Source fulfills the bonzai.Command interface.
+func (x *Cmd) GetSource() string { return x.Source }
+
+// Issues fulfills the bonzai.Command interface.
+func (x *Cmd) GetIssues() string { return x.Issues }
+
+// MinArgs fulfills the bonzai.Command interface.
+func (x *Cmd) GetMinArgs() int { return x.MinArgs }
+
+// MinParm fulfills the bonzai.Command interface.
+func (x *Cmd) GetMinParm() int { return x.MinParm }
+
+// MaxParm fulfills the bonzai.Command interface.
+func (x *Cmd) GetMaxParm() int { return x.MaxParm }
+
+// ReqConf fulfills the bonzai.Command interface.
+func (x *Cmd) GetReqConf() bool { return x.ReqConf }
+
+// UsageFunc fulfills the bonzai.Command interface.
+func (x *Cmd) GetUsageFunc() bonzai.UsageFunc { return x.UsageFunc }
+
+// GetCommands fulfills the bonzai.Command interface.
+func (x *Cmd) GetCommands() []bonzai.Command {
+	var commands []bonzai.Command
+	for _, s := range x.Commands {
+		commands = append(commands, bonzai.Command(s))
+	}
+	return commands
+}
+
+// GetCommandNames fulfills the bonzai.Command interface.
+func (x *Cmd) GetCommandNames() []string { return x.CmdNames() }
+
+// GetHidden fulfills the bonzai.Command interface.
 func (x *Cmd) GetHidden() []string { return x.Hidden }
 
-// GetParams fulfills the comp.Command interface.
+// GetParams fulfills the bonzai.Command interface.
 func (x *Cmd) GetParams() []string { return x.Params }
 
-// GetOther fulfills the comp.Command interface.
-func (x *Cmd) GetOther() []string { return x.OtherTitles() }
+// GetOther fulfills the bonzai.Command interface.
+func (x *Cmd) GetOther() []bonzai.Section {
+	var sections []bonzai.Section
+	for _, s := range x.Other {
+		sections = append(sections, bonzai.Section(s))
+	}
+	return sections
+}
+
+// GetOtherTitles fulfills the bonzai.Command interface.
+func (x *Cmd) GetOtherTitles() []string { return x.OtherTitles() }
 
 // GetCompleter fulfills the Command interface.
-func (x *Cmd) GetCompleter() comp.Completer { return x.Completer }
+func (x *Cmd) GetCompleter() bonzai.Completer { return x.Completer }
 
-// GetCaller fulfills the comp.Command interface.
-func (x *Cmd) GetCaller() comp.Command { return x.Caller }
+// GetCaller fulfills the bonzai.Command interface.
+func (x *Cmd) GetCaller() bonzai.Command { return x.Caller }

@@ -6,6 +6,7 @@ package comp_test
 import (
 	"fmt"
 
+	"github.com/rwxrob/bonzai"
 	"github.com/rwxrob/bonzai/comp"
 	Z "github.com/rwxrob/bonzai/z"
 	"github.com/rwxrob/fn/filt"
@@ -34,7 +35,7 @@ func ExampleStandard() {
 	fmt.Println(comp.Standard(foo, `bl`))
 
 	// give own completer for days of the week
-	foo.Completer = func(cmd comp.Command, args ...string) []string {
+	foo.Completer = func(cmd bonzai.Command, args ...string) []string {
 		list := []string{"mon", "tue", "wed", "thu", "fri", "sat", "sun"}
 		if len(args) == 0 {
 			return list
