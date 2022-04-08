@@ -163,6 +163,7 @@ func (x *Cmd) cacheSections() {
 // Note: Only bash runtime ("COMP_LINE") is currently supported, but
 // others such a zsh and shell-less REPLs are planned.
 func (x *Cmd) Run() {
+	defer TrapPanic()
 
 	x.cacheAliases()
 	x.cacheSections()

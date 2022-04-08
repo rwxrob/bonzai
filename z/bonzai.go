@@ -243,11 +243,16 @@ func ArgsOrIn(args []string) string {
 // whitespace are properly handled.
 var Aliases = make(map[string][]string)
 
+// AllowPanic disables TrapPanic stopping it from cleaning panic errors.
+var AllowPanic = false
+
 // TrapPanic recovers from any panic and more gracefully displays the
 // panic by logging it before exiting with a return value of 1.
 var TrapPanic = func() {
-	if r := recover(); r != nil {
-		log.Println(r)
-		os.Exit(1)
+	if !AllowPanic {
+		if r := recover(); r != nil {
+			log.Println(r)
+			os.Exit(1)
+		}
 	}
 }
