@@ -121,7 +121,7 @@ want the specific reasons.
   Bonzai command can provide its own completion algorithm or use one of
   the many already provided. Cobra can never do this.
 
-* **Corba is not designed to be a command compositor at all.**
+* **Cobra is not designed to be a command compositor at all.**
 
   This is really unfortunate because the designers missed a golden
   opportunity. Bonzai branches can be imported and composed into other
