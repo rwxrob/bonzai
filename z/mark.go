@@ -172,7 +172,7 @@ MAIN:
 	return blocks
 }
 
-// Mark renders BonzaiMark emphasis spans specifically for
+// Emph renders BonzaiMark emphasis spans specifically for
 // VT100-compatible terminals (which almost all are today):
 //
 //     *Italic*
@@ -283,6 +283,7 @@ func InWrap(in string) string {
 // optional emphasis (see Blocks and Emph) and applies IndentBy and
 // Columns wrapping to it.
 func Mark(in string) string {
+
 	if in == "" {
 		return ""
 	}

@@ -212,10 +212,14 @@ func (x *Cmd) Run() {
 	// default to first Command if no Call defined
 	if cmd.Call == nil {
 		if len(cmd.Commands) > 0 {
-			cmd = cmd.Commands[0]
-			if cmd.Call == nil {
+			fcmd := cmd.Commands[0]
+			if fcmd.Call == nil {
 				ExitError(fmt.Errorf("default commands require Call function"))
 			}
+			fcmd.Root = x
+			fcmd.Caller = cmd
+			fcmd.Conf = DefaultConfigurer
+			cmd = fcmd
 		} else {
 			ExitError(x.Unimplemented())
 		}
@@ -351,6 +355,8 @@ func (x *Cmd) IsHidden(name string) bool {
 
 func (x *Cmd) Seek(args []string) (*Cmd, []string) {
 	if args == nil || x.Commands == nil {
+		x.Root = x
+		x.Conf = DefaultConfigurer
 		return x, args
 	}
 	cur := x
@@ -386,8 +392,13 @@ func (x *Cmd) Branch() string {
 }
 
 // Q is a shorter version of x.Conf.Query(x.Root.Name,x.Branch()+"."+q)
-// for convenience.
+// for convenience. If Seek has not been called (setting Root on the
+// Cmd) then the current Cmd is assumed to be the Root instead and is
+// defined on the receiver.
 func (x *Cmd) Q(q string) string {
+	if x.Root == nil {
+		x.Root = x
+	}
 	return x.Conf.Query(x.Root.Name, "."+x.Branch()+"."+q)
 }
 

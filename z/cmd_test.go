@@ -7,7 +7,6 @@ import (
 	"fmt"
 	"os"
 
-	"github.com/rwxrob/bonzai/help"
 	Z "github.com/rwxrob/bonzai/z"
 )
 
@@ -63,12 +62,12 @@ func ExampleCmd_Seek() {
 	french := &Z.Cmd{
 		Name:     `french`,
 		Aliases:  []string{"fr"},
-		Commands: []*Z.Cmd{help.Cmd, salut},
+		Commands: []*Z.Cmd{salut},
 	}
 
 	greet := &Z.Cmd{
 		Name:     `greet`,
-		Commands: []*Z.Cmd{help.Cmd, yo, hi, hello, french},
+		Commands: []*Z.Cmd{yo, hi, hello, french},
 	}
 
 	cmd, args := greet.Seek(Z.ArgsFrom(`hi there`))
@@ -80,18 +79,10 @@ func ExampleCmd_Seek() {
 	cmd, args = greet.Seek(Z.ArgsFrom(`french salut `))
 	fmt.Printf("%v %q\n", cmd.Name, args)
 
-	cmd, args = greet.Seek(Z.ArgsFrom(`french h`))
-	fmt.Printf("%v %q\n", cmd.Name, args)
-
-	cmd, args = greet.Seek(Z.ArgsFrom(`french help`))
-	fmt.Printf("%v %q\n", cmd.Name, args)
-
 	// Output:
 	// hi ["there"]
 	// salut []
 	// salut [""]
-	// french ["h"]
-	// help []
 }
 
 func ExampleCmd_CmdNames() {

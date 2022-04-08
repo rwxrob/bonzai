@@ -63,6 +63,11 @@ func ExampleBlocks_numbered() {
 }
 
 func ExampleBlocks_paragraph() {
+
+	// defer func() { scan.Trace = 0 }()
+	// log.SetFlags(0)
+	// scan.Trace = 1
+
 	in := `
 			Simple paragraph
 			here on multiple

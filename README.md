@@ -346,6 +346,32 @@ want the specific reasons.
   This allows composition notation and ensures the author has control of
   how the Other sections appear.
 
+* **Move `help.Cmd` into its own package**
+
+  Although it breaks backward compatibility for many applications
+  updating between `v0.1` and `v0.2` the decision to put `help.Cmd` into
+  it's own Bonzai branch git repo was the right one. It is now on equal
+  footing with every other potential Bonzai branch and can keep its
+  `Version` in sync with Git version (as all Bonzai branches should). It
+  is highly likely that GUI/web/hybrid help commands will be preferred
+  by some and including one over another --- when not used --- ends up
+  just being unnecessary bloat. This also serves to clarify that the
+  legal information is related to that specific `help.Cmd` Bonzai branch
+  and not Bonzai itself. It's conceivable that another `help.Cmd`
+  creator may wish another legal agreement.
+
+* **Leave hidden default command params**
+
+  When the default command is invoked any of it's params will be
+  automatically passed as if the command specified them. But they are
+  not included in the tab completion. This is because there will
+  inevitably be conflicts between default command params and other
+  potential completions at that level for other commands. Rather than
+  disable this, or add tab completion, it was decided to keep them as a
+  useful shortcut side-effect without calling direct attention to them.
+  When and if dependencies on them become an issue it can be addressed
+  then.
+
 ## Style Guidelines
 
 * Everything through `go fmt` or equiv, no exceptions
