@@ -14,11 +14,11 @@ command.
 
 ## 🤚 TL;DR; 🛑
 
-Just want to see one? Check or clone the sample `foo` template:
+Check/clone sample `foo` template:
 
 👆 <https://github.com/rwxrob/foo>
 
-Or, have a look at the `z` monolith/multicall that started it all:
+Study the `z` monolith/multicall that started it all:
 
 👆 <https://github.com/rwxrob/z>
 
