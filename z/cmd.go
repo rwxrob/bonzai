@@ -4,11 +4,13 @@
 package Z
 
 import (
+	"bytes"
 	"fmt"
 	"log"
 	"os"
 	"strconv"
 	"strings"
+	"text/template"
 
 	"github.com/rwxrob/bonzai"
 	"github.com/rwxrob/bonzai/comp"
@@ -433,43 +435,58 @@ func (x *Cmd) Q(q string) string {
 	return Conf.Query(x.PathString() + "." + q)
 }
 
+// Fill fills out the passed text/template string using the Cmd instance
+// as the data object source for the template. It is called by the Get*
+// family of field accessors but can be called directly as well.
+func (x *Cmd) Fill(tmpl string) string {
+	t, err := template.New("t").Parse(tmpl)
+	if err != nil {
+		log.Println(err)
+	}
+	var buf bytes.Buffer
+	if err := t.Execute(&buf, x); err != nil {
+		log.Println(err)
+	}
+	return buf.String()
+}
+
 // --------------------- bonzai.Command interface ---------------------
 
 // GetName fulfills the bonzai.Command interface.
-func (x *Cmd) GetName() string { return x.Name }
+func (x *Cmd) GetName() string { return x.Fill(x.Name) }
 
 // GetTitle fulfills the bonzai.Command interface.
-func (x *Cmd) GetTitle() string { return x.Title() }
+func (x *Cmd) GetTitle() string { return x.Fill(x.Title()) }
 
 // GetAliases fulfills the bonzai.Command interface.
 func (x *Cmd) GetAliases() []string { return x.Aliases }
 
 // Summary fulfills the bonzai.Command interface.
-func (x *Cmd) GetSummary() string { return x.Summary }
+func (x *Cmd) GetSummary() string { return x.Fill(x.Summary) }
 
 // Usage fulfills the bonzai.Command interface.
-func (x *Cmd) GetUsage() string { return x.Usage }
+func (x *Cmd) GetUsage() string { return x.Fill(x.Usage) }
 
 // Version fulfills the bonzai.Command interface.
-func (x *Cmd) GetVersion() string { return x.Version }
+func (x *Cmd) GetVersion() string { return x.Fill(x.Version) }
 
 // Copyright fulfills the bonzai.Command interface.
-func (x *Cmd) GetCopyright() string { return x.Copyright }
+func (x *Cmd) GetCopyright() string { return x.Fill(x.Copyright) }
 
 // License fulfills the bonzai.Command interface.
-func (x *Cmd) GetLicense() string { return x.License }
+func (x *Cmd) GetLicense() string { return x.Fill(x.License) }
 
 // Description fulfills the bonzai.Command interface.
-func (x *Cmd) GetDescription() string { return x.Description }
+func (x *Cmd) GetDescription() string { return x.Fill(x.Description) }
 
 // Site fulfills the bonzai.Command interface.
-func (x *Cmd) GetSite() string { return x.Site }
+func (x *Cmd) GetSite() string { return x.Fill(x.Site) }
 
 // Source fulfills the bonzai.Command interface.
-func (x *Cmd) GetSource() string { return x.Source }
+func (x *Cmd) GetSource() string { return x.Fill(x.Source) }
 
 // Issues fulfills the bonzai.Command interface.
-func (x *Cmd) GetIssues() string { return x.Issues }
+func (x *Cmd) GetIssues() string { return x.Fill(x.Issues) }
 
 // MinArgs fulfills the bonzai.Command interface.
 func (x *Cmd) GetMinArgs() int { return x.MinArgs }
@@ -508,13 +525,20 @@ func (x *Cmd) GetParams() []string { return x.Params }
 func (x *Cmd) GetOther() []bonzai.Section {
 	var sections []bonzai.Section
 	for _, s := range x.Other {
+		s.Body = x.Fill(s.Body)
 		sections = append(sections, bonzai.Section(s))
 	}
 	return sections
 }
 
 // GetOtherTitles fulfills the bonzai.Command interface.
-func (x *Cmd) GetOtherTitles() []string { return x.OtherTitles() }
+func (x *Cmd) GetOtherTitles() []string {
+	var titles []string
+	for _, title := range x.OtherTitles() {
+		titles = append(titles, x.Fill(title))
+	}
+	return titles
+}
 
 // GetCompleter fulfills the Command interface.
 func (x *Cmd) GetCompleter() bonzai.Completer { return x.Completer }

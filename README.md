@@ -7,10 +7,10 @@ Card](https://goreportcard.com/badge/github.com/rwxrob/bonzai)](https://goreport
 
 Meticulously manicured monolith and multicall binaries, built from
 imported composite commands, on *any* device, with recursive,
-light-weight tab completion, and colorful embedded documentation from
-terminal or local web browser. Replace messy collections of shell
-scripts ported to clean Go code and compiled into a single, portable `z`
-command.
+light-weight tab completion, and colorful, rendered-templated
+documentation from terminal or local web browser. Replace messy
+collections of shell scripts ported to clean Go code and compiled into a
+single, portable `z` command.
 
 ## 🤚 TL;DR; 🛑
 
