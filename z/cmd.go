@@ -408,11 +408,12 @@ func (x *Cmd) Path() []string {
 	return path.Items()
 }
 
-// PathString returns a dotted notation of the Path. This is useful for
-// associating configuration and other data specifically with this
+// PathString returns a dotted notation of the Path including an initial
+// dot (for root). This is compatible yq query expressions and useful
+// for associating configuration and other data specifically with this
 // command.
 func (x *Cmd) PathString() string {
-	return strings.Join(x.Path(), ".")
+	return "." + strings.Join(x.Path(), ".")
 }
 
 // Log is currently short for log.Printf() but may be supplemented in
@@ -421,7 +422,7 @@ func (x *Cmd) Log(format string, a ...any) {
 	log.Printf(format, a...)
 }
 
-// Q is a shorter version of Z.Conf.Query(x.Path()+"."+q) for
+// Q is a shorter version of Z.Conf.Query(x.PathString()+"."+q) for
 // convenience. Logs the error and returns a blank string if Z.Conf is
 // not defined (see ReqConf).
 func (x *Cmd) Q(q string) string {

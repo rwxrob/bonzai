@@ -135,7 +135,7 @@ func ExampleCmd_PathString() {
 	z.Run()
 
 	// Output:
-	// some.thing.deep
+	// .some.thing.deep
 }
 
 func ExampleCmd_Names() {

@@ -24,6 +24,11 @@ package bonzai
 // to OverWrite will be marshalled to YAML and completely replace the
 // existing configuration in a way that must guarantee atomic,
 // system-wide write safety. (Locking a file is insufficient alone.)
+//
+// Query implementations must trim any initial or trailing white space
+// (usually just a single line return from yq, for example) in order to
+// ensure that the resulting values for edge matches can be used without
+// needing a trim.
 type Configurer interface {
 	Init() error              // must initialize a new configuration
 	Data() string             // must return full YAML
