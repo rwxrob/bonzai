@@ -5,6 +5,7 @@ package Z
 
 import (
 	"fmt"
+	"log"
 	"os"
 	"os/exec"
 	"syscall"
@@ -49,4 +50,23 @@ func Exec(args ...string) error {
 	cmd.Stdin = os.Stdin
 	cmd.Stderr = os.Stderr
 	return cmd.Run()
+}
+
+// Out returns the standard output of the executed command as
+// a string. Errors are logged but not returned.
+func Out(args ...string) string {
+	if len(args) == 0 {
+		log.Println("missing name of executable")
+		return ""
+	}
+	path, err := exec.LookPath(args[0])
+	if err != nil {
+		log.Println(err)
+		return ""
+	}
+	out, err := exec.Command(path, args[1:]...).Output()
+	if err != nil {
+		log.Println(err)
+	}
+	return string(out)
 }
