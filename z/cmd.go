@@ -40,12 +40,13 @@ type Cmd struct {
 	Completer bonzai.Completer `json:"-"`
 	UsageFunc bonzai.UsageFunc `json:"-"`
 
-	Caller  *Cmd   `json:"-"`
-	Call    Method `json:"-"`
-	MinArgs int    `json:"-"` // minimum number of args required (including parms)
-	MinParm int    `json:"-"` // minimum number of params required
-	MaxParm int    `json:"-"` // maximum number of params required
-	ReqConf bool   `json:"-"` // requires Z.Conf be assigned
+	Caller   *Cmd   `json:"-"`
+	Call     Method `json:"-"`
+	MinArgs  int    `json:"-"` // minimum number of args required (including parms)
+	MinParm  int    `json:"-"` // minimum number of params required
+	MaxParm  int    `json:"-"` // maximum number of params required
+	ReqConf  bool   `json:"-"` // requires Z.Conf be assigned
+	ReqCache bool   `json:"-"` // requires Z.Cache be assigned
 
 	_aliases  map[string]*Cmd   // see cacheAliases called from Run->Seek->Resolve
 	_sections map[string]string // see cacheSections called from Run
@@ -236,6 +237,10 @@ func (x *Cmd) Run() {
 		ExitError(cmd.ReqConfError())
 	}
 
+	if x.ReqCache && Cache == nil {
+		ExitError(cmd.ReqCacheError())
+	}
+
 	// delegate
 	if cmd.Caller == nil {
 		cmd.Caller = x
@@ -260,12 +265,19 @@ func (x *Cmd) UsageError() error {
 }
 
 // ReqConfError returns stating that the given command requires that
-// Z.Conf be set to something besides null. This is primarily for
-// those composing commands that import a given command to help the
-// develop know about the dependency.
+// Z.Conf be set to something besides null.
 func (x *Cmd) ReqConfError() error {
 	return fmt.Errorf(
 		"cmd %q requires a configurer (Z.Conf must be assigned)",
+		x.Name,
+	)
+}
+
+// ReqCacheError returns stating that the given command requires that
+// Z.Cache be set to something besides null.
+func (x *Cmd) ReqCacheError() error {
+	return fmt.Errorf(
+		"cmd %q requires cached variables (Z.Cache must be assigned)",
 		x.Name,
 	)
 }
@@ -499,6 +511,9 @@ func (x *Cmd) GetMaxParm() int { return x.MaxParm }
 
 // ReqConf fulfills the bonzai.Command interface.
 func (x *Cmd) GetReqConf() bool { return x.ReqConf }
+
+// ReqCache fulfills the bonzai.Command interface.
+func (x *Cmd) GetReqCache() bool { return x.ReqCache }
 
 // UsageFunc fulfills the bonzai.Command interface.
 func (x *Cmd) GetUsageFunc() bonzai.UsageFunc { return x.UsageFunc }

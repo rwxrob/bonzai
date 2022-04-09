@@ -69,7 +69,7 @@ var Commands map[string][]any
 // later time during runtime. Certain Bonzai branches and commands may
 // require Z.Conf to be defined and those that do generally require the
 // same implementation throughout all of runtime. Commands that require
-// Z.Conf should set ReqConfig to true. Other than the exceptional case
+// Z.Conf should set ReqConf to true. Other than the exceptional case
 // of configuration commands that fulfill bonzai.Configurer (and usually
 // assign themselves to Z.Conf at init() time), commands must never
 // require a specific implementation of bonzai.Configurer.  This
@@ -80,6 +80,23 @@ var Commands map[string][]any
 // simply need to be recompiled with a different bonzai.Configurer
 // implementation to switch everything that depends on configuration.
 var Conf bonzai.Configurer
+
+// Cache may be optionally assigned any implementation of
+// a bonzai.CacheMap. Once assigned it should not be reassigned at any
+// later time during runtime. Certain Bonzai branches and commands may
+// require Z.Cache to be defined and those that do generally require the
+// same implementation throughout all of runtime. Commands that require
+// Z.Cache should set ReqCache to true. Other than the exceptional case
+// of configuration commands that fulfill bonzai.CacheMap (and usually
+// assign themselves to Z.Cache at init() time), commands must never
+// require a specific implementation of bonzai.Cache.  This
+// encourages command creators and Bonzai tree composers to centralize
+// on a single form of caching without creating brittle
+// dependencies and tight coupling. Caching persistence can be
+// implemented in any number of ways without a problem and Bonzai trees
+// simply need to be recompiled with a different bonzai.CachMap
+// implementation to switch everything that depends on cached variables.
+var Cache bonzai.CacheMap
 
 // UsageText is used for one-line UsageErrors. It's exported to allow
 // for different languages.
