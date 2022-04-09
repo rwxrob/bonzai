@@ -45,7 +45,7 @@ type Cmd struct {
 	MaxParm int    `json:"-"` // maximum number of params required
 	ReqConf bool   `json:"-"` // requires Z.Conf be assigned
 
-	_aliases  map[string]*Cmd   // see cacheAliases called from Run
+	_aliases  map[string]*Cmd   // see cacheAliases called from Run->Seek->Resolve
 	_sections map[string]string // see cacheSections called from Run
 }
 
@@ -167,7 +167,6 @@ func (x *Cmd) cacheSections() {
 func (x *Cmd) Run() {
 	defer TrapPanic()
 
-	x.cacheAliases()
 	x.cacheSections()
 
 	// resolve Z.Aliases (if completion didn't replace them)
@@ -183,6 +182,7 @@ func (x *Cmd) Run() {
 
 	// bash completion context
 	line := os.Getenv("COMP_LINE")
+
 	if line != "" {
 		var list []string
 		lineargs := ArgsFrom(line)
@@ -207,6 +207,7 @@ func (x *Cmd) Run() {
 
 	// seek should never fail to return something, but ...
 	cmd, args := x.Seek(os.Args[1:])
+
 	if cmd == nil {
 		ExitError(x.UsageError())
 	}
@@ -290,16 +291,24 @@ func (x *Cmd) Add(name string, aliases ...string) *Cmd {
 	return c
 }
 
-// Resolve looks up a given Command by name or name from Aliases.
+// Resolve looks up a given Command by name or alias from Aliases
+// (caching a lookup map of aliases in the process).
 func (x *Cmd) Resolve(name string) *Cmd {
+
 	if x.Commands == nil {
 		return nil
 	}
+
 	for _, c := range x.Commands {
 		if name == c.Name {
 			return c
 		}
 	}
+
+	if x._aliases == nil {
+		x.cacheAliases()
+	}
+
 	if c, has := x._aliases[name]; has {
 		return c
 	}
