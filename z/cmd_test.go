@@ -244,5 +244,4 @@ func ExampleCmd_UsageCmdTitles() {
 	// f|foo - foo the things
 	// bar   - bar the things
 	// nosum
-
 }
