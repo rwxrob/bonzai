@@ -113,7 +113,7 @@ func ExampleCmd_GetParams() {
 	// [box bing and]
 }
 
-func ExampleCmd_PathString() {
+func ExampleCmd_Path() {
 	Z.ExitOff()
 
 	z := new(Z.Cmd)
@@ -125,7 +125,7 @@ func ExampleCmd_PathString() {
 	//fmt.Print(z.Commands[0].Commands[0].Commands[0].Name)
 
 	c.Call = func(x *Z.Cmd, _ ...string) error {
-		fmt.Println(x.PathString())
+		fmt.Println(x.Path())
 		return nil
 	}
 

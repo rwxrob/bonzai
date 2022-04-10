@@ -41,13 +41,13 @@ type Cmd struct {
 	Completer bonzai.Completer `json:"-"`
 	UsageFunc bonzai.UsageFunc `json:"-"`
 
-	Caller   *Cmd   `json:"-"`
-	Call     Method `json:"-"`
-	MinArgs  int    `json:"-"` // minimum number of args required (including parms)
-	MinParm  int    `json:"-"` // minimum number of params required
-	MaxParm  int    `json:"-"` // maximum number of params required
-	ReqConf  bool   `json:"-"` // requires Z.Conf be assigned
-	ReqCache bool   `json:"-"` // requires Z.Cache be assigned
+	Caller  *Cmd   `json:"-"`
+	Call    Method `json:"-"`
+	MinArgs int    `json:"-"` // minimum number of args required (including parms)
+	MinParm int    `json:"-"` // minimum number of params required
+	MaxParm int    `json:"-"` // maximum number of params required
+	ReqConf bool   `json:"-"` // requires Z.Conf be assigned
+	ReqVars bool   `json:"-"` // requires Z.Var be assigned
 
 	Dynamic template.FuncMap `json:"-"` // dynamic attributes
 
@@ -109,27 +109,39 @@ func (x *Cmd) Title() string {
 	}
 }
 
-// Legal returns a single line with the combined values of the
+// GetLegal returns a single line with the combined values of the
 // Name, Version, Copyright, and License. If Version is empty or nil an
-// empty string is returned instead. Legal() is used by the
+// empty string is returned instead. GetLegal() is used by the
 // version builtin command to aggregate all the version information into
 // a single output.
-func (x *Cmd) Legal() string {
+func (x *Cmd) GetLegal() string {
+
+	copyright := x.GetCopyright()
+	license := x.GetLicense()
+	version := x.GetVersion()
+
 	switch {
-	case len(x.Copyright) > 0 && len(x.License) == 0 && len(x.Version) == 0:
-		return x.Name + " " + x.Copyright
-	case len(x.Copyright) > 0 && len(x.License) > 0 && len(x.Version) > 0:
-		return x.Name + " (" + x.Version + ") " +
-			x.Copyright + "\nLicense " + x.License
-	case len(x.Copyright) > 0 && len(x.License) > 0:
-		return x.Name + " " + x.Copyright + "\nLicense " + x.License
-	case len(x.Copyright) > 0 && len(x.Version) > 0:
-		return x.Name + " (" + x.Version + ") " + x.Copyright
-	case len(x.Copyright) > 0:
-		return x.Name + "\n" + x.Copyright
+
+	case len(copyright) > 0 && len(license) == 0 && len(version) == 0:
+		return x.Name + " " + copyright
+
+	case len(copyright) > 0 && len(license) > 0 && len(version) > 0:
+		return x.Name + " (" + version + ") " +
+			copyright + "\nLicense " + license
+
+	case len(copyright) > 0 && len(license) > 0:
+		return x.Name + " " + copyright + "\nLicense " + license
+
+	case len(copyright) > 0 && len(version) > 0:
+		return x.Name + " (" + version + ") " + copyright
+
+	case len(copyright) > 0:
+		return x.Name + "\n" + copyright
+
 	default:
 		return ""
 	}
+
 }
 
 // OtherTitles returns just the ordered titles from Other.
@@ -240,8 +252,8 @@ func (x *Cmd) Run() {
 		ExitError(cmd.ReqConfError())
 	}
 
-	if x.ReqCache && Cache == nil {
-		ExitError(cmd.ReqCacheError())
+	if x.ReqVars && Vars == nil {
+		ExitError(cmd.ReqVarsError())
 	}
 
 	// delegate
@@ -276,11 +288,11 @@ func (x *Cmd) ReqConfError() error {
 	)
 }
 
-// ReqCacheError returns stating that the given command requires that
-// Z.Cache be set to something besides null.
-func (x *Cmd) ReqCacheError() error {
+// ReqVarsError returns stating that the given command requires that
+// Z.Vars be set to something besides null.
+func (x *Cmd) ReqVarsError() error {
 	return fmt.Errorf(
-		"cmd %q requires cached variables (Z.Cache must be assigned)",
+		"cmd %q requires cached variables (Z.Vars must be assigned)",
 		x.Name,
 	)
 }
@@ -293,7 +305,7 @@ func (x *Cmd) Unimplemented() error {
 // MissingConfig returns an error showing the expected configuration
 // entry that is missing from the given path.
 func (x *Cmd) MissingConfig(path string) error {
-	return fmt.Errorf("missing config: %v", x.PathString()+"."+path)
+	return fmt.Errorf("missing config: %v", x.Path()+"."+path)
 }
 
 // Add creates a new Cmd and sets the name and aliases and adds to
@@ -353,7 +365,7 @@ func (x *Cmd) UsageCmdTitles() string {
 	var summaries []string
 	for _, c := range x.Commands {
 		set = append(set, strings.Join(c.Names(), "|"))
-		summaries = append(summaries, c.Summary)
+		summaries = append(summaries, c.GetSummary())
 	}
 	longest := redu.Longest(set)
 	var buf string
@@ -394,6 +406,9 @@ func (x *Cmd) IsHidden(name string) bool {
 	return false
 }
 
+// Seek checks the args for command names returning the deepest along
+// with the remaining arguments. Typically the args passed are directly
+// from the command line.
 func (x *Cmd) Seek(args []string) (*Cmd, []string) {
 	if args == nil || x.Commands == nil {
 		return x, args
@@ -411,11 +426,11 @@ func (x *Cmd) Seek(args []string) (*Cmd, []string) {
 	return cur, args[n:]
 }
 
-// Path returns the path of command names used to arrive at this
+// PathNames returns the path of command names used to arrive at this
 // command. The path is determined by walking backward from current
 // Caller up rather than depending on anything from the command line
-// used to invoke the composing binary. Also see PathString.
-func (x *Cmd) Path() []string {
+// used to invoke the composing binary. Also see Path.
+func (x *Cmd) PathNames() []string {
 	path := qstack.New[string]()
 	path.Unshift(x.Name)
 	for p := x.Caller; p != nil; p = p.Caller {
@@ -425,12 +440,12 @@ func (x *Cmd) Path() []string {
 	return path.Items()
 }
 
-// PathString returns a dotted notation of the Path including an initial
+// Path returns a dotted notation of the PathNames including an initial
 // dot (for root). This is compatible yq query expressions and useful
 // for associating configuration and other data specifically with this
 // command.
-func (x *Cmd) PathString() string {
-	return "." + strings.Join(x.Path(), ".")
+func (x *Cmd) Path() string {
+	return "." + strings.Join(x.PathNames(), ".")
 }
 
 // Log is currently short for log.Printf() but may be supplemented in
@@ -439,7 +454,7 @@ func (x *Cmd) Log(format string, a ...any) {
 	log.Printf(format, a...)
 }
 
-// Q is a shorter version of Z.Conf.Query(x.PathString()+"."+q) for
+// Q is a shorter version of Z.Conf.Query(x.Path()+"."+q) for
 // convenience. Logs the error and returns a blank string if Z.Conf is
 // not defined (see ReqConf).
 func (x *Cmd) Q(q string) string {
@@ -447,12 +462,13 @@ func (x *Cmd) Q(q string) string {
 		log.Printf("cmd %q requires a configurer (Z.Conf must be assigned)", x.Name)
 		return ""
 	}
-	return Conf.Query(x.PathString() + "." + q)
+	return Conf.Query(x.Path() + "." + q)
 }
 
 // Fill fills out the passed text/template string using the Cmd instance
 // as the data object source for the template. It is called by the Get*
-// family of field accessors but can be called directly as well.
+// family of field accessors but can be called directly as well. Also
+// see markfunc.go for list of predefined template functions.
 func (x *Cmd) Fill(tmpl string) string {
 	funcs := to.MergedMaps(markFuncMap, x.Dynamic)
 	t, err := template.New("t").Funcs(funcs).Parse(tmpl)
@@ -468,58 +484,58 @@ func (x *Cmd) Fill(tmpl string) string {
 
 // --------------------- bonzai.Command interface ---------------------
 
-// GetName fulfills the bonzai.Command interface.
+// GetName fulfills the bonzai.Command interface. Uses Fill.
 func (x *Cmd) GetName() string { return x.Fill(x.Name) }
 
-// GetTitle fulfills the bonzai.Command interface.
+// GetTitle fulfills the bonzai.Command interface. Uses Fill.
 func (x *Cmd) GetTitle() string { return x.Fill(x.Title()) }
 
-// GetAliases fulfills the bonzai.Command interface.
+// GetAliases fulfills the bonzai.Command interface. No Fill.
 func (x *Cmd) GetAliases() []string { return x.Aliases }
 
-// Summary fulfills the bonzai.Command interface.
+// GetSummary fulfills the bonzai.Command interface. Uses Fill.
 func (x *Cmd) GetSummary() string { return x.Fill(x.Summary) }
 
-// Usage fulfills the bonzai.Command interface.
+// GetUsage fulfills the bonzai.Command interface. Uses Fill.
 func (x *Cmd) GetUsage() string { return x.Fill(x.Usage) }
 
-// Version fulfills the bonzai.Command interface.
+// GetVersion fulfills the bonzai.Command interface. Uses Fill.
 func (x *Cmd) GetVersion() string { return x.Fill(x.Version) }
 
-// Copyright fulfills the bonzai.Command interface.
+// GetCopyright fulfills the bonzai.Command interface. Uses Fill.
 func (x *Cmd) GetCopyright() string { return x.Fill(x.Copyright) }
 
-// License fulfills the bonzai.Command interface.
+// GetLicense fulfills the bonzai.Command interface. Uses Fill.
 func (x *Cmd) GetLicense() string { return x.Fill(x.License) }
 
-// Description fulfills the bonzai.Command interface.
+// GetDescription fulfills the bonzai.Command interface. Uses Fill.
 func (x *Cmd) GetDescription() string { return x.Fill(x.Description) }
 
-// Site fulfills the bonzai.Command interface.
+// GetSite fulfills the bonzai.Command interface. Uses Fill.
 func (x *Cmd) GetSite() string { return x.Fill(x.Site) }
 
-// Source fulfills the bonzai.Command interface.
+// GetSource fulfills the bonzai.Command interface. Uses Fill.
 func (x *Cmd) GetSource() string { return x.Fill(x.Source) }
 
-// Issues fulfills the bonzai.Command interface.
+// GetIssues fulfills the bonzai.Command interface. Uses Fill.
 func (x *Cmd) GetIssues() string { return x.Fill(x.Issues) }
 
-// MinArgs fulfills the bonzai.Command interface.
+// GetMinArgs fulfills the bonzai.Command interface. No Fill.
 func (x *Cmd) GetMinArgs() int { return x.MinArgs }
 
-// MinParm fulfills the bonzai.Command interface.
+// GetMinParm fulfills the bonzai.Command interface. No Fill.
 func (x *Cmd) GetMinParm() int { return x.MinParm }
 
-// MaxParm fulfills the bonzai.Command interface.
+// GetMaxParm fulfills the bonzai.Command interface. No Fill.
 func (x *Cmd) GetMaxParm() int { return x.MaxParm }
 
-// ReqConf fulfills the bonzai.Command interface.
+// GetReqConf fulfills the bonzai.Command interface. No Fill.
 func (x *Cmd) GetReqConf() bool { return x.ReqConf }
 
-// ReqCache fulfills the bonzai.Command interface.
-func (x *Cmd) GetReqCache() bool { return x.ReqCache }
+// GetReqVars fulfills the bonzai.Command interface. No Fill.
+func (x *Cmd) GetReqVars() bool { return x.ReqVars }
 
-// UsageFunc fulfills the bonzai.Command interface.
+// GetUsageFunc fulfills the bonzai.Command interface. No Fill.
 func (x *Cmd) GetUsageFunc() bonzai.UsageFunc { return x.UsageFunc }
 
 // GetCommands fulfills the bonzai.Command interface.
@@ -531,7 +547,7 @@ func (x *Cmd) GetCommands() []bonzai.Command {
 	return commands
 }
 
-// GetCommandNames fulfills the bonzai.Command interface.
+// GetCommandNames fulfills the bonzai.Command interface. No Fill.
 func (x *Cmd) GetCommandNames() []string { return x.CmdNames() }
 
 // GetHidden fulfills the bonzai.Command interface.
@@ -540,7 +556,7 @@ func (x *Cmd) GetHidden() []string { return x.Hidden }
 // GetParams fulfills the bonzai.Command interface.
 func (x *Cmd) GetParams() []string { return x.Params }
 
-// GetOther fulfills the bonzai.Command interface.
+// GetOther fulfills the bonzai.Command interface. Uses Fill.
 func (x *Cmd) GetOther() []bonzai.Section {
 	var sections []bonzai.Section
 	for _, s := range x.Other {
@@ -550,11 +566,11 @@ func (x *Cmd) GetOther() []bonzai.Section {
 	return sections
 }
 
-// GetOtherTitles fulfills the bonzai.Command interface.
+// GetOtherTitles fulfills the bonzai.Command interface. No Fill.
 func (x *Cmd) GetOtherTitles() []string {
 	var titles []string
 	for _, title := range x.OtherTitles() {
-		titles = append(titles, x.Fill(title))
+		titles = append(titles, title)
 	}
 	return titles
 }

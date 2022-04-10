@@ -39,20 +39,18 @@ type Configurer interface {
 	QueryPrint(q string)      // prints result to os.Stdout
 }
 
-// CacheMap specifies how to persist (cache) variable state data,
-// key-value combinations of strings with their own types. Types should
-// be strings that are easy to understand, although internally they
-// should probably be implemented as integers for performance.
-// Implementations of CacheMap can persist to disk (Protobuf, etc.) or
-// to network storage, or to cloud databases (Redis, etc.)
+// CacheMap specifies how to persist (cache) simple string key/value
+// data. Implementations of CacheMap can persist in different ways,
+// files, network storage, or cloud databases, etc. Must log errors
+// rather than panic (unavailable source, etc.)
 type CacheMap interface {
-	Var(key, typ string)
-	Type(key string) string
-	Get(key string) string
-	Set(key, val string)
-	Del(key string)
-	String() string // YAML key: value
-	Print()         // print YAML
+	Init() error                 // initialize completely new cache
+	Data() string                // k=v with \r and \n escaped in v
+	Print()                      // (printed)
+	Get(key string) string       // accessor
+	Set(key, val string) error   // mutator
+	Del(key string)              // destroyer
+	OverWrite(with string) error // safely replace all cache
 }
 
 // Completer defines a function to complete the given leaf Command with
@@ -97,7 +95,7 @@ type Command interface {
 	GetMinParm() int
 	GetMaxParm() int
 	GetReqConf() bool
-	GetReqCache() bool
+	GetReqVars() bool
 	GetUsageFunc() UsageFunc
 }
 
