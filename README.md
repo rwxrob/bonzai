@@ -371,6 +371,13 @@ want the specific reasons.
   When and if dependencies on them become an issue it can be addressed
   then.
 
+* **Not exporting Dynamic FuncMap builtins**
+
+  Since those builtins will land in `mark` subpackage eventually, don't
+  want to build any dependencies on them now that will break. The
+  builtins themselves can obviously be used immediately and has a much
+  smaller chance of changing in the future.
+
 ## Style Guidelines
 
 * Everything through `go fmt` or equiv, no exceptions

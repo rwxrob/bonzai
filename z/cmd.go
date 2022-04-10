@@ -18,6 +18,7 @@ import (
 	"github.com/rwxrob/fn/maps"
 	"github.com/rwxrob/fn/redu"
 	"github.com/rwxrob/structs/qstack"
+	"github.com/rwxrob/to"
 )
 
 type Cmd struct {
@@ -47,7 +48,8 @@ type Cmd struct {
 	MaxParm  int    `json:"-"` // maximum number of params required
 	ReqConf  bool   `json:"-"` // requires Z.Conf be assigned
 	ReqCache bool   `json:"-"` // requires Z.Cache be assigned
-	Dynamic  DynMap `json:"-"` // dynamic attributes
+
+	Dynamic template.FuncMap `json:"-"` // dynamic attributes
 
 	_aliases  map[string]*Cmd   // see cacheAliases called from Run->Seek->Resolve
 	_sections map[string]string // see cacheSections called from Run
@@ -59,26 +61,6 @@ type Cmd struct {
 type Section struct {
 	Title string
 	Body  string
-}
-
-// DynMap is a key value map of Dyn functions.
-type DynMap map[string]DynFunc
-
-// DynFunc is a dynamic attribute that evaluated and returned at runtime.
-// Access them from Cmd.Dyn[<name>]. They are slower to access so don't
-// abuse them.
-type DynFunc func(x *Cmd) string
-
-// Dyn returns the output of the DynFunc value for the give key from the
-// Cmd.Dynamic DynMap if not nil. Returns empty string otherwise.
-func (x *Cmd) Dyn(key string) string {
-	if x.Dynamic == nil {
-		return ""
-	}
-	if v, has := x.Dynamic[key]; has {
-		return v(x)
-	}
-	return ""
 }
 
 func (s Section) GetTitle() string { return s.Title }
@@ -472,7 +454,8 @@ func (x *Cmd) Q(q string) string {
 // as the data object source for the template. It is called by the Get*
 // family of field accessors but can be called directly as well.
 func (x *Cmd) Fill(tmpl string) string {
-	t, err := template.New("t").Parse(tmpl)
+	funcs := to.MergedMaps(markFuncMap, x.Dynamic)
+	t, err := template.New("t").Funcs(funcs).Parse(tmpl)
 	if err != nil {
 		log.Println(err)
 	}
