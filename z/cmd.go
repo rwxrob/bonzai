@@ -37,7 +37,7 @@ type Cmd struct {
 	// run-time additions to main documentation (ex: {{ exename }})
 	Dynamic template.FuncMap `json:"-"`
 
-	// administrative, used for auto updates, pushing releases
+	// administrative URLs, "https://" assumed
 	Site   string `json:"site,omitempty"`   // template, landing page
 	Source string `json:"source,omitempty"` // template, usually git url
 	Issues string `json:"issues,omitempty"` // template, have an issue
