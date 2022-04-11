@@ -98,10 +98,6 @@ var Conf bonzai.Configurer
 // implementation to switch everything that depends on cached variables.
 var Vars bonzai.CacheMap
 
-// UsageText is used for one-line UsageErrors. It's exported to allow
-// for different languages.
-var UsageText = `usage`
-
 // UsageFunc is the default first-class function called if a Cmd that
 // does not already define its own when usage information is needed (see
 // bonzai.UsageFunc and Cmd.UsageError for more). By default,
@@ -110,10 +106,7 @@ var UsageText = `usage`
 // It is used to return a usage summary. Generally, it should only
 // return a single line (even if that line is very long).  Developers
 // are encouraged to refer users to their chosen help command rather
-// than producing usually long usage lines. If only the word "usage"
-// needs to be changed (for a given language) consider UsageText
-// instead. Note that most developers will simply change the Usage
-// string when they do not want the default inferred usage string.
+// than producing usually long usage lines.
 var UsageFunc = InferredUsage
 
 // InferredUsage returns a single line of text summarizing only the

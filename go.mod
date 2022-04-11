@@ -8,7 +8,7 @@ require (
 	github.com/rwxrob/scan v0.6.1
 	github.com/rwxrob/structs v0.5.1
 	github.com/rwxrob/term v0.2.6
-	github.com/rwxrob/to v0.4.6
+	github.com/rwxrob/to v0.5.2
 )
 
 require (

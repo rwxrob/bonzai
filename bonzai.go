@@ -96,14 +96,4 @@ type Command interface {
 	GetMaxParm() int
 	GetReqConf() bool
 	GetReqVars() bool
-	GetUsageFunc() UsageFunc
 }
-
-// UsageFunc allows dynamic creation of usage strings for interactive
-// help and error messages. Every Z.Cmd has one as does the Z package
-// itself (which defaults to InferredUsage). The Z package version is
-// used with a Cmd has not assigned its own. UsageFunc should take the
-// Command interface as the only argument, but it is acceptable for Cmd
-// implementations to cast the Command passed to a specific Cmd to give
-// that implementation access to rest of the Cmd symbol scope.
-type UsageFunc func(x Command) string

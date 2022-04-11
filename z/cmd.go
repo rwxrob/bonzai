@@ -37,10 +37,10 @@ type Cmd struct {
 	// run-time additions to main documentation (ex: {{ exename }})
 	Dynamic template.FuncMap `json:"-"`
 
-	// administrative URLs, "https://" assumed
-	Site   string `json:"site,omitempty"`   // template, landing page
+	// administrative URLs
+	Site   string `json:"site,omitempty"`   // template, https:// assumed
 	Source string `json:"source,omitempty"` // template, usually git url
-	Issues string `json:"issues,omitempty"` // template, have an issue
+	Issues string `json:"issues,omitempty"` // template, https:// assumed
 
 	// descending tree, completable
 	Commands []*Cmd   `json:"commands,omitempty"`
@@ -277,17 +277,9 @@ func (x *Cmd) Run() {
 	Exit()
 }
 
-// UsageError returns an error with a single-line usage string. The word
-// "usage" can be changed by assigning Z.UsageText to something else.
-// The commands own UsageFunc will be used if defined. If undefined, the
-// Z.UsageFunc will be used instead (which can also be assigned
-// to something else if needed).
+// UsageError returns an error with a single-line usage string.
 func (x *Cmd) UsageError() error {
-	usage := x.UsageFunc
-	if usage == nil {
-		usage = UsageFunc
-	}
-	return fmt.Errorf("%v: %v %v", UsageText, x.Name, usage(x))
+	return fmt.Errorf("usage: %v %v", x.Name, UsageFunc(x))
 }
 
 // ReqConfError returns stating that the given command requires that
@@ -545,9 +537,6 @@ func (x *Cmd) GetReqConf() bool { return x.ReqConf }
 
 // GetReqVars fulfills the bonzai.Command interface. No Fill.
 func (x *Cmd) GetReqVars() bool { return x.ReqVars }
-
-// GetUsageFunc fulfills the bonzai.Command interface. No Fill.
-func (x *Cmd) GetUsageFunc() bonzai.UsageFunc { return x.UsageFunc }
 
 // GetCommands fulfills the bonzai.Command interface.
 func (x *Cmd) GetCommands() []bonzai.Command {
