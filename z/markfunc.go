@@ -5,6 +5,7 @@ import (
 	"path/filepath"
 	"text/template"
 
+	"github.com/rwxrob/term"
 	"github.com/rwxrob/to"
 )
 
@@ -13,7 +14,17 @@ import (
 // allowed.
 
 var markFuncMap = template.FuncMap{
-	"indent":      indent,
+
+	// semantic
+	"exe": func(a string) string { return term.Under + a + term.Reset },
+	"pkg": func(a string) string { return term.Bold + a + term.Reset },
+	"cmd": func(a string) string { return term.Bold + a + term.Reset },
+
+	// stylistic
+	"indent": indent,
+	"pre":    func(a string) string { return term.Under + a + term.Reset },
+
+	// host system information
 	"exepath":     exepath,
 	"exename":     exename,
 	"execachedir": execachedir,

@@ -277,6 +277,17 @@ func (x *Cmd) Run() {
 	Exit()
 }
 
+// Root returns the root Cmd from the current Path. This must always be
+// calculated every time since any Cmd can change positions and
+// pedigrees at any time at run time. Returns self if no PathCmds found.
+func (x *Cmd) Root() *Cmd {
+	cmds := x.PathCmds()
+	if len(cmds) > 0 {
+		return cmds[0].Caller
+	}
+	return x.Caller
+}
+
 // UsageError returns an error with a single-line usage string.
 func (x *Cmd) UsageError() error {
 	return fmt.Errorf("usage: %v %v", x.Name, UsageFunc(x))
@@ -427,6 +438,20 @@ func (x *Cmd) Seek(args []string) (*Cmd, []string) {
 		cur = next
 	}
 	return cur, args[n:]
+}
+
+// PathCmds returns the path of commands used to arrive at this
+// command. The path is determined by walking backward from current
+// Caller up rather than depending on anything from the command line
+// used to invoke the composing binary. Also see Path, PathNames.
+func (x *Cmd) PathCmds() []*Cmd {
+	path := qstack.New[*Cmd]()
+	path.Unshift(x)
+	for p := x.Caller; p != nil; p = p.Caller {
+		path.Unshift(p)
+	}
+	path.Shift()
+	return path.Items()
 }
 
 // PathNames returns the path of command names used to arrive at this
