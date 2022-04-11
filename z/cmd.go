@@ -22,34 +22,47 @@ import (
 )
 
 type Cmd struct {
-	Name        string    `json:"name,omitempty"`
-	Aliases     []string  `json:"aliases,omitempty"`
-	Summary     string    `json:"summary,omitempty"`
-	Usage       string    `json:"usage,omitempty"`
-	Version     string    `json:"version,omitempty"`
-	Copyright   string    `json:"copyright,omitempty"`
-	License     string    `json:"license,omitempty"`
-	Description string    `json:"description,omitempty"`
-	Site        string    `json:"site,omitempty"`
-	Source      string    `json:"source,omitempty"`
-	Issues      string    `json:"issues,omitempty"`
-	Commands    []*Cmd    `json:"commands,omitempty"`
-	Params      []string  `json:"params,omitempty"`
-	Hidden      []string  `json:"hidden,omitempty"`
-	Other       []Section `json:"other,omitempty"`
 
+	// main documentation, use Get* for filled template
+	Name        string    `json:"name,omitempty"`        // plain
+	Aliases     []string  `json:"aliases,omitempty"`     // plain
+	Summary     string    `json:"summary,omitempty"`     // template
+	Usage       string    `json:"usage,omitempty"`       // template
+	Version     string    `json:"version,omitempty"`     // template
+	Copyright   string    `json:"copyright,omitempty"`   // template
+	License     string    `json:"license,omitempty"`     // template
+	Description string    `json:"description,omitempty"` // template
+	Other       []Section `json:"other,omitempty"`       // template
+
+	// run-time additions to main documentation (ex: {{ exename }})
+	Dynamic template.FuncMap `json:"-"`
+
+	// administrative, used for auto updates, pushing releases
+	Site   string `json:"site,omitempty"`   // template, landing page
+	Source string `json:"source,omitempty"` // template, usually git url
+	Issues string `json:"issues,omitempty"` // template, have an issue
+
+	// descending tree, completable
+	Commands []*Cmd   `json:"commands,omitempty"`
+	Params   []string `json:"params,omitempty"`
+	Hidden   []string `json:"hidden,omitempty"`
+
+	// standard or custom completer
 	Completer bonzai.Completer `json:"-"`
-	UsageFunc bonzai.UsageFunc `json:"-"`
 
-	Caller  *Cmd   `json:"-"`
-	Call    Method `json:"-"`
-	MinArgs int    `json:"-"` // minimum number of args required (including parms)
-	MinParm int    `json:"-"` // minimum number of params required
-	MaxParm int    `json:"-"` // maximum number of params required
-	ReqConf bool   `json:"-"` // requires Z.Conf be assigned
-	ReqVars bool   `json:"-"` // requires Z.Var be assigned
+	// where the work happens
+	Caller *Cmd   `json:"-"`
+	Call   Method `json:"-"`
 
-	Dynamic template.FuncMap `json:"-"` // dynamic attributes
+	// faster than lots of "if" in Call
+	MinArgs int  `json:"-"` // minimum number of args required (including parms)
+	MinParm int  `json:"-"` // minimum number of params required
+	MaxParm int  `json:"-"` // maximum number of params required
+	ReqConf bool `json:"-"` // requires Z.Conf be assigned
+	ReqVars bool `json:"-"` // requires Z.Var be assigned
+
+	// DEPRECATED
+	UsageFunc bonzai.UsageFunc `json:"-"` // use {{ usage }} instead
 
 	_aliases  map[string]*Cmd   // see cacheAliases called from Run->Seek->Resolve
 	_sections map[string]string // see cacheSections called from Run
@@ -96,14 +109,15 @@ func (x *Cmd) UsageCmdNames() string {
 
 // Title returns a dynamic field of Name and Summary combined (if
 // exists). If the Name field of the commands is not defined will return
-// a "{ERROR}".
+// a "{ERROR}". Fills template for Summary.
 func (x *Cmd) Title() string {
 	if x.Name == "" {
 		return "{ERROR: Name is empty}"
 	}
+	summary := x.GetSummary()
 	switch {
-	case len(x.Summary) > 0:
-		return x.Name + " - " + x.Summary
+	case len(summary) > 0:
+		return x.Name + " - " + summary
 	default:
 		return x.Name
 	}
@@ -484,11 +498,11 @@ func (x *Cmd) Fill(tmpl string) string {
 
 // --------------------- bonzai.Command interface ---------------------
 
-// GetName fulfills the bonzai.Command interface. Uses Fill.
-func (x *Cmd) GetName() string { return x.Fill(x.Name) }
+// GetName fulfills the bonzai.Command interface. No Fill.
+func (x *Cmd) GetName() string { return x.Name }
 
-// GetTitle fulfills the bonzai.Command interface. Uses Fill.
-func (x *Cmd) GetTitle() string { return x.Fill(x.Title()) }
+// GetTitle fulfills the bonzai.Command interface. No Fill.
+func (x *Cmd) GetTitle() string { return x.Title() }
 
 // GetAliases fulfills the bonzai.Command interface. No Fill.
 func (x *Cmd) GetAliases() []string { return x.Aliases }
