@@ -457,15 +457,49 @@ func (x *Cmd) Log(format string, a ...any) {
 	log.Printf(format, a...)
 }
 
-// Q is a shorter version of Z.Conf.Query(x.Path()+"."+q) for
+// C is a shorter version of Z.Conf.Query(x.Path()+"."+q) for
 // convenience. Logs the error and returns a blank string if Z.Conf is
 // not defined (see ReqConf).
-func (x *Cmd) Q(q string) string {
+func (x *Cmd) C(q string) string {
 	if Conf == nil {
 		log.Printf("cmd %q requires a configurer (Z.Conf must be assigned)", x.Name)
 		return ""
 	}
-	return Conf.Query(x.Path() + "." + q)
+	path := x.Path()
+	if path != "." {
+		path += "."
+	}
+	return Conf.Query(path + q)
+}
+
+// Get is a shorter version of Z.Vars.Get(x.Path()+"."+key) for
+// convenience. Logs the error and returns blank string if Z.Vars is
+// not defined (see ReqVars).
+func (x *Cmd) Get(key string) string {
+	if Vars == nil {
+		log.Printf(
+			"cmd %q requires cached vars (Z.Vars must be assigned)", x.Name)
+		return ""
+	}
+	path := x.Path()
+	if path != "." {
+		path += "."
+	}
+	return Vars.Get(path + key)
+}
+
+// Set is a shorter version of Z.Vars.Set(x.Path()+"."+key.val) for
+// convenience. Logs the error Z.Vars is not defined (see ReqVars).
+func (x *Cmd) Set(key, val string) error {
+	if Vars == nil {
+		return fmt.Errorf(
+			"cmd %q requires cached vars (Z.Vars must be assigned)", x.Name)
+	}
+	path := x.Path()
+	if path != "." {
+		path += "."
+	}
+	return Vars.Set(path+key, val)
 }
 
 // Fill fills out the passed text/template string using the Cmd instance
