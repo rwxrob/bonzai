@@ -61,9 +61,6 @@ type Cmd struct {
 	ReqConf bool `json:"-"` // requires Z.Conf be assigned
 	ReqVars bool `json:"-"` // requires Z.Var be assigned
 
-	// DEPRECATED
-	UsageFunc bonzai.UsageFunc `json:"-"` // use {{ usage }} instead
-
 	_aliases  map[string]*Cmd   // see cacheAliases called from Run->Seek->Resolve
 	_sections map[string]string // see cacheSections called from Run
 }
