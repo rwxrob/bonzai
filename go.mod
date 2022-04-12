@@ -5,7 +5,6 @@ go 1.18
 require (
 	github.com/rwxrob/compcmd v0.1.1
 	github.com/rwxrob/fn v0.3.3
-	github.com/rwxrob/fs v0.5.0
 	github.com/rwxrob/scan v0.6.1
 	github.com/rwxrob/structs v0.5.1
 	github.com/rwxrob/term v0.2.6

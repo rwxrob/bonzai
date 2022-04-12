@@ -2,7 +2,6 @@ github.com/rwxrob/compcmd v0.1.1 h1:VCpA28yXWSS5ijAe6N5DswYektT1KT3ZryirINZVYgs=
 github.com/rwxrob/compcmd v0.1.1/go.mod h1:l4anbcmNEBs4vNb2uxfD45jSgm2FmPvpYfBNGqlO3rc=
 github.com/rwxrob/fn v0.3.3 h1:ymRQGWDhrrvoHKXLJ4WZlgI2qrC7gMOotowQMGvwmVQ=
 github.com/rwxrob/fn v0.3.3/go.mod h1:omPqOqEB+dDna09z5pi5YFxq4IZqDvv3wFPUCES5LvY=
-github.com/rwxrob/fs v0.5.0/go.mod h1:vO8AeluD7rnrO7zC54745xTEBFgHPUpHL0hbp1NnsVo=
 github.com/rwxrob/scan v0.6.1 h1:KMGi/kV7TY4pcVo8H/HVwwyQZ2gBFNQI3g7tT121Voo=
 github.com/rwxrob/scan v0.6.1/go.mod h1:eF28AgH3YUvP7E9UrhjePRUyLq3Gh7+fR28P7Z/Ku4E=
 github.com/rwxrob/structs v0.5.1 h1:epff+4ihej+EgsQx0qOAS/cn7ix3qSLor0M/AjWiV3M=
