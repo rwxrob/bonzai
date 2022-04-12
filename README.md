@@ -378,10 +378,6 @@ want the specific reasons.
   builtins themselves can obviously be used immediately and has a much
   smaller chance of changing in the future.
 
-* **Force `bonzai` Dependency in CacheMap, Conf, and Completer**
-
-
-
 ## Style Guidelines
 
 * Use "deciduous tree" emoji 🌳 to mark Bonzai stuff

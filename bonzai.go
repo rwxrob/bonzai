@@ -1,22 +1,27 @@
 package bonzai
 
-// Configurer specifies how to configure a Bonzai Cmd. Configurations
-// must always be maintained in YAML (of which JSON is a subset) and be
-// fully compatible with gopkg.in/yaml.v3.
+// Configurer specifies the package configuration driver interface. One
+// (and only one) implementation will be assigned to Z.Conf. Every
+// implementation *must* assign itself to Z.Conf on init so that
+// Bonzai tree developers need only import the implementation package.
 //
-// The location where the YAML is persisted is not specified by this
-// interface. Implementations may use any persistence layer that
-// guarantees atomic OverWrites and can be edited with a local system
-// editor.
+// Furthermore, implementations must be maintained in YAML (of which
+// JSON is a subset) and be fully compatible with gopkg.in/yaml.v3.
 //
-// The id may be anything that can be a YAML key, but use of Unicode
-// Letter class runes is strongly recommended.  Usually, the id will be
-// derived from the name of the executable binary or root Bonzai node
+// The location to which YAML is to be persisted is not specified by
+// this interface. Most implementations will use a file in
+// os.UserConfigDir (see rwxrob/conf). Implementations may use any
+// persistence layer that guarantees atomic OverWrites and can be edited
+// with a local system editor.
+//
+// The Id may be anything that can be a YAML key, but use of Unicode
+// Letter class runes is strongly recommended. Usually, the id will be
+// derived from the name of the executable binary or Cmd.Root Bonzai node
 // command.
 //
 // Configuration data is designed to change less frequently than cache
-// data (see Cacher) and is always updated by editing the entire YAML
-// file (never through future Set methods). It is important that
+// data (see Vars) and is always updated by editing the entire YAML file
+// (never through future Set methods). It is important that
 // configuration data not be abused and unnecessarily bloated to remain
 // performant.
 //
@@ -39,13 +44,19 @@ type Configurer interface {
 	QueryPrint(q string)      // prints result to os.Stdout
 }
 
-// CacheMap specifies how to persist (cache) simple string key/value
-// data. Implementations of CacheMap can persist in different ways,
-// files, network storage, or cloud databases, etc. but must always
-// present the data in a .key=val format with \r and \n escaped and the
-// key never must contain an equal (=). (Equal signs in the value are
-// ignored.) This is by far the fastest format to read and parse.
-type CacheMap interface {
+// Vars specifies the package persistent variables driver interface. All
+// implementations must assign themselves to Z.Vars during init. One
+// (and only one) persistent variable driver is allowed per executable.
+//
+// Implementations must persist (cache) simple string key/value
+// variables Implementations of Vars can persist in different ways, but
+// most will write to os.UserCacheDir (see rwxrob/vars).  Files, network
+// storage, or cloud databases, etc. are all allowed and expected.
+// However, each must always present the data in a .key=val format with
+// \r and \n escaped and the key never must contain an equal (=). (Equal
+// signs in the value are ignored.) This is the fastest format to read
+// and parse.
+type Vars interface {
 	Init() error                 // initialize completely new cache
 	Data() string                // k=v with \r and \n escaped in v
 	Print()                      // (printed)

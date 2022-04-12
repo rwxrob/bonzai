@@ -92,22 +92,23 @@ var Comp = compcmd.New()
 // implementation to switch everything that depends on configuration.
 var Conf bonzai.Configurer
 
-// Vars may be optionally assigned any implementation of
-// a bonzai.CacheMap. Once assigned it should not be reassigned at any
-// later time during runtime. Certain Bonzai branches and commands may
-// require Z.Vars to be defined and those that do generally require the
-// same implementation throughout all of runtime. Commands that require
-// Z.Vars should set ReqVars to true. Other than the exceptional case
-// of configuration commands that fulfill bonzai.CacheMap (and usually
-// assign themselves to Z.Vars at init() time), commands must never
-// require a specific implementation of bonzai.CacheMap.  This
+// Vars may be optionally assigned any implementation of a bonzai.Vars
+// but this is normally assigned at init() time by a bonzai.Vars driver
+// module (see rwxrob/vars). Once assigned it should not be reassigned
+// at any later time during runtime. Certain Bonzai branches and
+// commands may require Z.Vars to be defined and those that do generally
+// require the same implementation throughout all of runtime. Commands
+// that require Z.Vars should set ReqVars to true. Other than the
+// exceptional case of configuration commands that fulfill bonzai.Vars
+// (and usually assign themselves to Z.Vars at init() time), commands
+// must never require a specific implementation of bonzai.Vars.  This
 // encourages command creators and Bonzai tree composers to centralize
-// on a single form of caching without creating brittle
-// dependencies and tight coupling. Caching persistence can be
-// implemented in any number of ways without a problem and Bonzai trees
-// simply need to be recompiled with a different bonzai.CacheMap
-// implementation to switch everything that depends on cached variables.
-var Vars bonzai.CacheMap
+// on a single form of caching without creating brittle dependencies and
+// tight coupling. Caching persistence can be implemented in any number
+// of ways without a problem and Bonzai trees simply need to be
+// recompiled with a different bonzai.Vars implementation to switch
+// everything that depends on cached variables.
+var Vars bonzai.Vars
 
 // UsageFunc is the default first-class function called if a Cmd that
 // does not already define its own when usage information is needed (see
