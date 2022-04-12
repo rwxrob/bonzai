@@ -41,8 +41,10 @@ type Configurer interface {
 
 // CacheMap specifies how to persist (cache) simple string key/value
 // data. Implementations of CacheMap can persist in different ways,
-// files, network storage, or cloud databases, etc. Must log errors
-// rather than panic (unavailable source, etc.)
+// files, network storage, or cloud databases, etc. but must always
+// present the data in a .key=val format with \r and \n escaped and the
+// key never must contain an equal (=). (Equal signs in the value are
+// ignored.) This is by far the fastest format to read and parse.
 type CacheMap interface {
 	Init() error                 // initialize completely new cache
 	Data() string                // k=v with \r and \n escaped in v

@@ -183,16 +183,53 @@ func (x *Cmd) cacheSections() {
 	}
 }
 
-// Run is for running a command within a specific runtime (shell) and
-// performs completion if completion context is detected.  Otherwise, it
-// executes the leaf Cmd returned from Seek calling its Method, and then
-// Exits. Normally, Run is called from within main() to convert the Cmd
-// into an actual executable program and normally it exits the program.
-// Exiting can be controlled, however, with ExitOn/ExitOff when testing
-// or for other purposes requiring multiple Run calls. Using Call
-// instead will also just call the Cmd's Call Method without exiting.
-// Note: Only bash runtime ("COMP_LINE") is currently supported, but
-// others such a zsh and shell-less REPLs are planned.
+// Run method resolves aliases and seeks the leaf Cmd. It then calls the
+// leaf's first-class Call function passing itself as the first argument
+// along with any remaining command line arguments.  Run returns nothing
+// because it usually exits the program. Normally, Run is called from
+// within main() to convert the Cmd into an actual executable program.
+// Exiting can be controlled, however, by calling ExitOn or ExitOff
+// (primarily for testing). Use Call instead of Run when delegation is
+// needed. However, avoid tight-coupling that comes from delegation with
+// Call when possible. Use a high-level branch pkg instead (which is
+// idiomatic for good Bonzai branch development).
+//
+// Handling Completion
+//
+// Since Run is the main execution entry point for all Bonzai command
+// trees it is also responsible for handling completion (tab or
+// otherwise). Therefore, all Run methods have two modes: delegation and
+// completion (both are executions of the Bonzai binary command tree).
+// Delegation is the default mode. Completion mode is triggered by the
+// detection of the COMP_LINE environment variable.
+//
+// COMP_LINE
+//
+// When COMP_LINE is set, Run prints a list of possible completions to
+// standard output by calling its first-class Completer function
+// (default Z.Comp). Each Cmd therefore manages its own completion and
+// can draw from a rich ecosystem of Completers or assign its own custom
+// one. This enables very powerful completions including dynamic
+// completions that query the network or the local execution
+// environment. Since Go can run on pretty much every device
+// architecture right now, that's a lot of possibilities.  Even
+// a line-based calculator can be implemented as a Completer. AI
+// completers are also fully supported by this approach.  Intelligent
+// completion eliminates the need for overly complex and error-prone
+// (getopt) argument signatures for all Bonzai commands.
+//
+// Why COMP_LINE?
+//
+// Setting COMP_LINE has been a bash shell standard for more than a few
+// decades. (Unfortunately, zsh dubiously chose to not support it for no
+// good reason.) COMP_LINE completion, therefore, is the only planned
+// method of detecting completion context. Enabling it in bash for any
+// command becomes a simple matter of "complete -C foo foo" (rather than
+// forcing users to evaluate thousands of lines of shell code to enable
+// completion for even minimally complex command trees as other
+// "commanders" require). Any code will work that sets COMP_LINE before
+// calling Cmd.Run and receives a list of lines to standard
+// output with completion candidates.
 func (x *Cmd) Run() {
 	defer TrapPanic()
 
@@ -209,9 +246,9 @@ func (x *Cmd) Run() {
 		}
 	}
 
-	// bash completion context
-	line := os.Getenv("COMP_LINE")
+	// completion mode
 
+	line := os.Getenv("COMP_LINE")
 	if line != "" {
 		var list []string
 		lineargs := ArgsFrom(line)
@@ -220,6 +257,7 @@ func (x *Cmd) Run() {
 		}
 		cmd, args := x.Seek(lineargs[1:])
 		if cmd.Completer == nil {
+			// FIXME(rwxrob) change comp.Standard to Comp (Z.Comp)
 			list = append(list, comp.Standard(cmd, args...)...)
 			if len(list) == 1 && len(lineargs) == 2 {
 				if v, has := Aliases[list[0]]; has {
@@ -233,6 +271,8 @@ func (x *Cmd) Run() {
 		each.Println(cmd.Completer(cmd, args...))
 		Exit()
 	}
+
+	// delegation mode
 
 	// seek should never fail to return something, but ...
 	cmd, args := x.Seek(os.Args[1:])
