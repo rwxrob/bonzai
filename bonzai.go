@@ -55,10 +55,13 @@ type CacheMap interface {
 	OverWrite(with string) error // safely replace all cache
 }
 
-// Completer defines a function to complete the given leaf Command with
-// the provided arguments, if any. Completer functions must never be
-// passed a nil Command or nil as the args slice. See comp.Standard.
-type Completer func(leaf Command, args ...string) []string
+// Completer specifies a struct with a Complete function that will
+// complete the given bonzai.Command with the given arguments.
+// The Complete function must never panic and always return at least an
+// empty slice of strings.
+type Completer interface {
+	Complete(x Command, args ...string) []string
+}
 
 // Section is a section from the Other attribute.
 type Section interface {
@@ -91,7 +94,7 @@ type Command interface {
 	GetHidden() []string
 	GetOther() []Section
 	GetOtherTitles() []string
-	GetCompleter() Completer
+	GetComp() Completer
 	GetCaller() Command
 	GetMinArgs() int
 	GetMinParm() int

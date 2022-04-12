@@ -378,8 +378,13 @@ want the specific reasons.
   builtins themselves can obviously be used immediately and has a much
   smaller chance of changing in the future.
 
+* **Force `bonzai` Dependency in CacheMap, Conf, and Completer**
+
+
+
 ## Style Guidelines
 
+* Use "deciduous tree" emoji 🌳 to mark Bonzai stuff
 * Everything through `go fmt` or equiv, no exceptions
 * In Vim `set textwidth=72` (not 80 to line numbers fit)
 * Use `/* */` for package documentation comment, `//` elsewhere
@@ -388,7 +393,6 @@ want the specific reasons.
 * Package globals that will be used a lot can be single capital
 * Must be good reason to use more than 4 character pkg name
 * Avoid unnecessary comments
-* Use "deciduous tree" emoji 🌳 to mark Bonzai branches and commands
 
 ## Printing, Formatting, and Emphasis
 

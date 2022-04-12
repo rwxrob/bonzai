@@ -13,7 +13,6 @@ import (
 	"text/template"
 
 	"github.com/rwxrob/bonzai"
-	"github.com/rwxrob/bonzai/comp"
 	"github.com/rwxrob/fn/each"
 	"github.com/rwxrob/fn/maps"
 	"github.com/rwxrob/fn/redu"
@@ -47,8 +46,8 @@ type Cmd struct {
 	Params   []string `json:"params,omitempty"`
 	Hidden   []string `json:"hidden,omitempty"`
 
-	// standard or custom completer
-	Completer bonzai.Completer `json:"-"`
+	// standard or custom completer, usually of form compfoo.New()
+	Comp bonzai.Completer `json:"-"`
 
 	// where the work happens
 	Caller *Cmd   `json:"-"`
@@ -206,7 +205,7 @@ func (x *Cmd) cacheSections() {
 // COMP_LINE
 //
 // When COMP_LINE is set, Run prints a list of possible completions to
-// standard output by calling its first-class Completer function
+// standard output by calling its Comp.Complete function
 // (default Z.Comp). Each Cmd therefore manages its own completion and
 // can draw from a rich ecosystem of Completers or assign its own custom
 // one. This enables very powerful completions including dynamic
@@ -251,14 +250,19 @@ func (x *Cmd) Run() {
 	line := os.Getenv("COMP_LINE")
 	if line != "" {
 		var list []string
+
+		// find the leaf command
 		lineargs := ArgsFrom(line)
 		if len(lineargs) == 2 {
 			list = append(list, maps.KeysWithPrefix(Aliases, lineargs[1])...)
 		}
 		cmd, args := x.Seek(lineargs[1:])
-		if cmd.Completer == nil {
-			// FIXME(rwxrob) change comp.Standard to Comp (Z.Comp)
-			list = append(list, comp.Standard(cmd, args...)...)
+
+		// default completer or package aliases, always exits
+		if cmd.Comp == nil {
+			if Comp != nil {
+				list = append(list, Comp.Complete(cmd, args...)...)
+			}
 			if len(list) == 1 && len(lineargs) == 2 {
 				if v, has := Aliases[list[0]]; has {
 					fmt.Println(strings.Join(EscAll(v), " "))
@@ -268,7 +272,9 @@ func (x *Cmd) Run() {
 			each.Println(list)
 			Exit()
 		}
-		each.Println(cmd.Completer(cmd, args...))
+
+		// own completer, delegate
+		each.Println(cmd.Comp.Complete(cmd, args...))
 		Exit()
 	}
 
@@ -674,8 +680,8 @@ func (x *Cmd) GetOtherTitles() []string {
 	return titles
 }
 
-// GetCompleter fulfills the Command interface.
-func (x *Cmd) GetCompleter() bonzai.Completer { return x.Completer }
+// GetComp fulfills the Command interface.
+func (x *Cmd) GetComp() bonzai.Completer { return x.Comp }
 
 // GetCaller fulfills the bonzai.Command interface.
 func (x *Cmd) GetCaller() bonzai.Command { return x.Caller }

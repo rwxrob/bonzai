@@ -28,6 +28,7 @@ import (
 	"strings"
 
 	"github.com/rwxrob/bonzai"
+	"github.com/rwxrob/compcmd"
 	"github.com/rwxrob/term"
 )
 
@@ -63,6 +64,16 @@ var ExeName string
 // in "multicall" mode. Each value must begin with a *Cmd and the rest
 // will be assumed to be string arguments to prepend. See Run.
 var Commands map[string][]any
+
+// Comp may be optionally assigned any implementation of
+// bonzai.Completer and will be used as the default if a Command does not
+// provide its own. Comp is assigned rwxrob/compcmd.Completer by default.
+// This can be overriden by Bonzai tree developers through simple
+// assignment to their own preference. However, for consistency, this
+// default is strongly recommended, at least for all branch commands (as
+// opposed to leafs). See z.Cmd.Run for documentation on completion
+// mode.
+var Comp = compcmd.New()
 
 // Conf may be optionally assigned any implementation of
 // a bonzai.Configurer. Once assigned it should not be reassigned at any
