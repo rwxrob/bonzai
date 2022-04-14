@@ -35,13 +35,13 @@ package bonzai
 // ensure that the resulting values for edge matches can be used without
 // needing a trim.
 type Configurer interface {
-	Init() error              // must initialize a new configuration
-	Data() string             // must return full YAML
-	Print()                   // must print full YAML to os.Stdout
-	Edit() error              // must open full YAML in local editor
-	OverWrite(with any) error // safely replace all configuration
-	Query(q string) string    // yq compatible query string
-	QueryPrint(q string)      // prints result to os.Stdout
+	Init() error                    // must initialize a new configuration
+	Data() (string, error)          // must return full YAML
+	Print() error                   // must print full YAML to os.Stdout
+	Edit() error                    // must open full YAML in local editor
+	OverWrite(with any) error       // safely replace all configuration
+	Query(q string) (string, error) // yq compatible query string
+	QueryPrint(q string) error      // prints result to os.Stdout
 }
 
 // Vars specifies the package persistent variables driver interface. All

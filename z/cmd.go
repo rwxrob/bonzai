@@ -522,12 +522,11 @@ func (x *Cmd) Log(format string, a ...any) {
 }
 
 // C is a shorter version of Z.Conf.Query(x.Path()+"."+q) for
-// convenience. Logs the error and returns a blank string if Z.Conf is
-// not defined (see UseConf).
-func (x *Cmd) C(q string) string {
+// convenience. See UseConf.
+func (x *Cmd) C(q string) (string, error) {
 	if Conf == nil {
 		log.Printf("cmd %q requires a configurer (Z.Conf must be assigned)", x.Name)
-		return ""
+		return "", UsesConf{x}
 	}
 	path := x.Path()
 	if path != "." {
