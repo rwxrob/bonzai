@@ -59,8 +59,8 @@ type Cmd struct {
 	NumArgs int  `json:"-"` // exact number of args required (including parms)
 	MinParm int  `json:"-"` // minimum number of params required
 	MaxParm int  `json:"-"` // maximum number of params required
-	ReqConf bool `json:"-"` // requires Z.Conf be assigned
-	ReqVars bool `json:"-"` // requires Z.Var be assigned
+	UseConf bool `json:"-"` // requires Z.Conf be assigned
+	UseVars bool `json:"-"` // requires Z.Var be assigned
 
 	_aliases  map[string]*Cmd   // see cacheAliases called from Run->Seek->Resolve
 	_sections map[string]string // see cacheSections called from Run
@@ -318,14 +318,19 @@ func (x *Cmd) Run() {
 	switch {
 	case len(args) < cmd.MinArgs:
 		ExitError(NotEnoughArgs{cmd})
+		return
 	case cmd.MaxArgs > 0 && len(args) > cmd.MaxArgs:
 		ExitError(TooManyArgs{cmd})
+		return
 	case cmd.NumArgs > 0 && len(args) != cmd.NumArgs:
 		ExitError(WrongNumArgs{cmd})
-	case cmd.ReqConf && Conf == nil:
-		ExitError(ConfRequired{cmd})
-	case cmd.ReqVars && Vars == nil:
-		ExitError(VarsRequired{cmd})
+		return
+	case cmd.UseConf && Conf == nil:
+		ExitError(UsesConf{cmd})
+		return
+	case cmd.UseVars && Vars == nil:
+		ExitError(UsesVars{cmd})
+		return
 	}
 
 	// delegate
@@ -512,7 +517,7 @@ func (x *Cmd) Log(format string, a ...any) {
 
 // C is a shorter version of Z.Conf.Query(x.Path()+"."+q) for
 // convenience. Logs the error and returns a blank string if Z.Conf is
-// not defined (see ReqConf).
+// not defined (see UseConf).
 func (x *Cmd) C(q string) string {
 	if Conf == nil {
 		log.Printf("cmd %q requires a configurer (Z.Conf must be assigned)", x.Name)
@@ -527,7 +532,7 @@ func (x *Cmd) C(q string) string {
 
 // Get is a shorter version of Z.Vars.Get(x.Path()+"."+key) for
 // convenience. Logs the error and returns blank string if Z.Vars is
-// not defined (see ReqVars).
+// not defined (see UseVars).
 func (x *Cmd) Get(key string) string {
 	if Vars == nil {
 		log.Printf(
@@ -542,10 +547,10 @@ func (x *Cmd) Get(key string) string {
 }
 
 // Set is a shorter version of Z.Vars.Set(x.Path()+"."+key.val) for
-// convenience. Logs the error Z.Vars is not defined (see ReqVars).
+// convenience. Logs the error Z.Vars is not defined (see UseVars).
 func (x *Cmd) Set(key, val string) error {
 	if Vars == nil {
-		return VarsRequired{x}
+		return UsesVars{x}
 	}
 	path := x.Path()
 	if path != "." {
@@ -618,11 +623,11 @@ func (x *Cmd) GetMinParm() int { return x.MinParm }
 // GetMaxParm fulfills the bonzai.Command interface. No Fill.
 func (x *Cmd) GetMaxParm() int { return x.MaxParm }
 
-// GetReqConf fulfills the bonzai.Command interface. No Fill.
-func (x *Cmd) GetReqConf() bool { return x.ReqConf }
+// GetUseConf fulfills the bonzai.Command interface. No Fill.
+func (x *Cmd) GetUseConf() bool { return x.UseConf }
 
-// GetReqVars fulfills the bonzai.Command interface. No Fill.
-func (x *Cmd) GetReqVars() bool { return x.ReqVars }
+// GetUseVars fulfills the bonzai.Command interface. No Fill.
+func (x *Cmd) GetUseVars() bool { return x.UseVars }
 
 // GetCommands fulfills the bonzai.Command interface.
 func (x *Cmd) GetCommands() []bonzai.Command {

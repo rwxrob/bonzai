@@ -110,6 +110,6 @@ type Command interface {
 	GetMinArgs() int
 	GetMinParm() int
 	GetMaxParm() int
-	GetReqConf() bool
-	GetReqVars() bool
+	GetUseConf() bool
+	GetUseVars() bool
 }

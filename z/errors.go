@@ -26,19 +26,19 @@ func (e WrongNumArgs) Error() string {
 	return fmt.Sprintf("wrong number of args, %v required", e.Cmd.NumArgs)
 }
 
-type ConfRequired struct {
+type UsesConf struct {
 	Cmd *Cmd
 }
 
-func (e ConfRequired) Error() string {
+func (e UsesConf) Error() string {
 	return fmt.Sprintf("%v requires Z.Conf", e.Cmd.Name)
 }
 
-type VarsRequired struct {
+type UsesVars struct {
 	Cmd *Cmd
 }
 
-func (e VarsRequired) Error() string {
+func (e UsesVars) Error() string {
 	return fmt.Sprintf("%v requires Z.Vars", e.Cmd.Name)
 }
 
