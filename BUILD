@@ -9,7 +9,8 @@ tree binaries. The order matters because of interdepdencies:
 4.  rwxrob/vars
 5.  rwxrob/conf
 6.  rwxrob/foo
-7.  rwxrob/z
+7.  rwxrob/bon
+8.  rwxrob/z
 
 (others as needed)
 
