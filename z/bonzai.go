@@ -60,9 +60,12 @@ var ExePath string
 // (ex: .exe) and is set at init() time (see ExePath).
 var ExeName string
 
-// Commands contains the commands to lookup when Run-ing an executable
-// in "multicall" mode. Each value must begin with a *Cmd and the rest
-// will be assumed to be string arguments to prepend. See Run.
+// Commands contains the Cmds to lookup when executing with Z.Run in
+// "multicall" mode. Each value of the slice keyed to the name must
+// begin with a *Cmd and the rest will be assumed to be string arguments
+// to prepend. This allows the table of Commands to not only associate
+// with a specific Cmd, but to also provide different arguments to that
+// command. The name Commands is similar to Cmd.Commands. See Run.
 var Commands map[string][]any
 
 // Comp may be optionally assigned any implementation of
@@ -167,21 +170,29 @@ func InferredUsage(cmd bonzai.Command) string {
 }
 
 // Run infers the name of the command to run from the ExeName looked up
-// in the Commands delegates accordingly, prepending any arguments
-// provided in the Cmd.Run. Run produces an "unmapped multicall command"
-// error if no match is found. This is an alternative to the simpler,
-// direct Cmd.Run method from main where only one possible Cmd will ever
-// be the root and allows for BusyBox (https://www.busybox.net)
+// in the Commands and delegates accordingly, prepending any arguments
+// provided. This allows for BusyBox-like (https://www.busybox.net)
 // multicall binaries to be used for such things as very light-weight
-// Linux distributions when used "FROM SCRATCH" in containers.
+// Linux distributions when used "FROM SCRATCH" in containers.  Although
+// it shares the same name Z.Run should not confused with Cmd.Run. In
+// general, Z.Run is for "multicall" and Cmd.Run is for "monoliths".
+// Run may exit with the following errors:
+//
+// * MultiCallCmdNotFound
+// * MultiCallCmdNotCmd
+// * MultiCallCmdNotCmd
+// * MultiCallCmdArgNotString
+//
 func Run() {
 	if v, has := Commands[ExeName]; has {
 		if len(v) < 1 {
-			ExitError(fmt.Errorf("multicall command missing"))
+			ExitError(MultiCallCmdNotFound{ExeName})
+			return
 		}
 		cmd, iscmd := v[0].(*Cmd)
 		if !iscmd {
-			ExitError(fmt.Errorf("first value must be *Cmd"))
+			ExitError(MultiCallCmdNotCmd{ExeName, v[0]})
+			return
 		}
 		args := []string{cmd.Name}
 		if len(v) > 1 {
@@ -189,7 +200,8 @@ func Run() {
 			for _, a := range v[1:] {
 				s, isstring := a.(string)
 				if !isstring {
-					ExitError(fmt.Errorf("only string arguments allowed"))
+					ExitError(MultiCallCmdArgNotString{ExeName, a})
+					return
 				}
 				args = append(args, s)
 			}
@@ -198,8 +210,9 @@ func Run() {
 		os.Args = args
 		cmd.Run()
 		Exit()
+		return
 	}
-	ExitError(fmt.Errorf("unmapped multicall command: %v", ExeName))
+	ExitError(MultiCallCmdNotFound{ExeName})
 }
 
 // Method defines the main code to execute for a command (Cmd). By

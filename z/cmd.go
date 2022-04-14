@@ -292,25 +292,28 @@ func (x *Cmd) Run() {
 		if len(cmd.Commands) > 0 {
 			fcmd := cmd.Commands[0]
 			if fcmd.Call == nil {
-				ExitError(fmt.Errorf("default commands require Call function"))
+				ExitError(DefCmdReqCall{cmd})
+				return
 			}
 			fcmd.Caller = cmd
 			cmd = fcmd
 		} else {
-			ExitError(x.Unimplemented())
+			ExitError(NoCallNoCommands{cmd})
+			return
 		}
 	}
 
-	if len(args) < cmd.MinArgs {
-		ExitError(cmd.UsageError())
-	}
-
-	if x.ReqConf && Conf == nil {
-		ExitError(cmd.ReqConfError())
-	}
-
-	if x.ReqVars && Vars == nil {
-		ExitError(cmd.ReqVarsError())
+	switch {
+	case len(args) < cmd.MinArgs:
+		ExitError(NotEnoughArgs{cmd})
+	case cmd.MaxArgs > 0 && len(args) > cmd.MaxArgs:
+		ExitError(TooManyArgs{cmd})
+	case cmd.NumArgs > 0 && len(args) != cmd.NumArgs:
+		ExitError(WrongNumArgs{cmd})
+	case cmd.ReqConf && Conf == nil:
+		ExitError(ConfRequired{cmd})
+	case cmd.ReqVars && Vars == nil:
+		ExitError(VarsRequired{cmd})
 	}
 
 	// delegate
@@ -332,40 +335,6 @@ func (x *Cmd) Root() *Cmd {
 		return cmds[0].Caller
 	}
 	return x.Caller
-}
-
-// UsageError returns an error with a single-line usage string.
-func (x *Cmd) UsageError() error {
-	return fmt.Errorf("usage: %v %v", x.Name, UsageFunc(x))
-}
-
-// ReqConfError returns stating that the given command requires that
-// Z.Conf be set to something besides null.
-func (x *Cmd) ReqConfError() error {
-	return fmt.Errorf(
-		"cmd %q requires a configurer (Z.Conf must be assigned)",
-		x.Name,
-	)
-}
-
-// ReqVarsError returns stating that the given command requires that
-// Z.Vars be set to something besides null.
-func (x *Cmd) ReqVarsError() error {
-	return fmt.Errorf(
-		"cmd %q requires cached variables (Z.Vars must be assigned)",
-		x.Name,
-	)
-}
-
-// Unimplemented returns an error with a single-line usage string.
-func (x *Cmd) Unimplemented() error {
-	return fmt.Errorf("%q has not yet been implemented", x.Name)
-}
-
-// MissingConfig returns an error showing the expected configuration
-// entry that is missing from the given path.
-func (x *Cmd) MissingConfig(path string) error {
-	return fmt.Errorf("missing config: %v", x.Path()+"."+path)
 }
 
 // Add creates a new Cmd and sets the name and aliases and adds to
@@ -563,8 +532,7 @@ func (x *Cmd) Get(key string) string {
 // convenience. Logs the error Z.Vars is not defined (see ReqVars).
 func (x *Cmd) Set(key, val string) error {
 	if Vars == nil {
-		return fmt.Errorf(
-			"cmd %q requires cached vars (Z.Vars must be assigned)", x.Name)
+		return VarsRequired{x}
 	}
 	path := x.Path()
 	if path != "." {

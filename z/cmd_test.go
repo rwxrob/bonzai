@@ -190,7 +190,7 @@ func ExampleCmd_UsageError_commands_with_Aliases() {
 			&Z.Cmd{Name: "bar"},
 		},
 	}
-	fmt.Println(x.UsageError())
+	fmt.Println(Z.IncorrectUsage{x})
 	// Output:
 	// usage: cmd ((f|foo)|bar)
 
@@ -205,7 +205,7 @@ func ExampleCmd_UsageError_params_but_No_Call() {
 			&Z.Cmd{Name: "bar"},
 		},
 	}
-	fmt.Println(x.UsageError())
+	fmt.Println(Z.IncorrectUsage{x})
 	// Output:
 	// usage: cmd {ERROR: Params without Call: p1, p2}
 }
@@ -214,7 +214,7 @@ func ExampleCmd_UsageError_no_Call_nor_Commands() {
 	x := &Z.Cmd{
 		Name: `cmd`,
 	}
-	fmt.Println(x.UsageError())
+	fmt.Println(Z.IncorrectUsage{x})
 	// Output:
 	// usage: cmd {ERROR: neither Call nor Commands defined}
 
