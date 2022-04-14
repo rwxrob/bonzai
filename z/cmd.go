@@ -55,6 +55,8 @@ type Cmd struct {
 
 	// faster than lots of "if" in Call
 	MinArgs int  `json:"-"` // minimum number of args required (including parms)
+	MaxArgs int  `json:"-"` // maximum number of args required (including parms)
+	NumArgs int  `json:"-"` // exact number of args required (including parms)
 	MinParm int  `json:"-"` // minimum number of params required
 	MaxParm int  `json:"-"` // maximum number of params required
 	ReqConf bool `json:"-"` // requires Z.Conf be assigned
@@ -190,8 +192,11 @@ func (x *Cmd) cacheSections() {
 // Exiting can be controlled, however, by calling ExitOn or ExitOff
 // (primarily for testing). Use Call instead of Run when delegation is
 // needed. However, avoid tight-coupling that comes from delegation with
-// Call when possible. Use a high-level branch pkg instead (which is
-// idiomatic for good Bonzai branch development).
+// Call when possible. Also, Call automatically assumes the proper
+// number and type of arguments have already been checked (see MinArgs,
+// MaxArgs, NumArgs, etc.) which is normally done by Run. Use
+// a high-level branch pkg instead (which is idiomatic for good Bonzai
+// branch development).
 //
 // Handling Completion
 //
@@ -232,6 +237,9 @@ func (x *Cmd) cacheSections() {
 func (x *Cmd) Run() {
 	defer TrapPanic()
 
+	// returns throughout are because Exit* can be disabled
+	// see ExitOff/On
+
 	x.cacheSections()
 
 	// resolve Z.Aliases (if completion didn't replace them)
@@ -245,7 +253,7 @@ func (x *Cmd) Run() {
 		}
 	}
 
-	// completion mode
+	// COMPLETION
 
 	line := os.Getenv("COMP_LINE")
 	if line != "" {
@@ -267,24 +275,28 @@ func (x *Cmd) Run() {
 				if v, has := Aliases[list[0]]; has {
 					fmt.Println(strings.Join(EscAll(v), " "))
 					Exit()
+					return
 				}
 			}
 			each.Println(list)
 			Exit()
+			return
 		}
 
 		// own completer, delegate
 		each.Println(cmd.Comp.Complete(cmd, args...))
 		Exit()
+		return
 	}
 
-	// delegation mode
+	// DELEGATION
 
 	// seek should never fail to return something, but ...
 	cmd, args := x.Seek(os.Args[1:])
 
 	if cmd == nil {
-		ExitError(x.UsageError())
+		ExitError(IncorrectUsage{cmd})
+		return
 	}
 
 	// default to first Command if no Call defined
@@ -322,6 +334,7 @@ func (x *Cmd) Run() {
 	}
 	if err := cmd.Call(cmd, args...); err != nil {
 		ExitError(err)
+		return
 	}
 	Exit()
 }
