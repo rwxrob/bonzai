@@ -26,6 +26,14 @@ func (e WrongNumArgs) Error() string {
 	return fmt.Sprintf("wrong number of args, %v required", e.Cmd.NumArgs)
 }
 
+type MissingConf struct {
+	Path string
+}
+
+func (e MissingConf) Error() string {
+	return fmt.Sprintf("missing conf value for %v", e.Path)
+}
+
 type UsesConf struct {
 	Cmd *Cmd
 }

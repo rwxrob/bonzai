@@ -525,7 +525,6 @@ func (x *Cmd) Log(format string, a ...any) {
 // convenience. See UseConf.
 func (x *Cmd) C(q string) (string, error) {
 	if Conf == nil {
-		log.Printf("cmd %q requires a configurer (Z.Conf must be assigned)", x.Name)
 		return "", UsesConf{x}
 	}
 	path := x.Path()
@@ -579,6 +578,11 @@ func (x *Cmd) Fill(tmpl string) string {
 		log.Println(err)
 	}
 	return buf.String()
+}
+
+// UsageError returns IncorrectUsage for self.
+func (x *Cmd) UsageError() error {
+	return IncorrectUsage{x}
 }
 
 // --------------------- bonzai.Command interface ---------------------
