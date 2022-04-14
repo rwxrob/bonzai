@@ -378,6 +378,51 @@ want the specific reasons.
   builtins themselves can obviously be used immediately and has a much
   smaller chance of changing in the future.
 
+* **Reserve `--` for BonzaiShell pipe assignment**
+
+  The only operator of the BonzaiShell (that is not a Bonzai leaf
+  command allowing maximum extensibility) is the "into" (`--`) operator.
+  It is observed by `Seek` (called from `Run`) and is processed in a
+  consistent way. All it does is follow the precedent set by
+  `text/template` of buffering standard output of the command
+  immediately before it and adding it as the last argument to the
+  following command. That's it. Not only is this consistent will well
+  established practices, it's drop dead simple to remember and
+  implement. Ultimately, this will result in BonzaiShell scripts that
+  look something like this (where lines with *any* space are line
+  continuations, unless they are `--`, which joins them as a pipe):
+
+       #!/usr/bin/env z
+       produce output with lines
+       --
+       each line
+         foo the line
+       --
+       prefix someprefix
+
+  The fact that `--` is observed by most shells as the "end of
+  arguments" mark makes it somewhat intuitive for regular shell users
+  who know that if they have anything that contains such a thing that it
+  would have to be quoted. Therefore, ***no Bonzai command must ever
+  require a double-dash argument*** because it will be handled before the
+  command ever sees it signifying this pipe relationship to the next
+  command.
+
+  Unlike most host shells (which will create their own conflicts with
+  most Bonzai commands) this is the *only* reserved keyword. When
+  BonzaiShell is complete, users will be able to start a REPL with `z
+  shell`, or, if the Bonzai tree developer decides to make `shell` the
+  default argument (which will probably become the recommended
+  convention) then users will be able to write BonzaiShell scripts or
+  even use `#!/usr/bin/env z` on Unix systems (despite that probably
+  being discouraged over just writing a simple Bonzai leaf command that
+  does the same and compiling it into your tree).
+
+  In fact, BonzaiShell scripts could provide for great prototyping
+  before writing all that code in Go. Hell, we could even create a
+  BonzaiShell to Bonzai Cmd code generator with very little effort at
+  that point.
+
 ## Style Guidelines
 
 * Use "deciduous tree" emoji 🌳 to mark Bonzai stuff
