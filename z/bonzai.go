@@ -312,3 +312,6 @@ var TrapPanic = func() {
 		}
 	}
 }
+
+// CallDummy is useful for testing when non-nil Call function needed.
+var CallDummy = func(_ *Cmd, args ...string) error { return nil }
