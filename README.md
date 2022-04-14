@@ -423,6 +423,25 @@ want the specific reasons.
   BonzaiShell to Bonzai Cmd code generator with very little effort at
   that point.
 
+* **Custom errors as package globals**
+
+  When it became clear that there are a number of canned error
+  conditions that we want to allow Cmd developers to use quickly and
+  easily, and that not all of them directly relate to a particular Cmd
+  (`x`) is was decided to move all errors into a central `errors.go`
+  file as package global custom error structures that implement `error`
+  interface (`Error() string`) and have concrete, public fields so that
+  composition notation can be used (instead of forcing an unnecessary
+  function call). The benefits of custom errors that can be interrogated
+  with the `errors` functions are obvious and this also consolidates
+  most English language usage for later when we add full
+  language-by-locale support.
+
+  Note that this was a breaking change (added in `v0.10.0`) with
+  high-impact because so many have hard-coded `x.UsageError` (which is
+  why the full `v1.0` is not expected until December 25th 2022, some
+  months after things should feel settled and finished).
+
 ## Style Guidelines
 
 * Use "deciduous tree" emoji 🌳 to mark Bonzai stuff
