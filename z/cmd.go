@@ -504,8 +504,14 @@ func (x *Cmd) PathNames() []string {
 // Path returns a dotted notation of the PathNames including an initial
 // dot (for root). This is compatible yq query expressions and useful
 // for associating configuration and other data specifically with this
-// command.
-func (x *Cmd) Path() string {
+// command. If any arguments are passed then will be added with dots
+// between them.
+func (x *Cmd) Path(more ...string) string {
+	if len(more) > 0 {
+		list := x.PathNames()
+		list = append(list, more...)
+		return "." + strings.Join(list, ".")
+	}
 	return "." + strings.Join(x.PathNames(), ".")
 }
 

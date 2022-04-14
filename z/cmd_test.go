@@ -126,6 +126,7 @@ func ExampleCmd_Path() {
 
 	c.Call = func(x *Z.Cmd, _ ...string) error {
 		fmt.Println(x.Path())
+		fmt.Println(x.Path(`and`, `some`, `more`))
 		return nil
 	}
 
@@ -136,6 +137,7 @@ func ExampleCmd_Path() {
 
 	// Output:
 	// .some.thing.deep
+	// .some.thing.deep.and.some.more
 }
 
 func ExampleCmd_Names() {
