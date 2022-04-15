@@ -57,6 +57,7 @@ type Cmd struct {
 	MinArgs int  `json:"-"` // minimum number of args required (including parms)
 	MaxArgs int  `json:"-"` // maximum number of args required (including parms)
 	NumArgs int  `json:"-"` // exact number of args required (including parms)
+	NoArgs  bool `json:"-"` // must not have any args
 	MinParm int  `json:"-"` // minimum number of params required
 	MaxParm int  `json:"-"` // maximum number of params required
 	UseConf bool `json:"-"` // requires Z.Conf be assigned
@@ -316,6 +317,9 @@ func (x *Cmd) Run() {
 	}
 
 	switch {
+	case len(args) > 0 && cmd.NoArgs:
+		ExitError(TooManyArgs{cmd})
+		return
 	case len(args) < cmd.MinArgs:
 		ExitError(NotEnoughArgs{cmd})
 		return
@@ -599,8 +603,15 @@ func (x *Cmd) GetAliases() []string { return x.Aliases }
 // GetSummary fulfills the bonzai.Command interface. Uses Fill.
 func (x *Cmd) GetSummary() string { return x.Fill(x.Summary) }
 
-// GetUsage fulfills the bonzai.Command interface. Uses Fill.
-func (x *Cmd) GetUsage() string { return x.Fill(x.Usage) }
+// GetUsage fulfills the bonzai.Command interface. Uses x.Usage if not
+// empty. Otherwise, calls UsageFunc to get usage, then uses Fill.
+func (x *Cmd) GetUsage() string {
+	usage := x.Usage
+	if usage == "" {
+		usage = UsageFunc(x)
+	}
+	return x.Fill(usage)
+}
 
 // GetVersion fulfills the bonzai.Command interface. Uses Fill.
 func (x *Cmd) GetVersion() string { return x.Fill(x.Version) }

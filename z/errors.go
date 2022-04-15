@@ -7,7 +7,10 @@ type NotEnoughArgs struct {
 }
 
 func (e NotEnoughArgs) Error() string {
-	return fmt.Sprintf("not enough args, %v required", e.Cmd.MinArgs)
+	return fmt.Sprintf(
+		"usage: %v %v (not enough args, %v required)",
+		e.Cmd.Name, e.Cmd.GetUsage(), e.Cmd.MinArgs,
+	)
 }
 
 type TooManyArgs struct {
@@ -15,7 +18,10 @@ type TooManyArgs struct {
 }
 
 func (e TooManyArgs) Error() string {
-	return fmt.Sprintf("too many args, %v maximum", e.Cmd.MaxArgs)
+	return fmt.Sprintf(
+		"usage: %v %v (too many args, %v maximum)",
+		e.Cmd.Name, e.Cmd.GetUsage(), e.Cmd.MaxArgs,
+	)
 }
 
 type WrongNumArgs struct {
@@ -23,7 +29,10 @@ type WrongNumArgs struct {
 }
 
 func (e WrongNumArgs) Error() string {
-	return fmt.Sprintf("wrong number of args, %v required", e.Cmd.NumArgs)
+	return fmt.Sprintf(
+		"usage: %v %v (wrong number of args, %v required)",
+		e.Cmd.Name, e.Cmd.GetUsage(), e.Cmd.NumArgs,
+	)
 }
 
 type MissingConf struct {
@@ -71,7 +80,7 @@ type IncorrectUsage struct {
 }
 
 func (e IncorrectUsage) Error() string {
-	return fmt.Sprintf("usage: %v %v", e.Cmd.Name, UsageFunc(e.Cmd))
+	return fmt.Sprintf("usage: %v %v", e.Cmd.Name, e.Cmd.GetUsage())
 }
 
 type MultiCallCmdNotFound struct {
