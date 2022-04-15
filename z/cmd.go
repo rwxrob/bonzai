@@ -525,8 +525,11 @@ func (x *Cmd) Log(format string, a ...any) {
 	log.Printf(format, a...)
 }
 
-// C is a shorter version of Z.Conf.Query(x.Path()+"."+q) for
-// convenience. See UseConf.
+// C is a shorter version of
+// strings.TrimSpace(Z.Conf.Query(x.Path()+"."+q)) for convenience. The
+// yq YAML/JSON queries unreliably add line returns sometimes and other
+// times not. If a line return is wanted, the caller will need to use
+// fmt.Println. Also see UseConf.
 func (x *Cmd) C(q string) (string, error) {
 	if Conf == nil {
 		return "", UsesConf{x}
@@ -535,23 +538,24 @@ func (x *Cmd) C(q string) (string, error) {
 	if path != "." {
 		path += "."
 	}
-	return Conf.Query(path + q)
+	res, err := Conf.Query(path + q)
+	if err != nil {
+		return "", err
+	}
+	return strings.TrimSpace(res), nil
 }
 
 // Get is a shorter version of Z.Vars.Get(x.Path()+"."+key) for
-// convenience. Logs the error and returns blank string if Z.Vars is
-// not defined (see UseVars).
-func (x *Cmd) Get(key string) string {
+// convenience. Also see UseVars.
+func (x *Cmd) Get(key string) (string, error) {
 	if Vars == nil {
-		log.Printf(
-			"cmd %q requires cached vars (Z.Vars must be assigned)", x.Name)
-		return ""
+		return "", UsesVars{x}
 	}
 	path := x.Path()
 	if path != "." {
 		path += "."
 	}
-	return Vars.Get(path + key)
+	return Vars.Get(path + key), nil
 }
 
 // Set is a shorter version of Z.Vars.Set(x.Path()+"."+key.val) for
