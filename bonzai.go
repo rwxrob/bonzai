@@ -10,9 +10,9 @@ package bonzai
 //
 // The location to which YAML is to be persisted is not specified by
 // this interface. Most implementations will use a file in
-// os.UserConfigDir (see rwxrob/conf). Implementations may use any
-// persistence layer that guarantees atomic OverWrites and can be edited
-// with a local system editor.
+// os.UserConfigDir. Implementations may use any persistence layer that
+// guarantees atomic OverWrites and can be edited with a local system
+// editor.
 //
 // The Id may be anything that can be a YAML key, but use of Unicode
 // Letter class runes is strongly recommended. Usually, the id will be
@@ -50,12 +50,11 @@ type Configurer interface {
 //
 // Implementations must persist (cache) simple string key/value
 // variables Implementations of Vars can persist in different ways, but
-// most will write to os.UserCacheDir (see rwxrob/vars).  Files, network
-// storage, or cloud databases, etc. are all allowed and expected.
-// However, each must always present the data in a .key=val format with
-// \r and \n escaped and the key never must contain an equal (=). (Equal
-// signs in the value are ignored.) This is the fastest format to read
-// and parse.
+// most will write to os.UserCacheDir.  Files, network storage, or cloud
+// databases, etc. are all allowed and expected.  However, each must
+// always present the data in a .key=val format with \r and \n escaped
+// and the key never must contain an equal (=). (Equal signs in the
+// value are ignored.) This is the fastest format to read and parse.
 type Vars interface {
 	Init() error                 // initialize completely new cache
 	Data() string                // k=v with \r and \n escaped in v

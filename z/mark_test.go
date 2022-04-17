@@ -122,7 +122,7 @@ func ExampleBlocks_verbatim() {
 
 func ExampleEmph_basics() {
 
-	// Emph observes the rwxrob/term escapes
+	// Emph observes the term escapes
 	// (see package documentation for more)
 
 	term.Italic = `<italic>`
@@ -355,7 +355,7 @@ func ExampleMarkf() {
 
 func ExamplePrintEmph_basics() {
 
-	// Emph observes the rwxrob/term escapes
+	// Emph observes the term escapes
 	// (see package documentation for more)
 
 	term.Italic = `<italic>`

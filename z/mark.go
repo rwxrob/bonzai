@@ -18,9 +18,8 @@ var IndentBy = 7
 
 // Columns is the number of bytes (not runes) at which Wrap will wrap.
 // By default detects the terminal width (if possible) otherwise keeps
-// 80 standard (see rwxrob/term.WinSize). Bonzai command tree creator
-// can change this for every composite command imported their
-// application in this one place.
+// 80 standard. Bonzai command tree creator can change this for every
+// composite command imported their application in this one place.
 var Columns = int(term.WinSize.Col)
 
 // Lines returns the string converted into a slice of lines.
@@ -180,7 +179,7 @@ MAIN:
 //     ***BoldItalic***
 //     <under> (keeping brackets)
 //
-// See Mark for block formatting and rwxrob/term for terminal rendering.
+// See Mark for block formatting and term for terminal rendering.
 func Emph(buf string) string {
 	var nbuf []rune
 	var opentok, closetok bool

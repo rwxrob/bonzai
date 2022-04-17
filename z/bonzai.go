@@ -70,7 +70,7 @@ var Commands map[string][]any
 
 // Comp may be optionally assigned any implementation of
 // bonzai.Completer and will be used as the default if a Command does not
-// provide its own. Comp is assigned rwxrob/compcmd.Completer by default.
+// provide its own. Comp is assigned compcmd.Completer by default.
 // This can be overriden by Bonzai tree developers through simple
 // assignment to their own preference. However, for consistency, this
 // default is strongly recommended, at least for all branch commands (as
@@ -97,7 +97,7 @@ var Conf bonzai.Configurer
 
 // Vars may be optionally assigned any implementation of a bonzai.Vars
 // but this is normally assigned at init() time by a bonzai.Vars driver
-// module (see rwxrob/vars). Once assigned it should not be reassigned
+// module. Once assigned it should not be reassigned
 // at any later time during runtime. Certain Bonzai branches and
 // commands may require Z.Vars to be defined and those that do generally
 // require the same implementation throughout all of runtime. Commands
