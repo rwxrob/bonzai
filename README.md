@@ -14,9 +14,9 @@ single, portable `z` command.
 
 ## 🤚 TL;DR; 🛑
 
-Check/clone sample `foo` template:
+Check/clone sample `bonzai-example` template:
 
-👆 <https://github.com/rwxrob/foo>
+👆 <https://github.com/rwxrob/bonzai-example>
 
 Study the `z` monolith/multicall that started it all:
 
@@ -185,7 +185,7 @@ want the specific reasons.
 
 ## Examples
 
-* <https://github.com/rwxrob/foo> - clone-able GitHub template
+* <https://github.com/rwxrob/bonzai-example> - clone-able GitHub template
 * <https://github.com/rwxrob/z> - first Bonzai command tree ever made
 
 ## Design Considerations
