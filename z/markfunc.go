@@ -31,6 +31,7 @@ var markFuncMap = template.FuncMap{
 	"execonfdir":  execonfdir,
 	"cachedir":    cachedir,
 	"confdir":     confdir,
+	"homedir":     homedir,
 }
 
 func indent(n int, in string) string {
@@ -45,6 +46,13 @@ func cachedir() string {
 func confdir() string {
 	dir, _ := os.UserCacheDir()
 	return dir
+}
+
+func homedir(a ...string) string {
+	dir, _ := os.UserHomeDir()
+	extra := filepath.Join(a...)
+	path := filepath.Join(dir, extra)
+	return path
 }
 
 func exepath() string { return ExePath }
