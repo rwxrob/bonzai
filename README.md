@@ -10,13 +10,13 @@ imported composite commands, on *any* device, with recursive,
 light-weight tab completion, and colorful, rendered-templated
 documentation from terminal or local web browser. Replace messy
 collections of shell scripts ported to clean Go code and compiled into a
-single, portable `z` command.
+single, portable command.
 
-## 🤚 TL;DR; 🛑
+## Get Started
 
 Check/clone sample `foo` template:
 
-👆 <https://github.com/rwxrob/foo>
+👆 <https://github.com/rwxrob/bonzai-example>
 
 Study the `z` monolith/multicall that started it all:
 
@@ -24,24 +24,11 @@ Study the `z` monolith/multicall that started it all:
 
 ![logo](logo.png)
 
-## Installation
-
-🎉 ***Bonzai shamelessly requires Go 1.18+*** 💋
-
-1. Install Go 1.18 and the tooling your require for it
-1. `go install github.com/rwxrob/bonzai@latest` 
-1. `import Z "github.com/rwxrob/bonzai"`
-1. Consider using the [template][] to get started
-
-[template]: <https://github.com/rwxrob/bonzai-template>
-
-😎 *Yes, we use the wonderful new generics all [over](fn).* 👍
-
 ## Welcome to Bonzai
 
 Yes, "banzai" is something people yell going into battle. But isn't
 that what making command line utilities in Go (instead of your favorite
-shell script) actually is? 
+shell script) actually is?
 
 And yes, "bonsai" trees are well-manicured, meticulously crafted,
 miniature trees that rival their larger cousins, just like Bonzai
@@ -56,18 +43,6 @@ be particularly grateful.
 But wait, there's more! What about all those other tasks you need to do
 to make a command line application honorable in anyone's eyes? Tools are
 needed.
-
-## Contributors/PRs Welcome
-
-*... especially for "Completers", included popular commands, and Runtime
-Detection.*
-
-Speaking of sharing, why not send a PR for your addition to the ever
-growing collection of `comp` subpackage `Completers` for everything from
-days of the week, to tab-driven inline math calculations, to a list of
-all the listening ports running on your current system.
-
-[CONTRIBUTING](CONTRIBUTING)
 
 ## "It's spelled bonsai/banzai."
 
@@ -183,311 +158,11 @@ want the specific reasons.
 > various Go modules. Individual commands are isolated and unaware of
 > each other and possibly maintained by other people." (tadasv123)
 
-## Examples
-
-* <https://github.com/rwxrob/foo> - clone-able GitHub template
-* <https://github.com/rwxrob/z> - first Bonzai command tree ever made
-
-## Design Considerations
-
-* **Promote high-level package library API calls over Cmd bloat**
-
-  Code belongs in package libraries, not Cmds.
-
-  While Bonzai allows for rapid applications development by putting
-  everything initially in Cmd Call first-class function, Cmds are most
-  designed for documentation and completion, not heavy Call
-  implementations (even though many will organically start there from
-  people's personal Bonzai trees).
-
-  Eventually, most Call implementations should be moved into their own
-  package libraries, perhaps even in the same Go module. Cmds should
-  *never* communicate with each other directly (other than calling one
-  another on occasion). While the idea of adding a Channel attribute was
-  intriguing, it quickly became clear that doing so would promote 
-  undesirable tight coupling --- even with channels --- between
-  specific commands.
-
-* **Cmds should be very light**
-
-  Most Cmds should assign their first-class Call function to one that
-  lightly wraps a similar function signature in a callable, high-level
-  library that works entirely independently from the bonzai package.
-  It's best to promote strong support for sustainable API packages.
-
-* **Only bash completion and shell.Cmd planned**
-
-  If it doesn't work with `complete -C` or equivalent then just run the
-  Bonzai command tree monolith as a temporary shell (shell.Cmd) and use
-  its cross-platform support for tab completion.
-
-  Zsh, Powershell, and Fish have no equivalent to `complete -C` (which
-  allows any executable to provide its own completion). This forces
-  inferior dependencies on overly verbose external "completer" scripts
-  written in only those languages for those specific shells. This
-  dependency completely negates any possibility of providing modular
-  completers and composable commands that carry their own completion
-  logic. This one objective fact alone should give everyone pause before
-  opting to use one of these inferior shells for their command line
-  interactions.
-
-  Bonzai commands leverage this best-of-breed completion functionality
-  of bash to provide an unlimited number of completion methods and
-  combinations. The equivalent implementations, perhaps as an export
-  collected from all composed commands providing their shell equivalent
-  of completion scripts, would be preposterously large just for its
-  basic completion tree). Instead, Bonzai uses Go itself to manage
-  that completion --- drawing on a rich collection of completers
-  included in the standard Bonzai module --- and provides documented
-  shortcut aliases when completion is not available (h|help, for
-  example).
-
-* **Bonzai commands may default to `shell.Cmd` or `help.Cmd`**
-
-  These provide help information and optional interactive assistance
-  including tab completion in runtime environments that do not have
-  `complete -C foo foo` enabled.
-
-  *shell.Cmd is still under development and likely will be for a while*
-
-* **Target users replacing shell scripts in "dot files" collections**
-
-  By creating a `cmd` subdirectory of a dot files repo a multi-call
-  Bonzai command named `cmd` can be easily maintained and added to just
-  as quickly as any shell script. This has the added bonus of allowing
-  others to quickly add one of your little commands with just a simple
-  import (for example, `import github.com/rwxrob/dot/cmd` and then
-  `cmd.Isosec`) from their own `cmd` monoliths. This also enables the
-  fastest possible prototyping of code that would otherwise require
-  significant, problematic mocks. Developers can work out the details of
-  a thing just as fast as with shell scripting --- but with the power of
-  all the Go standard library --- and then factor out their favorites as
-  they grow into their own Bonzai command repos. This approach keeps "Go
-  on the brain" (instead of having to port a bunch of bash later) and
-  promotes the massive benefits of rapid applications development the
-  fullest extent.
-
-* **Use either `foo.Cmd` or `cmd.Foo` convention**
-
-  People may decide to put all their Bonzai commands into a single `cmd`
-  package or to put each command into its own package. Both are
-  perfectly acceptable and allow the developer making the import to
-  alias the packages as needed using Go's excellent package import
-  design.
-
-* **Default capital "Z" import name**
-
-  People can easily change the default "Z" import name to whatever else
-  if they don't like it (or worse, if has conflicts). But, we actually
-  want naming conflicts even though this seems counter-intuitive.
-  Developers should be putting most of their code into their own `pkg`
-  libraries and calling into them from their wrapping Bonzai trees and
-  branches that import Z. If someone is importing Z into their package
-  library they are likely doing something they shouldn't. Bonzai should
-  *only* be imported into the composable branch or standalone command
-  (`main`). This is a reminder as well to Bonzai developers not to stuff
-  things into the Z package that would never be used outside a Bonzai
-  command, tree or `main.go` standalone.
-
-* **Promote lower "z" personal Bonzai trees**
-
-  Just as "dotfiles" has become a convention, use of the simple "z"
-  GitHub repo should be promoted as a common, "ez" way to find people's
-  personal monoliths. Obviously, people can use what they want. This is
-  also consistent with the capital "Z" import name of the `bonzai`
-  package.
-
-* **Use simple regular expressions for usage**
-
-  Bonzai takes a fundamentally different approach to the command line
-  and usage documentation. Any command line is a minimal domain specific
-  language. As such, usage notation simple is not enough. Regular
-  expressions allow the quick understanding of what is allowed and
-  should become mandatory learning in a world of minimal domain specific
-  grammars. Only the most basic regular expressions are required to
-  produce rich usage strings for any Bonzai command. However, those
-  wanting traditional usage notation can easily override the
-  `DefaultUsageFunc` with their own.
-
-* **Prioritize output to VT100-compatible terminals**
-
-  Every modern terminal supports VT100 compatibility. If it doesn't,
-  people should just not use it. This means emphasis and formatting are
-  dependent on the [`rwxrob/term`](https://github.com/rwxrob/term)
-  package for the main output. Bonzai tree developers will likely want
-  terminal output helpers more than anything (yes even web rendering).
-
-* **Secondary output to local web browser**
-
-  Bonzai will eventually provide the option to enable use of the local
-  web browser instead of terminal output for help and other
-  documentation output. This will allow graphic application executables
-  to simple be double-clicked from graphic desktops. Bonzai will ship
-  with an embedded web template for such applications, but will also
-  allow users to granularly customize their own modifications to the
-  default theme. Bonzai branch creators are encouraged to provide
-  downloadable themes in this regard. In this way, Bonzai will provide
-  the web shell to encapsulate other web applications.
-
-* **Prefer local web apps over other GUI platforms**
-
-  While it is obviously possible to create any graphic application with
-  Bonzai, the creation of localized web applications should be the
-  preferred convention of the Bonzai GUI applications community. This
-  simplifies application development and takes aim at bloated
-  alternatives that embed full GUI web clients (such as Electron) while
-  still providing a rich terminal interface for those who prefer it.
-  Every Bonzai binary is its own local web server which Go's rich
-  standard library to draw on.
-
-* **[]Section instead of map[string]string for Other**
-
-  This allows composition notation and ensures the author has control of
-  how the Other sections appear.
-
-* **Move `help.Cmd` into its own package**
-
-  Although it breaks backward compatibility for many applications
-  updating between `v0.1` and `v0.2` the decision to put `help.Cmd` into
-  it's own Bonzai branch git repo was the right one. It is now on equal
-  footing with every other potential Bonzai branch and can keep its
-  `Version` in sync with Git version (as all Bonzai branches should). It
-  is highly likely that GUI/web/hybrid help commands will be preferred
-  by some and including one over another --- when not used --- ends up
-  just being unnecessary bloat. This also serves to clarify that the
-  legal information is related to that specific `help.Cmd` Bonzai branch
-  and not Bonzai itself. It's conceivable that another `help.Cmd`
-  creator may wish another legal agreement.
-
-* **Leave hidden default command params**
-
-  When the default command is invoked any of it's params will be
-  automatically passed as if the command specified them. But they are
-  not included in the tab completion. This is because there will
-  inevitably be conflicts between default command params and other
-  potential completions at that level for other commands. Rather than
-  disable this, or add tab completion, it was decided to keep them as a
-  useful shortcut side-effect without calling direct attention to them.
-  When and if dependencies on them become an issue it can be addressed
-  then.
-
-* **Not exporting Dynamic FuncMap builtins**
-
-  Since those builtins will land in `mark` subpackage eventually, don't
-  want to build any dependencies on them now that will break. The
-  builtins themselves can obviously be used immediately and has a much
-  smaller chance of changing in the future.
-
-* **Reserve `--` for BonzaiShell pipe assignment**
-
-  The only operator of the BonzaiShell (that is not a Bonzai leaf
-  command allowing maximum extensibility) is the "into" (`--`) operator.
-  It is observed by `Seek` (called from `Run`) and is processed in a
-  consistent way. All it does is follow the precedent set by
-  `text/template` of buffering standard output of the command
-  immediately before it and adding it as the last argument to the
-  following command. That's it. Not only is this consistent will well
-  established practices, it's drop dead simple to remember and
-  implement. Ultimately, this will result in BonzaiShell scripts that
-  look something like this (where lines with *any* space are line
-  continuations, unless they are `--`, which joins them as a pipe):
-
-       #!/usr/bin/env z
-       produce output with lines
-       --
-       each line
-         foo the line
-       --
-       prefix someprefix
-
-  The fact that `--` is observed by most shells as the "end of
-  arguments" mark makes it somewhat intuitive for regular shell users
-  who know that if they have anything that contains such a thing that it
-  would have to be quoted. Therefore, ***no Bonzai command must ever
-  require a double-dash argument*** because it will be handled before the
-  command ever sees it signifying this pipe relationship to the next
-  command.
-
-  Unlike most host shells (which will create their own conflicts with
-  most Bonzai commands) this is the *only* reserved keyword. When
-  BonzaiShell is complete, users will be able to start a REPL with `z
-  shell`, or, if the Bonzai tree developer decides to make `shell` the
-  default argument (which will probably become the recommended
-  convention) then users will be able to write BonzaiShell scripts or
-  even use `#!/usr/bin/env z` on Unix systems (despite that probably
-  being discouraged over just writing a simple Bonzai leaf command that
-  does the same and compiling it into your tree).
-
-  In fact, BonzaiShell scripts could provide for great prototyping
-  before writing all that code in Go. Hell, we could even create a
-  BonzaiShell to Bonzai Cmd code generator with very little effort at
-  that point.
-
-* **Custom errors as package globals**
-
-  When it became clear that there are a number of canned error
-  conditions that we want to allow Cmd developers to use quickly and
-  easily, and that not all of them directly relate to a particular Cmd
-  (`x`) is was decided to move all errors into a central `errors.go`
-  file as package global custom error structures that implement `error`
-  interface (`Error() string`) and have concrete, public fields so that
-  composition notation can be used (instead of forcing an unnecessary
-  function call). The benefits of custom errors that can be interrogated
-  with the `errors` functions are obvious and this also consolidates
-  most English language usage for later when we add full
-  language-by-locale support.
-
-  Note that this was a breaking change (added in `v0.10.0`) with
-  high-impact because so many have hard-coded `x.UsageError` (which is
-  why the full `v1.0` is not expected until December 25th 2022, some
-  months after things should feel settled and finished).
-
-## Style Guidelines
-
-* Use "deciduous tree" emoji 🌳 to mark Bonzai stuff
-* Everything through `go fmt` or equiv, no exceptions
-* In Vim `set textwidth=72` (not 80 to line numbers fit)
-* Use `/* */` for package documentation comment, `//` elsewhere
-* Smallest possible names for given scope while still clear
-* Favor additional packages (possibly in `internal`) over long names
-* Package globals that will be used a lot can be single capital
-* Must be good reason to use more than 4 character pkg name
-* Avoid unnecessary comments
-
-## Printing, Formatting, and Emphasis
-
-* `Z.Lines(a string) []string`
-* `Z.Blocks(a string) []string`
-
-• `Z.Emph(a string) string`   - just emphasis
-• `Z.Wrap(a string) string`   - wraps to Z.Columns
-• `Z.Indent(a string) string` - indents Z.IndentBy
-• `Z.InWrap(a string) string` - indents Z.IndentBy, wraps to Z.Columns
-• `Z.Mark(a string) string`   - block aware, indents, wraps all but verbatim
-
-* `Z.Emphf(a string, f ...any) string`       - Emph with Sprintf first
-* `Z.Indentf(a string, f ...any) string`       - Indent with Sprintf first
-* `Z.Wrapf(a string, f ...any) string`       - Wrap with Sprintf first
-* `Z.InWrapf(a string, f ...any) string`     - InWrap with Sprintf first
-* `Z.Markf(a string, f ...any) string`  - Mark with Sprintf first
-`
-• `Z.PrintEmph(a string)`     - shorthand for fmt.Print(Z.Emph(a string))
-• `Z.PrintWrap(a string)`     - shorthand for fmt.Print(Z.Wrap(a string))
-• `Z.PrintIndent(a string)`     - shorthand for fmt.Print(Z.Indent(a string))
-• `Z.PrintInWrap(a string)`     - shorthand for fmt.Print(Z.InWrap(a string))
-• `Z.PrintMark(a string)`     - shorthand for fmt.Print(Z.Mark(a string))
-`
-• `Z.PrintfEmph(a string, f ...any)` - fmt.Print(Z.Emphf(a string, f ...any))
-• `Z.PrintfWrap(a string, f ...any)` - fmt.Print(Z.Wrapf(a string, f ...any))
-• `Z.PrintfIndent(a string, f ...any)` - fmt.Print(Z.Indentf(a string, f ...any))
-• `Z.PrintfInWrap(a string, f ...any)` - fmt.Print(Z.InWrapf(a string, f ...any))
-• `Z.PrintfMark(a string, f ...any)` - fmt.Print(Z.Markf(a string, f ...any))
-
 ## Acknowledgements
 
 The <https://twitch.tv/rwxrob> community has been constantly involved
 with the development of this project, making suggestions about
-everything from my use of init, to the name "bonzai". While all their
+everything from my use of `init()`, to the name "bonzai". While all their
 contributions are too numerous to name specifically, they 
 more than deserve a huge thank you here.
 
@@ -501,25 +176,3 @@ can be used freely to refer to the Bonzai™ project
 <https://github.com/rwxrob/bonzai> without limitation. To avoid
 potential developer confusion, intentionally using these trademarks to
 refer to other projects --- free or proprietary --- is prohibited.
-
-## Shwag
-
-Looking to get with
-[https://www.trendhunter.com/trends/amuseable-bonsai-tree] to make a
-plushy mascot.
-
-## TODO
-
-Here is a list of major things that are still needed before a v1.0
-release:
-
-* Complete default `help.Cmd`
-* Complete `bonzai` helper command
-  * Initialize new branch including optional GitHub repo creation
-  * Vet a branch repo for orphan commands, etc.
-  * Cache/search list of package depending on `bonzai` as registry
-* Complete final art
-  * Large logo for landing page
-  * Small logo for lists
-  * Animated emote suitable for Twitch
-* Create a Bonzai™ merch outlet
