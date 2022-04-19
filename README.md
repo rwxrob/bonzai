@@ -23,7 +23,7 @@ all:
 
 👆 <https://github.com/rwxrob/z>
 
-## Welcome to Bonzai™!
+## Go Bonzai!
 
 ![logo](logo.png)
 
