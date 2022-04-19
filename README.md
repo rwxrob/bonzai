@@ -26,23 +26,22 @@ all:
 
 ![logo](logo.png)
 
-Yes, "banzai" is something people yell going into battle. But isn't
-that what making command line utilities in Go (instead of your favorite
-shell script) actually is?
+Yes, "banzai" is something people yell going into battle, and battle is
+exactly what it feels like to conquer your monstrous collection of shell
+scripts, completion bloated rc files, and man pages (if you even got
+that far).
 
-And yes, "bonsai" trees are well-manicured, meticulously crafted,
-miniature trees that rival their larger cousins, just like Bonzai
-command and data node trees. They are unlike anything you've probably
-encountered so far, no getopt dashes (we kind of hate them), no ugly
-commander interface to learn, no 12637 lines of shell tab completion
-bloat to source before your command will complete, just well manicured
+"Bonsai" trees are well-manicured, meticulously crafted,
+miniature *real* trees that rival their larger cousins, much like a
+Bonzai composite command tree.
+
+Bonzai trees are unlike anything you've likely encountered so far, no
+getopt dashes, no ugly commander interface language to learn, no 12637
+lines of shell tab completion bloat to source before your command will
+complete, just well manicured
 nested-tab-complete-with-magical-aliases-enabled commands organized into
 rooted node trees for your command-line enjoyment. Your right-pinky will
 be particularly grateful.
-
-But wait, there's more! What about all those other tasks you need to do
-to make a command line application honorable in anyone's eyes? Tools are
-needed.
 
 ## "It's spelled bonsai/banzai."
 
@@ -73,6 +72,8 @@ Linux container distros like BusyBox and Alpine, as well as root kits,
 and other security tools
 
 ## "Why not just use Cobra?"
+
+We get this question a lot, the answer is --- honest.
 
 Just because something is popular (or first) doesn't mean it was well
 designed. In fact, often inferior designs are rushed to market just to
@@ -111,29 +112,40 @@ want the specific reasons.
 
 * **Cobra suffers from broken boomer "getopt" design.**
 
-  The world if finally realizing how bad dashed arguments and options
-  have always been for *good* human-computer interactions from the
-  command line, perhaps because more people are using chat interfaces as
-  their command line. People simply cannot remember all sorts of ungodly
-  combinations of dashes and equals signs hoping things will
-  just work. Bonzai takes a no-dashes approach with aliases promoting
-  cleaner, understandable command lines with context and promotion of
-  domain specific languages (created with PEGN, scan.X, or others) that
-  easily translate directly to chat and other command-line interfaces
-  that most humans can use without even looking up the documentation,
-  which, by the way, is embedded in any Bonzai command tree.
+  The world has finally realizing just how bad dashed arguments and
+  options have always been for good human-computer interactions from the
+  command line, perhaps because more regular people are using command
+  line interfaces, like chat apps from their laptops and phones. People
+  simply cannot remember all sorts of ungodly combinations of dashes and
+  equals signs hoping things will just work, and they certainly cannot
+  speak any getopt command into their phone and have it interpreted
+  correctly. With Bonzai they can. Bonzai UX is universal whether it be
+  from an Arch Linux command line or Slack app on an iPhone.
+
+  Bonzai takes a no-dashes approach with aliases promoting cleaner,
+  understandable command lines with context and promotion of domain
+  specific languages (created with PEGN, scan.X, or others) that easily
+  translate directly to chat and other command-line interfaces that most
+  humans can use without even looking up the documentation, which, by
+  the way, is embedded in any Bonzai command tree.
 
 * **Cobra provides bad, brittle, command documentation.**
 
   Cobra documentation is virtually unreadable in source form. And Cobra
   provides no means of markup or use of color and doesn't even promote
-  the same look and feel of manual page documentation. In contrast,
-  Bonzai has its own subset of Markdown, BonzaiMark, respects the well
-  established readability of manual pages, and allows for the creation
-  of elegant documentation that can be viewed from the command line or
-  easily from a local browser on the same computer running the command.
-  Bonzai command documentation is as easy to read in source form as the
-  documentation itself.
+  the same look and feel of manual page documentation.
+
+  In contrast, Bonzai has its own subset of Markdown, BonzaiMark, which
+  respects the well established readability of manual pages, and allows
+  for the creation of elegant, templated documentation that can be
+  viewed from the command line or easily from a local browser on the
+  same computer running the command. Bonzai command documentation is as
+  easy to read in source form as the documentation itself.
+
+  Bonzai documentation is also dynamic. Rather than refer to a
+  configuration file the path to that specific file can be dynamically
+  included in the fully `text/template` enabled embedded documentation.
+  Cobra doesn't have anything even close to this.
 
 * **Cobra suffers from crushing technical debt.**
 
