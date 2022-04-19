@@ -12,7 +12,7 @@ documentation from terminal or local web browser. Replace messy
 collections of shell scripts ported to clean Go code and compiled into a
 single, portable command.
 
-## Get Started
+## Getting Started
 
 Check/clone sample `foo` template:
 
@@ -22,9 +22,9 @@ Study the `z` monolith/multicall that started it all:
 
 👆 <https://github.com/rwxrob/z>
 
-![logo](logo.png)
+## Welcome to Bonzai™!
 
-## Welcome to Bonzai
+![logo](logo.png)
 
 Yes, "banzai" is something people yell going into battle. But isn't
 that what making command line utilities in Go (instead of your favorite
