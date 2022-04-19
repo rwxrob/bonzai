@@ -14,11 +14,12 @@ single, portable command.
 
 ## Getting Started
 
-Check/clone sample `foo` template:
+Copy or clone the example template:
 
 👆 <https://github.com/rwxrob/bonzai-example>
 
-Study the `z` monolith/multicall that started it all:
+Study the personal, script-replacing monolith/multicall that started it
+all:
 
 👆 <https://github.com/rwxrob/z>
 
