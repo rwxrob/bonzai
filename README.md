@@ -160,6 +160,15 @@ want the specific reasons.
   sustainable, human-friendly command compositor to take us into the
   future of command line interfaces.
 
+* **Cobra interfaces are nearly impossible to test.**
+
+  Ever tried creating tests for all the different Cobra option
+  combinations? It's a case study in the science of exponential problem
+  complexity. By using a rooted node tree of commands, which
+  observe cached variables or singular configuration, Bonzai makes short
+  work of writing even the highest-level of tests against the commands
+  themselves as if they were run by a user.
+
 ## What People Are Saying
 
 > "It's like a modular, multicall BusyBox builder for Go with built in
