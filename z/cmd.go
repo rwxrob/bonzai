@@ -244,17 +244,6 @@ func (x *Cmd) Run() {
 
 	x.cacheSections()
 
-	// resolve Z.Shortcuts (if completion didn't replace them)
-	if len(os.Args) > 1 {
-		args := []string{os.Args[0]}
-		alias := Shortcuts[os.Args[1]]
-		if alias != nil {
-			args = append(args, alias...)
-			args = append(args, os.Args[2:]...)
-			os.Args = args
-		}
-	}
-
 	// COMPLETION
 
 	line := os.Getenv("COMP_LINE")
@@ -263,22 +252,12 @@ func (x *Cmd) Run() {
 
 		// find the leaf command
 		lineargs := ArgsFrom(line)
-		if len(lineargs) == 2 {
-			list = append(list, maps.KeysWithPrefix(Shortcuts, lineargs[1])...)
-		}
 		cmd, args := x.Seek(lineargs[1:])
 
 		// default completer or package aliases, always exits
 		if cmd.Comp == nil {
 			if Comp != nil {
 				list = append(list, Comp.Complete(cmd, args...)...)
-			}
-			if len(list) == 1 && len(lineargs) == 2 {
-				if v, has := Shortcuts[list[0]]; has {
-					fmt.Println(strings.Join(EscAll(v), " "))
-					Exit()
-					return
-				}
 			}
 			each.Println(list)
 			Exit()
@@ -503,7 +482,7 @@ func (x *Cmd) Seek(args []string) (*Cmd, []string) {
 		if v, has := cur.Shortcuts[args[n]]; has {
 			nargs := v
 			nargs = append(nargs, args[n+1:]...)
-			return cur.Seek(EscAll(nargs))
+			return cur.Seek(nargs)
 		}
 	}
 	return cur, args[n:]

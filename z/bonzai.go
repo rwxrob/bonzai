@@ -291,8 +291,8 @@ func ArgsOrIn(args []string) string {
 }
 
 // ArgMap is a map keyed to individual arguments that should be
-// expanded by being replaced with the slice of strings. Z.Aliases and
-// Cmd.Shortcuts are both ArgMaps.
+// expanded by being replaced with the slice of strings. See
+// Cmd.Shortcuts.
 type ArgMap map[string][]string
 
 // Keys returns only the key names.
@@ -303,15 +303,6 @@ func (m ArgMap) Keys() []string {
 	}
 	return list
 }
-
-// Shortcuts allows Bonzai tree developers to create single-word
-// shortcuts (similar to shell aliases) that are directly translated
-// into arguments to the Bonzai tree executable by overriding the
-// os.Args in a controlled way.  The value of a shortcut is always a slice
-// of strings that will replace the os.Args[2:]. A slice is used
-// (instead of a string parsed with strings.Fields) to ensure that
-// hard-coded arguments containing whitespace are properly handled.
-var Shortcuts = make(ArgMap)
 
 // AllowPanic disables TrapPanic stopping it from cleaning panic errors.
 var AllowPanic = false
