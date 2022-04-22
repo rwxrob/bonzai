@@ -499,11 +499,11 @@ func (x *Cmd) Seek(args []string) (*Cmd, []string) {
 		next.Caller = cur
 		cur = next
 	}
-	if len(cur.Shortcuts) > 0 {
+	if len(cur.Shortcuts) > 0 && len(args[n:]) > 0 {
 		if v, has := cur.Shortcuts[args[n]]; has {
 			nargs := v
 			nargs = append(nargs, args[n+1:]...)
-			return cur.Seek(nargs)
+			return cur.Seek(EscAll(nargs))
 		}
 	}
 	return cur, args[n:]
