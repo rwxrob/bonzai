@@ -431,6 +431,29 @@ func (x *Cmd) UsageCmdTitles() string {
 	return buf
 }
 
+// UsageCmdShortcuts returns a single string with the Shortcuts
+// indented and with a maximum title signature length for
+// justification.
+func (x *Cmd) UsageCmdShortcuts() string {
+	var set []string
+	var summaries []string
+	for k, v := range x.Shortcuts {
+		set = append(set, k)
+		summaries = append(summaries, strings.Join(v, " "))
+	}
+	longest := redu.Longest(set)
+	var buf string
+	for n := 0; n < len(set); n++ {
+		if len(summaries[n]) > 0 {
+			buf += fmt.Sprintf(
+				`%-`+strconv.Itoa(longest)+"v - %v\n", set[n], summaries[n])
+		} else {
+			buf += fmt.Sprintf(`%-`+strconv.Itoa(longest)+"v\n", set[n])
+		}
+	}
+	return buf
+}
+
 // Param returns Param matching name if found, empty string if not.
 func (x *Cmd) Param(p string) string {
 	if x.Params == nil {

@@ -247,3 +247,17 @@ func ExampleCmd_UsageCmdTitles() {
 	// bar   - bar the things
 	// nosum
 }
+
+func ExampleCmd_UsageCmdShortcuts() {
+	x := &Z.Cmd{
+		Name: `cmd`,
+		Shortcuts: Z.ArgMap{
+			"foo": {"a", "long", "way", "to", "foo"},
+			"bar": {"a", "long", "long", "way", "to", "bar"},
+		},
+	}
+	fmt.Println(x.UsageCmdShortcuts())
+	// Output:
+	// foo - a long way to foo
+	// bar - a long long way to bar
+}
