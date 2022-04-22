@@ -25,6 +25,7 @@ type Cmd struct {
 	// main documentation, use Get* for filled template
 	Name        string    `json:"name,omitempty"`        // plain
 	Aliases     []string  `json:"aliases,omitempty"`     // plain
+	Shortcuts   ArgMap    `json:"shortcuts,omitempty"`   // plain
 	Summary     string    `json:"summary,omitempty"`     // template
 	Usage       string    `json:"usage,omitempty"`       // template
 	Version     string    `json:"version,omitempty"`     // template
@@ -185,19 +186,19 @@ func (x *Cmd) cacheSections() {
 	}
 }
 
-// Run method resolves aliases and seeks the leaf Cmd. It then calls the
-// leaf's first-class Call function passing itself as the first argument
-// along with any remaining command line arguments.  Run returns nothing
-// because it usually exits the program. Normally, Run is called from
-// within main() to convert the Cmd into an actual executable program.
-// Exiting can be controlled, however, by calling ExitOn or ExitOff
-// (primarily for testing). Use Call instead of Run when delegation is
-// needed. However, avoid tight-coupling that comes from delegation with
-// Call when possible. Also, Call automatically assumes the proper
-// number and type of arguments have already been checked (see MinArgs,
-// MaxArgs, NumArgs, etc.) which is normally done by Run. Use
-// a high-level branch pkg instead (which is idiomatic for good Bonzai
-// branch development).
+// Run method resolves Shortcuts and Aliases and seeks the leaf Cmd. It
+// then calls the leaf's first-class Call function passing itself as the
+// first argument along with any remaining command line arguments.  Run
+// returns nothing because it usually exits the program. Normally, Run
+// is called from within main() to convert the Cmd into an actual
+// executable program.  Exiting can be controlled, however, by calling
+// ExitOn or ExitOff (primarily for testing). Use Call instead of Run
+// when delegation is needed. However, avoid tight-coupling that comes
+// from delegation with Call when possible. Also, Call automatically
+// assumes the proper number and type of arguments have already been
+// checked (see MinArgs, MaxArgs, NumArgs, etc.) which is normally done
+// by Run. Use a high-level branch pkg instead (which is idiomatic for
+// good Bonzai branch development).
 //
 // Handling Completion
 //
@@ -459,7 +460,8 @@ func (x *Cmd) IsHidden(name string) bool {
 
 // Seek checks the args for command names returning the deepest along
 // with the remaining arguments. Typically the args passed are directly
-// from the command line.
+// from the command line. Seek also sets the Caller on each Cmd found
+// during resolution. Cmd.Shortcuts are expanded.
 func (x *Cmd) Seek(args []string) (*Cmd, []string) {
 	if args == nil || x.Commands == nil {
 		return x, args
@@ -473,6 +475,13 @@ func (x *Cmd) Seek(args []string) (*Cmd, []string) {
 		}
 		next.Caller = cur
 		cur = next
+	}
+	if len(cur.Shortcuts) > 0 {
+		if v, has := cur.Shortcuts[args[n]]; has {
+			nargs := v
+			nargs = append(nargs, args[n+1:]...)
+			return cur.Seek(nargs)
+		}
 	}
 	return cur, args[n:]
 }
@@ -603,6 +612,14 @@ func (x *Cmd) GetTitle() string { return x.Title() }
 
 // GetAliases fulfills the bonzai.Command interface. No Fill.
 func (x *Cmd) GetAliases() []string { return x.Aliases }
+
+// GetShortcutsMap fulfills the bonzai.Command interface. No Fill.
+func (x *Cmd) GetShortcutsMap() map[string][]string {
+	return map[string][]string(x.Shortcuts)
+}
+
+// GetShortcuts fulfills the bonzai.Command interface. No Fill.
+func (x *Cmd) GetShortcuts() []string { return x.Shortcuts.Keys() }
 
 // GetSummary fulfills the bonzai.Command interface. Uses Fill.
 func (x *Cmd) GetSummary() string { return x.Fill(x.Summary) }

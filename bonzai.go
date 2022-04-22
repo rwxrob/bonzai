@@ -89,6 +89,8 @@ type Command interface {
 	GetName() string
 	GetTitle() string
 	GetAliases() []string
+	GetShortcutsMap() map[string][]string
+	GetShortcuts() []string
 	GetSummary() string
 	GetUsage() string
 	GetVersion() string
