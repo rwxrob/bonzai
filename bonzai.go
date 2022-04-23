@@ -36,6 +36,7 @@ package bonzai
 // needing a trim.
 type Configurer interface {
 	Init() error                    // must initialize a new configuration
+	SoftInit() error                // must init if not yet initialized
 	Data() (string, error)          // must return full YAML
 	Print() error                   // must print full YAML to os.Stdout
 	Edit() error                    // must open full YAML in local editor
@@ -57,6 +58,7 @@ type Configurer interface {
 // value are ignored.) This is the fastest format to read and parse.
 type Vars interface {
 	Init() error                 // initialize completely new cache
+	SoftInit() error             // initialize if not already initialized
 	Data() string                // k=v with \r and \n escaped in v
 	Print()                      // (printed)
 	Get(key string) string       // accessor
