@@ -582,12 +582,26 @@ func (x *Cmd) Set(key, val string) error {
 	return Vars.Set(path+key, val)
 }
 
+// Del is a shorter version of Z.Vars.Del(x.Path()+"."+key.val) for
+// convenience. Logs the error Z.Vars is not defined (see UseVars).
+func (x *Cmd) Del(key string) error {
+	if Vars == nil {
+		return UsesVars{x}
+	}
+	path := x.Path()
+	if path != "." {
+		path += "."
+	}
+	Vars.Del(path + key)
+	return nil
+}
+
 // Fill fills out the passed text/template string using the Cmd instance
 // as the data object source for the template. It is called by the Get*
 // family of field accessors but can be called directly as well. Also
 // see markfunc.go for list of predefined template functions.
 func (x *Cmd) Fill(tmpl string) string {
-	funcs := to.MergedMaps(markFuncMap, x.Dynamic)
+	funcs := to.MergedMaps(Dynamic, x.Dynamic)
 	t, err := template.New("t").Funcs(funcs).Parse(tmpl)
 	if err != nil {
 		log.Println(err)

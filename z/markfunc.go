@@ -13,7 +13,14 @@ import (
 // in their Description and other places where templated BonzaiMark is
 // allowed.
 
-var markFuncMap = template.FuncMap{
+// Dynamic contains the package global default template language which
+// can be supplemented or overridden by Bonzai developers. Note this is in
+// addition to any specific syntax added specifically to a Cmd with
+// Cmd.Dynamic (which takes higher priority). Use Z.Dynamic when
+// a shared template language is to be used across all Cmds within
+// a single Bonzai tree or branch. This allows powerful, template-driven
+// applications to work well with one another.
+var Dynamic = template.FuncMap{
 
 	// semantic
 	"exe": func(a string) string { return term.Under + a + term.Reset },

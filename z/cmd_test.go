@@ -257,7 +257,7 @@ func ExampleCmd_UsageCmdShortcuts() {
 		},
 	}
 	fmt.Println(x.UsageCmdShortcuts())
-	// Output:
+	// Unordered Output:
 	// foo - a long way to foo
 	// bar - a long long way to bar
 }
