@@ -63,7 +63,7 @@ type Vars interface {
 	Print()                      // (printed)
 	Get(key string) string       // accessor
 	Set(key, val string) error   // mutator
-	Del(key string)              // destroyer
+	Del(key string) error        // destroyer
 	OverWrite(with string) error // safely replace all cache
 }
 
