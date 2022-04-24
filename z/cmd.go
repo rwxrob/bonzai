@@ -298,22 +298,22 @@ func (x *Cmd) Run() {
 
 	switch {
 	case len(args) > 0 && cmd.NoArgs:
-		ExitError(TooManyArgs{cmd})
+		ExitError(TooManyArgs{len(args), 0})
 		return
 	case len(args) < cmd.MinArgs:
-		ExitError(NotEnoughArgs{cmd})
+		ExitError(NotEnoughArgs{len(args), cmd.MinArgs})
 		return
 	case cmd.MaxArgs > 0 && len(args) > cmd.MaxArgs:
-		ExitError(TooManyArgs{cmd})
+		ExitError(TooManyArgs{len(args), cmd.MaxArgs})
 		return
 	case cmd.NumArgs > 0 && len(args) != cmd.NumArgs:
-		ExitError(WrongNumArgs{cmd})
+		ExitError(WrongNumArgs{len(args), cmd.NumArgs})
 		return
 	case cmd.UseConf && Conf == nil:
-		ExitError(UsesConf{cmd})
+		ExitError(UsesConf{})
 		return
 	case cmd.UseVars && Vars == nil:
-		ExitError(UsesVars{cmd})
+		ExitError(UsesVars{})
 		return
 	}
 

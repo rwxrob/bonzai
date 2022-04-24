@@ -3,36 +3,33 @@ package Z
 import "fmt"
 
 type NotEnoughArgs struct {
-	Cmd *Cmd
+	Count int
+	Min   int
 }
 
 func (e NotEnoughArgs) Error() string {
 	return fmt.Sprintf(
-		"usage: %v %v (not enough args, %v required)",
-		e.Cmd.Name, e.Cmd.GetUsage(), e.Cmd.MinArgs,
-	)
+		"error: %v is not enough args, %v required", e.Count, e.Min)
 }
 
 type TooManyArgs struct {
-	Cmd *Cmd
+	Count int
+	Max   int
 }
 
 func (e TooManyArgs) Error() string {
 	return fmt.Sprintf(
-		"usage: %v %v (too many args, %v maximum)",
-		e.Cmd.Name, e.Cmd.GetUsage(), e.Cmd.MaxArgs,
-	)
+		"error: %v is too many args, %v maximum", e.Count, e.Max)
 }
 
 type WrongNumArgs struct {
-	Cmd *Cmd
+	Count int
+	Num   int
 }
 
 func (e WrongNumArgs) Error() string {
 	return fmt.Sprintf(
-		"usage: %v %v (wrong number of args, %v required)",
-		e.Cmd.Name, e.Cmd.GetUsage(), e.Cmd.NumArgs,
-	)
+		"error: %v is wrong number of args, %v required", e.Count, e.Num)
 }
 
 type MissingConf struct {
