@@ -565,3 +565,51 @@ func ExamplePrintMarkf() {
 	// ----------------------
 
 }
+
+/*
+func ExampleWrap_again() {
+
+	defer func() {
+		term.Italic = `<italic>`
+		term.Bold = `<bold>`
+		term.BoldItalic = `<bolditalic>`
+		term.Under = `<under>`
+		term.Reset = `<reset>`
+	}()
+
+	term.Italic = esc.Italic
+	term.Bold = esc.Bold
+	term.BoldItalic = esc.BoldItalic
+	term.Under = esc.Under
+	term.Reset = esc.Reset
+	Z.IndentBy = 0
+	Z.Columns = 40
+
+	cmd := &Z.Cmd{
+		Name: `some`,
+		Dynamic: template.FuncMap{
+			"builddir":  func() string { return "a/build/dir" },
+			"buildfile": func() string { return "build.yaml" },
+		},
+
+		Description: `
+		   The {{cmd .Name}} command looks for a {{pre buildfile}} file in
+		   the specified or current directory and runs the build command on
+		   each building them all concurrently into the {{pre builddir}}
+		   directory where they are ready for upload to GitHub as a release.
+		   If an argument is passed it is expected to be an explicit path to
+		   a different build directory. If no path is specified will assume
+		   the current directory and recursively search all parents for
+		   {{pre buildfile}} until found creating a {{pre builddir}} within that
+		   directory for the newly built artifacts.  `,
+	}
+
+	fmt.Println("Output")
+	//	fmt.Println(Z.Mark(cmd.Fill(cmd.Description)))
+	fmt.Println(to.Wrapped(cmd.Fill(cmd.Description), Z.Columns))
+
+	// Output:
+	// some
+
+}
+*/
