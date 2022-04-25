@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"regexp"
 	"strconv"
-	"unicode"
 
 	"github.com/rwxrob/scan"
 	"github.com/rwxrob/term"
@@ -180,88 +179,74 @@ MAIN:
 //     <under> (keeping brackets)
 //
 // See Mark for block formatting and term for terminal rendering.
-func Emph(buf string) string {
+func Emph[T string | []byte | []rune](buf T) string {
 	var nbuf []rune
-	var opentok, closetok bool
-	var otok, ctok string
-	prev := ' '
 
-	for i := 0; i < len([]rune(buf)); i++ {
-		r := []rune(buf)[i]
+	s := scan.R{Buf: []byte(string(buf))}
 
-		if r == '<' {
+	for s.Scan() {
+
+		// <under>
+		if s.Rune == '<' {
 			nbuf = append(nbuf, '<')
 			nbuf = append(nbuf, []rune(term.Under)...)
-			for {
-				i++
-				r = rune(buf[i])
-				if r == '>' {
-					i++
+			for s.Scan() {
+				if s.Rune == '>' {
+					nbuf = append(nbuf, []rune(term.Reset)...)
+					nbuf = append(nbuf, '>')
 					break
 				}
-				nbuf = append(nbuf, r)
+				nbuf = append(nbuf, s.Rune)
 			}
-			nbuf = append(nbuf, []rune(term.Reset)...)
-			nbuf = append(nbuf, '>')
-			i--
 			continue
 		}
 
-		if r != '*' {
-
-			if opentok {
-				tokval := " "
-				if !unicode.IsSpace(r) {
-					switch otok {
-					case "*":
-						tokval = term.Italic
-					case "**":
-						tokval = term.Bold
-					case "***":
-						tokval = term.BoldItalic
-					}
-				} else {
-					tokval = otok
+		// ***BoldItalic***
+		if s.Rune == '*' && s.Peek("**") {
+			s.Pos += 2
+			nbuf = append(nbuf, []rune(term.BoldItalic)...)
+			for s.Scan() {
+				if s.Rune == '*' && s.Peek("**") {
+					s.Pos += 2
+					nbuf = append(nbuf, []rune(term.Reset)...)
+					break
 				}
-				nbuf = append(nbuf, []rune(tokval)...)
-				opentok = false
-				otok = ""
+				nbuf = append(nbuf, s.Rune)
 			}
+			continue
+		}
 
-			if closetok {
-				nbuf = append(nbuf, []rune(term.Reset)...) // practical, not perfect
-				ctok = ""
-				closetok = false
+		// **Bold**
+		if s.Rune == '*' && s.Peek("*") {
+			s.Pos++
+			nbuf = append(nbuf, []rune(term.Bold)...)
+			for s.Scan() {
+				if s.Rune == '*' && s.Peek("*") {
+					s.Pos++
+					nbuf = append(nbuf, []rune(term.Reset)...)
+					break
+				}
+				nbuf = append(nbuf, s.Rune)
 			}
-
-			prev = r
-			nbuf = append(nbuf, r)
 			continue
 		}
 
-		// everything else for '*'
-		if unicode.IsSpace(prev) || opentok {
-			opentok = true
-			otok += string(r)
+		// *Italic*
+		if s.Rune == '*' {
+			nbuf = append(nbuf, []rune(term.Italic)...)
+			for s.Scan() {
+				if s.Rune == '*' {
+					nbuf = append(nbuf, []rune(term.Reset)...)
+					break
+				}
+				nbuf = append(nbuf, s.Rune)
+			}
 			continue
 		}
 
-		// only closer conditions remain
-		if !unicode.IsSpace(prev) {
-			closetok = true
-			ctok += string(r)
-			continue
-		}
+		nbuf = append(nbuf, s.Rune)
 
-		// nothing special
-		closetok = false
-		nbuf = append(nbuf, r)
-	}
-
-	// for tokens at the end of a block
-	if closetok {
-		nbuf = append(nbuf, []rune(term.Reset)...)
-	}
+	} // end main scan loop
 
 	return string(nbuf)
 }

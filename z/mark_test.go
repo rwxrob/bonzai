@@ -120,12 +120,43 @@ func ExampleBlocks_verbatim() {
 
 // -------------------------- main BonzaiMark -------------------------
 
+func ExampleEmph_under() {
+	term.Under = `<under>`
+	term.Reset = `<reset>`
+	fmt.Println(Z.Emph("<UNDER>"))
+	// Output:
+	// <<under>UNDER<reset>>
+}
+
+func ExampleEmph_boldItalic() {
+	term.BoldItalic = `<bolditalic>`
+	term.Reset = `<reset>`
+	fmt.Println(Z.Emph("***BoldItalic***"))
+	// Output:
+	// <bolditalic>BoldItalic<reset>
+}
+
+func ExampleEmph_bold() {
+	term.Bold = `<bold>`
+	term.Reset = `<reset>`
+	fmt.Println(Z.Emph("**Bold**"))
+	// Output:
+	// <bold>Bold<reset>
+}
+
+func ExampleEmph_italic() {
+	term.Italic = `<italic>`
+	term.Reset = `<reset>`
+	fmt.Println(Z.Emph("*Italic*"))
+	// Output:
+	// <italic>Italic<reset>
+}
+
 func ExampleEmph_basics() {
 
 	// Emph observes the term escapes
 	// (see package documentation for more)
 
-	term.Italic = `<italic>`
 	term.Bold = `<bold>`
 	term.BoldItalic = `<bolditalic>`
 	term.Under = `<under>`
