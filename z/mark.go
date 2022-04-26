@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"regexp"
 	"strconv"
+	"unicode"
 
 	"github.com/rwxrob/scan"
 	"github.com/rwxrob/term"
@@ -67,108 +68,112 @@ func (s *Block) String() string { return string(s.V) }
 func Blocks(in string) []*Block {
 
 	var blocks []*Block
-	verbpre := regexp.MustCompile(` {4,}`)
-	s := scan.R{Buf: []byte(to.Dedented(in))}
 
-MAIN:
+	s := scan.R{Buf: []byte(to.Dedented(in))}
+	//s.Trace++
+
 	for s.Scan() {
 
-		if s.Rune == '*' { // bulleted list
-			if !s.Peek(" ") {
-				goto PARA
-			}
-			m := s.Pos - 1
+		// bulleted list
+		if s.Peek("* ") {
+			var beg, end int
+			beg = s.Pos - 1
+
 			for s.Scan() {
 				if s.Peek("\n\n") {
-					blocks = append(blocks, &Block{Bulleted, s.Buf[m:s.Pos]})
-					s.Pos += 2
-					continue MAIN
+					end = s.Pos - 1
+					s.Pos++
+					break
 				}
 			}
-		}
 
-		if s.Rune == '1' { // numbered list
-			if !s.Peek(". ") {
-				goto PARA
-			}
-			m := s.Pos - 1
-			for s.Scan() {
-				if s.Peek("\n\n") {
-					blocks = append(blocks, &Block{Numbered, s.Buf[m:s.Pos]})
-					s.Pos += 2
-					continue MAIN
-				}
-			}
-		}
-
-		if s.Rune == ' ' { // verbatim
-			s.Pos -= 1
-			ln := s.Match(verbpre)
-			s.Pos++
-
-			if ln < 0 {
-				continue
-			}
-			pre := s.Buf[s.Pos-1 : s.Pos+ln-1]
-			s.Pos += len(pre) - 1
-
-			var block []byte
-			for s.Scan() {
-
-				if s.Rune == '\n' {
-
-					// add in indented lines
-					if s.Peek(string(pre)) {
-						block = append(block, '\n')
-						s.Pos += len(pre)
-						continue
-					}
-
-					// end of the block
-					blocks = append(blocks, &Block{Verbatim, block})
-					continue MAIN
-				}
-
-				block = append(block, []byte(string(s.Rune))...)
-			}
-
-		}
-
-		if s.Rune == '\n' || s.Rune == '\r' || s.Rune == '\t' {
+			blocks = append(blocks, &Block{Bulleted, s.Buf[beg:end]})
 			continue
 		}
 
-	PARA:
-		{
-			var block []byte
-			block = append(block, []byte(string(s.Rune))...)
+		// numbered list
+		if s.Peek("1. ") {
+			var beg, end int
+			beg = s.Pos - 1
+
+			for s.Scan() {
+				if s.Peek("\n\n") {
+					end = s.Pos - 1
+					s.Pos++
+					break
+				}
+			}
+
+			blocks = append(blocks, &Block{Numbered, s.Buf[beg:end]})
+			continue
+		}
+
+		// verbatim
+		if ln := s.Match(begVerbatim); ln >= 4 {
+			s.Pos--
+
+			var beg, end int
+			beg = s.Pos
+
 			for s.Scan() {
 
 				if s.Peek("\n\n") {
-					block = append(block, []byte(string(s.Rune))...)
-					blocks = append(blocks, &Block{Paragraph, block})
-					s.Scan()
-					s.Scan()
-					continue MAIN
+					s.Pos++
+					end = s.Pos - 2
+					break
 				}
 
-				if s.Rune == '\n' || s.Rune == '\r' {
-					block = append(block, ' ')
+			}
+
+			dedented := to.Dedented(string(s.Buf[beg:end]))
+			blocks = append(blocks, &Block{Verbatim, []byte(dedented)})
+			continue
+		}
+
+		// paragraph (default)
+		if !unicode.IsSpace(s.Rune) {
+
+			buf := []byte(string(s.Rune))
+
+			for s.Scan() {
+
+				if s.Peek("\n\n") {
+					s.Pos++
+					break
+				}
+
+				if ln := s.Match(ws); ln > 0 {
+					buf = append(buf, ' ')
+					s.Pos += ln - 1
 					continue
 				}
 
-				block = append(block, []byte(string(s.Rune))...)
+				buf = append(buf, []byte(string(s.Rune))...)
+
 			}
 
-			if len(block) > 0 {
-				blocks = append(blocks, &Block{Paragraph, block})
+			if len(buf) > 0 {
+				blocks = append(blocks, &Block{Paragraph, buf})
 			}
-
-		} // PARA
+			continue
+		}
 
 	}
 	return blocks
 }
+
+// don't expose these until mark has own package
+
+var begVerbatim = regexp.MustCompile(`^ {4,}`)
+var ws = regexp.MustCompile(`^[\s\r\n]+`)
+var begUnder = regexp.MustCompile(`^<\p{L}`)
+var endUnder = regexp.MustCompile(`^\p{L}>`)
+var begBoldItalic = regexp.MustCompile(`^\*{3}\p{L}`)
+var endBoldItalic = regexp.MustCompile(`^\p{L}\*{3}`)
+var begBold = regexp.MustCompile(`^\*{2}\p{L}`)
+var endBold = regexp.MustCompile(`^\p{L}\*{2}`)
+var begItalic = regexp.MustCompile(`^\*\p{L}`)
+var endItalic = regexp.MustCompile(`^\p{L}\*`)
 
 // Emph renders BonzaiMark emphasis spans specifically for
 // VT100-compatible terminals (which almost all are today):
@@ -187,13 +192,15 @@ func Emph[T string | []byte | []rune](buf T) string {
 	for s.Scan() {
 
 		// <under>
-		if s.Rune == '<' {
+		if s.Match(begUnder) > 0 {
 			nbuf = append(nbuf, '<')
 			nbuf = append(nbuf, []rune(term.Under)...)
 			for s.Scan() {
-				if s.Rune == '>' {
+				if s.Match(endUnder) > 0 {
+					nbuf = append(nbuf, s.Rune)
 					nbuf = append(nbuf, []rune(term.Reset)...)
 					nbuf = append(nbuf, '>')
+					s.Pos++
 					break
 				}
 				nbuf = append(nbuf, s.Rune)
@@ -202,11 +209,29 @@ func Emph[T string | []byte | []rune](buf T) string {
 		}
 
 		// ***BoldItalic***
-		if s.Rune == '*' && s.Peek("**") {
-			s.Pos += 2
+		if s.Match(begBoldItalic) > 0 {
+			s.Scan()
+			s.Scan()
 			nbuf = append(nbuf, []rune(term.BoldItalic)...)
 			for s.Scan() {
-				if s.Rune == '*' && s.Peek("**") {
+				if s.Match(endBoldItalic) > 0 {
+					nbuf = append(nbuf, s.Rune)
+					nbuf = append(nbuf, []rune(term.Reset)...)
+					s.Pos += 3
+					break
+				}
+				nbuf = append(nbuf, s.Rune)
+			}
+			continue
+		}
+
+		// **Bold**
+		if s.Match(begBold) > 0 {
+			s.Pos += 1
+			nbuf = append(nbuf, []rune(term.Bold)...)
+			for s.Scan() {
+				if s.Match(endBold) > 0 {
+					nbuf = append(nbuf, s.Rune)
 					s.Pos += 2
 					nbuf = append(nbuf, []rune(term.Reset)...)
 					break
@@ -216,27 +241,14 @@ func Emph[T string | []byte | []rune](buf T) string {
 			continue
 		}
 
-		// **Bold**
-		if s.Rune == '*' && s.Peek("*") {
-			s.Pos++
-			nbuf = append(nbuf, []rune(term.Bold)...)
-			for s.Scan() {
-				if s.Rune == '*' && s.Peek("*") {
-					s.Pos++
-					nbuf = append(nbuf, []rune(term.Reset)...)
-					break
-				}
-				nbuf = append(nbuf, s.Rune)
-			}
-			continue
-		}
-
 		// *Italic*
-		if s.Rune == '*' {
+		if s.Match(begItalic) > 0 {
 			nbuf = append(nbuf, []rune(term.Italic)...)
 			for s.Scan() {
-				if s.Rune == '*' {
+				if s.Match(endItalic) > 0 {
+					nbuf = append(nbuf, s.Rune)
 					nbuf = append(nbuf, []rune(term.Reset)...)
+					s.Pos++
 					break
 				}
 				nbuf = append(nbuf, s.Rune)

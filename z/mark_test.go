@@ -4,6 +4,7 @@ import (
 	"fmt"
 
 	Z "github.com/rwxrob/bonzai/z"
+	//	"github.com/rwxrob/scan"
 	"github.com/rwxrob/term"
 )
 
@@ -13,6 +14,7 @@ func init() {
 	term.BoldItalic = `<bolditalic>`
 	term.Under = `<under>`
 	term.Reset = `<reset>`
+	//	scan.Trace++
 }
 
 func ExampleLines() {
@@ -37,12 +39,13 @@ func ExampleBlocks_bulleted() {
 			`
 
 	blocks := Z.Blocks(in)
-	fmt.Printf("%v %q\n", blocks[1].T, blocks[1])
-	fmt.Printf("%v %q\n", blocks[2].T, blocks[2])
+	fmt.Printf("%q\n", blocks[0])
+	fmt.Printf("%q\n", blocks[1])
 
 	//Output:
-	// 3 "* another block\n* here"
-	// 1 "*boldnotbullet*"
+	// "* some thing\n* another thing"
+	// "* another block\n* here"
+
 }
 
 func ExampleBlocks_numbered() {
@@ -56,10 +59,14 @@ func ExampleBlocks_numbered() {
 
 			`
 
-	fmt.Printf("%q\n", Z.Blocks(in)[1])
+	blocks := Z.Blocks(in)
+	fmt.Printf("%q\n", blocks[0])
+	fmt.Printf("%q\n", blocks[1])
 
 	//Output:
+	// "1. some thing\n2. another thing"
 	// "1. another block\n2. here"
+
 }
 
 func ExampleBlocks_paragraph() {
@@ -73,17 +80,19 @@ func ExampleBlocks_paragraph() {
 			here on multiple
 			lines.
 
-			And another one here
+			And another   one here
 			with just a bit more.
 
 			`
 
-	fmt.Printf("%q\n", Z.Blocks(in)[0])
-	fmt.Printf("%q\n", Z.Blocks(in)[1])
+	blocks := Z.Blocks(in)
+	fmt.Printf("%q\n", blocks[0])
+	fmt.Printf("%q\n", blocks[1])
 
 	// Output:
 	// "Simple paragraph here on multiple lines."
 	// "And another one here with just a bit more."
+
 }
 
 func ExampleBlocks_verbatim() {
@@ -107,9 +116,10 @@ func ExampleBlocks_verbatim() {
 
 			`
 
-	fmt.Printf("%q\n", Z.Blocks(in)[0])
-	fmt.Printf("%q\n", Z.Blocks(in)[1])
-	fmt.Printf("%q\n", Z.Blocks(in)[2])
+	blocks := Z.Blocks(in)
+	fmt.Printf("%q\n", blocks[0])
+	fmt.Printf("%q\n", blocks[1])
+	fmt.Printf("%q\n", blocks[2])
 
 	//Output:
 	// "Must have another block type first."
@@ -124,8 +134,10 @@ func ExampleEmph_under() {
 	term.Under = `<under>`
 	term.Reset = `<reset>`
 	fmt.Println(Z.Emph("<UNDER>"))
+	fmt.Println(Z.Emph("< UNDER >"))
 	// Output:
 	// <<under>UNDER<reset>>
+	// < UNDER >
 }
 
 func ExampleEmph_boldItalic() {
@@ -140,16 +152,20 @@ func ExampleEmph_bold() {
 	term.Bold = `<bold>`
 	term.Reset = `<reset>`
 	fmt.Println(Z.Emph("**Bold**"))
+	fmt.Println(Z.Emph("** Bold **"))
 	// Output:
 	// <bold>Bold<reset>
+	// ** Bold **
 }
 
 func ExampleEmph_italic() {
 	term.Italic = `<italic>`
 	term.Reset = `<reset>`
 	fmt.Println(Z.Emph("*Italic*"))
+	fmt.Println(Z.Emph("* Italic *"))
 	// Output:
 	// <italic>Italic<reset>
+	// * Italic *
 }
 
 func ExampleEmph_basics() {
