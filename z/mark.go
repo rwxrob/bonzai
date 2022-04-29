@@ -69,7 +69,7 @@ func Blocks(in string) []*Block {
 
 	var blocks []*Block
 
-	s := scan.R{Buf: []byte(to.Dedented(in))}
+	s := scan.R{B: []byte(to.Dedented(in))}
 	//s.Trace++
 
 	for s.Scan() {
@@ -77,78 +77,78 @@ func Blocks(in string) []*Block {
 		// bulleted list
 		if s.Peek("* ") {
 			var beg, end int
-			beg = s.Pos - 1
+			beg = s.P - 1
 
 			for s.Scan() {
 				if s.Peek("\n\n") {
-					end = s.Pos - 1
-					s.Pos++
+					end = s.P - 1
+					s.P++
 					break
 				}
 			}
 
-			blocks = append(blocks, &Block{Bulleted, s.Buf[beg:end]})
+			blocks = append(blocks, &Block{Bulleted, s.B[beg:end]})
 			continue
 		}
 
 		// numbered list
 		if s.Peek("1. ") {
 			var beg, end int
-			beg = s.Pos - 1
+			beg = s.P - 1
 
 			for s.Scan() {
 				if s.Peek("\n\n") {
-					end = s.Pos - 1
-					s.Pos++
+					end = s.P - 1
+					s.P++
 					break
 				}
 			}
 
-			blocks = append(blocks, &Block{Numbered, s.Buf[beg:end]})
+			blocks = append(blocks, &Block{Numbered, s.B[beg:end]})
 			continue
 		}
 
 		// verbatim
 		if ln := s.Match(begVerbatim); ln >= 4 {
-			s.Pos--
+			s.P--
 
 			var beg, end int
-			beg = s.Pos
+			beg = s.P
 
 			for s.Scan() {
 
 				if s.Peek("\n\n") {
-					s.Pos++
-					end = s.Pos - 2
+					s.P++
+					end = s.P - 2
 					break
 				}
 
 			}
 
-			dedented := to.Dedented(string(s.Buf[beg:end]))
+			dedented := to.Dedented(string(s.B[beg:end]))
 			blocks = append(blocks, &Block{Verbatim, []byte(dedented)})
 			continue
 		}
 
 		// paragraph (default)
-		if !unicode.IsSpace(s.Rune) {
+		if !unicode.IsSpace(s.R) {
 
-			buf := []byte(string(s.Rune))
+			buf := []byte(string(s.R))
 
 			for s.Scan() {
 
 				if s.Peek("\n\n") {
-					s.Pos++
+					s.P++
 					break
 				}
 
 				if ln := s.Match(ws); ln > 0 {
 					buf = append(buf, ' ')
-					s.Pos += ln - 1
+					s.P += ln - 1
 					continue
 				}
 
-				buf = append(buf, []byte(string(s.Rune))...)
+				buf = append(buf, []byte(string(s.R))...)
 
 			}
 
@@ -187,7 +187,7 @@ var endItalic = regexp.MustCompile(`^\p{L}\*`)
 func Emph[T string | []byte | []rune](buf T) string {
 	var nbuf []rune
 
-	s := scan.R{Buf: []byte(string(buf))}
+	s := scan.R{B: []byte(string(buf))}
 
 	for s.Scan() {
 
@@ -197,13 +197,13 @@ func Emph[T string | []byte | []rune](buf T) string {
 			nbuf = append(nbuf, []rune(term.Under)...)
 			for s.Scan() {
 				if s.Match(endUnder) > 0 {
-					nbuf = append(nbuf, s.Rune)
+					nbuf = append(nbuf, s.R)
 					nbuf = append(nbuf, []rune(term.Reset)...)
 					nbuf = append(nbuf, '>')
-					s.Pos++
+					s.P++
 					break
 				}
-				nbuf = append(nbuf, s.Rune)
+				nbuf = append(nbuf, s.R)
 			}
 			continue
 		}
@@ -215,28 +215,28 @@ func Emph[T string | []byte | []rune](buf T) string {
 			nbuf = append(nbuf, []rune(term.BoldItalic)...)
 			for s.Scan() {
 				if s.Match(endBoldItalic) > 0 {
-					nbuf = append(nbuf, s.Rune)
+					nbuf = append(nbuf, s.R)
 					nbuf = append(nbuf, []rune(term.Reset)...)
-					s.Pos += 3
+					s.P += 3
 					break
 				}
-				nbuf = append(nbuf, s.Rune)
+				nbuf = append(nbuf, s.R)
 			}
 			continue
 		}
 
 		// **Bold**
 		if s.Match(begBold) > 0 {
-			s.Pos += 1
+			s.P += 1
 			nbuf = append(nbuf, []rune(term.Bold)...)
 			for s.Scan() {
 				if s.Match(endBold) > 0 {
-					nbuf = append(nbuf, s.Rune)
-					s.Pos += 2
+					nbuf = append(nbuf, s.R)
+					s.P += 2
 					nbuf = append(nbuf, []rune(term.Reset)...)
 					break
 				}
-				nbuf = append(nbuf, s.Rune)
+				nbuf = append(nbuf, s.R)
 			}
 			continue
 		}
@@ -246,17 +246,17 @@ func Emph[T string | []byte | []rune](buf T) string {
 			nbuf = append(nbuf, []rune(term.Italic)...)
 			for s.Scan() {
 				if s.Match(endItalic) > 0 {
-					nbuf = append(nbuf, s.Rune)
+					nbuf = append(nbuf, s.R)
 					nbuf = append(nbuf, []rune(term.Reset)...)
-					s.Pos++
+					s.P++
 					break
 				}
-				nbuf = append(nbuf, s.Rune)
+				nbuf = append(nbuf, s.R)
 			}
 			continue
 		}
 
-		nbuf = append(nbuf, s.Rune)
+		nbuf = append(nbuf, s.R)
 
 	} // end main scan loop
 
