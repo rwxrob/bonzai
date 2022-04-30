@@ -12,7 +12,10 @@
 
 ## Design Considerations
 
-**Promote high-level package library API calls over Cmd bloat**
+Here is a summary of the thinking behind important design decisions
+when creating Bonzai.
+
+### Promote high-level package library API calls over Cmd bloat
 
 Code belongs in package libraries, not Cmds.
 
@@ -30,14 +33,14 @@ intriguing, it quickly became clear that doing so would promote
 undesirable tight coupling --- even with channels --- between
 specific commands.
 
-**Cmds should be very light**
+### Cmds should be very light
 
 Most Cmds should assign their first-class Call function to one that
 lightly wraps a similar function signature in a callable, high-level
 library that works entirely independently from the bonzai package.
 It's best to promote strong support for sustainable API packages.
 
-**Only bash completion and shell.Cmd planned**
+### Only bash completion and shell.Cmd planned
 
 If it doesn't work with `complete -C` or equivalent then just run the
 Bonzai command tree monolith as a temporary shell (shell.Cmd) and use
@@ -64,13 +67,13 @@ included in the standard Bonzai module --- and provides documented
 shortcut aliases when completion is not available (h|help, for
 example).
 
-**Bonzai commands may default to `shell.Cmd` or `help.Cmd`**
+### Bonzai commands may default to `shell.Cmd` or `help.Cmd`
 
 These provide help information and optional interactive assistance
 including tab completion in runtime environments that do not have
 `complete -C foo foo` enabled.
 
-**Target users replacing shell scripts in "dot files" collections**
+### Target users replacing shell scripts in "dot files" collections
 
 By creating a `cmd` subdirectory of a dot files repo a multi-call
 Bonzai command named `cmd` can be easily maintained and added to just
@@ -87,7 +90,7 @@ on the brain" (instead of having to port a bunch of bash later) and
 promotes the massive benefits of rapid applications development the
 fullest extent.
 
-**Use either `foo.Cmd` or `cmd.Foo` convention**
+### Use either `foo.Cmd` or `cmd.Foo` convention
 
 People may decide to put all their Bonzai commands into a single `cmd`
 package or to put each command into its own package. Both are
@@ -95,7 +98,7 @@ perfectly acceptable and allow the developer making the import to
 alias the packages as needed using Go's excellent package import
 design.
 
-**Default capital "Z" import name**
+### Default capital "Z" import name
 
 People can easily change the default "Z" import name to whatever else
 if they don't like it (or worse, if has conflicts). But, we actually
@@ -109,7 +112,7 @@ library they are likely doing something they shouldn't. Bonzai should
 things into the Z package that would never be used outside a Bonzai
 command, tree or `main.go` standalone.
 
-**Promote lower "z" personal Bonzai trees**
+### Promote lower "z" personal Bonzai trees
 
 Just as "dotfiles" has become a convention, use of the simple "z"
 GitHub repo should be promoted as a common, "ez" way to find people's
@@ -117,7 +120,7 @@ personal monoliths. Obviously, people can use what they want. This is
 also consistent with the capital "Z" import name of the `bonzai`
 package.
 
-**Use simple regular expressions for usage**
+### Use simple regular expressions for usage
 
 Bonzai takes a fundamentally different approach to the command line
 and usage documentation. Any command line is a minimal domain specific
@@ -129,7 +132,7 @@ produce rich usage strings for any Bonzai command. However, those
 wanting traditional usage notation can easily override the
 `DefaultUsageFunc` with their own.
 
-**Prioritize output to VT100-compatible terminals**
+### Prioritize output to VT100-compatible terminals
 
 Every modern terminal supports VT100 compatibility. If it doesn't,
 people should just not use it. This means emphasis and formatting are
@@ -137,7 +140,7 @@ dependent on the [`rwxrob/term`](https://github.com/rwxrob/term)
 package for the main output. Bonzai tree developers will likely want
 terminal output helpers more than anything (yes even web rendering).
 
-**Secondary output to local web browser**
+### Secondary output to local web browser
 
 Bonzai will eventually provide the option to enable use of the local
 web browser instead of terminal output for help and other
@@ -149,7 +152,7 @@ default theme. Bonzai branch creators are encouraged to provide
 downloadable themes in this regard. In this way, Bonzai will provide
 the web shell to encapsulate other web applications.
 
-**Prefer local web apps over other GUI platforms**
+### Prefer local web apps over other GUI platforms
 
 While it is obviously possible to create any graphic application with
 Bonzai, the creation of localized web applications should be the
@@ -160,12 +163,12 @@ still providing a rich terminal interface for those who prefer it.
 Every Bonzai binary is its own local web server which Go's rich
 standard library to draw on.
 
-**[]Section instead of map[string]string for Other**
+### []Section instead of map[string]string for Other
 
 This allows composition notation and ensures the author has control of
 how the Other sections appear.
 
-**Move `help.Cmd` into its own package**
+### Move `help.Cmd` into its own package
 
 Although it breaks backward compatibility for many applications
 updating between `v0.1` and `v0.2` the decision to put `help.Cmd` into
@@ -179,7 +182,7 @@ legal information is related to that specific `help.Cmd` Bonzai branch
 and not Bonzai itself. It's conceivable that another `help.Cmd`
 creator may wish another legal agreement.
 
-**Leave hidden default command params**
+### Leave hidden default command params
 
 When the default command is invoked any of it's params will be
 automatically passed as if the command specified them. But they are
@@ -191,14 +194,14 @@ useful shortcut side-effect without calling direct attention to them.
 When and if dependencies on them become an issue it can be addressed
 then.
 
-**Not exporting Dynamic FuncMap builtins**
+### Not exporting Dynamic FuncMap builtins
 
 Since those builtins will land in `mark` subpackage eventually, don't
 want to build any dependencies on them now that will break. The
 builtins themselves can obviously be used immediately and has a much
 smaller chance of changing in the future.
 
-**Reserve `--` for BonzaiShell pipe assignment**
+### Reserve `--` for BonzaiShell pipe assignment
 
 The only operator of the BonzaiShell (that is not a Bonzai leaf
 command allowing maximum extensibility) is the "into" (`--`) operator.
@@ -244,7 +247,7 @@ before writing all that code in Go. Hell, we could even create a
 BonzaiShell to Bonzai Cmd code generator with very little effort at
 that point.
 
-**Custom errors as package globals**
+### Custom errors as package globals
 
 When it became clear that there are a number of canned error
 conditions that we want to allow Cmd developers to use quickly and
@@ -263,14 +266,14 @@ high-impact because so many have hard-coded `x.UsageError` (which is
 why the full `v1.0` is not expected until December 25th 2022, some
 months after things should feel settled and finished).
 
-**Move package global Aliases/Shortcuts into Cmd**
+### Move package global Aliases/Shortcuts into Cmd
 
 In Cmd they can be documented. They also tend to be long and eat up
 too much of the command line when using them with completion. Better
 to just have them in the help docs to lookup when the full path is
 wanted.
 
-**Allow dashes, but discourage**
+### Allow dashes, but discourage
 
 Being able to put a command anywhere in the commands tree path of
 arguments will never be allowed since it is fundamentally against the
@@ -310,37 +313,11 @@ specific design decisions based on the assumptions that dashes are never
 used in command names. One such design decision is to use `--` as the
 pipe operator in eventual `bonsh.Shell` command.
 
-## Printing, Formatting, and Emphasis
+### No shebang (`#!`) line ever in `bonsh` scripts
 
-* `Z.Lines(a string) []string`
-* `Z.Blocks(a string) []string`
-
-• `Z.Emph(a string) string`   - just emphasis
-• `Z.Wrap(a string) string`   - wraps to Z.Columns
-• `Z.Indent(a string) string` - indents Z.IndentBy
-• `Z.InWrap(a string) string` - indents Z.IndentBy, wraps to Z.Columns
-• `Z.Mark(a string) string`   - block aware, indents, wraps all but verbatim
-
-* `Z.Emphf(a string, f ...any) string`       - Emph with Sprintf first
-* `Z.Indentf(a string, f ...any) string`       - Indent with Sprintf first
-* `Z.Wrapf(a string, f ...any) string`       - Wrap with Sprintf first
-* `Z.InWrapf(a string, f ...any) string`     - InWrap with Sprintf first
-* `Z.Markf(a string, f ...any) string`  - Mark with Sprintf first
-`
-• `Z.PrintEmph(a string)`     - shorthand for fmt.Print(Z.Emph(a string))
-• `Z.PrintWrap(a string)`     - shorthand for fmt.Print(Z.Wrap(a string))
-• `Z.PrintIndent(a string)`     - shorthand for fmt.Print(Z.Indent(a string))
-• `Z.PrintInWrap(a string)`     - shorthand for fmt.Print(Z.InWrap(a string))
-• `Z.PrintMark(a string)`     - shorthand for fmt.Print(Z.Mark(a string))
-`
-• `Z.PrintfEmph(a string, f ...any)` - fmt.Print(Z.Emphf(a string, f ...any))
-• `Z.PrintfWrap(a string, f ...any)` - fmt.Print(Z.Wrapf(a string, f ...any))
-• `Z.PrintfIndent(a string, f ...any)` - fmt.Print(Z.Indentf(a string, f ...any))
-• `Z.PrintfInWrap(a string, f ...any)` - fmt.Print(Z.InWrapf(a string, f ...any))
-• `Z.PrintfMark(a string, f ...any)` - fmt.Print(Z.Markf(a string, f ...any))
-
-## Shwag
-
-Looking to get with
-[https://www.trendhunter.com/trends/amuseable-bonsai-tree] to make a
-plushy mascot.
+We don't want to create an ecosystem of Bonzai shell scripts that are
+associated with a specific operating system. All `bonsh` scripts must be
+passed to an interpreter, which is any Bonzai composite command tree
+that imports `bon.Shell`, which includes `z bon [shell]`, the default
+for the `bon` command, which many will create a shortcut for `z sh`
+(pronounced `zee S H` or `bonzai shell`, what's `zsh`?).
