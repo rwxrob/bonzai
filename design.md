@@ -213,7 +213,6 @@ look something like this (where lines with *any* space are line
 continuations, unless they are `--`, which joins them as a pipe):
 
 ```bonzai
-  #!/usr/bin/env z
   produce output with lines
   --
   each line
