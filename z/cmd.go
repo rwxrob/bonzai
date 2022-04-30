@@ -11,6 +11,7 @@ import (
 	"strconv"
 	"strings"
 	"text/template"
+	"unicode"
 
 	"github.com/rwxrob/bonzai"
 	"github.com/rwxrob/fn/each"
@@ -80,10 +81,18 @@ func (s Section) GetTitle() string { return s.Title }
 func (s Section) GetBody() string  { return s.Body }
 
 // Names returns the Name and any Aliases grouped such that the Name is
-// always last.
+// always last. Any alias beginning with anything but a letter (L) is
+// omitted.
 func (x *Cmd) Names() []string {
 	var names []string
-	names = append(names, x.Aliases...)
+	for _, a := range x.Aliases {
+		if len(a) == 0 {
+			continue
+		}
+		if unicode.IsLetter([]rune(a)[0]) {
+			names = append(names, a)
+		}
+	}
 	names = append(names, x.Name)
 	return names
 }
@@ -389,12 +398,16 @@ func (x *Cmd) CmdNames() []string {
 
 // UsageCmdTitles returns a single string with the titles of each
 // subcommand indented and with a maximum title signature length for
-// justification.  Hidden commands are not included. Note that the order
+// justification.  Hidden commands are not included. Aliases that begin
+// with anything but a letter (L) are not included. Note that the order
 // of the Commands is preserved (not necessarily alphabetic).
 func (x *Cmd) UsageCmdTitles() string {
 	var set []string
 	var summaries []string
 	for _, c := range x.Commands {
+		if x.IsHidden(c.Name) {
+			continue
+		}
 		set = append(set, strings.Join(c.Names(), "|"))
 		summaries = append(summaries, c.GetSummary())
 	}

@@ -144,7 +144,7 @@ func ExampleCmd_Names() {
 
 	x := &Z.Cmd{
 		Name:    `foo`,
-		Aliases: []string{"f", "FOO"},
+		Aliases: []string{"-f", "@f", "f", "FOO"},
 	}
 	fmt.Println(x.Names())
 
@@ -226,6 +226,7 @@ func ExampleCmd_UsageCmdTitles() {
 	x := &Z.Cmd{
 		Name:   `cmd`,
 		Params: []string{"p1", "p2"},
+		Hidden: []string{"hidden"},
 		Commands: []*Z.Cmd{
 			&Z.Cmd{
 				Name:    "foo",
@@ -238,6 +239,10 @@ func ExampleCmd_UsageCmdTitles() {
 			},
 			&Z.Cmd{
 				Name: "nosum",
+			},
+			&Z.Cmd{
+				Name:    "hidden",
+				Summary: "not listed, but works",
 			},
 		},
 	}
