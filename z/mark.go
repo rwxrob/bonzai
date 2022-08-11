@@ -58,6 +58,9 @@ func (s *Block) String() string { return string(s.V) }
 // For now, these blocks are added as is, but plans are to eventually
 // add support for short and long lists much like CommonMark.
 //
+// If no blocks are parsed returns an empty slice of Block pointers ([]
+// *Block).
+//
 // Note that because of the nature of Verbatim's block's initial (4
 // space) token Verbatim blocks must never be first since the entire
 // input buffer is first dedented and the spaces would grouped with the
@@ -65,100 +68,96 @@ func (s *Block) String() string { return string(s.V) }
 // because Verbatim blocks never make sense as the first block in
 // a BonzaiMark document. This simplicity and clarity of 4-space tokens
 // far outweighs the advantages of alternatives (such as fences).
+//
+//  PEGN Spefication
+//
+//        Grammar     <-- Block*
+//        Block       <-- Bulleted / Numbered / Verbatim / Paragraph
+//        Bulleted    <-- '* ' (!EOB unipoint)* EOB
+//        Numbered    <-- '1. ' (!EOB unipoint)* EOB
+//        Verbatim    <-- '    ' (!EOB unipoint)* EOB
+//        Paragraph   <-- (!EOB unipoint)* EOB
+//        EOB          <- LF{2} / EOD
+//        EOD          <- # end of data stream
+//
 func Blocks(in string) []*Block {
-
 	var blocks []*Block
 
-	s := scan.R{B: []byte(to.Dedented(in))}
+	in = to.Dedented(in) // also trims initial white space
+
+	s := scan.R{B: []byte(in)}
 	//s.Trace++
 
 	for s.Scan() {
 
-		// bulleted list
-		if s.Peek("* ") {
+		// Bulleted
+		if s.Is("* ") {
 			var beg, end int
 			beg = s.P - 1
-
 			for s.Scan() {
-				if s.Peek("\n\n") {
+				if s.Is("\n\n") {
 					end = s.P - 1
 					s.P++
 					break
 				}
+				end = s.P
 			}
-
 			blocks = append(blocks, &Block{Bulleted, s.B[beg:end]})
 			continue
 		}
 
-		// numbered list
-		if s.Peek("1. ") {
+		// Numbered
+		if s.Is("1. ") {
 			var beg, end int
 			beg = s.P - 1
-
 			for s.Scan() {
-				if s.Peek("\n\n") {
+				if s.Is("\n\n") {
 					end = s.P - 1
 					s.P++
 					break
 				}
+				end = s.P
 			}
-
 			blocks = append(blocks, &Block{Numbered, s.B[beg:end]})
 			continue
 		}
 
-		// verbatim
+		// Verbatim
 		if ln := s.Match(begVerbatim); ln >= 4 {
-			s.P--
-
 			var beg, end int
-			beg = s.P
-
+			beg = s.LP
 			for s.Scan() {
-
-				if s.Peek("\n\n") {
+				if s.Is("\n\n") {
+					end = s.P - 1
 					s.P++
-					end = s.P - 2
 					break
 				}
-
+				end = s.P
 			}
-
 			dedented := to.Dedented(string(s.B[beg:end]))
 			blocks = append(blocks, &Block{Verbatim, []byte(dedented)})
 			continue
 		}
 
-		// paragraph (default)
+		// Paragraph (default)
 		if !unicode.IsSpace(s.R) {
-
-			buf := []byte(string(s.R))
-
+			var beg, end int
+			beg = s.LP
 			for s.Scan() {
-
-				if s.Peek("\n\n") {
+				if s.Is("\n\n") {
+					end = s.P - 1
 					s.P++
 					break
 				}
-
-				if ln := s.Match(ws); ln > 0 {
-					buf = append(buf, ' ')
-					s.P += ln - 1
-					continue
-				}
-
-				buf = append(buf, []byte(string(s.R))...)
-
+				end = s.P
 			}
-
-			if len(buf) > 0 {
-				blocks = append(blocks, &Block{Paragraph, buf})
-			}
+			blocks = append(blocks, &Block{Paragraph,
+				[]byte(to.Words(string(s.B[beg:end])))})
 			continue
 		}
 
 	}
+
 	return blocks
 }
 
@@ -227,6 +226,7 @@ func Emph[T string | []byte | []rune](buf T) string {
 
 		// **Bold**
 		if s.Match(begBold) > 0 {
+
 			s.P += 1
 			nbuf = append(nbuf, []rune(term.Bold)...)
 			for s.Scan() {

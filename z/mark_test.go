@@ -39,6 +39,7 @@ func ExampleBlocks_bulleted() {
 			`
 
 	blocks := Z.Blocks(in)
+	//fmt.Println(blocks)
 	fmt.Printf("%q\n", blocks[0])
 	fmt.Printf("%q\n", blocks[1])
 
@@ -86,6 +87,8 @@ func ExampleBlocks_paragraph() {
 			`
 
 	blocks := Z.Blocks(in)
+	//fmt.Println(len(blocks))
+	//fmt.Printf("%v", blocks)
 	fmt.Printf("%q\n", blocks[0])
 	fmt.Printf("%q\n", blocks[1])
 
@@ -104,7 +107,7 @@ func ExampleBlocks_verbatim() {
 	// verbatim prefix. (If using Vi/m try set :list to display them.)
 
 	in := `
-			Must have another block type first.
+			* Must have another block type first.
 
 			     Now we can start
 			     a Verbatim
@@ -112,19 +115,21 @@ func ExampleBlocks_verbatim() {
 			     
 			     Which can have blank lines, even.
 
-			And back to a paragraph block.
+			* And back to another bulleted list.
 
 			`
 
 	blocks := Z.Blocks(in)
+	//fmt.Println(len(blocks))
+	//fmt.Println(blocks)
 	fmt.Printf("%q\n", blocks[0])
 	fmt.Printf("%q\n", blocks[1])
 	fmt.Printf("%q\n", blocks[2])
 
 	//Output:
-	// "Must have another block type first."
+	// "* Must have another block type first."
 	// "Now we can start\na Verbatim\nblock.\n\nWhich can have blank lines, even."
-	// "And back to a paragraph block."
+	// "* And back to another bulleted list."
 
 }
 
