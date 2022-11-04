@@ -201,52 +201,6 @@ want to build any dependencies on them now that will break. The
 builtins themselves can obviously be used immediately and has a much
 smaller chance of changing in the future.
 
-### Reserve `--` for BonzaiShell pipe assignment
-
-The only operator of the BonzaiShell (that is not a Bonzai leaf
-command allowing maximum extensibility) is the "into" (`--`) operator.
-It is observed by `Seek` (called from `Run`) and is processed in a
-consistent way. All it does is follow the precedent set by
-`text/template` of buffering standard output of the command
-immediately before it and adding it as the last argument to the
-following command. That's it. Not only is this consistent will well
-established practices, it's drop dead simple to remember and
-implement. Ultimately, this will result in BonzaiShell scripts that
-look something like this (where lines with *any* space are line
-continuations, unless they are `--`, which joins them as a pipe):
-
-```bonzai
-  produce output with lines
-  --
-  each line
-  foo the line
-  --
-  prefix someprefix
-```
-
-The fact that `--` is observed by most shells as the "end of
-arguments" mark makes it somewhat intuitive for regular shell users
-who know that if they have anything that contains such a thing that it
-would have to be quoted. Therefore, ***no Bonzai command must ever
-require a double-dash argument*** because it will be handled before the
-command ever sees it signifying this pipe relationship to the next
-command.
-
-Unlike most host shells (which will create their own conflicts with
-most Bonzai commands) this is the *only* reserved keyword. When
-BonzaiShell is complete, users will be able to start a REPL with `z
-shell`, or, if the Bonzai tree developer decides to make `shell` the
-default argument (which will probably become the recommended
-convention) then users will be able to write BonzaiShell scripts or
-even use `#!/usr/bin/env z` on Unix systems (despite that probably
-being discouraged over just writing a simple Bonzai leaf command that
-does the same and compiling it into your tree).
-
-In fact, BonzaiShell scripts could provide for great prototyping
-before writing all that code in Go. Hell, we could even create a
-BonzaiShell to Bonzai Cmd code generator with very little effort at
-that point.
-
 ### Custom errors as package globals
 
 When it became clear that there are a number of canned error
@@ -310,14 +264,15 @@ arguments and parameters using getopt notation. Having this freedom is a
 part of FOSS and for those who insist is supported. It is simply
 strongly discouraged by the Bonzai project itself which will make
 specific design decisions based on the assumptions that dashes are never
-used in command names. One such design decision is to use `--` as the
-pipe operator in eventual `bonsh.Shell` command.
+used in command names.
 
-### No shebang (`#!`) line ever in `bonsh` scripts
+### Abandon plans for Bonzai "shell" and double-dash pipes
 
-We don't want to create an ecosystem of Bonzai shell scripts that are
-associated with a specific operating system. All `bonsh` scripts must be
-passed to an interpreter, which is any Bonzai composite command tree
-that imports `bon.Shell`, which includes `z bon [shell]`, the default
-for the `bon` command, which many will create a shortcut for `z sh`
-(pronounced `zee S H` or `bonzai shell`, what's `zsh`?).
+At one point the thought that allowing a PipeToken to be set would allow
+an internal unix-like pipeline construct in the Shortcuts as well as
+from the command line, which would easily be expandable into its own
+scripting language, but these plans have been abandoned for the sake of
+simplicity and anti-bloatware. We want to encourage creation of other
+commands that combine the input and output in their own ways and have
+added `Input io.Reader` instead. Commands can check this in addition to
+checking for `args` to determine what to do with such input.

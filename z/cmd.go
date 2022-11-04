@@ -6,6 +6,7 @@ package Z
 import (
 	"bytes"
 	"fmt"
+	"io"
 	"log"
 	"os"
 	"strconv"
@@ -54,6 +55,9 @@ type Cmd struct {
 	// where the work happens
 	Caller *Cmd   `json:"-"`
 	Call   Method `json:"-"`
+
+	// pass bulk input efficiently (when args won't do)
+	Input io.Reader
 
 	// faster than lots of "if" in Call
 	MinArgs int  `json:"-"` // minimum number of args required (including parms)

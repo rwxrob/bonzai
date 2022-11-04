@@ -51,7 +51,7 @@ func cachedir() string {
 }
 
 func confdir() string {
-	dir, _ := os.UserCacheDir()
+	dir, _ := os.UserConfigDir()
 	return dir
 }
 
