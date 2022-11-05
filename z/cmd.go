@@ -49,6 +49,9 @@ type Cmd struct {
 	Params   []string `json:"params,omitempty"`
 	Hidden   []string `json:"hidden,omitempty"`
 
+	// default values for Var variables, also for initialization
+	VarDefs VarVals `json:"vardefs,omitempty"`
+
 	// standard or custom completer, usually of form compfoo.New()
 	Comp bonzai.Completer `json:"-"`
 
@@ -60,14 +63,15 @@ type Cmd struct {
 	Input io.Reader
 
 	// faster than lots of "if" in Call
-	MinArgs int  `json:"-"` // minimum number of args required (including parms)
-	MaxArgs int  `json:"-"` // maximum number of args required (including parms)
-	NumArgs int  `json:"-"` // exact number of args required (including parms)
-	NoArgs  bool `json:"-"` // must not have any args
-	MinParm int  `json:"-"` // minimum number of params required
-	MaxParm int  `json:"-"` // maximum number of params required
-	UseConf bool `json:"-"` // requires Z.Conf be assigned
-	UseVars bool `json:"-"` // requires Z.Var be assigned
+	MinArgs  int  `json:"-"` // minimum number of args required (including parms)
+	MaxArgs  int  `json:"-"` // maximum number of args required (including parms)
+	NumArgs  int  `json:"-"` // exact number of args required (including parms)
+	NoArgs   bool `json:"-"` // must not have any args
+	MinParm  int  `json:"-"` // minimum number of params required
+	MaxParm  int  `json:"-"` // maximum number of params required
+	UseConf  bool `json:"-"` // requires Z.Conf be assigned
+	UseVars  bool `json:"-"` // requires Z.Var be assigned
+	ConfVars bool `json:"-"` // vars default to conf values before VarDefs
 
 	_aliases  map[string]*Cmd   // see cacheAliases called from Run->Seek->Resolve
 	_sections map[string]string // see cacheSections called from Run
@@ -594,9 +598,19 @@ func (x *Cmd) Get(key string) (string, error) {
 		return v, nil
 	}
 
-	v, _ = Conf.Query(ptr)
-	if v != "" && v != "null" {
-		x.Set(key, v)
+	if x.ConfVars {
+		v, _ = Conf.Query(ptr)
+		if v != "" && v != "null" {
+			x.Set(key, v)
+			return v, nil
+		}
+	}
+
+	if x.VarDefs != nil {
+		v, _ = x.VarDefs[key]
+		if v != "" {
+			x.Set(key, v)
+		}
 		return v, nil
 	}
 

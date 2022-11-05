@@ -124,11 +124,6 @@ var Vars bonzai.Vars
 // than producing usually long usage lines.
 var UsageFunc = InferredUsage
 
-// VarDefsFromConf will cause the Get method to check for an existing
-// Conf value matching the path as the and if found Set it to that
-// default and then return it.
-var VarDefsFromConf bool
-
 // InferredUsage returns a single line of text summarizing only the
 // Commands (less any Hidden commands), Params, and Aliases. If a Cmd
 // is currently in an invalid state (Params without Call, no Call and no
@@ -294,6 +289,10 @@ func ArgsOrIn(args []string) string {
 	}
 	return strings.Join(args, " ")
 }
+
+// VarVals is a map keyed to individual variable keys from Vars. See
+// Cmd.ConfVars and Cmd.Get.
+type VarVals map[string]string
 
 // ArgMap is a map keyed to individual arguments that should be
 // expanded by being replaced with the slice of strings. See
