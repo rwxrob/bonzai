@@ -124,6 +124,11 @@ var Vars bonzai.Vars
 // than producing usually long usage lines.
 var UsageFunc = InferredUsage
 
+// VarDefsFromConf will cause the Get method to check for an existing
+// Conf value matching the path as the and if found Set it to that
+// default and then return it.
+var VarDefsFromConf bool
+
 // InferredUsage returns a single line of text summarizing only the
 // Commands (less any Hidden commands), Params, and Aliases. If a Cmd
 // is currently in an invalid state (Params without Call, no Call and no

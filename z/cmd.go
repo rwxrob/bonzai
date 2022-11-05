@@ -574,16 +574,33 @@ func (x *Cmd) C(q string) (string, error) {
 }
 
 // Get is a shorter version of Z.Vars.Get(x.Path()+"."+key) for
-// convenience. Also see UseVars.
+// convenience but also observes VarDefsFromConf if set. Also see
+// UseVars.
 func (x *Cmd) Get(key string) (string, error) {
+
 	if Vars == nil {
 		return "", UsesVars{x}
 	}
+
 	path := x.Path()
 	if path != "." {
 		path += "."
 	}
-	return Vars.Get(path + key), nil
+
+	ptr := path + key
+
+	v := Vars.Get(ptr)
+	if v != "" {
+		return v, nil
+	}
+
+	v, _ = Conf.Query(ptr)
+	if v != "" && v != "null" {
+		x.Set(key, v)
+		return v, nil
+	}
+
+	return "", nil
 }
 
 // Set is a shorter version of Z.Vars.Set(x.Path()+"."+key.val) for
