@@ -23,15 +23,15 @@ Most realize Bonzai really distinguishes itself from anything else out there the
 
 ## Getting Started
 
-1. Read the book:
+Read the book:
 
 * https://github.com/rwxrob/book-bonzai
 
-1. Copy or clone the example template:
+Copy or clone the example template:
 
 * https://github.com/rwxrob/bonzai-example
 
-1. Get ideas for your own by looking at others
+Get ideas for your own by looking at others
 
 * https://github.com/rwxrob/z
 * https://github.com/rwxrob/pomo
