@@ -59,6 +59,7 @@ type Cmd struct {
 	// where the work happens
 	Caller *Cmd   `json:"-"`
 	Call   Method `json:"-"`
+	Init   Method `json:"-"` // before Commands/Call, good for validation
 
 	// pass bulk input efficiently (when args won't do)
 	Input io.Reader
@@ -298,6 +299,13 @@ func (x *Cmd) Run() {
 		return
 	}
 
+	// initialize before delegation and Call
+	if cmd.Init != nil {
+		if err := cmd.Init(cmd, args...); err != nil {
+			ExitError(err)
+		}
+	}
+
 	// default to first Command if no Call defined
 	if cmd.Call == nil {
 		if len(cmd.Commands) > 0 {
@@ -339,6 +347,7 @@ func (x *Cmd) Run() {
 	if cmd.Caller == nil {
 		cmd.Caller = x
 	}
+
 	if err := cmd.Call(cmd, args...); err != nil {
 		ExitError(err)
 		return
