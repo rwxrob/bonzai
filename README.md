@@ -15,7 +15,11 @@ Bonzai was born from a very real need to replace messy collections of shell scri
 
 There's no better language than Go for such things.
 
-Bonzai gets its name from the fact that Bonzai users are fond of meticulously manicuring their own stateful command trees, built from imported composite commands that they can easily copy and run on on any device, anywhere. Bonzai users can easily share their own commands with others just like they would any other Go module and since any Bonzai command also doubles as a high-level library package, even non-Bonzai users benefit. But where Bonzai really separates itself from anything else ever created is that any Bonzai command branch can be turned into a fully-documented, tab-completing stand-alone or multi-call binary by wrapping it in five lines of code and compiling. Such is the beautiful advantage of their stateful command tree design. There's simply nothing else like it.
+Bonzai gets its name from the fact that Bonzai users are fond of meticulously manicuring their own stateful command trees, built from imported composite commands that they can easily copy and run on on any device, anywhere.
+
+Bonzai users can easily share their own commands with others just like they would any other Go module and since any Bonzai command also doubles as a high-level library package, even non-Bonzai users benefit.
+
+Most realize Bonzai really distinguishes itself from anything else out there the first time they turn any command branch into a fully-documented, tab-completing, stand-alone binary simply by wrapping it in five lines of code. Such is the beauty of stateful command tree design. There's simply nothing else like it, in Go or any other language.
 
 ## Getting Started
 
