@@ -36,7 +36,8 @@ type Cmd struct {
 	Description string    `json:"description,omitempty"` // template
 	Other       []Section `json:"other,omitempty"`       // template
 
-	// run-time additions to main documentation (ex: {{ exename }})
+	// for use with text/template for run-time additions to main
+	// documentation and embedded file output (ex: {{ exename }})
 	Dynamic template.FuncMap `json:"-"`
 
 	// administrative URLs
