@@ -6,7 +6,7 @@ import (
 	"strconv"
 	"unicode"
 
-	"github.com/rwxrob/scan"
+	"github.com/rwxrob/pegn/scanner"
 	"github.com/rwxrob/term"
 	"github.com/rwxrob/to"
 )
@@ -85,7 +85,7 @@ func Blocks(in string) []*Block {
 
 	in = to.Dedented(in) // also trims initial white space
 
-	s := scan.R{B: []byte(in)}
+	s := scanner.New(in)
 	//s.Trace++
 
 	for s.Scan() {
@@ -93,48 +93,48 @@ func Blocks(in string) []*Block {
 		// Bulleted
 		if s.Is("* ") {
 			var beg, end int
-			beg = s.P - 1
+			beg = s.E - 1
 			for s.Scan() {
 				if s.Is("\n\n") {
-					end = s.P - 1
-					s.P++
+					end = s.E - 1
+					s.E++
 					break
 				}
-				end = s.P
+				end = s.E
 			}
-			blocks = append(blocks, &Block{Bulleted, s.B[beg:end]})
+			blocks = append(blocks, &Block{Bulleted, s.Buf[beg:end]})
 			continue
 		}
 
 		// Numbered
 		if s.Is("1. ") {
 			var beg, end int
-			beg = s.P - 1
+			beg = s.E - 1
 			for s.Scan() {
 				if s.Is("\n\n") {
-					end = s.P - 1
-					s.P++
+					end = s.E - 1
+					s.E++
 					break
 				}
-				end = s.P
+				end = s.E
 			}
-			blocks = append(blocks, &Block{Numbered, s.B[beg:end]})
+			blocks = append(blocks, &Block{Numbered, s.Buf[beg:end]})
 			continue
 		}
 
 		// Verbatim
 		if ln := s.Match(begVerbatim); ln >= 4 {
 			var beg, end int
-			beg = s.LP
+			beg = s.B
 			for s.Scan() {
 				if s.Is("\n\n") {
-					end = s.P - 1
-					s.P++
+					end = s.E - 1
+					s.E++
 					break
 				}
-				end = s.P
+				end = s.E
 			}
-			dedented := to.Dedented(string(s.B[beg:end]))
+			dedented := to.Dedented(string(s.Buf[beg:end]))
 			blocks = append(blocks, &Block{Verbatim, []byte(dedented)})
 			continue
 		}
@@ -142,17 +142,17 @@ func Blocks(in string) []*Block {
 		// Paragraph (default)
 		if !unicode.IsSpace(s.R) {
 			var beg, end int
-			beg = s.LP
+			beg = s.B
 			for s.Scan() {
 				if s.Is("\n\n") {
-					end = s.P - 1
-					s.P++
+					end = s.E - 1
+					s.E++
 					break
 				}
-				end = s.P
+				end = s.E
 			}
 			blocks = append(blocks, &Block{Paragraph,
-				[]byte(to.Words(string(s.B[beg:end])))})
+				[]byte(to.Words(string(s.Buf[beg:end])))})
 			continue
 		}
 
@@ -186,7 +186,7 @@ var endItalic = regexp.MustCompile(`^\p{L}\*`)
 func Emph[T string | []byte | []rune](buf T) string {
 	var nbuf []rune
 
-	s := scan.R{B: []byte(string(buf))}
+	s := scanner.New(buf)
 
 	for s.Scan() {
 
@@ -199,7 +199,7 @@ func Emph[T string | []byte | []rune](buf T) string {
 					nbuf = append(nbuf, s.R)
 					nbuf = append(nbuf, []rune(term.Reset)...)
 					nbuf = append(nbuf, '>')
-					s.P++
+					s.E++
 					break
 				}
 				nbuf = append(nbuf, s.R)
@@ -216,7 +216,7 @@ func Emph[T string | []byte | []rune](buf T) string {
 				if s.Match(endBoldItalic) > 0 {
 					nbuf = append(nbuf, s.R)
 					nbuf = append(nbuf, []rune(term.Reset)...)
-					s.P += 3
+					s.E += 3
 					break
 				}
 				nbuf = append(nbuf, s.R)
@@ -227,12 +227,12 @@ func Emph[T string | []byte | []rune](buf T) string {
 		// **Bold**
 		if s.Match(begBold) > 0 {
 
-			s.P += 1
+			s.E += 1
 			nbuf = append(nbuf, []rune(term.Bold)...)
 			for s.Scan() {
 				if s.Match(endBold) > 0 {
 					nbuf = append(nbuf, s.R)
-					s.P += 2
+					s.E += 2
 					nbuf = append(nbuf, []rune(term.Reset)...)
 					break
 				}
@@ -248,7 +248,7 @@ func Emph[T string | []byte | []rune](buf T) string {
 				if s.Match(endItalic) > 0 {
 					nbuf = append(nbuf, s.R)
 					nbuf = append(nbuf, []rune(term.Reset)...)
-					s.P++
+					s.E++
 					break
 				}
 				nbuf = append(nbuf, s.R)

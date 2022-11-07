@@ -4,7 +4,6 @@ import (
 	"fmt"
 
 	Z "github.com/rwxrob/bonzai/z"
-	//	"github.com/rwxrob/scan"
 	"github.com/rwxrob/term"
 )
 
@@ -14,7 +13,6 @@ func init() {
 	term.BoldItalic = `<bolditalic>`
 	term.Under = `<under>`
 	term.Reset = `<reset>`
-	//	scan.Trace++
 }
 
 func ExampleLines() {
@@ -71,10 +69,6 @@ func ExampleBlocks_numbered() {
 }
 
 func ExampleBlocks_paragraph() {
-
-	// defer func() { scan.Trace = 0 }()
-	// log.SetFlags(0)
-	// scan.Trace = 1
 
 	in := `
 			Simple paragraph
