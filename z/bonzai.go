@@ -245,22 +245,34 @@ func Exit() {
 // has been set to true. Commands should usually never call ExitError
 // themselves returning an error from their Method instead.
 func ExitError(err ...interface{}) {
+	prev := os.Stdout
+	os.Stdout = os.Stderr
+	previ := IndentBy
+	IndentBy = 0
+
 	switch e := err[0].(type) {
+
 	case string:
 		if len(e) > 1 {
-			log.Printf(e+"\n", err[1:]...)
+			PrintMarkf(e+"\n", err[1:]...)
 		} else {
-			log.Println(e)
+			PrintMark(e)
 		}
+
 	case error:
 		out := fmt.Sprintf("%v", e)
 		if len(out) > 0 {
-			log.Println(out)
+			PrintMark(out)
 		}
 	}
+
+	IndentBy = previ
+	os.Stdout = prev
+
 	if !DoNotExit {
 		os.Exit(1)
 	}
+
 }
 
 // ArgsFrom returns a list of field strings split on space with an extra
