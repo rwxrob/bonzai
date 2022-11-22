@@ -262,7 +262,7 @@ func ExitError(err ...interface{}) {
 	case error:
 		out := fmt.Sprintf("%v", e)
 		if len(out) > 0 {
-			PrintMark(out)
+			fmt.Println(strings.TrimSpace(Mark(out)))
 		}
 	}
 
