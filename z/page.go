@@ -4,12 +4,32 @@ import (
 	"fmt"
 	"os"
 	"os/exec"
+	"strings"
 
 	"github.com/rwxrob/to"
 )
 
 // NoPager disables all paging.
 var NoPager bool
+
+// FixPagerEnv sets environment variables for
+// different pagers to get them to support color ANSI escapes. FRX is
+// added to LESS and LV is set to -c. (These are the same fixes used by
+// the git diff command.)
+func FixPagerEnv() {
+	less := os.Getenv(`LESS`)
+	if strings.Index(less, `R`) < 0 {
+		less += `R`
+	}
+	if strings.Index(less, `F`) < 0 {
+		less += `F`
+	}
+	if strings.Index(less, `X`) < 0 {
+		less += `X`
+	}
+	os.Setenv(`LESS`, less)
+	os.Setenv(`LV`, `-c`)
+}
 
 // FindPager returns a full path to a pager binary if it can find one on
 // the system:
@@ -22,6 +42,7 @@ func FindPager() string {
 	if NoPager {
 		return ""
 	}
+	FixPagerEnv()
 	path := os.Getenv(`PAGER`)
 	if path == "" {
 		path, _ = exec.LookPath(path)
