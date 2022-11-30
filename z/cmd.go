@@ -540,7 +540,6 @@ func (x *Cmd) PathCmds() []*Cmd {
 func (x *Cmd) PathNames() []string {
 	path := qstack.New[string]()
 	path.Unshift(x.Name)
-	log.Print(x.Caller)
 	p := x.Caller
 	for p != nil {
 		path.Unshift(p.Name)
