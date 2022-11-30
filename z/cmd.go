@@ -336,10 +336,10 @@ func (x *Cmd) Run() {
 		ExitError(WrongNumArgs{len(args), cmd.NumArgs})
 		return
 	case cmd.UseConf && Conf == nil:
-		ExitError(UsesConf{})
+		ExitError(UsesConf{x})
 		return
 	case cmd.UseVars && Vars == nil:
-		ExitError(UsesVars{})
+		ExitError(UsesVars{x})
 		return
 	}
 
