@@ -28,6 +28,9 @@ func ExampleArgsOrIn_read_Nil() {
 
 	// Output:
 	// some thing
+	// input
+	//
+	// with blank line
 }
 
 func ExampleArgsOrIn_read_Zero_Args() {
@@ -40,6 +43,9 @@ func ExampleArgsOrIn_read_Zero_Args() {
 
 	// Output:
 	// some thing
+	// input
+	//
+	// with blank line
 }
 
 func ExampleArgsOrIn_args_Joined() {
