@@ -22,6 +22,7 @@ package Z
 
 import (
 	"fmt"
+	"io"
 	"log"
 	"os"
 	"path/filepath"
@@ -29,7 +30,6 @@ import (
 
 	"github.com/rwxrob/bonzai"
 	"github.com/rwxrob/compcmd"
-	"github.com/rwxrob/term"
 )
 
 func init() {
@@ -294,10 +294,14 @@ func ArgsFrom(line string) []string {
 // ArgsOrIn takes an slice or nil as argument and if the slice has any
 // length greater than 0 returns all the argument joined together with
 // a single space between them. Otherwise, will read standard input
-// until end of file reached (Cntl-D).
+// until end of file reached (Cntl-D). Returns empty string if error.
 func ArgsOrIn(args []string) string {
 	if args == nil || len(args) == 0 {
-		return term.Read()
+		buf, err := io.ReadAll(os.Stdin)
+		if err != nil {
+			return ""
+		}
+		return string(buf)
 	}
 	return strings.Join(args, " ")
 }
