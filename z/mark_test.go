@@ -167,6 +167,16 @@ func ExampleEmph_italic() {
 	// * Italic *
 }
 
+func ExampleEmph_code() {
+	term.Under = `<code>`
+	term.Reset = `<reset>`
+	fmt.Println(Z.Emph("`Code`"))
+	fmt.Println(Z.Emph("` Code `"))
+	// Output:
+	// <code>Code<reset>
+	// ` Code `
+}
+
 func ExampleEmph_basics() {
 
 	// Emph observes the term escapes

@@ -69,7 +69,7 @@ func (s *Block) String() string { return string(s.V) }
 // a BonzaiMark document. This simplicity and clarity of 4-space tokens
 // far outweighs the advantages of alternatives (such as fences).
 //
-//  PEGN Spefication
+//  PEGN Specification
 //
 //        Grammar     <-- Block*
 //        Block       <-- Bulleted / Numbered / Verbatim / Paragraph
@@ -173,6 +173,8 @@ var begBold = regexp.MustCompile(`^\*{2}\p{L}`)
 var endBold = regexp.MustCompile(`^\p{L}\*{2}`)
 var begItalic = regexp.MustCompile(`^\*\p{L}`)
 var endItalic = regexp.MustCompile(`^\p{L}\*`)
+var begCode = regexp.MustCompile(`^` + "`" + `\p{L}`)
+var endCode = regexp.MustCompile(`^\p{L}` + "`")
 
 // Emph renders BonzaiMark emphasis spans specifically for
 // VT100-compatible terminals (which almost all are today):
@@ -180,7 +182,8 @@ var endItalic = regexp.MustCompile(`^\p{L}\*`)
 //     *Italic*
 //     **Bold**
 //     ***BoldItalic***
-//     <under> (keeping brackets)
+//     <Under> (keeping brackets)
+//     `Code`
 //
 // See Mark for block formatting and term for terminal rendering.
 func Emph[T string | []byte | []rune](buf T) string {
@@ -246,6 +249,21 @@ func Emph[T string | []byte | []rune](buf T) string {
 			nbuf = append(nbuf, []rune(term.Italic)...)
 			for s.Scan() {
 				if s.Match(endItalic) > 0 {
+					nbuf = append(nbuf, s.R)
+					nbuf = append(nbuf, []rune(term.Reset)...)
+					s.E++
+					break
+				}
+				nbuf = append(nbuf, s.R)
+			}
+			continue
+		}
+
+		// `Code`
+		if s.Match(begCode) > 0 {
+			nbuf = append(nbuf, []rune(term.Under)...)
+			for s.Scan() {
+				if s.Match(endCode) > 0 {
 					nbuf = append(nbuf, s.R)
 					nbuf = append(nbuf, []rune(term.Reset)...)
 					s.E++
