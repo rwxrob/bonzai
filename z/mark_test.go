@@ -172,9 +172,11 @@ func ExampleEmph_code() {
 	term.Reset = `<reset>`
 	fmt.Println(Z.Emph("`Code`"))
 	fmt.Println(Z.Emph("` Code `"))
+	fmt.Println(Z.Emph("`.git`"))
 	// Output:
 	// <code>Code<reset>
 	// ` Code `
+	// <code>.git<reset>
 }
 
 func ExampleEmph_basics() {

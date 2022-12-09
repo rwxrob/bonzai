@@ -173,8 +173,8 @@ var begBold = regexp.MustCompile(`^\*{2}\p{L}`)
 var endBold = regexp.MustCompile(`^\p{L}\*{2}`)
 var begItalic = regexp.MustCompile(`^\*\p{L}`)
 var endItalic = regexp.MustCompile(`^\p{L}\*`)
-var begCode = regexp.MustCompile(`^` + "`" + `\p{L}`)
-var endCode = regexp.MustCompile(`^\p{L}` + "`")
+var begCode = regexp.MustCompile(`^` + "`" + `\S`)
+var endCode = regexp.MustCompile(`^\S` + "`")
 
 // Emph renders BonzaiMark emphasis spans specifically for
 // VT100-compatible terminals (which almost all are today):
