@@ -39,6 +39,8 @@ var Dynamic = template.FuncMap{
 	"cachedir":    cachedir,
 	"confdir":     confdir,
 	"homedir":     homedir,
+	"pathsep":     func() string { return string(os.PathSeparator) },
+	"pathjoin":    filepath.Join,
 }
 
 func indent(n int, in string) string {
