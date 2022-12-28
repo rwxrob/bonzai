@@ -9,6 +9,8 @@ Card](https://goreportcard.com/badge/github.com/rwxrob/bonzai)](https://goreport
 
 > "The utility here is that Bonzai lets you maintain your own personal 'toolbox' with built in auto-complete that you can assemble from  various Go modules. Individual commands are isolated and unaware of  each other and possibly maintained by other people."
 
+> "I used Bonzai for a pentest ... was able to inject ebpf.io kernel modules that were part of bin lol! Bonzai is Genius!"
+
 ![logo](logo.png)
 
 Bonzai was born from a very real need to replace messy collections of shell scripts, wasteful completion sourcing, and OS-specific documentation with a single, stateful, binary composed of commands organized as rooted node trees with a clean, modular, portable, statically-compiled, and dynamically self-documenting design.
