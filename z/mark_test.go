@@ -3,8 +3,8 @@ package Z_test
 import (
 	"fmt"
 
-	Z "github.com/rwxrob/bonzai/z"
 	"github.com/rwxrob/term"
+	Z "github.com/vekio/bonzai/z"
 )
 
 func init() {
@@ -106,7 +106,7 @@ func ExampleBlocks_verbatim() {
 			     Now we can start
 			     a Verbatim
 			     block.
-			     
+
 			     Which can have blank lines, even.
 
 			* And back to another bulleted list.

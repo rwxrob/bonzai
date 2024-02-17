@@ -1,9 +1,9 @@
 # 🌳 Go Bonzai™ Command Compositor
 
-[![GoDoc](https://godoc.org/github.com/rwxrob/bonzai?status.svg)](https://godoc.org/github.com/rwxrob/bonzai)
+[![GoDoc](https://godoc.org/github.com/vekio/bonzai?status.svg)](https://godoc.org/github.com/vekio/bonzai)
 [![License](https://img.shields.io/badge/license-Apache2-brightgreen.svg)](LICENSE)
 [![Go Report
-Card](https://goreportcard.com/badge/github.com/rwxrob/bonzai)](https://goreportcard.com/report/github.com/rwxrob/bonzai)
+Card](https://goreportcard.com/badge/github.com/vekio/bonzai)](https://goreportcard.com/report/github.com/vekio/bonzai)
 
 > "It's like a modular, multicall BusyBox builder for Go with built in completion and embedded documentation support."
 
@@ -31,7 +31,7 @@ Read the book:
 
 Copy or clone the example template:
 
-* https://github.com/rwxrob/bonzai-example
+* https://github.com/vekio/bonzai-example
 
 Get ideas for your own by looking at others
 
@@ -40,11 +40,11 @@ Get ideas for your own by looking at others
 
 ## Legal
 
-Copyright 2022 Robert S. Muhlestein (<mailto:rob@rwx.gg>)  
+Copyright 2022 Robert S. Muhlestein (<mailto:rob@rwx.gg>)
 SPDX-License-Identifier: Apache-2.0
 
 "Bonzai" and "bonzai" are legal trademarks of Robert S. Muhlestein but
 can be used freely to refer to the Bonzai™ project
-<https://github.com/rwxrob/bonzai> without limitation. To avoid
+<https://github.com/vekio/bonzai> without limitation. To avoid
 potential developer confusion, intentionally using these trademarks to
 refer to other projects --- free or proprietary --- is prohibited.

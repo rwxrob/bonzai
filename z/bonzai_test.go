@@ -7,7 +7,7 @@ import (
 	"fmt"
 	"os"
 
-	Z "github.com/rwxrob/bonzai/z"
+	Z "github.com/vekio/bonzai/z"
 )
 
 func ExampleArgsFrom() {
