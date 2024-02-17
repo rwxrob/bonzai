@@ -27,8 +27,8 @@ import (
 	"path/filepath"
 	"strings"
 
+	"github.com/rwxrob/bonzai"
 	"github.com/rwxrob/compcmd"
-	"github.com/vekio/bonzai"
 )
 
 func init() {

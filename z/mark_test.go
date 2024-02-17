@@ -3,8 +3,8 @@ package Z_test
 import (
 	"fmt"
 
+	Z "github.com/rwxrob/bonzai/z"
 	"github.com/rwxrob/term"
-	Z "github.com/vekio/bonzai/z"
 )
 
 func init() {
