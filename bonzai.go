@@ -43,6 +43,8 @@ type Configurer interface {
 	OverWrite(with any) error       // safely replace all configuration
 	Query(q string) (string, error) // yq compatible query string
 	QueryPrint(q string) error      // prints result to os.Stdout
+	DirPath() string                // path to config folder
+	Path() string                   // path to config file
 }
 
 // Vars specifies the package persistent variables driver interface. All
