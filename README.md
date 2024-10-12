@@ -40,7 +40,7 @@ Get ideas for your own by looking at others
 
 ## Legal
 
-Copyright 2022 Robert S. Muhlestein (<mailto:rob@rwx.gg>)  
+Copyright 2024 Robert S. Muhlestein (<mailto:rob@rwx.gg>)  
 SPDX-License-Identifier: Apache-2.0
 
 "Bonzai" and "bonzai" are legal trademarks of Robert S. Muhlestein but
