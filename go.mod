@@ -1,6 +1,6 @@
 module github.com/rwxrob/bonzai
 
-go 1.18
+go 1.23
 
 require (
 	github.com/rwxrob/compcmd v0.3.0
