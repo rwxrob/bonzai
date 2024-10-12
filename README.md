@@ -33,6 +33,7 @@ Get ideas for your own by looking at others
 
 * https://github.com/rwxrob/z
 * https://github.com/rwxrob/pomo
+* https://github.com/BuddhiLW/lazywal
 
 ## Legal
 
