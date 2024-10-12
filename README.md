@@ -25,10 +25,6 @@ Most realize Bonzai really distinguishes itself from anything else out there the
 
 ## Getting Started
 
-Read the book:
-
-* https://github.com/rwxrob/book-bonzai
-
 Copy or clone the example template:
 
 * https://github.com/rwxrob/bonzai-example
