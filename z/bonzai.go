@@ -8,15 +8,14 @@ much easier to intuit without reading all the docs. Documentation is
 embedded with each command removing the need for separate man pages and
 such and can be viewed as text or a locally served web page.
 
-Rooted Node Tree
+# Rooted Node Tree
 
 Commands and parameters are linked to create a rooted node tree of the
 following types of nodes:
 
-    * Leaves with a method and optional parameters
-		* Branches with leaves, other branches, and a optional method
-		* Parameters, single words that are passed to a leaf command
-
+  - Leaves with a method and optional parameters
+  - Branches with leaves, other branches, and a optional method
+  - Parameters, single words that are passed to a leaf command
 */
 package Z
 
@@ -29,7 +28,7 @@ import (
 	"strings"
 
 	"github.com/rwxrob/bonzai"
-	"github.com/rwxrob/compcmd"
+	"github.com/rwxrob/bonzai/z/internal/compcmd"
 )
 
 func init() {
@@ -182,7 +181,6 @@ func InferredUsage(cmd bonzai.Command) string {
 // * MultiCallCmdNotCmd
 // * MultiCallCmdNotCmd
 // * MultiCallCmdArgNotString
-//
 func Run() {
 	if v, has := Commands[ExeName]; has {
 		if len(v) < 1 {
