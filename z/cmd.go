@@ -15,11 +15,11 @@ import (
 	"unicode"
 
 	"github.com/rwxrob/bonzai"
+	"github.com/rwxrob/bonzai/z/qstack"
+	"github.com/rwxrob/bonzai/z/to"
 	"github.com/rwxrob/fn/each"
 	"github.com/rwxrob/fn/maps"
 	"github.com/rwxrob/fn/redu"
-	"github.com/rwxrob/structs/qstack"
-	"github.com/rwxrob/to"
 )
 
 type Cmd struct {
@@ -219,7 +219,7 @@ func (x *Cmd) cacheSections() {
 // by Run. Use a high-level branch pkg instead (which is idiomatic for
 // good Bonzai branch development).
 //
-// Handling Completion
+// # Handling Completion
 //
 // Since Run is the main execution entry point for all Bonzai command
 // trees it is also responsible for handling completion (tab or

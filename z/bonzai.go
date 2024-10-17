@@ -28,7 +28,7 @@ import (
 	"strings"
 
 	"github.com/rwxrob/bonzai"
-	"github.com/rwxrob/bonzai/z/internal/compcmd"
+	"github.com/rwxrob/bonzai/z/compcmd"
 )
 
 func init() {

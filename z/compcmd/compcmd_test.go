@@ -8,7 +8,7 @@ import (
 
 	"github.com/rwxrob/bonzai"
 	Z "github.com/rwxrob/bonzai/z"
-	"github.com/rwxrob/bonzai/z/internal/compcmd"
+	"github.com/rwxrob/bonzai/z/compcmd"
 	"github.com/rwxrob/fn/filt"
 )
 
