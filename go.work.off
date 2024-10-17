@@ -1,6 +1,5 @@
-go 1.18
+go 1.23
 
-use (
-	.
-	../to
-)
+toolchain go1.23.2
+
+use .
