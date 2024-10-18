@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# https://github.com/rwxrob/json (tools)
+# https://github.com/rwxrob/bonzai/z/json (tools)
 # filter for use from vi/m
 # type name on any line in vim, then !!goprintasjson (tab comp works)
 
@@ -9,7 +9,7 @@ echo "
 
 // ---------------------------- marshaling ----------------------------
 
-// TODO change import "encoding/json" to "github.com/rwxrob/json"
+// TODO change import "encoding/json" to "github.com/rwxrob/bonzai/z/json"
 
 func (s $name) MarshalJSON() ([]byte, error) {
     buf := ""
@@ -17,11 +17,11 @@ func (s $name) MarshalJSON() ([]byte, error) {
     return []byte(buf),nil
 }
 
-// JSONL implements rwxrob/json.AsJSON.
+// JSONL implements rwxrob/bonzai/z/json.AsJSON.
 func (s $name) JSON() ([]byte, error) {return s.MarshalJSON()}
 func (s $name) JSON() ([]byte, error) {return json.Marshal(s)}
 
-// JSONL implements rwxrob/json.AsJSON.
+// JSONL implements rwxrob/bonzai/z/json.AsJSON.
 func (s $name) JSONL() ([]byte, error) {
     return s.MarshalIndent(\"  \",\"  \")
 }
@@ -29,7 +29,7 @@ func (s $name) JSONL() ([]byte, error) {
     return json.MarshalIndent(s,\"  \",\"  \")
 }
 
-// String implements rwxrob/json.Stringer and fmt.Stringer.
+// String implements rwxrob/bonzai/z/json.Stringer and fmt.Stringer.
 func (s $name) String() string {
   byt,err := s.JSON()
   if err != nil {
@@ -38,7 +38,7 @@ func (s $name) String() string {
   return string(byt)
 }
 
-// StringLong implements rwxrob/json.Stringer.
+// StringLong implements rwxrob/bonzai/z/json.Stringer.
 func (s $name) StringLong() string {
   byt,err := s.JSONL()
   if err != nil {
@@ -47,15 +47,15 @@ func (s $name) StringLong() string {
   return string(byt)
 }
 
-// String implements rwxrob/json.Printer.
+// String implements rwxrob/bonzai/z/json.Printer.
 func (s $name) Print() { fmt.Println(s.String()) }
 
-// PrintLong implements rwxrob/json.Printer.
+// PrintLong implements rwxrob/bonzai/z/json.Printer.
 func (s $name) PrintLong() { fmt.Println(s.StringLong()) }
 
-// Log implements rwxrob/json.Logger.
+// Log implements rwxrob/bonzai/z/json.Logger.
 func (s $name) Log() { log.Print(s.String()) }
 
-// LogLong implements rwxrob/json.Logger.
+// LogLong implements rwxrob/bonzai/z/json.Logger.
 func (s $name) LogLong() { each.Log(to.Lines(s.StringLong())) }
 "

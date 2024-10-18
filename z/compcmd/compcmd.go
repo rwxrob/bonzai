@@ -8,7 +8,7 @@ package compcmd
 import (
 	"github.com/rwxrob/bonzai"
 	"github.com/rwxrob/bonzai/z/fn/filt"
-	"github.com/rwxrob/structs/set/text/set"
+	"github.com/rwxrob/bonzai/z/set/text/set"
 )
 
 // New returns a private struct that fulfills the bonzai.Completer
