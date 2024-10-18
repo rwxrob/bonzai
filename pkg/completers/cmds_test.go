@@ -1,13 +1,13 @@
 // Copyright 2022 Robert S. Muhlestein.
 // SPDX-License-Identifier: Apache-2.0
 
-package compcmd_test
+package completers_test
 
 import (
 	"fmt"
 
 	bonzai "github.com/rwxrob/bonzai/pkg"
-	"github.com/rwxrob/bonzai/pkg/compcmd"
+	"github.com/rwxrob/bonzai/pkg/completers"
 	"github.com/rwxrob/bonzai/pkg/fn/filt"
 	Z "github.com/rwxrob/bonzai/pkg/z"
 )
@@ -15,7 +15,7 @@ import (
 // give own completer for days of the week
 type weekcomp struct{}
 
-func NewWeekComp() *weekcomp { return new(weekcomp) }
+var WeekComp = new(weekcomp)
 
 func (weekcomp) Complete(cmd bonzai.Command, args ...string) []string {
 	list := []string{"mon", "tue", "wed", "thu", "fri", "sat", "sun"}
@@ -32,20 +32,20 @@ func ExampleStandard() {
 	foo.Add("blah")
 
 	// if no args, we have to assume the command isn't finished yet
-	fmt.Println(compcmd.New().Complete(foo))
+	fmt.Println(completers.Cmds.Complete(foo))
 
 	// we know it's not a command, but no prefix just yet
 	// (usually this is when a space has been added after the command)
-	fmt.Println(compcmd.New().Complete(foo, ""))
+	fmt.Println(completers.Cmds.Complete(foo, ""))
 
 	// everything that begins with a (nothing)
-	fmt.Println(compcmd.New().Complete(foo, `a`))
+	fmt.Println(completers.Cmds.Complete(foo, `a`))
 
 	// everything that begins with b (which is everything)
-	fmt.Println(compcmd.New().Complete(foo, `b`))
+	fmt.Println(completers.Cmds.Complete(foo, `b`))
 
 	// everything that begins with bl (just blah)
-	fmt.Println(compcmd.New().Complete(foo, `bl`))
+	fmt.Println(completers.Cmds.Complete(foo, `bl`))
 
 	/* (note this has to happen outside of block because of receiver)
 	// give own completer for days of the week
@@ -62,7 +62,7 @@ func ExampleStandard() {
 	}
 	*/
 
-	fmt.Println(NewWeekComp().Complete(foo, `t`))
+	fmt.Println(WeekComp.Complete(foo, `t`))
 
 	//Output:
 	// []

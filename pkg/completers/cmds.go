@@ -1,9 +1,4 @@
-/*
-Package compcmd is the default completion driver for Bonzai command trees and
-fulfills the bonzai.Completer package interface. See Complete method for
-details.
-*/
-package compcmd
+package completers
 
 import (
 	bonzai "github.com/rwxrob/bonzai/pkg"
@@ -11,17 +6,15 @@ import (
 	"github.com/rwxrob/bonzai/pkg/set"
 )
 
-// New returns a private struct that fulfills the bonzai.Completer
-// interface. See Complete method for details.
-func New() *comp { return new(comp) }
+type cmds struct{}
 
-type comp struct{}
+var Cmds = new(cmds)
 
 // Complete resolves completion as follows:
 //
 //  1. If leaf has Comp function, delegate to it
 //
-//  2. If leaf has no arguments, return all Commands and Params
+//  2. If leaf has no arguments, return all Cmds and Params
 //
 //  3. If first argument is the name of a Command return it only even
 //     if in the Hidden list
@@ -30,7 +23,7 @@ type comp struct{}
 //     Hidden list and HasPrefix matching the first arg
 //
 // See bonzai.Completer.
-func (comp) Complete(x bonzai.Command, args ...string) []string {
+func (cmds) Complete(x bonzai.Command, args ...string) []string {
 
 	// if has completer, delegate
 	if c := x.GetComp(); c != nil {

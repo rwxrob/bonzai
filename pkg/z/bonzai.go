@@ -28,7 +28,7 @@ import (
 	"strings"
 
 	bonzai "github.com/rwxrob/bonzai/pkg"
-	"github.com/rwxrob/bonzai/pkg/compcmd"
+	"github.com/rwxrob/bonzai/pkg/completers"
 	"github.com/rwxrob/bonzai/pkg/mark"
 )
 
@@ -70,13 +70,8 @@ var Commands map[string][]any
 
 // Comp may be optionally assigned any implementation of
 // bonzai.Completer and will be used as the default if a Command does not
-// provide its own. Comp is assigned compcmd.Completer by default.
-// This can be overriden by Bonzai tree developers through simple
-// assignment to their own preference. However, for consistency, this
-// default is strongly recommended, at least for all branch commands (as
-// opposed to leafs). See z.Cmd.Run for documentation on completion
-// mode.
-var Comp = compcmd.New()
+// provide its own.
+var Comp = completers.Cmds
 
 // Conf may be optionally assigned any implementation of
 // a bonzai.Configurer. Once assigned it should not be reassigned at any
