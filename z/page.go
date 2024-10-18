@@ -6,7 +6,7 @@ import (
 	"os/exec"
 	"strings"
 
-	"github.com/rwxrob/to"
+	"github.com/rwxrob/bonzai/z/to"
 )
 
 // NoPager disables all paging.
@@ -34,8 +34,8 @@ func FixPagerEnv() {
 // FindPager returns a full path to a pager binary if it can find one on
 // the system:
 //
-//     * $PAGER
-//     * pager (in PATH)
+//   - $PAGER
+//   - pager (in PATH)
 //
 // If neither is found returns an empty string.
 func FindPager() string {
