@@ -242,16 +242,16 @@ func ExampleInWrap() {
 	// "    some\n    that\n    is\n    indented\n"
 }
 
-func ExampleMark_simple() {
+func ExampleSprint_simple() {
 
-	fmt.Print(mark.Mark(`**foo**`))
+	fmt.Print(mark.Sprint(`**foo**`))
 
 	//Output:
 	// <bold>foo<reset>
 
 }
 
-func ExampleMark() {
+func ExampleSprint() {
 
 	in := `
 			Must have *another* block before verbatim:
@@ -277,7 +277,7 @@ func ExampleMark() {
 			`
 
 	fmt.Println("----------------------")
-	fmt.Print(mark.Mark(in))
+	fmt.Print(mark.Sprint(in))
 	fmt.Println("----------------------")
 
 	//Output:
@@ -381,7 +381,7 @@ func ExampleMarkf() {
 			`
 
 	fmt.Println("----------------------")
-	fmt.Print(mark.Markf(in, "another", "paragraph"))
+	fmt.Print(mark.Sprintf(in, "another", "paragraph"))
 	fmt.Println("----------------------")
 
 	//Output:
@@ -493,7 +493,7 @@ func ExamplePrintMark() {
 			`
 
 	fmt.Println("----------------------")
-	mark.PrintMark(in)
+	mark.Print(in)
 	fmt.Println("----------------------")
 
 	//Output:
@@ -596,7 +596,7 @@ func ExamplePrintMarkf() {
 			`
 
 	fmt.Println("----------------------")
-	mark.PrintMarkf(in, "another", "paragraph")
+	mark.Printf(in, "another", "paragraph")
 	fmt.Println("----------------------")
 
 	//Output:

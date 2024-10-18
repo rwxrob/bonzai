@@ -292,10 +292,10 @@ func InWrap(in string) string {
 	return to.Indented(w, IndentBy)
 }
 
-// Mark parses the input as a string of BonzaiMark, multiple blocks with
+// Sprint parses the input as a string of BonzaiMark, multiple blocks with
 // optional emphasis (see Blocks and Emph) and applies IndentBy and
 // Columns wrapping to it.
-func Mark(in string) string {
+func Sprint(in string) string {
 
 	if in == "" {
 		return ""
@@ -347,9 +347,9 @@ func InWrapf(a string, f ...any) string {
 	return InWrap(fmt.Sprintf(a, f...))
 }
 
-// Markf calls fmt.Sprintf on the string before passing it to Mark.
-func Markf(a string, f ...any) string {
-	return Mark(fmt.Sprintf(a, f...))
+// Sprintf calls fmt.Sprintf on the string before passing it to Sprint.
+func Sprintf(a string, f ...any) string {
+	return Sprint(fmt.Sprintf(a, f...))
 }
 
 // PrintEmph passes string to Emph and prints it.
@@ -364,8 +364,12 @@ func PrintIndent(a string) { fmt.Print(Indent(a)) }
 // PrintInWrap passes string to InWrap and prints it.
 func PrintInWrap(a string) { fmt.Print(InWrap(a)) }
 
-// PrintMark passes string to Mark and prints it.
-func PrintMark(a string) { fmt.Print(Mark(a)) }
+// Print passes string to Mark and prints it.
+func Print(a string) { fmt.Print(Sprint(a)) }
+
+// Printf calls fmt.Sprintf on the string before passing it to Mark
+// and then printing it.
+func Printf(a string, f ...any) { fmt.Print(Sprintf(a, f...)) }
 
 // PrintEmphf calls fmt.Sprintf on the string before passing it to Emph
 // and then printing it.
@@ -389,10 +393,4 @@ func PrintIndentf(a string, f ...any) {
 // InWrap and then printing it.
 func PrintInWrapf(a string, f ...any) {
 	fmt.Print(InWrap(fmt.Sprintf(a, f...)))
-}
-
-// PrintMarkf calls fmt.Sprintf on the string before passing it to Mark
-// and then printing it.
-func PrintMarkf(a string, f ...any) {
-	fmt.Print(Mark(fmt.Sprintf(a, f...)))
 }
