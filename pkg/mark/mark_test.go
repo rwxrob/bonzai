@@ -1,10 +1,10 @@
-package Z_test
+package mark_test
 
 import (
 	"fmt"
 
-	Z "github.com/rwxrob/bonzai/pkg"
 	"github.com/rwxrob/bonzai/pkg/term"
+	Z "github.com/rwxrob/bonzai/pkg/z"
 )
 
 func init() {
