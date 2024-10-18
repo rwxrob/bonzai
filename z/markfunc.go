@@ -5,8 +5,8 @@ import (
 	"path/filepath"
 	"text/template"
 
-	"github.com/rwxrob/term"
-	"github.com/rwxrob/to"
+	"github.com/rwxrob/bonzai/z/term"
+	"github.com/rwxrob/bonzai/z/to"
 )
 
 // This file contains the BonzaiMark builtins that Cmd authors can use

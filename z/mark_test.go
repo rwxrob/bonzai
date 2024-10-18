@@ -4,7 +4,7 @@ import (
 	"fmt"
 
 	Z "github.com/rwxrob/bonzai/z"
-	"github.com/rwxrob/term"
+	"github.com/rwxrob/bonzai/z/term"
 )
 
 func init() {

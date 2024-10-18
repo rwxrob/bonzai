@@ -6,9 +6,9 @@ import (
 	"strconv"
 	"unicode"
 
-	"github.com/rwxrob/pegn/scanner"
-	"github.com/rwxrob/term"
-	"github.com/rwxrob/to"
+	"github.com/rwxrob/bonzai/z/scanner"
+	"github.com/rwxrob/bonzai/z/term"
+	"github.com/rwxrob/bonzai/z/to"
 )
 
 // IndentBy is the number of spaces to indent in Indent. Default is 7.
@@ -46,14 +46,14 @@ func (s *Block) String() string { return string(s.V) }
 // blocks separated by one or more empty lines and applies basic
 // formatting to each as follows:
 //
-//     If is one of the following leave alone with no wrapping:
+//	If is one of the following leave alone with no wrapping:
 //
-//     * Bulleted List - beginning with *
-//     * Numbered List - beginning with 1.
-//     * Verbatim      - beginning with four spaces
+//	* Bulleted List - beginning with *
+//	* Numbered List - beginning with 1.
+//	* Verbatim      - beginning with four spaces
 //
-//     Everything else is considered a "paragraph" and will be unwrapped
-//     into a single long line (which is normally wrapped later).
+//	Everything else is considered a "paragraph" and will be unwrapped
+//	into a single long line (which is normally wrapped later).
 //
 // For now, these blocks are added as is, but plans are to eventually
 // add support for short and long lists much like CommonMark.
@@ -69,17 +69,16 @@ func (s *Block) String() string { return string(s.V) }
 // a BonzaiMark document. This simplicity and clarity of 4-space tokens
 // far outweighs the advantages of alternatives (such as fences).
 //
-//  PEGN Specification
+//	PEGN Specification
 //
-//        Grammar     <-- Block*
-//        Block       <-- Bulleted / Numbered / Verbatim / Paragraph
-//        Bulleted    <-- '* ' (!EOB unipoint)* EOB
-//        Numbered    <-- '1. ' (!EOB unipoint)* EOB
-//        Verbatim    <-- '    ' (!EOB unipoint)* EOB
-//        Paragraph   <-- (!EOB unipoint)* EOB
-//        EOB          <- LF{2} / EOD
-//        EOD          <- # end of data stream
-//
+//	      Grammar     <-- Block*
+//	      Block       <-- Bulleted / Numbered / Verbatim / Paragraph
+//	      Bulleted    <-- '* ' (!EOB unipoint)* EOB
+//	      Numbered    <-- '1. ' (!EOB unipoint)* EOB
+//	      Verbatim    <-- '    ' (!EOB unipoint)* EOB
+//	      Paragraph   <-- (!EOB unipoint)* EOB
+//	      EOB          <- LF{2} / EOD
+//	      EOD          <- # end of data stream
 func Blocks(in string) []*Block {
 	var blocks []*Block
 
@@ -179,11 +178,11 @@ var endCode = regexp.MustCompile(`^\S` + "`")
 // Emph renders BonzaiMark emphasis spans specifically for
 // VT100-compatible terminals (which almost all are today):
 //
-//     *Italic*
-//     **Bold**
-//     ***BoldItalic***
-//     <Under> (keeping brackets)
-//     `Code`
+//	*Italic*
+//	**Bold**
+//	***BoldItalic***
+//	<Under> (keeping brackets)
+//	`Code`
 //
 // See Mark for block formatting and term for terminal rendering.
 func Emph[T string | []byte | []rune](buf T) string {
