@@ -13,8 +13,8 @@ import (
 	"fmt"
 	"log"
 	"os"
-  "syscall"
 	"strings"
+	"syscall"
 	"unicode"
 
 	"github.com/rwxrob/bonzai/z/term/esc"

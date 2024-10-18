@@ -1,6 +1,8 @@
 /*
 Package json contains interface specifications for representing any Go
 type as JSON where possible. Using the goprintasjson tool allows for quick code generation of scaffolding to make any Go type easily used as JSON.
+
+For querying JSON/YAML/TOML/XML structured data the github.com/rwxrob/yq functions are recommended but not included due to the large number of dependencies that would forced into this project.
 */
 package json
 
