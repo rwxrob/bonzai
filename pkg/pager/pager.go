@@ -1,4 +1,4 @@
-package Z
+package pager
 
 import (
 	"fmt"
@@ -6,6 +6,7 @@ import (
 	"os/exec"
 	"strings"
 
+	"github.com/rwxrob/bonzai/pkg/run"
 	"github.com/rwxrob/bonzai/pkg/to"
 )
 
@@ -65,7 +66,7 @@ func PageFile(path string) error {
 		fmt.Print(string(buf))
 		return nil
 	}
-	return Exec(pager, path)
+	return run.Exe(pager, path)
 }
 
 // Page writes the buf to a temporary file and passes it as first
@@ -89,5 +90,5 @@ func Page[T any](buf T) error {
 	if err != nil {
 		return err
 	}
-	return Exec(pager, name)
+	return run.Exe(pager, name)
 }

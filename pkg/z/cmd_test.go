@@ -7,7 +7,7 @@ import (
 	"fmt"
 	"os"
 
-	Z "github.com/rwxrob/bonzai/pkg"
+	Z "github.com/rwxrob/bonzai/pkg/z"
 )
 
 func ExampleCmd_Seek() {

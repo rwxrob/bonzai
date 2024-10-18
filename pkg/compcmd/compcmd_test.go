@@ -6,10 +6,10 @@ package compcmd_test
 import (
 	"fmt"
 
-	"github.com/rwxrob/bonzai"
-	Z "github.com/rwxrob/bonzai/pkg"
+	bonzai "github.com/rwxrob/bonzai/pkg"
 	"github.com/rwxrob/bonzai/pkg/compcmd"
 	"github.com/rwxrob/bonzai/pkg/fn/filt"
+	Z "github.com/rwxrob/bonzai/pkg/z"
 )
 
 // give own completer for days of the week

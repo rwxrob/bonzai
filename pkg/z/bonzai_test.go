@@ -7,7 +7,8 @@ import (
 	"fmt"
 	"os"
 
-	Z "github.com/rwxrob/bonzai/pkg"
+	"github.com/rwxrob/bonzai/pkg/to"
+	Z "github.com/rwxrob/bonzai/pkg/z"
 )
 
 func ExampleArgsFrom() {
@@ -57,8 +58,8 @@ func ExampleArgsOrIn_args_Joined() {
 }
 
 func ExampleEsc() {
-	fmt.Println(Z.Esc("|&;()<>![]"))
-	fmt.Printf("%q", Z.Esc(" \n\r"))
+	fmt.Println(to.Esc("|&;()<>![]"))
+	fmt.Printf("%q", to.Esc(" \n\r"))
 	// Output:
 	// \|\&\;\(\)\<\>\!\[\]
 	// "\\ \\\n\\\r"
@@ -66,7 +67,7 @@ func ExampleEsc() {
 
 func ExampleEscAll() {
 	list := []string{"so!me", "<here>", "other&"}
-	fmt.Println(Z.EscAll(list))
+	fmt.Println(to.EscAll(list))
 	// Output:
 	// [so\!me \<here\> other\&]
 }

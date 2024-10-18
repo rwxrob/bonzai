@@ -29,6 +29,7 @@ import (
 
 	bonzai "github.com/rwxrob/bonzai/pkg"
 	"github.com/rwxrob/bonzai/pkg/compcmd"
+	"github.com/rwxrob/bonzai/pkg/mark"
 )
 
 func init() {
@@ -245,26 +246,26 @@ func Exit() {
 func ExitError(err ...interface{}) {
 	prev := os.Stdout
 	os.Stdout = os.Stderr
-	previ := IndentBy
-	IndentBy = 0
+	previ := mark.IndentBy
+	mark.IndentBy = 0
 
 	switch e := err[0].(type) {
 
 	case string:
 		if len(e) > 1 {
-			PrintMarkf(e+"\n", err[1:]...)
+			mark.PrintMarkf(e+"\n", err[1:]...)
 		} else {
-			PrintMark(e)
+			mark.PrintMark(e)
 		}
 
 	case error:
 		out := fmt.Sprintf("%v", e)
 		if len(out) > 0 {
-			fmt.Println(strings.TrimSpace(Mark(out)))
+			fmt.Println(strings.TrimSpace(mark.Mark(out)))
 		}
 	}
 
-	IndentBy = previ
+	mark.IndentBy = previ
 	os.Stdout = prev
 
 	if !DoNotExit {
@@ -294,7 +295,7 @@ func ArgsFrom(line string) []string {
 // a single space between them. Otherwise, will read standard input
 // until end of file reached (Cntl-D). Returns empty string if error.
 func ArgsOrIn(args []string) string {
-	if args == nil || len(args) == 0 {
+	if len(args) == 0 {
 		buf, err := io.ReadAll(os.Stdin)
 		if err != nil {
 			return ""

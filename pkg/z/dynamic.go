@@ -1,10 +1,11 @@
-package mark
+package Z
 
 import (
 	"os"
 	"path/filepath"
 	"text/template"
 
+	"github.com/rwxrob/bonzai/pkg/mark"
 	"github.com/rwxrob/bonzai/pkg/term"
 	"github.com/rwxrob/bonzai/pkg/to"
 )
@@ -44,7 +45,7 @@ var Dynamic = template.FuncMap{
 }
 
 func indent(n int, in string) string {
-	return to.Indented(in, IndentBy+n)
+	return to.Indented(in, mark.IndentBy+n)
 }
 
 func cachedir() string {

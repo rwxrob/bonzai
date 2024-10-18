@@ -1,14 +1,14 @@
 /*
-Package compcmd is a completion driver for Bonzai command trees and
+Package compcmd is the default completion driver for Bonzai command trees and
 fulfills the bonzai.Completer package interface. See Complete method for
 details.
 */
 package compcmd
 
 import (
-	"github.com/rwxrob/bonzai"
+	bonzai "github.com/rwxrob/bonzai/pkg"
 	"github.com/rwxrob/bonzai/pkg/fn/filt"
-	"github.com/rwxrob/bonzai/pkg/set/text/set"
+	"github.com/rwxrob/bonzai/pkg/set"
 )
 
 // New returns a private struct that fulfills the bonzai.Completer
@@ -47,7 +47,7 @@ func (comp) Complete(x bonzai.Command, args ...string) []string {
 	list = append(list, x.GetCommandNames()...)
 	list = append(list, x.GetParams()...)
 	list = append(list, x.GetShortcuts()...)
-	list = set.Minus[string, string](list, x.GetHidden())
+	list = set.MinusAsString[string, string](list, x.GetHidden())
 
 	if len(args) == 0 {
 		return list
