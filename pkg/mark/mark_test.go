@@ -3,8 +3,9 @@ package mark_test
 import (
 	"fmt"
 
-	Z "github.com/rwxrob/bonzai/pkg/cmd"
+	"github.com/rwxrob/bonzai/pkg/mark"
 	"github.com/rwxrob/bonzai/pkg/term"
+	"github.com/rwxrob/bonzai/pkg/to"
 )
 
 func init() {
@@ -16,7 +17,7 @@ func init() {
 }
 
 func ExampleLines() {
-	fmt.Printf("%q\n", Z.Lines("line one\nline two"))
+	fmt.Printf("%q\n", to.Lines("line one\nline two"))
 	// Output:
 	// ["line one" "line two"]
 }
@@ -36,7 +37,7 @@ func ExampleBlocks_bulleted() {
 
 			`
 
-	blocks := Z.Blocks(in)
+	blocks := mark.Blocks(in)
 	//fmt.Println(blocks)
 	fmt.Printf("%q\n", blocks[0])
 	fmt.Printf("%q\n", blocks[1])
@@ -58,7 +59,7 @@ func ExampleBlocks_numbered() {
 
 			`
 
-	blocks := Z.Blocks(in)
+	blocks := mark.Blocks(in)
 	fmt.Printf("%q\n", blocks[0])
 	fmt.Printf("%q\n", blocks[1])
 
@@ -80,7 +81,7 @@ func ExampleBlocks_paragraph() {
 
 			`
 
-	blocks := Z.Blocks(in)
+	blocks := mark.Blocks(in)
 	//fmt.Println(len(blocks))
 	//fmt.Printf("%v", blocks)
 	fmt.Printf("%q\n", blocks[0])
@@ -113,7 +114,7 @@ func ExampleBlocks_verbatim() {
 
 			`
 
-	blocks := Z.Blocks(in)
+	blocks := mark.Blocks(in)
 	//fmt.Println(len(blocks))
 	//fmt.Println(blocks)
 	fmt.Printf("%q\n", blocks[0])
@@ -132,8 +133,8 @@ func ExampleBlocks_verbatim() {
 func ExampleEmph_under() {
 	term.Under = `<under>`
 	term.Reset = `<reset>`
-	fmt.Println(Z.Emph("<UNDER>"))
-	fmt.Println(Z.Emph("< UNDER >"))
+	fmt.Println(mark.Emph("<UNDER>"))
+	fmt.Println(mark.Emph("< UNDER >"))
 	// Output:
 	// <<under>UNDER<reset>>
 	// < UNDER >
@@ -142,7 +143,7 @@ func ExampleEmph_under() {
 func ExampleEmph_boldItalic() {
 	term.BoldItalic = `<bolditalic>`
 	term.Reset = `<reset>`
-	fmt.Println(Z.Emph("***BoldItalic***"))
+	fmt.Println(mark.Emph("***BoldItalic***"))
 	// Output:
 	// <bolditalic>BoldItalic<reset>
 }
@@ -150,8 +151,8 @@ func ExampleEmph_boldItalic() {
 func ExampleEmph_bold() {
 	term.Bold = `<bold>`
 	term.Reset = `<reset>`
-	fmt.Println(Z.Emph("**Bold**"))
-	fmt.Println(Z.Emph("** Bold **"))
+	fmt.Println(mark.Emph("**Bold**"))
+	fmt.Println(mark.Emph("** Bold **"))
 	// Output:
 	// <bold>Bold<reset>
 	// ** Bold **
@@ -160,8 +161,8 @@ func ExampleEmph_bold() {
 func ExampleEmph_italic() {
 	term.Italic = `<italic>`
 	term.Reset = `<reset>`
-	fmt.Println(Z.Emph("*Italic*"))
-	fmt.Println(Z.Emph("* Italic *"))
+	fmt.Println(mark.Emph("*Italic*"))
+	fmt.Println(mark.Emph("* Italic *"))
 	// Output:
 	// <italic>Italic<reset>
 	// * Italic *
@@ -170,9 +171,9 @@ func ExampleEmph_italic() {
 func ExampleEmph_code() {
 	term.Under = `<code>`
 	term.Reset = `<reset>`
-	fmt.Println(Z.Emph("`Code`"))
-	fmt.Println(Z.Emph("` Code `"))
-	fmt.Println(Z.Emph("`.git`"))
+	fmt.Println(mark.Emph("`Code`"))
+	fmt.Println(mark.Emph("` Code `"))
+	fmt.Println(mark.Emph("`.git`"))
 	// Output:
 	// <code>Code<reset>
 	// ` Code `
@@ -189,10 +190,10 @@ func ExampleEmph_basics() {
 	term.Under = `<under>`
 	term.Reset = `<reset>`
 
-	fmt.Println(Z.Emph("*ITALIC*"))
-	fmt.Println(Z.Emph("**BOLD**"))
-	fmt.Println(Z.Emph("***BOLDITALIC***"))
-	fmt.Println(Z.Emph("<UNDER>")) // keeps brackets
+	fmt.Println(mark.Emph("*ITALIC*"))
+	fmt.Println(mark.Emph("**BOLD**"))
+	fmt.Println(mark.Emph("***BOLDITALIC***"))
+	fmt.Println(mark.Emph("<UNDER>")) // keeps brackets
 
 	// Output:
 	// <italic>ITALIC<reset>
@@ -203,10 +204,10 @@ func ExampleEmph_basics() {
 }
 
 func ExampleWrap() {
-	col := Z.Columns
-	Z.Columns = 10
-	fmt.Println(Z.Wrap(`some thing here that is more than 10 characters`))
-	Z.Columns = col
+	col := mark.Columns
+	mark.Columns = 10
+	fmt.Println(mark.Wrap(`some thing here that is more than 10 characters`))
+	mark.Columns = col
 	// Output:
 	// some thing
 	// here that
@@ -216,34 +217,34 @@ func ExampleWrap() {
 }
 
 func ExampleIndent() {
-	indent := Z.IndentBy
-	col := Z.Columns
-	Z.Columns = 10
-	Z.Columns = 10
-	Z.IndentBy = 4
-	fmt.Printf("%q", Z.Indent("some\nthat is \n  indented"))
-	Z.IndentBy = indent
-	Z.Columns = col
+	indent := mark.IndentBy
+	col := mark.Columns
+	mark.Columns = 10
+	mark.Columns = 10
+	mark.IndentBy = 4
+	fmt.Printf("%q", mark.Indent("some\nthat is \n  indented"))
+	mark.IndentBy = indent
+	mark.Columns = col
 	// Output:
 	// "    some\n    that is \n      indented\n"
 }
 
 func ExampleInWrap() {
-	defer func() { Z.IndentBy = Z.IndentBy }()
-	indent := Z.IndentBy
-	col := Z.Columns
-	Z.Columns = 10
-	Z.IndentBy = 4
-	fmt.Printf("%q", Z.InWrap("some\nthat is \n  indented"))
-	Z.IndentBy = indent
-	Z.Columns = col
+	defer func() { mark.IndentBy = mark.IndentBy }()
+	indent := mark.IndentBy
+	col := mark.Columns
+	mark.Columns = 10
+	mark.IndentBy = 4
+	fmt.Printf("%q", mark.InWrap("some\nthat is \n  indented"))
+	mark.IndentBy = indent
+	mark.Columns = col
 	// Output:
 	// "    some\n    that\n    is\n    indented\n"
 }
 
 func ExampleMark_simple() {
 
-	fmt.Print(Z.Mark(`**foo**`))
+	fmt.Print(mark.Mark(`**foo**`))
 
 	//Output:
 	// <bold>foo<reset>
@@ -276,7 +277,7 @@ func ExampleMark() {
 			`
 
 	fmt.Println("----------------------")
-	fmt.Print(Z.Mark(in))
+	fmt.Print(mark.Mark(in))
 	fmt.Println("----------------------")
 
 	//Output:
@@ -308,16 +309,16 @@ func ExampleMark() {
 // ------------------------ Sprintf variations ------------------------
 
 func ExampleEmphf() {
-	fmt.Println(Z.Emphf(`some *%v* thing`, "italic"))
+	fmt.Println(mark.Emphf(`some *%v* thing`, "italic"))
 	// Output:
 	// some <italic>italic<reset> thing
 }
 
 func ExampleWrapf() {
-	col := Z.Columns
-	Z.Columns = 3
-	fmt.Println(Z.Wrapf(`some %v here`, 10))
-	Z.Columns = col
+	col := mark.Columns
+	mark.Columns = 3
+	fmt.Println(mark.Wrapf(`some %v here`, 10))
+	mark.Columns = col
 	// Output:
 	// some
 	// 10
@@ -325,26 +326,26 @@ func ExampleWrapf() {
 }
 
 func ExampleIndentf() {
-	in := Z.IndentBy
-	Z.IndentBy = 3
-	fmt.Println(Z.Indentf("-----\nindented by %v here", Z.IndentBy))
-	Z.IndentBy = in
+	in := mark.IndentBy
+	mark.IndentBy = 3
+	fmt.Println(mark.Indentf("-----\nindented by %v here", mark.IndentBy))
+	mark.IndentBy = in
 	// Output:
 	// -----
 	//    indented by 3 here
 }
 
 func ExampleInWrapf() {
-	in := Z.IndentBy
-	col := Z.Columns
-	Z.IndentBy = 3
-	Z.Columns = 10
+	in := mark.IndentBy
+	col := mark.Columns
+	mark.IndentBy = 3
+	mark.Columns = 10
 	fmt.Println(
-		Z.InWrapf("-----\nindented by %v here and wrapped at %v",
-			Z.IndentBy, Z.Columns,
+		mark.InWrapf("-----\nindented by %v here and wrapped at %v",
+			mark.IndentBy, mark.Columns,
 		))
-	Z.IndentBy = in
-	Z.Columns = col
+	mark.IndentBy = in
+	mark.Columns = col
 	// -----
 	//    indented
 	//    by 3
@@ -380,7 +381,7 @@ func ExampleMarkf() {
 			`
 
 	fmt.Println("----------------------")
-	fmt.Print(Z.Markf(in, "another", "paragraph"))
+	fmt.Print(mark.Markf(in, "another", "paragraph"))
 	fmt.Println("----------------------")
 
 	//Output:
@@ -422,10 +423,10 @@ func ExamplePrintEmph_basics() {
 	term.Under = `<under>`
 	term.Reset = `<reset>`
 
-	Z.PrintEmph("*ITALIC*\n")
-	Z.PrintEmph("**BOLD**\n")
-	Z.PrintEmph("***BOLDITALIC***\n")
-	Z.PrintEmph("<UNDER>\n") // keeps brackets
+	mark.PrintEmph("*ITALIC*\n")
+	mark.PrintEmph("**BOLD**\n")
+	mark.PrintEmph("***BOLDITALIC***\n")
+	mark.PrintEmph("<UNDER>\n") // keeps brackets
 
 	// Output:
 	// <italic>ITALIC<reset>
@@ -436,10 +437,10 @@ func ExamplePrintEmph_basics() {
 }
 
 func ExamplePrintWrap() {
-	col := Z.Columns
-	Z.Columns = 10
-	Z.PrintWrap(`some thing here that is more than 10 characters`)
-	Z.Columns = col
+	col := mark.Columns
+	mark.Columns = 10
+	mark.PrintWrap(`some thing here that is more than 10 characters`)
+	mark.Columns = col
 	// Output:
 	// some thing
 	// here that
@@ -449,15 +450,15 @@ func ExamplePrintWrap() {
 }
 
 func ExamplePrintInWrap() {
-	defer func() { Z.IndentBy = Z.IndentBy }()
-	indent := Z.IndentBy
-	col := Z.Columns
-	Z.Columns = 10
-	Z.IndentBy = 4
+	defer func() { mark.IndentBy = mark.IndentBy }()
+	indent := mark.IndentBy
+	col := mark.Columns
+	mark.Columns = 10
+	mark.IndentBy = 4
 	fmt.Println("-----")
-	Z.PrintInWrap("some\nthat is \n  indented")
-	Z.IndentBy = indent
-	Z.Columns = col
+	mark.PrintInWrap("some\nthat is \n  indented")
+	mark.IndentBy = indent
+	mark.Columns = col
 	// Output:
 	// -----
 	//     some
@@ -492,7 +493,7 @@ func ExamplePrintMark() {
 			`
 
 	fmt.Println("----------------------")
-	Z.PrintMark(in)
+	mark.PrintMark(in)
 	fmt.Println("----------------------")
 
 	//Output:
@@ -524,16 +525,16 @@ func ExamplePrintMark() {
 // --------------------- Print(Sprintf) variations --------------------
 
 func ExamplePrintEmphf() {
-	Z.PrintEmphf(`some *%v* thing`, "italic")
+	mark.PrintEmphf(`some *%v* thing`, "italic")
 	// Output:
 	// some <italic>italic<reset> thing
 }
 
 func ExamplePrintfWrapf() {
-	col := Z.Columns
-	Z.Columns = 3
-	Z.PrintWrapf(`some %v here`, 10)
-	Z.Columns = col
+	col := mark.Columns
+	mark.Columns = 3
+	mark.PrintWrapf(`some %v here`, 10)
+	mark.Columns = col
 	// Output:
 	// some
 	// 10
@@ -541,25 +542,25 @@ func ExamplePrintfWrapf() {
 }
 
 func ExamplePrintIndentf() {
-	in := Z.IndentBy
-	Z.IndentBy = 3
-	Z.PrintIndentf("-----\nindented by %v here", Z.IndentBy)
-	Z.IndentBy = in
+	in := mark.IndentBy
+	mark.IndentBy = 3
+	mark.PrintIndentf("-----\nindented by %v here", mark.IndentBy)
+	mark.IndentBy = in
 	// Output:
 	// -----
 	//    indented by 3 here
 }
 
 func ExamplePrintInWrapf() {
-	in := Z.IndentBy
-	col := Z.Columns
-	Z.IndentBy = 3
-	Z.Columns = 10
-	Z.PrintInWrapf("-----\nindented by %v here and wrapped at %v",
-		Z.IndentBy, Z.Columns,
+	in := mark.IndentBy
+	col := mark.Columns
+	mark.IndentBy = 3
+	mark.Columns = 10
+	mark.PrintInWrapf("-----\nindented by %v here and wrapped at %v",
+		mark.IndentBy, mark.Columns,
 	)
-	Z.IndentBy = in
-	Z.Columns = col
+	mark.IndentBy = in
+	mark.Columns = col
 	// -----
 	//    indented
 	//    by 3
@@ -595,7 +596,7 @@ func ExamplePrintMarkf() {
 			`
 
 	fmt.Println("----------------------")
-	Z.PrintMarkf(in, "another", "paragraph")
+	mark.PrintMarkf(in, "another", "paragraph")
 	fmt.Println("----------------------")
 
 	//Output:
@@ -640,10 +641,10 @@ func ExampleWrap_again() {
 	term.BoldItalic = esc.BoldItalic
 	term.Under = esc.Under
 	term.Reset = esc.Reset
-	Z.IndentBy = 0
-	Z.Columns = 40
+	mark.IndentBy = 0
+	mark.Columns = 40
 
-	cmd := &Z.Cmd{
+	cmd := &mark.Cmd{
 		Name: `some`,
 		MarkMap: template.FuncMap{
 			"builddir":  func() string { return "a/build/dir" },
@@ -663,8 +664,8 @@ func ExampleWrap_again() {
 	}
 
 	fmt.Println("Output")
-	//	fmt.Println(Z.Mark(cmd.Fill(cmd.Description)))
-	fmt.Println(to.Wrapped(cmd.Fill(cmd.Description), Z.Columns))
+	//	fmt.Println(mark.Mark(cmd.Fill(cmd.Description)))
+	fmt.Println(to.Wrapped(cmd.Fill(cmd.Description), mark.Columns))
 
 	// Output:
 	// some
