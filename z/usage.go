@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/rwxrob/fn/filt"
+	"github.com/rwxrob/bonzai/z/fn/filt"
 )
 
 // UsageGroup uses Bonzai usage notation, a basic form of regular

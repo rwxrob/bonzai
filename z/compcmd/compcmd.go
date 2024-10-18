@@ -7,7 +7,7 @@ package compcmd
 
 import (
 	"github.com/rwxrob/bonzai"
-	"github.com/rwxrob/fn/filt"
+	"github.com/rwxrob/bonzai/z/fn/filt"
 	"github.com/rwxrob/structs/set/text/set"
 )
 

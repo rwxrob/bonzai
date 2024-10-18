@@ -17,9 +17,9 @@ import (
 	"github.com/rwxrob/bonzai"
 	"github.com/rwxrob/bonzai/z/qstack"
 	"github.com/rwxrob/bonzai/z/to"
-	"github.com/rwxrob/fn/each"
-	"github.com/rwxrob/fn/maps"
-	"github.com/rwxrob/fn/redu"
+	"github.com/rwxrob/bonzai/z/fn/each"
+	"github.com/rwxrob/bonzai/z/fn/maps"
+	"github.com/rwxrob/bonzai/z/fn/redu"
 )
 
 type Cmd struct {

@@ -9,7 +9,7 @@ import (
 	"github.com/rwxrob/bonzai"
 	Z "github.com/rwxrob/bonzai/z"
 	"github.com/rwxrob/bonzai/z/compcmd"
-	"github.com/rwxrob/fn/filt"
+	"github.com/rwxrob/bonzai/z/fn/filt"
 )
 
 // give own completer for days of the week

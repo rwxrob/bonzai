@@ -1,6 +1,6 @@
 package Z
 
-import "github.com/rwxrob/fn"
+import "github.com/rwxrob/bonzai/z/fn"
 
 // EscThese is set to the default UNIX shell characters which require
 // escaping to be used safely on the terminal. It can be changed to suit
