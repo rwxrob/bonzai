@@ -3,8 +3,8 @@ package mark_test
 import (
 	"fmt"
 
+	Z "github.com/rwxrob/bonzai/pkg/cmd"
 	"github.com/rwxrob/bonzai/pkg/term"
-	Z "github.com/rwxrob/bonzai/pkg/z"
 )
 
 func init() {
@@ -645,7 +645,7 @@ func ExampleWrap_again() {
 
 	cmd := &Z.Cmd{
 		Name: `some`,
-		Dynamic: template.FuncMap{
+		MarkMap: template.FuncMap{
 			"builddir":  func() string { return "a/build/dir" },
 			"buildfile": func() string { return "build.yaml" },
 		},
