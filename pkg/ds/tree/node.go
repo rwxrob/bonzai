@@ -4,11 +4,11 @@
 package node
 
 import (
-	"encoding/json"
 	"fmt"
 	"log"
 
-	"github.com/rwxrob/bonzai/pkg/qstack"
+	"github.com/rwxrob/bonzai/pkg/ds/qstack"
+	"github.com/rwxrob/bonzai/pkg/json"
 )
 
 // Node is an implementation of a "node" from traditional rooted node

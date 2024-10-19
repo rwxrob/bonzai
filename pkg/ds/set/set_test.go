@@ -6,7 +6,7 @@ package set_test
 import (
 	"fmt"
 
-	"github.com/rwxrob/bonzai/pkg/set/text/set"
+	"github.com/rwxrob/bonzai/pkg/set"
 )
 
 func ExampleMinus() {
@@ -14,7 +14,7 @@ func ExampleMinus() {
 		"one", "two", "three", "four", "five", "six", "seven",
 	}
 	m := []string{"two", "four", "six"}
-	fmt.Println(set.Minus[string, string](s, m))
+	fmt.Println(set.Minus(s, m))
 	// Output:
 	// [one three five seven]
 }

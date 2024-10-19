@@ -19,9 +19,9 @@ import (
 	"time"
 	"unicode"
 
-	"github.com/rwxrob/bonzai/pkg/qstack"
-	"github.com/rwxrob/bonzai/pkg/scanner"
+	"github.com/rwxrob/bonzai/pkg/ds/qstack"
 	"github.com/rwxrob/bonzai/pkg/fn/maps"
+	"github.com/rwxrob/bonzai/pkg/scanner"
 )
 
 type Text interface{ string | []rune }

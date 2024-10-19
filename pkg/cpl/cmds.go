@@ -1,9 +1,9 @@
-package completers
+package cpl
 
 import (
 	bonzai "github.com/rwxrob/bonzai/pkg"
+	"github.com/rwxrob/bonzai/pkg/ds/set"
 	"github.com/rwxrob/bonzai/pkg/fn/filt"
-	"github.com/rwxrob/bonzai/pkg/set"
 )
 
 type cmds struct{}
@@ -40,7 +40,7 @@ func (cmds) Complete(x bonzai.Command, args ...string) []string {
 	list = append(list, x.GetCommandNames()...)
 	list = append(list, x.GetParams()...)
 	list = append(list, x.GetShortcuts()...)
-	list = set.MinusAsString[string, string](list, x.GetHidden())
+	list = set.Minus[string, string](list, x.GetHidden())
 
 	if len(args) == 0 {
 		return list

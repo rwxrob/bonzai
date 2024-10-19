@@ -15,10 +15,10 @@ import (
 	"unicode"
 
 	bonzai "github.com/rwxrob/bonzai/pkg"
+	"github.com/rwxrob/bonzai/pkg/ds/qstack"
 	"github.com/rwxrob/bonzai/pkg/fn/each"
 	"github.com/rwxrob/bonzai/pkg/fn/maps"
 	"github.com/rwxrob/bonzai/pkg/fn/redu"
-	"github.com/rwxrob/bonzai/pkg/qstack"
 	"github.com/rwxrob/bonzai/pkg/to"
 )
 

@@ -28,7 +28,7 @@ import (
 	"strings"
 
 	bonzai "github.com/rwxrob/bonzai/pkg"
-	"github.com/rwxrob/bonzai/pkg/completers"
+	"github.com/rwxrob/bonzai/pkg/cpl"
 	"github.com/rwxrob/bonzai/pkg/fn/filt"
 	"github.com/rwxrob/bonzai/pkg/mark"
 )
@@ -72,7 +72,7 @@ var Commands map[string][]any
 // Comp may be optionally assigned any implementation of
 // bonzai.Completer and will be used as the default if a Command does not
 // provide its own.
-var Comp = completers.Cmds
+var Comp = cpl.Cmds
 
 // Conf may be optionally assigned any implementation of
 // a bonzai.Configurer. Once assigned it should not be reassigned at any
@@ -249,15 +249,15 @@ func ExitError(err ...interface{}) {
 
 	case string:
 		if len(e) > 1 {
-			mark.PrintMarkf(e+"\n", err[1:]...)
+			mark.Printf(e+"\n", err[1:]...)
 		} else {
-			mark.PrintMark(e)
+			mark.Print(e)
 		}
 
 	case error:
 		out := fmt.Sprintf("%v", e)
 		if len(out) > 0 {
-			fmt.Println(strings.TrimSpace(mark.Mark(out)))
+			fmt.Println(strings.TrimSpace(mark.Sprint(out)))
 		}
 	}
 

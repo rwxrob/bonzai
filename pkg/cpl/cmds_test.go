@@ -1,15 +1,15 @@
 // Copyright 2022 Robert S. Muhlestein.
 // SPDX-License-Identifier: Apache-2.0
 
-package completers_test
+package cpl_test
 
 import (
 	"fmt"
 
 	bonzai "github.com/rwxrob/bonzai/pkg"
-	"github.com/rwxrob/bonzai/pkg/completers"
+	Z "github.com/rwxrob/bonzai/pkg/cmd"
+	"github.com/rwxrob/bonzai/pkg/cpl"
 	"github.com/rwxrob/bonzai/pkg/fn/filt"
-	Z "github.com/rwxrob/bonzai/pkg/z"
 )
 
 // give own completer for days of the week
@@ -32,20 +32,20 @@ func ExampleStandard() {
 	foo.Add("blah")
 
 	// if no args, we have to assume the command isn't finished yet
-	fmt.Println(completers.Cmds.Complete(foo))
+	fmt.Println(cpl.Cmds.Complete(foo))
 
 	// we know it's not a command, but no prefix just yet
 	// (usually this is when a space has been added after the command)
-	fmt.Println(completers.Cmds.Complete(foo, ""))
+	fmt.Println(cpl.Cmds.Complete(foo, ""))
 
 	// everything that begins with a (nothing)
-	fmt.Println(completers.Cmds.Complete(foo, `a`))
+	fmt.Println(cpl.Cmds.Complete(foo, `a`))
 
 	// everything that begins with b (which is everything)
-	fmt.Println(completers.Cmds.Complete(foo, `b`))
+	fmt.Println(cpl.Cmds.Complete(foo, `b`))
 
 	// everything that begins with bl (just blah)
-	fmt.Println(completers.Cmds.Complete(foo, `bl`))
+	fmt.Println(cpl.Cmds.Complete(foo, `bl`))
 
 	/* (note this has to happen outside of block because of receiver)
 	// give own completer for days of the week
