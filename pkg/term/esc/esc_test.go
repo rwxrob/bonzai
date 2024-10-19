@@ -1,0 +1,52 @@
+// Copyright 2022 Robert S. Muhlestein
+// SPDX-License-Identifier: Apache-2.0
+  
+package esc_test
+
+/*
+func TestAttributes(t *testing.T) {
+	fmt.Println(esc.Bright + "Bright" + esc.Reset)
+	fmt.Println(esc.Dim + "Dim" + esc.Reset)
+	fmt.Println(esc.Italic + "Italic" + esc.Reset)
+	fmt.Println(esc.Under + "Under" + esc.Reset)
+	fmt.Println(esc.Blink + "Blink" + esc.Reset)
+	fmt.Println(esc.BlinkF + "BlinkF" + esc.Reset)
+	fmt.Println(esc.Reverse + "Reverse" + esc.Reset)
+	fmt.Println(esc.Hidden + "Hidden" + esc.Reset)
+	fmt.Println(esc.Strike + "Strike" + esc.Reset)
+	fmt.Println(esc.Black + "Black" + esc.Reset)
+	fmt.Println(esc.Red + "Red" + esc.Reset)
+	fmt.Println(esc.Green + "Green" + esc.Reset)
+	fmt.Println(esc.Yellow + "Yellow" + esc.Reset)
+	fmt.Println(esc.Blue + "Blue" + esc.Reset)
+	fmt.Println(esc.Magenta + "Magenta" + esc.Reset)
+	fmt.Println(esc.Cyan + "Cyan" + esc.Reset)
+	fmt.Println(esc.White + "White" + esc.Reset)
+	fmt.Println(esc.BBlack + "BBlack" + esc.Reset)
+	fmt.Println(esc.BRed + "BRed" + esc.Reset)
+	fmt.Println(esc.BGreen + "BGreen" + esc.Reset)
+	fmt.Println(esc.BYellow + "BYellow" + esc.Reset)
+	fmt.Println(esc.BBlue + "BBlue" + esc.Reset)
+	fmt.Println(esc.BMagenta + "BMagenta" + esc.Reset)
+	fmt.Println(esc.BCyan + "BCyan" + esc.Reset)
+	fmt.Println(esc.BWhite + "BWhite" + esc.Reset)
+	fmt.Println(esc.HBlack + "HBlack" + esc.Reset)
+	fmt.Println(esc.HRed + "HRed" + esc.Reset)
+	fmt.Println(esc.HGreen + "HGreen" + esc.Reset)
+	fmt.Println(esc.HYellow + "HYellow" + esc.Reset)
+	fmt.Println(esc.HBlue + "HBlue" + esc.Reset)
+	fmt.Println(esc.HMagenta + "HMagenta" + esc.Reset)
+	fmt.Println(esc.HCyan + "HCyan" + esc.Reset)
+	fmt.Println(esc.HWhite + "HWhite" + esc.Reset)
+	fmt.Println(esc.BHBlack + "BHBlack" + esc.Reset)
+	fmt.Println(esc.BHRed + "BHRed" + esc.Reset)
+	fmt.Println(esc.BHGreen + "BHGreen" + esc.Reset)
+	fmt.Println(esc.BHYellow + "BHYellow" + esc.Reset)
+	fmt.Println(esc.BHBlue + "BHBlue" + esc.Reset)
+	fmt.Println(esc.BHMagenta + "BHMagenta" + esc.Reset)
+	fmt.Println(esc.BHCyan + "BHCyan" + esc.Reset)
+	fmt.Println(esc.BHWhite + "BHWhite" + esc.Reset)
+	time.Sleep(20 * time.Second)
+	fmt.Println(esc.Clear)
+}
+*/
