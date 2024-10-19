@@ -99,14 +99,10 @@ func ExampleDupPerms() {
 */
 
 func ExampleExists() {
-	fmt.Println(futil.Exists("testdata/file")) // use NotExists instead of !
+	fmt.Println(futil.Exists("testdata/exists"))
+	fmt.Println(futil.Exists("testdata"))
 	// Output:
-	// false
-}
-
-func ExampleNotExists() {
-	fmt.Println(futil.NotExists("testdata/nope")) // use Exists instead of !
-	// Output:
+	// true
 	// true
 }
 

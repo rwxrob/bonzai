@@ -6,16 +6,14 @@ import (
 	"net/http"
 	ht "net/http/httptest"
 	"os"
-	"path/filepath"
-	"strings"
 
 	"github.com/rwxrob/bonzai/pkg/futil"
 )
 
 func ExampleTouch_create() {
-	fmt.Println(NotExists("testdata/foo"))
+	fmt.Println(futil.NotExists("testdata/foo"))
 	futil.Touch("testdata/foo")
-	fmt.Println(Exists("testdata/foo"))
+	fmt.Println(futil.Exists("testdata/foo"))
 	os.Remove("testdata/foo")
 	// Output:
 	// true
@@ -26,12 +24,12 @@ func ExampleTouch_update() {
 
 	// first create it and capture the time as a string
 	futil.Touch("testdata/tmpfile")
-	u1 := ModTime("testdata/tmpfile")
+	u1 := futil.ModTime("testdata/tmpfile")
 	log.Print(u1)
 
 	// touch it and capture the new time
 	futil.Touch("testdata/tmpfile")
-	u2 := ModTime("testdata/tmpfile")
+	u2 := futil.ModTime("testdata/tmpfile")
 	log.Print(u2)
 
 	// check that they are not equiv
@@ -114,48 +112,6 @@ func ExampleReplace() {
 	// 0
 	// -r--------
 	// 16
-
-}
-
-func ExampleExists() {
-	fmt.Println(futil.Exists("testdata/exists"))
-	fmt.Println(futil.Exists("testdata"))
-	// Output:
-	// true
-	// false
-}
-
-func ExampleHereOrAbove_here() {
-	dir, _ := os.Getwd()
-	defer func() { os.Chdir(dir) }()
-	os.Chdir("testdata/adir")
-
-	path, err := futil.HereOrAbove("afile")
-	if err != nil {
-		fmt.Println(err)
-	}
-	d := strings.Split(path, string(filepath.Separator))
-	fmt.Println(d[len(d)-2:])
-
-	// Output:
-	// [adir afile]
-
-}
-
-func ExampleHereOrAbove_above() {
-	dir, _ := os.Getwd()
-	defer func() { os.Chdir(dir) }()
-	os.Chdir("testdata/adir")
-
-	path, err := futil.HereOrAbove("anotherfile")
-	if err != nil {
-		fmt.Println(err)
-	}
-	d := strings.Split(path, string(filepath.Separator))
-	fmt.Println(d[len(d)-2:])
-
-	// Output:
-	// [testdata anotherfile]
 
 }
 
@@ -251,19 +207,19 @@ func ExampleOverwrite() {
 	// hello
 }
 
-func ExampleIsEmpty() {
-	fmt.Println(futil.IsEmpty(`testdata/overwritten`))
-	fmt.Println(futil.IsEmpty(`testdata/ovewritten`))
+func ExampleFileIsEmpty() {
+	fmt.Println(futil.FileIsEmpty(`testdata/overwritten`))
+	fmt.Println(futil.FileIsEmpty(`testdata/ovewritten`))
 	futil.Touch(`testdata/emptyfile`)
-	fmt.Println(futil.IsEmpty(`testdata/emptyfile`))
+	fmt.Println(futil.FileIsEmpty(`testdata/emptyfile`))
 	// Output:
 	// false
 	// false
 	// true
 }
 
-func ExampleSize() {
-	fmt.Println(futil.Size(`testdata/headtail`))
+func ExampleFileSize() {
+	fmt.Println(futil.FileSize(`testdata/headtail`))
 	// Output:
 	// 24
 }

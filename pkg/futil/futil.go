@@ -110,7 +110,7 @@ func HereOrAbove(name string) (string, error) {
 	if err != nil {
 		return "", err
 	}
-	for ; len(dir) > 0 && dir != "/"; dir = filepath.Dir(dir) {
+	for ; len(dir) > 0 && dir != string(os.PathSeparator); dir = filepath.Dir(dir) {
 		path := filepath.Join(dir, name)
 		if Exists(path) {
 			return path, nil

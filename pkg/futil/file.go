@@ -16,17 +16,17 @@ import (
 	"time"
 
 	"github.com/rogpeppe/go-internal/lockedfile"
-	"github.com/rwxrob/bonzai/pkg/call"
+	"github.com/rwxrob/bonzai/pkg/run"
 )
 
-// DefaultPerms for new file creation.
-var DefaultPerms = 0600
+var DefaultFilePerms = 0600
 var DefaultDirPerms = 0700
 
 // Touch creates a new file at path or updates the time stamp of
-// existing. If a new file is needed creates it with 0600 permissions
-// (instead of 0666 as default os.Create does). If the directory does
-// not exist it is also created using DefaultDirPerms.
+// existing. If a new file is needed creates it with DefaultFilePerms
+// permissions (instead of 0666 as default os.Create does). If the
+// directory does not exist all parent directories are created using
+// DefaultDirPerms.
 func Touch(path string) error {
 	if NotExists(path) {
 		if err := os.MkdirAll(
@@ -40,7 +40,7 @@ func Touch(path string) error {
 			return err
 		}
 		file.Close()
-		return os.Chmod(path, _fs.FileMode(DefaultPerms))
+		return os.Chmod(path, _fs.FileMode(DefaultFilePerms))
 	}
 	now := time.Now().Local()
 	if err := os.Chtimes(path, now, now); err != nil {
@@ -111,57 +111,50 @@ func Fetch(from, to string) error {
 // * VISUAL
 // * EDITOR
 // * code
+// * nvim
 // * vim
 // * vi
+// * nvi
 // * emacs
 // * nano
 func Edit(path string) error {
 	ed := os.Getenv("VISUAL")
 	if ed != "" {
-		return call.Exec(ed, path)
+		return run.Exe(ed, path)
 	}
 	ed = os.Getenv("EDITOR")
 	if ed != "" {
-		return Z.Execute(ed, path)
+		return run.Exe(ed, path)
 	}
 	ed, _ = exec.LookPath("code")
 	if ed != "" {
-		return Z.Execute(ed, path)
+		return run.Exe(ed, path)
+	}
+	ed, _ = exec.LookPath("nvim")
+	if ed != "" {
+		return run.Exe(ed, path)
 	}
 	ed, _ = exec.LookPath("vim")
 	if ed != "" {
-		return Z.Execute(ed, path)
+		return run.Exe(ed, path)
 	}
 	ed, _ = exec.LookPath("vi")
 	if ed != "" {
-		return Z.Execute(ed, path)
+		return run.Exe(ed, path)
+	}
+	ed, _ = exec.LookPath("nvi")
+	if ed != "" {
+		return run.Exe(ed, path)
 	}
 	ed, _ = exec.LookPath("emacs")
 	if ed != "" {
-		return Z.Execute(ed, path)
+		return run.Exe(ed, path)
 	}
 	ed, _ = exec.LookPath("nano")
 	if ed != "" {
-		return Z.Execute(ed, path)
+		return run.Exe(ed, path)
 	}
 	return fmt.Errorf("unable to find editor")
-}
-
-// HereOrAbove returns the full path to the file if the file is found in
-// the current working directory, or if not exists in any parent
-// directory recursively.
-func HereOrAbove(name string) (string, error) {
-	dir, err := os.Getwd()
-	if err != nil {
-		return "", err
-	}
-	for ; len(dir) > 0 && dir != string(os.PathSeparator); dir = filepath.Dir(dir) {
-		path := filepath.Join(dir, name)
-		if Exists(path) {
-			return path, nil
-		}
-	}
-	return "", nil
 }
 
 // Head is like the UNIX head command returning only that number of
@@ -287,13 +280,13 @@ func Cat(path string) error {
 	return nil
 }
 
-// IsEmpty checks for files of zero length in an OS-agnostic way. If the
+// FileIsEmpty checks for files of zero length in an OS-agnostic way. If the
 // file does not exist returns false.
-func IsEmpty(path string) bool { return Size(path) == 0 }
+func FileIsEmpty(path string) bool { return FileSize(path) == 0 }
 
-// Size returns the info.Size() of the file from os.Stat(path). Returns
+// FileSize returns the info.Size() of the file from os.Stat(path). Returns
 // -1 if unable to determine.
-func Size(path string) int64 {
+func FileSize(path string) int64 {
 	info, err := os.Stat(path)
 	if err != nil {
 		return -1
