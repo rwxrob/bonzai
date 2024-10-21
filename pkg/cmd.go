@@ -5,13 +5,14 @@ package bonzai
 
 import (
 	"bytes"
+	"embed"
 	"fmt"
-	"html/template"
 	"io"
 	"log"
 	"os"
 	"strconv"
 	"strings"
+	"text/template"
 	"unicode"
 
 	"github.com/rwxrob/bonzai/pkg/core/ds/qstack"
@@ -23,112 +24,128 @@ import (
 )
 
 type Cmd struct {
+	Name    string // ex: delete
+	Aliases string // ex: rm|d|del
+	Params  string // ex: mon|wed|fri
+	Usage   string // filled
+	Version string // filled, sets IsBase() to true
 
-	// Preferred from embedded [mark] file as string
-	DocFrom string `json:"docfrom,omitempty"` // template, embedded
-
-	// Or, directly assigned
-	Name        string   `json:"name,omitempty"`        // plain
-	Aliases     []string `json:"aliases,omitempty"`     // plain
-	Usage       string   `json:"usage,omitempty"`       // template
-	Summary     string   `json:"summary,omitempty"`     // template
-	Version     string   `json:"version,omitempty"`     // template
-	Copyright   string   `json:"copyright,omitempty"`   // template
-	License     string   `json:"license,omitempty"`     // template
-	Site        string   `json:"site,omitempty"`        // template (url)
-	Source      string   `json:"source,omitempty"`      // template (url)
-	Issues      string   `json:"issues,omitempty"`      // template (url)
-	Description string   `json:"description,omitempty"` // template
+	// Faster than lots of "if" conditions in [Call]
+	MinArgs int
+	MaxArgs int
+	NumArgs int
+	NoArgs  bool
+	MinParm int
+	MaxParm int
 
 	// Descending tree of delegated commands
-	Commands []*Cmd   `json:"commands,omitempty"` // delegated
-	Hidden   []string `json:"hidden,omitempty"`   // no completion
+	Commands []*Cmd // delegated, first is always default
+	Hidden   string // disables completion for Commands/Aliases ex: -h
 
-	// Leaf command parameter possibilities (simple completion)
-	Params []string `json:"params,omitempty"` // just completed
+	// When unassigned automatically assigned [DefComp] if either [Commands] or
+	// [Params] is not empty.
+	Comp Completer
 
-	// Initial variable values, keys will complete with buitin var
-	// command. If nil no var command is added.
-	Vars map[string]string `json:"vars,omitempty"`
+	// When assigned, triggers append of [VarsCmd] to [Commands] and
+	// calling [VarsCmd.SoftInit].
+	Vars Vars
 
-	// Set to true to indicate can be compiled independently or used as
-	// a base command in a multicall binary. When true and Vars is non-nil
-	// cache for Vars is initialized if not present using the [Cmd.Name]
-	IsBase bool `json:isbase, omitempty`
-
-	// Disables the automatic help command. Useful for leaf commands where
-	// help could be an actual value.
-	NoHelp bool `json:nohelp,omitempty`
+	// When assigned, triggers prepend of [DocCmd] to [Commands] if not
+	// already found. String is usually embedded and lazy loaded only when
+	// doc command is called. Format of the content of the string must be
+	// in compatible [mark]. One use case is supporting multiple languages
+	// by assigning a different language [embed.FS].
+	DocFS *embed.FS
 
 	// Functions to be used for the Fill command which is automatically
-	// called on most string properties (ex: {{ exename }}).
-	FuncMap template.FuncMap `json:"-"`
+	// called on most string properties (ex: {{ exename }})
+	FuncMap template.FuncMap
 
-	// If unassigned will be assigned [DefComp] if either [Commands] or
-	// [Params] is not empty.
-	Comp Completer `json:"-"`
-
-	// Where the work happens.
-	Init   Method `json:"-"` // before Commands/Call, good for validation
-	Call   Method `json:"-"` // optional if Commands
-	Caller *Cmd   `json:"-"`
+	// Where the work happens
+	Init   Method // before Commands/Call, good for validation
+	Call   Method // optional if Commands
+	Caller *Cmd
 
 	// Pass bulk input efficiently (when args won't do)
 	Input io.Reader
 
-	// Faster than lots of "if" conditions in Call
-	MinArgs int  `json:"minargs,omitempty"`
-	MaxArgs int  `json:"maxargs,omitempty"`
-	NumArgs int  `json:"numargs,omitempty"`
-	NoArgs  bool `json:"noargs,omitempty"`
-	MinParm int  `json:"minparm,omitempty"`
-	MaxParm int  `json:"minparm,omitempty"`
-
-	_aliases map[string]*Cmd // see cacheAliases called from Run->Seek->Resolve
+	aliases map[string]*Cmd // see [CacheAliases]
+	params  []string        // see [CacheParms]
 }
 
-func (x *Cmd) FUsage() string     { return x.Fill(x.Usage) }
-func (x *Cmd) FShort() string     { return x.Fill(x.Short) }
-func (x *Cmd) FLong() string      { return x.Fill(x.Long) }
-func (x *Cmd) FVersion() string   { return x.Fill(x.Version) }
-func (x *Cmd) FCopyright() string { return x.Fill(x.Copyright) }
-func (x *Cmd) FLicense() string   { return x.Fill(x.License) }
-func (x *Cmd) FSite() string      { return x.Fill(x.Site) }
-func (x *Cmd) FSource() string    { return x.Fill(x.Source) }
-func (x *Cmd) FIssues() string    { return x.Fill(x.Issues) }
+// IsBase indicates this command can be used independently (cut from the
+// main "branch" so to speak). Any base command is a candidate for use
+// as a multicall link/copy when creating multicall binaries. Base
+// commands usually have subcommands and/or parameters but are not
+// necessarily required to.
+func (x *Cmd) IsBase() bool { return len(x.Version) > 0 }
 
-// Completer specifies a struct with a Complete function that will
-// complete the given bonzai.Cmd with the given arguments.
+// IsBranch is a [Cmd] that returns false for [IsBase] but has one more
+// [Commands] as subcommands under it. This is typical when grouping
+// multiple commands to simplify command hierarchies. However, branches
+// may include [DocCmd] and [VarCmd].
+func (x *Cmd) IsBranch() bool { return !x.IsBase() && !x.IsLeaf() }
+
+// IsLeaf is a [Cmd] that has no [Commands] under it. [DocCmd] and
+// [VarCmd] do not count. Leafs may have optional [Params], [DocCmd], or
+// [VarCmd].
+func (x *Cmd) IsLeaf() bool {
+	for _, c := range x.Commands {
+		if c == VarCmd || c == DocCmd {
+			continue
+		}
+	}
+	return false
+}
+
+// Completer specifies a struct with a [Completer.Complete] function that will
+// complete the given [Cmd] with the given arguments.
 // The Complete function must never panic and always return at least an
 // empty slice of strings. Not all completers require the passed
-// command. By convention such the unused [Cmd] should use a single
-// underscore as their name. In the less likely event that arguments are
-// not to do the completion (only the Cmd itself) then an underscore
-// should also be used in place of "args".
+// command. By convention any unused arguments should use underscore for
+// their names.
 type Completer interface {
 	Complete(x *Cmd, args ...string) []string
 }
 
-// Method defines the main code to execute for a command (Cmd). By
-// convention the parameter list should be named "args" if there are
-// args expected and underscore (_) if not. Methods must never write
-// error output to anything but standard error and should almost always
-// use the slog package to do so. By convention "caller" is usually
-// named "x". If the caller is unused the argument name is underscore (_)
-// by convention.
-type Method func(caller *Cmd, args ...string) error
+// Method defines the main code to execute for a command [Cmd.Call]. By
+// convention the parameter list should be named "args" and the caller
+// "x". If either is unused an underscore should be used instead.
+type Method func(x *Cmd, args ...string) error
 
-// Names returns the Name and any Aliases grouped such that the Name is
-// always last. Any alias beginning with anything but a letter (L) is
-// omitted.
+type Text interface {
+	string | []byte | []rune
+}
+
+// IsValidName validates that the passed text is only 45 or less
+// [unicode.IsLetter] runes (without invoking overhead of regular
+// expression).
+func IsValidName[T Text](name T) bool {
+	for _, r := range []rune(string(name)) {
+		if !unicode.IsLetter(r) {
+			return false
+		}
+	}
+	return true
+}
+
+// Names returns slice of all [Aliases] (caching them in the process, if
+// not already) and the [Name] as the last item. This also validates
+// them against the strict Bonzai naming requirements which are that all
+// names must be composed of 45 or less lowercase letters (\p{Li}{45}) (which
+// enables safe creation of multicall binary links enabling universal
+// command completion and more).
 func (x *Cmd) Names() []string {
 	var names []string
-	for _, a := range x.Aliases {
-		if len(a) == 0 {
+	if x.aliases == nil {
+		x.CacheAliases()
+	}
+	for k, _ := range x.aliases {
+		if len(k) == 0 {
 			continue
 		}
-		if unicode.IsLetter([]rune(a)[0]) {
-			names = append(names, a)
+		if unicode.IsLetter([]rune(k)[0]) {
+			names = append(names, k)
 		}
 	}
 	names = append(names, x.Name)
@@ -149,8 +166,8 @@ func (x *Cmd) Names() []string {
 //     {min,max}  - min>0 max>0 (min and max)
 //     {,max}     - min=0 max>0 (max, no min)
 //
-// An empty args slice returns an empty string. If only one arg, then
-// that arg is simply returned and min and max are ignored. Arguments
+// An empty args slice returns an empty string. If only one argument, then
+// that argument is simply returned and min and max are ignored. Arguments
 // that are empty strings are ignored. No transformation is done to the
 // string itself (such as removing white space).
 func UsageGroup(args []string, min, max int) string {
@@ -185,7 +202,10 @@ func (x *Cmd) UsageNames() string { return UsageGroup(x.Names(), 1, 1) }
 
 // UsageParams returns the Params in UsageGroup notation.
 func (x *Cmd) UsageParams() string {
-	return UsageGroup(x.Params, x.MinParm, x.MaxParm)
+	if x.params == nil {
+		x.CacheParams()
+	}
+	return UsageGroup(x.params, x.MinParm, x.MaxParm)
 }
 
 // UsageCmdNames returns the Names for each of its Commands joined, if
@@ -198,13 +218,13 @@ func (x *Cmd) UsageCmdNames() string {
 	return UsageGroup(names, 1, 1)
 }
 
-// Title returns [Name] and [FShort] combined (if exists). If the Name
+// Title returns [Name] and [FSummary] combined (if exists). If the Name
 // field of the commands is not defined will return a "{ERROR}".
 func (x *Cmd) Title() string {
 	if x.Name == "" {
 		return "{ERROR: Name is empty}"
 	}
-	summary := x.FShort()
+	summary := x.FSummary()
 	switch {
 	case len(summary) > 0:
 		return x.Name + " - " + summary
@@ -248,20 +268,27 @@ func (x *Cmd) Legal() string {
 
 }
 
-func (x *Cmd) cacheAliases() {
-	x._aliases = map[string]*Cmd{}
+func (x *Cmd) CacheAliases() {
+	x.aliases = map[string]*Cmd{}
 	if x.Commands == nil {
 		return
 	}
 	for _, c := range x.Commands {
-		if c.Aliases == nil {
+		if len(c.Aliases) == 0 {
 			continue
 		}
-		for _, a := range c.Aliases {
-			x._aliases[a] = c
+		for _, a := range strings.Split(c.Aliases, `|`) {
+			x.aliases[a] = c
 		}
 	}
 }
+
+// CacheParams updates the internal [params] cache with [ParseParams].
+// Remember to call this whenever dynamically altering the value at
+// runtime.
+func (x *Cmd) CacheParams() { x.params = x.ParseParams() }
+
+func (x *Cmd) ParseParams() []string { return strings.Split(x.Params, `|`) }
 
 // Run method resolves [Cmd.Aliases] and seeks the leaf [Cmd]. It then
 // calls the leaf's first-class [Cmd.Call] function passing itself as
@@ -305,6 +332,10 @@ func (x *Cmd) Run() {
 	// complete -C cmd cmd
 	if line := os.Getenv("COMP_LINE"); len(line) > 0 && run.ShellIsBash() {
 		var list []string
+
+		if x.params == nil {
+			x.CacheParams()
+		}
 
 		// find the leaf command
 		lineargs := run.ArgsFrom(line)
@@ -395,10 +426,10 @@ func (x *Cmd) Root() *Cmd {
 	return x.Caller
 }
 
-// Add creates a new Cmd and sets the name and aliases and adds to
-// Commands returning a reference to the new Cmd. The name must be
+// Add creates a new Cmd and sets the [Name] and [Aliases] and adds to
+// [Commands] returning a reference to the new Cmd. Name must be
 // first.
-func (x *Cmd) Add(name string, aliases ...string) *Cmd {
+func (x *Cmd) Add(name, aliases string) *Cmd {
 	c := &Cmd{
 		Name:    name,
 		Aliases: aliases,
@@ -421,11 +452,11 @@ func (x *Cmd) Resolve(name string) *Cmd {
 		}
 	}
 
-	if x._aliases == nil {
-		x.cacheAliases()
+	if x.aliases == nil {
+		x.CacheAliases()
 	}
 
-	if c, has := x._aliases[name]; has {
+	if c, has := x.aliases[name]; has {
 		return c
 	}
 	return nil
@@ -456,9 +487,9 @@ func (x *Cmd) UsageCmdTitles() string {
 			continue
 		}
 		set = append(set, strings.Join(c.Names(), "|"))
-		summaries = append(summaries, c.FShort())
+		summaries = append(summaries, c.FSummary())
 	}
-	longest := redu.Longest(set)
+	longest := redu.Description(set)
 	var buf string
 	for n := 0; n < len(set); n++ {
 		if len(summaries[n]) > 0 {
@@ -635,7 +666,7 @@ func (x *Cmd) Del(key string) error {
 // family of field accessors but can be called directly as well. Also
 // see [bonzai.FuncMap] for list of predefined template functions.
 // Filled versions of most fields are available as dynamic methods
-// beginning with F (ex: [FShort]).
+// beginning with F (ex: [FSummary]).
 func (x *Cmd) Fill(tmpl string) string {
 	funcs := to.MergedMaps(FuncMap, x.FuncMap)
 	t, err := template.New("t").Funcs(funcs).Parse(tmpl)
@@ -675,7 +706,7 @@ var _vars_help string
 
 var varsCmd = &Cmd{
 	Name:    `var`,
-	Short: help.S(_vars_help),
+	Summary: help.S(_vars_help),
 	Desc:    help.D(_vars_help),
 	Commands: []*Cmd{
 		getCmd, // default
@@ -688,9 +719,9 @@ var getDoc string
 
 var getCmd = &Z.Cmd{
 	Name:        `get`,
-	Short:     `print a cached variable with a new line`,
+	Summary:     `print a cached variable with a new line`,
 	Commands:    []*Z.Cmd{help.Cmd},
-	Long: getDoc,
+	Description: getDoc,
 	NumArgs:     1,
 
 	Call: func(x *Z.Cmd, args ...string) error {
@@ -705,9 +736,9 @@ var getCmd = &Z.Cmd{
 
 var setCmd = &Z.Cmd{
 	Name:        `set`,
-	Short:     `safely sets (persists) a cached variable`,
+	Summary:     `safely sets (persists) a cached variable`,
 	Usage:       `(help|<name>) [<args>...]`,
-	Long: setDoc,
+	Description: setDoc,
 	Commands:    []*Z.Cmd{help.Cmd},
 	MinArgs:     1,
 
@@ -728,7 +759,7 @@ var setDoc string
 var fileCmd = &Z.Cmd{
 	Name:     `file`,
 	Aliases:  []string{"f"},
-	Short:  `outputs full path to the cached vars file`,
+	Summary:  `outputs full path to the cached vars file`,
 	Commands: []*Z.Cmd{help.Cmd},
 	Call: func(x *Z.Cmd, _ ...string) error {
 		term.Print(vars.Path())
@@ -742,10 +773,10 @@ var initDoc string
 var initCmd = &Z.Cmd{
 	Name:        `init`,
 	Aliases:     []string{"i"},
-	Short:     `(re)initializes current variable cache`,
+	Summary:     `(re)initializes current variable cache`,
 	Commands:    []*Z.Cmd{help.Cmd},
 	UseVars:     true, // but fulfills at init() above
-	Long: initDoc,
+	Description: initDoc,
 	Call: func(x *Z.Cmd, _ ...string) error {
 		if term.IsInteractive() {
 			r := term.Prompt(`Really initialize %v? (y/N) `, vars.DirPath())
@@ -763,8 +794,8 @@ var dataDoc string
 var dataCmd = &Z.Cmd{
 	Name:        `data`,
 	Aliases:     []string{"d"},
-	Short:     `outputs contents of the cached variables file`,
-	Long: dataDoc,
+	Summary:     `outputs contents of the cached variables file`,
+	Description: dataDoc,
 	Commands:    []*Z.Cmd{help.Cmd},
 	Call: func(x *Z.Cmd, _ ...string) error {
 		fmt.Print(vars.Data())
@@ -777,8 +808,8 @@ var editDoc string
 
 var editCmd = &Z.Cmd{
 	Name:        `edit`,
-	Short:     `edit variables file ({{execachedir "vars"}}) `,
-	Long: editDoc,
+	Summary:     `edit variables file ({{execachedir "vars"}}) `,
+	Description: editDoc,
 	Aliases:     []string{"e"},
 	Commands:    []*Z.Cmd{help.Cmd},
 	Call:        func(x *Z.Cmd, _ ...string) error { return vars.Edit() },
@@ -787,11 +818,11 @@ var editCmd = &Z.Cmd{
 var deleteCmd = &Z.Cmd{
 	Name:        `delete`,
 	Aliases:     []string{`d`, `del`, `unset`},
-	Short:     `delete variable(s) from cache`,
+	Summary:     `delete variable(s) from cache`,
 	Usage:       `(help|<name>...)`,
 	Commands:    []*Z.Cmd{help.Cmd},
 	MinArgs:     1,
-	Long: ` The {{aka}} command deletes the specified variable from cache.`,
+	Description: ` The {{aka}} command deletes the specified variable from cache.`,
 
 	Call: func(x *Z.Cmd, args ...string) error {
 		for _, i := range args {
