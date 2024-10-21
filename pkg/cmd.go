@@ -17,30 +17,33 @@ import (
 	"github.com/rwxrob/bonzai/pkg/core/ds/qstack"
 	"github.com/rwxrob/bonzai/pkg/core/fn/each"
 	"github.com/rwxrob/bonzai/pkg/core/fn/filt"
-	"github.com/rwxrob/bonzai/pkg/core/fn/maps"
 	"github.com/rwxrob/bonzai/pkg/core/fn/redu"
 	"github.com/rwxrob/bonzai/pkg/core/run"
 	"github.com/rwxrob/bonzai/pkg/core/to"
 )
 
 type Cmd struct {
-	Name      string    `json:"name,omitempty"`        // plain
-	Aliases   []string  `json:"aliases,omitempty"`     // plain
-	Usage     string    `json:"usage,omitempty"`       // template
-	Short     string    `json:"summary,omitempty"`     // template
-	Long      string    `json:"description,omitempty"` // template
-	Version   string    `json:"version,omitempty"`     // template
-	Copyright string    `json:"copyright,omitempty"`   // template
-	License   string    `json:"license,omitempty"`     // template
-	Other     []Section `json:"other,omitempty"`       // template
-	Site      string    `json:"site,omitempty"`        // template (url)
-	Source    string    `json:"source,omitempty"`      // template (url)
-	Issues    string    `json:"issues,omitempty"`      // template (url)
+	Name    string   `json:"name,omitempty"`    // plain
+	Aliases []string `json:"aliases,omitempty"` // plain
+	DocFrom string   `json:"docfrom,omitempty"` // template, embedded
 
-	// descending tree
-	Commands []*Cmd   `json:"commands,omitempty"` // tab completed
-	Params   []string `json:"params,omitempty"`   // tab completed
-	Hidden   []string `json:"hidden,omitempty"`   // not tab completed
+	// Directly assign (instead of parse from DocFrom)
+	Usage     string `json:"usage,omitempty"`       // template
+	Short     string `json:"summary,omitempty"`     // template
+	Long      string `json:"description,omitempty"` // template
+	Version   string `json:"version,omitempty"`     // template
+	Copyright string `json:"copyright,omitempty"`   // template
+	License   string `json:"license,omitempty"`     // template
+	Site      string `json:"site,omitempty"`        // template (url)
+	Source    string `json:"source,omitempty"`      // template (url)
+	Issues    string `json:"issues,omitempty"`      // template (url)
+
+	// Descending tree of delegated commands
+	Commands []*Cmd   `json:"commands,omitempty"` // delegated
+	Hidden   []string `json:"hidden,omitempty"`   // no completion
+
+	// Leaf command parameter possibilities (simple completion)
+	Params []string `json:"params,omitempty"` // just completed
 
 	// Initial variable values, keys will complete with buitin var
 	// command. If nil no var command is added.
@@ -79,8 +82,7 @@ type Cmd struct {
 	MinParm int  `json:"minparm,omitempty"`
 	MaxParm int  `json:"minparm,omitempty"`
 
-	_aliases  map[string]*Cmd   // see cacheAliases called from Run->Seek->Resolve
-	_sections map[string]string // see cacheSections called from Run
+	_aliases map[string]*Cmd // see cacheAliases called from Run->Seek->Resolve
 }
 
 func (x *Cmd) FUsage() string     { return x.Fill(x.Usage) }
@@ -113,14 +115,6 @@ type Completer interface {
 // named "x". If the caller is unused the argument name is underscore (_)
 // by convention.
 type Method func(caller *Cmd, args ...string) error
-
-// Section contains the Other sections of a command. Composition
-// notation (without Title and Body) is not only supported but
-// encouraged for clarity when reading the source for documentation.
-type Section struct {
-	Title string
-	Body  string
-}
 
 // Names returns the Name and any Aliases grouped such that the Name is
 // always last. Any alias beginning with anything but a letter (L) is
@@ -252,9 +246,6 @@ func (x *Cmd) Legal() string {
 
 }
 
-// OtherTitles returns just the ordered titles from Other.
-func (x *Cmd) OtherTitles() []string { return maps.Keys(x._sections) }
-
 func (x *Cmd) cacheAliases() {
 	x._aliases = map[string]*Cmd{}
 	if x.Commands == nil {
@@ -267,16 +258,6 @@ func (x *Cmd) cacheAliases() {
 		for _, a := range c.Aliases {
 			x._aliases[a] = c
 		}
-	}
-}
-
-func (x *Cmd) cacheSections() {
-	x._sections = map[string]string{}
-	if len(x.Other) == 0 {
-		return
-	}
-	for _, s := range x.Other {
-		x._sections[s.Title] = s.Body
 	}
 }
 
@@ -319,10 +300,7 @@ func (x *Cmd) cacheSections() {
 func (x *Cmd) Run() {
 	defer run.TrapPanic()
 
-	x.cacheSections()
-
-	// COMPLETION
-
+	// complete -C cmd cmd
 	if line := os.Getenv("COMP_LINE"); len(line) > 0 && run.ShellIsBash() {
 		var list []string
 
