@@ -33,20 +33,20 @@ func ExampleAllLatinASCIIUpper() {
 	tests := []string{"HELLO", "WORLD", "Hello", "123", "abc123", "abcdEF", "", "ABC-DEF", "LATINLOWER", "ÁBC"}
 
 	for _, test := range tests {
-		result := is.AllLatinASCIILower(test)
+		result := is.AllLatinASCIIUpper(test)
 		fmt.Printf("%q %v\n", test, result)
 	}
 
 	// Output:
-	// "hello" true
-	// "world" true
+	// "HELLO" true
+	// "WORLD" true
 	// "Hello" false
 	// "123" false
 	// "abc123" false
 	// "abcdEF" false
 	// "" true
-	// "abc-def" false
-	// "latinlower" true
-	// "ábc" false
+	// "ABC-DEF" false
+	// "LATINLOWER" true
+	// "ÁBC" false
 
 }

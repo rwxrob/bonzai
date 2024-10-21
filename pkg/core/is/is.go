@@ -1,11 +1,7 @@
 package is
 
-type text interface {
-	string | []byte | []rune
-}
-
-func AllLatinASCIILower[T text](txt T) bool {
-	for _, r := range []rune(string(txt)) {
+func AllLatinASCIILower(in string) bool {
+	for _, r := range in {
 		if 'a' <= r && r <= 'z' {
 			continue
 		}
@@ -14,8 +10,8 @@ func AllLatinASCIILower[T text](txt T) bool {
 	return true
 }
 
-func AllLatinASCIIUpper[T text](txt T) bool {
-	for _, r := range []rune(string(txt)) {
+func AllLatinASCIIUpper(in string) bool {
+	for _, r := range in {
 		if 'A' <= r && r <= 'Z' {
 			continue
 		}
