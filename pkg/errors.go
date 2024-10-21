@@ -3,20 +3,27 @@ package bonzai
 import "fmt"
 
 const (
-	E_DefCmdReqCall            = "default (first) %q Commands requires Call"
-	E_IncorrectUsage           = "usage: %v %v"
-	E_MissingConf              = "missing conf value for %v"
-	E_MissingVar               = "missing var for %v"
-	E_MultiCallCmdArgNotString = "multicall match for %v, but arg not string: %T"
-	E_MultiCallCmdNotCmd       = "multicall match for %v, but first in slice not *Z.Cmd: %T"
-	E_MultiCallCmdNotFound     = "multicall command not found: %v"
-	E_NoCallNoCommands         = "%v requires either Call or Commands"
+	E_InvalidName              = `invalid name detected: %v`
+	E_DefCmdReqCall            = `default (first) %q Commands requires Call`
+	E_IncorrectUsage           = `usage: %v %v`
+	E_MissingConf              = `missing conf value for %v`
+	E_MissingVar               = `missing var for %v`
+	E_MultiCallCmdArgNotString = `multicall match for %v, but arg not string: %T`
+	E_MultiCallCmdNotCmd       = `multicall match for %v, but first in slice not *Z.Cmd: %T`
+	E_MultiCallCmdNotFound     = `multicall command not found: %v`
+	E_NoCallNoCommands         = `%v requires either Call or Commands`
 	E_NotEnoughArgs            = `error: %v is not enough arguments, %v required`
 	E_TooManyArgs              = `error: %v is too many arguments, %v maximum`
-	E_UsesConf                 = "%v requires Z.Conf"
-	E_UsesVars                 = "%v requires Z.Vars"
 	E_WrongNumArgs             = `error: %v is wrong number of arguments, %v required`
 )
+
+type InvalidName struct {
+	Name string
+}
+
+func (e InvalidName) Error() string {
+	return fmt.Sprintf(E_InvalidName, e.Name)
+}
 
 type NotEnoughArgs struct {
 	Count int
@@ -45,22 +52,6 @@ func (e WrongNumArgs) Error() string {
 	return fmt.Sprintf(E_WrongNumArgs, e.Count, e.Num)
 }
 
-type UsesConf struct {
-	Cmd *Cmd
-}
-
-func (e UsesConf) Error() string {
-	return fmt.Sprintf(E_UsesConf, e.Cmd.Name)
-}
-
-type UsesVars struct {
-	Cmd *Cmd
-}
-
-func (e UsesVars) Error() string {
-	return fmt.Sprintf(E_UsesVars, e.Cmd.Name)
-}
-
 type NoCallNoCommands struct {
 	Cmd *Cmd
 }
@@ -82,7 +73,10 @@ type IncorrectUsage struct {
 }
 
 func (e IncorrectUsage) Error() string {
-	return fmt.Sprintf(E_IncorrectUsage, e.Cmd.Name, e.Cmd.FUsage())
+	return fmt.Sprintf(E_IncorrectUsage,
+		e.Cmd.Name,
+		e.Cmd.Fill(e.Cmd.Usage),
+	)
 }
 
 type MultiCallCmdNotFound struct {

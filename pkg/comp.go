@@ -36,9 +36,9 @@ func (defcomp) Complete(x *Cmd, args ...string) []string {
 
 	// build list of visible commands and params
 	list := []string{}
-	list = append(list, x.CmdNames()...)
-	list = append(list, x.Params...)
-	list = set.Minus[string, string](list, x.Hidden)
+	list = append(list, x.CommandNames()...)
+	list = append(list, x.ParamsSlice()...)
+	list = set.Minus[string, string](list, x.HiddenSlice())
 
 	if len(args) == 0 {
 		return list

@@ -11,9 +11,9 @@ import (
 
 func ExampleDefComp_Complete() {
 	foo := new(bonzai.Cmd)
-	foo.Params = []string{"box"}
-	foo.Add("bar")
-	foo.Add("blah")
+	foo.Params = `box`
+	foo.Add(`bar`)
+	foo.Add(`blah`)
 
 	// if no args, we have to assume the command isn't finished yet
 	fmt.Println(bonzai.DefComp.Complete(foo))
