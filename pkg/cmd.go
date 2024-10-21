@@ -23,20 +23,22 @@ import (
 )
 
 type Cmd struct {
-	Name    string   `json:"name,omitempty"`    // plain
-	Aliases []string `json:"aliases,omitempty"` // plain
-	DocFrom string   `json:"docfrom,omitempty"` // template, embedded
 
-	// Directly assign (instead of parse from DocFrom)
-	Usage     string `json:"usage,omitempty"`       // template
-	Short     string `json:"summary,omitempty"`     // template
-	Long      string `json:"description,omitempty"` // template
-	Version   string `json:"version,omitempty"`     // template
-	Copyright string `json:"copyright,omitempty"`   // template
-	License   string `json:"license,omitempty"`     // template
-	Site      string `json:"site,omitempty"`        // template (url)
-	Source    string `json:"source,omitempty"`      // template (url)
-	Issues    string `json:"issues,omitempty"`      // template (url)
+	// Preferred from embedded [mark] file as string
+	DocFrom string `json:"docfrom,omitempty"` // template, embedded
+
+	// Or, directly assigned
+	Name        string   `json:"name,omitempty"`        // plain
+	Aliases     []string `json:"aliases,omitempty"`     // plain
+	Usage       string   `json:"usage,omitempty"`       // template
+	Summary     string   `json:"summary,omitempty"`     // template
+	Version     string   `json:"version,omitempty"`     // template
+	Copyright   string   `json:"copyright,omitempty"`   // template
+	License     string   `json:"license,omitempty"`     // template
+	Site        string   `json:"site,omitempty"`        // template (url)
+	Source      string   `json:"source,omitempty"`      // template (url)
+	Issues      string   `json:"issues,omitempty"`      // template (url)
+	Description string   `json:"description,omitempty"` // template
 
 	// Descending tree of delegated commands
 	Commands []*Cmd   `json:"commands,omitempty"` // delegated
