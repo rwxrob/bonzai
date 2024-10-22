@@ -332,7 +332,12 @@ func (x *Cmd) Run(args ...string) {
 
 		// dashed/long (ex: z-bon-multi-symlink)
 		if strings.Contains(name, `-`) {
-			x.Run(name)
+			args = strings.Split(name, `-`)
+			first := args[0]
+			if first != ExeName {
+				run.ExitError(InvalidMultiExeName{ExeName, name})
+			}
+			x.Run(args[1:]...)
 			return
 		}
 
@@ -484,23 +489,19 @@ func (x *Cmd) Resolve(name string) *Cmd {
 // item in the list.
 func (x *Cmd) Can(names ...string) *Cmd {
 	var name string
-
 	switch len(names) {
 	case 0:
 		return nil
 	case 1:
 		return x.can(names[0])
 	}
-
 	name = names[0]
 	names = names[1:]
-
 	c := x.can(name)
-	if len(names) > 0 {
-		return x.Can(names...)
+	if c == nil {
+		return nil
 	}
-
-	return c
+	return c.Can(names...)
 }
 
 func (x *Cmd) can(name string) *Cmd {

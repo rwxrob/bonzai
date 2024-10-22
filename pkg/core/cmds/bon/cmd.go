@@ -6,7 +6,7 @@ import (
 )
 
 func init() {
-	run.AllowPanic = true
+	run.AllowPanic = false
 }
 
 var otherCmd = &bonzai.Cmd{

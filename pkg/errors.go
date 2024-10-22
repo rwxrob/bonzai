@@ -1,21 +1,31 @@
 package bonzai
 
-import "fmt"
+import (
+	"fmt"
+)
 
 const (
-	E_InvalidName              = `invalid name/alias detected: %v`
-	E_DefCmdReqCall            = `default (first) %q Commands requires Call`
-	E_IncorrectUsage           = `usage: %v %v`
-	E_MissingConf              = `missing conf value for %v`
-	E_MissingVar               = `missing var for %v`
-	E_MultiCallCmdArgNotString = `multicall match for %v, but arg not string: %T`
-	E_MultiCallCmdNotCmd       = `multicall match for %v, but first in slice not *Z.Cmd: %T`
-	E_MultiCallCmdNotFound     = `multicall command not found: %v`
-	E_NoCallNoCommands         = `%v requires either Call or Commands`
-	E_NotEnoughArgs            = `error: %v is not enough arguments, %v required`
-	E_TooManyArgs              = `error: %v is too many arguments, %v maximum`
-	E_WrongNumArgs             = `error: %v is wrong number of arguments, %v required`
+	E_InvalidName         = `invalid name/alias detected: %v`
+	E_DefCmdReqCall       = `default (first) %q Commands requires Call`
+	E_IncorrectUsage      = `usage: %v %v`
+	E_MissingConf         = `missing conf value for %v`
+	E_MissingVar          = `missing var for %v`
+	E_NoCallNoCommands    = `%v requires either Call or Commands`
+	E_NotEnoughArgs       = `%v is not enough arguments, %v required`
+	E_TooManyArgs         = `%v is too many arguments, %v maximum`
+	E_WrongNumArgs        = `%v arguments, %v required`
+	E_InvalidMultiExeName = `%q must begin with %q: %q`
 )
+
+type InvalidMultiExeName struct {
+	Got  string
+	Want string
+}
+
+func (e InvalidMultiExeName) Error() string {
+	return fmt.Sprintf(E_InvalidMultiExeName,
+		e.Want, e.Got, e.Got+"-"+e.Want)
+}
 
 type InvalidName struct {
 	Name string
@@ -77,32 +87,6 @@ func (e IncorrectUsage) Error() string {
 		e.Cmd.Name,
 		e.Cmd.Fill(e.Cmd.Usage),
 	)
-}
-
-type MultiCallCmdNotFound struct {
-	CmdName string
-}
-
-func (e MultiCallCmdNotFound) Error() string {
-	return fmt.Sprintf(E_MultiCallCmdNotFound, e.CmdName)
-}
-
-type MultiCallCmdNotCmd struct {
-	CmdName string
-	It      any
-}
-
-func (e MultiCallCmdNotCmd) Error() string {
-	return fmt.Sprintf(E_MultiCallCmdNotCmd, e.CmdName, e.It)
-}
-
-type MultiCallCmdArgNotString struct {
-	CmdName string
-	It      any
-}
-
-func (e MultiCallCmdArgNotString) Error() string {
-	return fmt.Sprintf(E_MultiCallCmdArgNotString, e.CmdName, e.It)
 }
 
 type MissingVar struct {
