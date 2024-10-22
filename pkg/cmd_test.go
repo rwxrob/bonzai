@@ -10,7 +10,7 @@ func ExampleCmd_AliasesSlice() {
 
 	barCmd := &bonzai.Cmd{
 		Name:    `bar`,
-		Aliases: `b|B`,
+		Aliases: `b|rab`,
 		Call: func(_ *bonzai.Cmd, _ ...string) error {
 			fmt.Println(`i am bar`)
 			return nil
@@ -26,7 +26,7 @@ func ExampleCmd_AliasesSlice() {
 	fmt.Printf("%q", fooCmd.AliasesSlice())
 
 	// Output:
-	// ["b" "B"][]
+	// ["b" "rab"][]
 
 }
 

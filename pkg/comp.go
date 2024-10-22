@@ -1,8 +1,6 @@
 package bonzai
 
 import (
-	"slices"
-
 	"github.com/rwxrob/bonzai/pkg/core/fn/filt"
 )
 
@@ -43,13 +41,6 @@ func (defcomp) Complete(x *Cmd, args ...string) []string {
 			continue
 		}
 		list = append(list, c.Name)
-		hidden := c.HiddenSlice()
-		for _, a := range c.AliasesSlice() {
-			if slices.Contains(hidden, a) {
-				continue
-			}
-			list = append(list, a)
-		}
 	}
 
 	// params

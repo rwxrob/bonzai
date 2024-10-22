@@ -9,11 +9,19 @@ func init() {
 	run.AllowPanic = true
 }
 
+var otherCmd = &bonzai.Cmd{
+	Name:    `other`,
+	Aliases: `o`,
+	Call: func(x *bonzai.Cmd, _ ...string) error {
+		x.Println(`hello from {{.Name}} in {{exepath}}`)
+		return nil
+	},
+}
+
 var fooCmd = &bonzai.Cmd{
 	Name:    `foo`,
 	Aliases: `f|something`,
 	Params:  `one|two|three`,
-	Hidden:  `something`,
 	Call: func(x *bonzai.Cmd, _ ...string) error {
 		x.Println(`hello from {{.Name}} in {{exepath}}`)
 		return nil
@@ -21,8 +29,9 @@ var fooCmd = &bonzai.Cmd{
 }
 
 var barCmd = &bonzai.Cmd{
-	Name:    `bar`,
-	Aliases: `whatever|b`,
+	Name:     `bar`,
+	Aliases:  `whatever|b`,
+	Commands: []*bonzai.Cmd{otherCmd},
 	Call: func(x *bonzai.Cmd, _ ...string) error {
 		x.Println(`hello from {{.Name}} in {{exepath}}`)
 		return nil
@@ -30,8 +39,8 @@ var barCmd = &bonzai.Cmd{
 }
 
 var Cmd = &bonzai.Cmd{
-	Name: `bon`,
-	//Aliases:  `bon|bonzaicli`,
+	Name:     `bon`,
+	Summary:  `manage bonzai composite command trees`,
 	Version:  `v0.0.1`,
 	Commands: []*bonzai.Cmd{barCmd, fooCmd},
 }

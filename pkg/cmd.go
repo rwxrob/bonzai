@@ -24,8 +24,11 @@ type Cmd struct {
 	Name    string // ex: delete
 	Aliases string // ex: rm|d|del
 	Params  string // ex: mon|wed|fri
-	Usage   string // filled
-	Version string // filled, sets IsBase() to true
+
+	// minimal for when DocFS overkill, trigger doc command injection
+	Usage   string
+	Summary string
+	Version string // sets IsBase() to true
 
 	// Faster than lots of "if" conditions in [Call]
 	MinArgs int
@@ -276,8 +279,7 @@ func (x *Cmd) IsHidden() bool {
 // copying the binary to another name, or linking (symbolic or hard).
 // All Bonzai compiled binaries automatically behave as multicall
 // binaries provided the name of the actual binary or link matches the
-// name of a root [Cmd] that returns true for [IsBase] (has
-// a [Cmd.Version] set).
+// name of [Cmd].
 //
 // Note that this method should never be used to obscure a highly
 // sensitive command thinking it won't be discovered. Discovering every
@@ -292,8 +294,29 @@ func (x *Cmd) IsHidden() bool {
 //
 // Throws [InvalidName] error and exist if [Name] does not pass
 // [InvalidName] check.
-func (x *Cmd) Run() {
+//
+// # Subcommand optional arguments
+//
+// If any argument is detected, delegation through recursive Run calls
+// to subcommands is attempted. If more than one argument, each
+// argument is assumed to be a [Name] or alias from [Aliases] and so on
+// (see [Can] for details). As a convenience, if only one argument is
+// passed and that argument contains a dash, it is assumed to be
+// a [PathWithDashes] and is split and expanded into a new args list as
+// if every field where passed as separate strings instead.
+func (x *Cmd) Run(args ...string) {
 	defer run.TrapPanic()
+
+	argslen := len(args)
+	if argslen > 0 {
+		if argslen == 1 && strings.Contains(args[0], `-`) {
+			args = strings.Split(args[0], `-`)
+		}
+		if c := x.Can(args...); c != nil {
+			c.Run()
+			return
+		}
+	}
 
 	if !IsValidName(x.Name) {
 		run.ExitError(InvalidName{x.Name})
@@ -306,6 +329,14 @@ func (x *Cmd) Run() {
 		name = ExeSymLink
 	}
 	if name != x.Name {
+
+		// dashed/long (ex: z-bon-multi-symlink)
+		if strings.Contains(name, `-`) {
+			x.Run(name)
+			return
+		}
+
+		// simple (ex: bon)
 		if c := x.Can(name); c != nil {
 			c.Run()
 			return
@@ -448,8 +479,31 @@ func (x *Cmd) Resolve(name string) *Cmd {
 }
 
 // Can returns the [*Cmd] from [Commands] if the [Cmd.Name] or any
-// alias in [Cmd.Aliases] for that command matches the name passed.
-func (x *Cmd) Can(name string) *Cmd {
+// alias in [Cmd.Aliases] for that command matches the name passed. If
+// more than one argument is passed calls itself recursively on each
+// item in the list.
+func (x *Cmd) Can(names ...string) *Cmd {
+	var name string
+
+	switch len(names) {
+	case 0:
+		return nil
+	case 1:
+		return x.can(names[0])
+	}
+
+	name = names[0]
+	names = names[1:]
+
+	c := x.can(name)
+	if len(names) > 0 {
+		return x.Can(names...)
+	}
+
+	return c
+}
+
+func (x *Cmd) can(name string) *Cmd {
 	for _, c := range x.Commands {
 		if c.Name == name {
 			return c
@@ -563,7 +617,7 @@ func (x *Cmd) PathNames() []string {
 }
 
 // Path returns a dotted notation of the [PathNames] including an initial
-// dot (for root). This useful for associating configuration and other
+// dot (for root). This is useful for associating configuration and other
 // data specifically with this command. If any arguments are passed then
 // will be added with dots between them.
 func (x *Cmd) Path(more ...string) string {
@@ -573,4 +627,11 @@ func (x *Cmd) Path(more ...string) string {
 		return "." + strings.Join(list, ".")
 	}
 	return "." + strings.Join(x.PathNames(), ".")
+}
+
+// PathWithDashes is the same as [Path] but with dashes/hyphens instead and
+// without the leading dot.
+func (x *Cmd) PathWithDashes(more ...string) string {
+	path := x.Path(more...)
+	return path[1:]
 }
