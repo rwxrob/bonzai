@@ -15,6 +15,7 @@ import (
 
 	"github.com/rwxrob/bonzai/pkg/core/ds/qstack"
 	"github.com/rwxrob/bonzai/pkg/core/fn/each"
+	"github.com/rwxrob/bonzai/pkg/core/fn/maps"
 	"github.com/rwxrob/bonzai/pkg/core/is"
 	"github.com/rwxrob/bonzai/pkg/core/run"
 	"github.com/rwxrob/bonzai/pkg/core/to"
@@ -133,7 +134,7 @@ var IsValidName = is.AllLatinASCIILower
 
 // CacheCommandAliases splits the [Cmd.Aliases] for each [Cmd] in
 // [Commands] with its respective [Cmd.AliasesSlice] and assigns them
-// the [Cmd.CommandAliases] cache map. This is primarily used for bash
+// the [Cmd.CommandAliasesMap] cache map. This is primarily used for bash
 // tab completion support in [Run] and use as a multicall binary. If
 // [Commands] is nil or [Name] is empty silently returns.
 func (x *Cmd) CacheCommandAliases() {
@@ -152,15 +153,19 @@ func (x *Cmd) CacheCommandAliases() {
 	}
 }
 
-// CommandAliases calls [CacheCommandAliases] to update [CommandAliases]
-// cache if it is nil and then returns it. Remember to call this
-// whenever dynamically altering the value of [Aliases] or those of any
-// [Command].
-func (x *Cmd) CommandAliases() map[string]*Cmd {
+// CommandAliasesMap calls [CacheCommandAliases] to update cache if it
+// is nil and then returns it. [Hidden] is not applied.
+func (x *Cmd) CommandAliasesMap() map[string]*Cmd {
 	if x.commandAliases == nil {
 		x.CacheCommandAliases()
 	}
 	return x.commandAliases
+}
+
+// CommandAliases returns only the alias string keys from the
+// [CommandAliasesMap] most for completion. [Hidden] is not applied.
+func (x *Cmd) CommandAliases() []string {
+	return maps.Keys(x.CommandAliasesMap())
 }
 
 // CacheParams updates the [params] cache by splitting [Params]
@@ -423,7 +428,7 @@ func (x *Cmd) Resolve(name string) *Cmd {
 		}
 	}
 
-	aliases := x.CommandAliases()
+	aliases := x.CommandAliasesMap()
 	if c, has := aliases[name]; has {
 		return c
 	}
@@ -438,7 +443,7 @@ func (x *Cmd) Can(name string) *Cmd {
 			return c
 		}
 	}
-	aliases := x.CommandAliases() // to trigger cache if needed
+	aliases := x.CommandAliasesMap() // to trigger cache if needed
 	if c, has := aliases[name]; has {
 		return c
 	}

@@ -12,6 +12,7 @@ func init() {
 var fooCmd = &bonzai.Cmd{
 	Name:    `foo`,
 	Aliases: `f|F`,
+	Hidden:  `F`,
 	Call: func(x *bonzai.Cmd, _ ...string) error {
 		x.Println(`hello from {{.Name}} in {{exepath}}`)
 		return nil
