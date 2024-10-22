@@ -24,6 +24,10 @@ var ExePath string
 // (ex: .exe) and is set at init() time (see ExePath).
 var ExeName string
 
+// ExeSymLink holds the name of the symbolic link pointing to the real
+// [ExeName]. Note that hard links are indistinguishable.
+var ExeSymLink string
+
 func init() {
 	var err error
 	// get the full path to current running process executable
@@ -32,12 +36,18 @@ func init() {
 		log.Print(err)
 		return
 	}
+	ExeName = strings.TrimSuffix(
+		filepath.Base(ExePath), filepath.Ext(ExePath))
 	ExePath, err = filepath.EvalSymlinks(ExePath)
 	if err != nil {
 		log.Print(err)
 	}
-	ExeName = strings.TrimSuffix(
+	realname := strings.TrimSuffix(
 		filepath.Base(ExePath), filepath.Ext(ExePath))
+	if realname != ExeName {
+		ExeSymLink = ExeName
+		ExeName = realname
+	}
 }
 
 // This file contains the BonzaiMark builtins that Cmd authors can use
@@ -69,6 +79,7 @@ var FuncMap = template.FuncMap{
 	// host system information
 	"exepath":     exepath,
 	"exename":     exename,
+	"exesymlink":  exesymlink,
 	"execachedir": execachedir,
 	"execonfdir":  execonfdir,
 	"cachedir":    cachedir,
@@ -99,9 +110,9 @@ func homedir(a ...string) string {
 	return path
 }
 
-func exepath() string { return ExePath }
-
-func exename() string { return ExeName }
+func exepath() string    { return ExePath }
+func exename() string    { return ExeName }
+func exesymlink() string { return ExeSymLink }
 
 func execachedir(a ...string) string {
 	path := filepath.Join(cachedir(), ExeName)

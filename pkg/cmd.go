@@ -301,11 +301,15 @@ func (x *Cmd) Run() {
 	}
 
 	// called as multicall binary
-	if name := exename(); x.Name != name {
+	name := ExeName
+	if name == x.Name {
+		name = ExeSymLink
+	}
+	if name != x.Name {
 		if c := x.Can(name); c != nil {
 			c.Run()
+			return
 		}
-		return
 	}
 
 	// complete -C foo foo (man bash, Programmable Completion)
