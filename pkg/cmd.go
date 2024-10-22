@@ -15,7 +15,6 @@ import (
 
 	"github.com/rwxrob/bonzai/pkg/core/ds/qstack"
 	"github.com/rwxrob/bonzai/pkg/core/fn/each"
-	"github.com/rwxrob/bonzai/pkg/core/fn/maps"
 	"github.com/rwxrob/bonzai/pkg/core/is"
 	"github.com/rwxrob/bonzai/pkg/core/run"
 	"github.com/rwxrob/bonzai/pkg/core/to"
@@ -162,12 +161,6 @@ func (x *Cmd) CommandAliasesMap() map[string]*Cmd {
 	return x.commandAliases
 }
 
-// CommandAliases returns only the alias string keys from the
-// [CommandAliasesMap] most for completion. [Hidden] is not applied.
-func (x *Cmd) CommandAliases() []string {
-	return maps.Keys(x.CommandAliasesMap())
-}
-
 // CacheParams updates the [params] cache by splitting [Params]
 // . Remember to call this whenever dynamically altering the value at
 // runtime.
@@ -226,6 +219,16 @@ func (x *Cmd) HiddenSlice() []string {
 		x.CacheHidden()
 	}
 	return x.hidden
+}
+
+// IsHidden returns true if one of [Hidden] matches the [Name].
+func (x *Cmd) IsHidden() bool {
+	for _, hidden := range x.HiddenSlice() {
+		if hidden == x.Name {
+			return true
+		}
+	}
+	return false
 }
 
 // Run method resolves [Cmd.Aliases] and seeks the leaf [Cmd]. It then
@@ -378,7 +381,6 @@ func (x *Cmd) handleBashCompletion(line string) {
 		run.Exit()
 		return
 	}
-	run.Exit()
 
 	// own completer, delegate
 	each.Println(cmd.Comp.Complete(cmd, args...))
