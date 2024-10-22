@@ -132,17 +132,15 @@ func (x *Cmd) Names() []string {
 var IsValidName = is.AllLatinASCIILower
 
 // CacheCommandAliases splits the [Cmd.Aliases] for each [Cmd] in
-// [Commands] with its respective [Cmd.AliasesSlice] and assigning to
-// the [Cmd.cmdAliases] cache map. This is primarily used for bash tab
-// completion support in [Run]. If [Commands] is nil or [Name] is empty
-// silently returns.
+// [Commands] with its respective [Cmd.AliasesSlice] and assigns them
+// the [Cmd.CommandAliases] cache map. This is primarily used for bash
+// tab completion support in [Run] and use as a multicall binary. If
+// [Commands] is nil or [Name] is empty silently returns.
 func (x *Cmd) CacheCommandAliases() {
 	x.commandAliases = map[string]*Cmd{}
-
 	if x.Commands == nil || len(x.Name) == 0 {
 		return
 	}
-
 	for _, c := range x.Commands {
 		aliases := c.AliasesSlice()
 		if len(aliases) == 0 {
@@ -154,7 +152,7 @@ func (x *Cmd) CacheCommandAliases() {
 	}
 }
 
-// CommandAliases calls [CacheCommandAliases] to update [commandAliases]
+// CommandAliases calls [CacheCommandAliases] to update [CommandAliases]
 // cache if it is nil and then returns it. Remember to call this
 // whenever dynamically altering the value of [Aliases] or those of any
 // [Command].
@@ -168,7 +166,13 @@ func (x *Cmd) CommandAliases() map[string]*Cmd {
 // CacheParams updates the [params] cache by splitting [Params]
 // . Remember to call this whenever dynamically altering the value at
 // runtime.
-func (x *Cmd) CacheParams() { x.params = strings.Split(x.Params, `|`) }
+func (x *Cmd) CacheParams() {
+	if len(x.Params) > 0 {
+		x.params = strings.Split(x.Params, `|`)
+		return
+	}
+	x.params = []string{}
+}
 
 // ParamsSlice updates the [params] internal cache ([CacheParams]) and
 // returns it as a slice.
@@ -180,9 +184,15 @@ func (x *Cmd) ParamsSlice() []string {
 }
 
 // CacheAliases updates the [aliases] cache by splitting [Aliases]
-// . Remember to call this whenever dynamically altering the value at
-// runtime.
-func (x *Cmd) CacheAliases() { x.aliases = strings.Split(x.Aliases, `|`) }
+// and adding the [Name] to the end. Remember to call this whenever
+// dynamically altering the value at runtime.
+func (x *Cmd) CacheAliases() {
+	if len(x.Aliases) > 0 {
+		x.aliases = strings.Split(x.Aliases, `|`)
+		return
+	}
+	x.aliases = []string{}
+}
 
 // AliasesSlice updates the [aliases] internal cache ([CacheAliases]) and
 // returns it as a slice.
@@ -196,7 +206,13 @@ func (x *Cmd) AliasesSlice() []string {
 // CacheHidden updates the [hidden] cache by splitting [Hidden]
 // . Remember to call this whenever dynamically altering the value at
 // runtime.
-func (x *Cmd) CacheHidden() { x.hidden = strings.Split(x.Hidden, `|`) }
+func (x *Cmd) CacheHidden() {
+	if len(x.Hidden) > 0 {
+		x.hidden = strings.Split(x.Hidden, `|`)
+		return
+	}
+	x.hidden = []string{}
+}
 
 // HiddenSlice updates the [hidden] internal cache ([CacheHidden]) and
 // returns it as a slice.
@@ -218,7 +234,7 @@ func (x *Cmd) HiddenSlice() []string {
 // number and type of arguments have already been checked (see
 // [Cmd.MinArgs], etc.) which is normally done by Run.
 //
-// # Delegation and completion
+// # Completion
 //
 // Since Run is the main execution entry point for all Bonzai command
 // trees it is also responsible for handling completion (tab or
@@ -239,6 +255,20 @@ func (x *Cmd) HiddenSlice() []string {
 // ecosystem of Completers or assign its own. See the
 // [core/comp] package for more.
 //
+// # Multicall binary and links
+//
+// Popularized by BusyBox/Alpine, a multicall binary is a single
+// executable that behaves differently based on its name, either through
+// copying the binary to another name, or linking (symbolic or hard).
+// All Bonzai compiled binaries automatically behave as multicall
+// binaries provided the name of the actual binary or link matches the
+// name of a root [Cmd] that returns true for [IsBase] (has
+// a [Cmd.Version] set).
+//
+// Note that this method should never be used to obscure a highly
+// sensitive command thinking it won't be discovered. Discovering every
+// possible command is very easy to brute force.
+//
 // # Never panic
 //
 // All panics are trapped with [run.TrapPanic] which normally exits with 1 and
@@ -256,30 +286,19 @@ func (x *Cmd) Run() {
 		return
 	}
 
-	// complete -C cmd cmd
-	if line := os.Getenv("COMP_LINE"); len(line) > 0 && run.ShellIsBash() {
-		list := []string{}
-
-		// find the leaf command
-		lineargs := run.ArgsFrom(line)
-		cmd, args := x.Seek(lineargs[1:])
-
-		// default completer or package aliases, always exits
-		if cmd.Comp == nil {
-			list = append(list, DefComp.Complete(cmd, args...)...)
-			each.Println(list)
-			run.Exit()
-			return
+	// called as multicall binary
+	if name := exename(); x.Name != name {
+		if c := x.Can(name); c != nil {
+			c.Run()
 		}
-		run.Exit()
-
-		// own completer, delegate
-		each.Println(cmd.Comp.Complete(cmd, args...))
-		run.Exit()
 		return
 	}
 
-	// DELEGATION
+	// complete -C foo foo (man bash, Programmable Completion)
+	if line := os.Getenv("COMP_LINE"); len(line) > 0 && run.ShellIsBash() {
+		x.handleBashCompletion(line)
+		return
+	}
 
 	// seek should never fail to return something, but ...
 	cmd, args := x.Seek(os.Args[1:])
@@ -339,6 +358,29 @@ func (x *Cmd) Run() {
 	run.Exit()
 }
 
+// complete -C cmd cmd
+func (x *Cmd) handleBashCompletion(line string) {
+	list := []string{}
+
+	// find the leaf command
+	lineargs := run.ArgsFrom(line)
+	cmd, args := x.Seek(lineargs[1:])
+
+	// default completer or package aliases, always exits
+	if cmd.Comp == nil {
+		list = append(list, DefComp.Complete(cmd, args...)...)
+		each.Println(list)
+		run.Exit()
+		return
+	}
+	run.Exit()
+
+	// own completer, delegate
+	each.Println(cmd.Comp.Complete(cmd, args...))
+	run.Exit()
+	return
+}
+
 // String fulfills the [fmt.Stringer] interface for debugging.
 func (x Cmd) String() string { return x.Name }
 
@@ -382,6 +424,21 @@ func (x *Cmd) Resolve(name string) *Cmd {
 	}
 
 	aliases := x.CommandAliases()
+	if c, has := aliases[name]; has {
+		return c
+	}
+	return nil
+}
+
+// Can returns the [*Cmd] from [Commands] if the [Cmd.Name] or any
+// alias in [Cmd.Aliases] for that command matches the name passed.
+func (x *Cmd) Can(name string) *Cmd {
+	for _, c := range x.Commands {
+		if c.Name == name {
+			return c
+		}
+	}
+	aliases := x.CommandAliases() // to trigger cache if needed
 	if c, has := aliases[name]; has {
 		return c
 	}
