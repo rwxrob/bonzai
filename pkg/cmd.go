@@ -258,19 +258,20 @@ func (x *Cmd) Run() {
 
 	// complete -C cmd cmd
 	if line := os.Getenv("COMP_LINE"); len(line) > 0 && run.ShellIsBash() {
-		var list []string
+		list := []string{}
 
 		// find the leaf command
 		lineargs := run.ArgsFrom(line)
 		cmd, args := x.Seek(lineargs[1:])
 
 		// default completer or package aliases, always exits
-		if cmd.Comp == nil && (len(cmd.Commands) > 0 || len(cmd.Params) > 0) {
+		if cmd.Comp == nil {
 			list = append(list, DefComp.Complete(cmd, args...)...)
 			each.Println(list)
 			run.Exit()
 			return
 		}
+		run.Exit()
 
 		// own completer, delegate
 		each.Println(cmd.Comp.Complete(cmd, args...))
@@ -337,6 +338,9 @@ func (x *Cmd) Run() {
 	}
 	run.Exit()
 }
+
+// String fulfills the [fmt.Stringer] interface for debugging.
+func (x Cmd) String() string { return x.Name }
 
 // Root returns the root [Cmd] from the current [Path]. This must always
 // be calculated every time since any Cmd can change positions and
@@ -435,7 +439,7 @@ func (x *Cmd) Param(p string) string {
 // from the command line. Seek also sets the Caller on each Cmd found
 // during resolution.
 func (x *Cmd) Seek(args []string) (*Cmd, []string) {
-	if args == nil || x.Commands == nil {
+	if (len(args) == 1 && args[0] == "") || x.Commands == nil {
 		return x, args
 	}
 	cur := x

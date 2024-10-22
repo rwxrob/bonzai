@@ -40,6 +40,8 @@ func (defcomp) Complete(x *Cmd, args ...string) []string {
 	list = append(list, x.ParamsSlice()...)
 	list = set.Minus[string, string](list, x.HiddenSlice())
 
+	//log.Print(list)
+
 	if len(args) == 0 {
 		return list
 	}
