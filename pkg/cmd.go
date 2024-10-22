@@ -6,6 +6,7 @@ package bonzai
 import (
 	"bytes"
 	"embed"
+	"fmt"
 	"io"
 	"log"
 	"os"
@@ -409,6 +410,12 @@ func (x *Cmd) Fill(tmpl string) string {
 	}
 	return buf.String()
 }
+
+// Print calls [Fill] on string and prints it with [fmt.Print].
+func (x *Cmd) Print(tmpl string) { fmt.Print(x.Fill(tmpl)) }
+
+// Println calls [Fill] on string and prints it with [fmt.Print].
+func (x *Cmd) Println(tmpl string) { fmt.Println(x.Fill(tmpl)) }
 
 // Param returns Param matching name if found, empty string if not.
 func (x *Cmd) Param(p string) string {
