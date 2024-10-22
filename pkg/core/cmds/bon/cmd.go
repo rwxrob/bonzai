@@ -9,6 +9,13 @@ func init() {
 	run.AllowPanic = false
 }
 
+var Cmd = &bonzai.Cmd{
+	Name:     `bon`,
+	Summary:  `manage bonzai composite command trees`,
+	Version:  `v0.0.1`,
+	Commands: []*bonzai.Cmd{barCmd, fooCmd},
+}
+
 var otherCmd = &bonzai.Cmd{
 	Name:    `other`,
 	Aliases: `o`,
@@ -36,11 +43,4 @@ var barCmd = &bonzai.Cmd{
 		x.Println(`hello from {{.Name}} in {{exepath}}`)
 		return nil
 	},
-}
-
-var Cmd = &bonzai.Cmd{
-	Name:     `bon`,
-	Summary:  `manage bonzai composite command trees`,
-	Version:  `v0.0.1`,
-	Commands: []*bonzai.Cmd{barCmd, fooCmd},
 }

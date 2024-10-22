@@ -306,7 +306,60 @@ func (x *Cmd) IsHidden() bool {
 // if every field where passed as separate strings instead.
 func (x *Cmd) Run(args ...string) {
 	defer run.TrapPanic()
+	x.recurseIfArgs(args)
+	x.exitUnlessValidName()
+	x.recurseIfMulti(args)
+	x.detectBashCompletion(args)
+	c, args := x.Seek(os.Args[1:])
+	if c == nil {
+		run.ExitError(IncorrectUsage{c})
+		return
+	}
+	c.init(args)
+	c.exitUnlessCallable()
+	c.exitIfBadArgs(args)
+	c.call(args)
+}
 
+func (x *Cmd) call(args []string) {
+	if x.Caller == nil {
+		x.Caller = x
+	}
+	if err := x.Call(x, args...); err != nil {
+		run.ExitError(err)
+		return
+	}
+	run.Exit()
+}
+
+// default to first Command if no Call defined
+func (x *Cmd) exitUnlessCallable() {
+	if x.Call == nil {
+		if len(x.Commands) > 0 {
+			fcmd := x.Commands[0]
+			if fcmd.Call == nil {
+				run.ExitError(DefCmdReqCall{x})
+				return
+			}
+			fcmd.Caller = x
+			x = fcmd
+		} else {
+			run.ExitError(NoCallNoCommands{x})
+			return
+		}
+	}
+}
+
+// initialize before delegation and Call
+func (x *Cmd) init(args []string) {
+	if x.Init != nil {
+		if err := x.Init(x, args...); err != nil {
+			run.ExitError(err)
+		}
+	}
+}
+
+func (x *Cmd) recurseIfArgs(args []string) {
 	argslen := len(args)
 	if argslen > 0 {
 		if argslen == 1 && strings.Contains(args[0], `-`) {
@@ -317,19 +370,39 @@ func (x *Cmd) Run(args ...string) {
 			return
 		}
 	}
+}
 
+func (x *Cmd) exitIfBadArgs(args []string) {
+	switch {
+	case len(args) > 0 && x.NoArgs:
+		run.ExitError(TooManyArgs{len(args), 0})
+		return
+	case len(args) < x.MinArgs:
+		run.ExitError(NotEnoughArgs{len(args), x.MinArgs})
+		return
+	case x.MaxArgs > 0 && len(args) > x.MaxArgs:
+		run.ExitError(TooManyArgs{len(args), x.MaxArgs})
+		return
+	case x.NumArgs > 0 && len(args) != x.NumArgs:
+		run.ExitError(WrongNumArgs{len(args), x.NumArgs})
+		return
+	}
+}
+
+func (x *Cmd) exitUnlessValidName() {
 	if !IsValidName(x.Name) {
 		run.ExitError(InvalidName{x.Name})
 		return
 	}
+}
 
+func (x *Cmd) recurseIfMulti(args []string) {
 	// called as multicall binary
 	name := ExeName
 	if name == x.Name {
 		name = ExeSymLink
 	}
 	if name != x.Name {
-
 		// dashed/long (ex: z-bon-multi-symlink)
 		if strings.Contains(name, `-`) {
 			args = strings.Split(name, `-`)
@@ -340,98 +413,38 @@ func (x *Cmd) Run(args ...string) {
 			x.Run(args[1:]...)
 			return
 		}
-
 		// simple (ex: bon)
 		if c := x.Can(name); c != nil {
 			c.Run()
 			return
 		}
 	}
-
-	// complete -C foo foo (man bash, Programmable Completion)
-	if line := os.Getenv("COMP_LINE"); len(line) > 0 && run.ShellIsBash() {
-		x.handleBashCompletion(line)
-		return
-	}
-
-	// seek should never fail to return something, but ...
-	cmd, args := x.Seek(os.Args[1:])
-
-	if cmd == nil {
-		run.ExitError(IncorrectUsage{cmd})
-		return
-	}
-
-	// initialize before delegation and Call
-	if cmd.Init != nil {
-		if err := cmd.Init(cmd, args...); err != nil {
-			run.ExitError(err)
-		}
-	}
-
-	// default to first Command if no Call defined
-	if cmd.Call == nil {
-		if len(cmd.Commands) > 0 {
-			fcmd := cmd.Commands[0]
-			if fcmd.Call == nil {
-				run.ExitError(DefCmdReqCall{cmd})
-				return
-			}
-			fcmd.Caller = cmd
-			cmd = fcmd
-		} else {
-			run.ExitError(NoCallNoCommands{cmd})
-			return
-		}
-	}
-
-	switch {
-	case len(args) > 0 && cmd.NoArgs:
-		run.ExitError(TooManyArgs{len(args), 0})
-		return
-	case len(args) < cmd.MinArgs:
-		run.ExitError(NotEnoughArgs{len(args), cmd.MinArgs})
-		return
-	case cmd.MaxArgs > 0 && len(args) > cmd.MaxArgs:
-		run.ExitError(TooManyArgs{len(args), cmd.MaxArgs})
-		return
-	case cmd.NumArgs > 0 && len(args) != cmd.NumArgs:
-		run.ExitError(WrongNumArgs{len(args), cmd.NumArgs})
-		return
-	}
-
-	// delegate
-	if cmd.Caller == nil {
-		cmd.Caller = x
-	}
-
-	if err := cmd.Call(cmd, args...); err != nil {
-		run.ExitError(err)
-		return
-	}
-	run.Exit()
 }
 
-// complete -C cmd cmd
-func (x *Cmd) handleBashCompletion(line string) {
+// complete -C foo foo (man bash, Programmable Completion)
+func (x *Cmd) detectBashCompletion(args []string) {
 	list := []string{}
 
-	// find the leaf command
-	lineargs := run.ArgsFrom(line)
-	cmd, args := x.Seek(lineargs[1:])
+	if line := os.Getenv("COMP_LINE"); len(line) > 0 && run.ShellIsBash() {
 
-	// default completer or package aliases, always exits
-	if cmd.Comp == nil {
-		list = append(list, DefComp.Complete(cmd, args...)...)
-		each.Println(list)
+		// find the leaf command
+		lineargs := run.ArgsFrom(line)
+		cmd, args := x.Seek(lineargs[1:])
+
+		// default completer or package aliases, always exits
+		if cmd.Comp == nil {
+			list = append(list, DefComp.Complete(cmd, args...)...)
+			each.Println(list)
+			run.Exit()
+			return
+		}
+
+		// own completer, delegate
+		each.Println(cmd.Comp.Complete(cmd, args...))
 		run.Exit()
 		return
 	}
 
-	// own completer, delegate
-	each.Println(cmd.Comp.Complete(cmd, args...))
-	run.Exit()
-	return
 }
 
 // String fulfills the [fmt.Stringer] interface for debugging.
