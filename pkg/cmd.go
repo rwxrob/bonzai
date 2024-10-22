@@ -187,6 +187,12 @@ func (x *Cmd) ParamsSlice() []string {
 func (x *Cmd) CacheAliases() {
 	if len(x.Aliases) > 0 {
 		x.aliases = strings.Split(x.Aliases, `|`)
+		for _, alias := range x.aliases {
+			if !IsValidName(alias) {
+				run.ExitError(InvalidName{alias})
+				return
+			}
+		}
 		return
 	}
 	x.aliases = []string{}

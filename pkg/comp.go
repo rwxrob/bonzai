@@ -1,7 +1,8 @@
 package bonzai
 
 import (
-	"github.com/rwxrob/bonzai/pkg/core/ds/set"
+	"slices"
+
 	"github.com/rwxrob/bonzai/pkg/core/fn/filt"
 )
 
@@ -34,12 +35,25 @@ func (defcomp) Complete(x *Cmd, args ...string) []string {
 		return []string{x.Name}
 	}
 
-	// build list of visible commands and params
 	list := []string{}
-	list = append(list, x.CommandNames()...)
-	list = set.Minus[string, string](list, x.HiddenSlice())
+
+	// commands
+	for _, c := range x.Commands {
+		if c.IsHidden() {
+			continue
+		}
+		list = append(list, c.Name)
+		hidden := c.HiddenSlice()
+		for _, a := range c.AliasesSlice() {
+			if slices.Contains(hidden, a) {
+				continue
+			}
+			list = append(list, a)
+		}
+	}
+
+	// params
 	list = append(list, x.ParamsSlice()...)
-	list = append(list, x.CommandAliases()...)
 
 	if len(args) == 0 {
 		return list

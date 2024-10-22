@@ -3,7 +3,7 @@ package bonzai
 import "fmt"
 
 const (
-	E_InvalidName              = `invalid name detected: %v`
+	E_InvalidName              = `invalid name/alias detected: %v`
 	E_DefCmdReqCall            = `default (first) %q Commands requires Call`
 	E_IncorrectUsage           = `usage: %v %v`
 	E_MissingConf              = `missing conf value for %v`

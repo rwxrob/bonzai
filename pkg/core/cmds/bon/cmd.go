@@ -11,8 +11,8 @@ func init() {
 
 var fooCmd = &bonzai.Cmd{
 	Name:    `foo`,
-	Aliases: `f|F`,
-	Hidden:  `F`,
+	Aliases: `f|F|something`,
+	Hidden:  `something`,
 	Call: func(x *bonzai.Cmd, _ ...string) error {
 		x.Println(`hello from {{.Name}} in {{exepath}}`)
 		return nil
@@ -21,7 +21,7 @@ var fooCmd = &bonzai.Cmd{
 
 var barCmd = &bonzai.Cmd{
 	Name:    `bar`,
-	Aliases: `b|whatever`,
+	Aliases: `whatever|b`,
 	Call: func(x *bonzai.Cmd, _ ...string) error {
 		x.Println(`hello from {{.Name}} in {{exepath}}`)
 		return nil
