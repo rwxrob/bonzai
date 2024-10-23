@@ -5,25 +5,42 @@ import (
 )
 
 const (
-	E_InvalidName         = `invalid name/alias detected: %v`
-	E_DefCmdReqCall       = `default (first) %q Commands requires Call`
-	E_IncorrectUsage      = `usage: %v %v`
-	E_MissingConf         = `missing conf value for %v`
-	E_MissingVar          = `missing var for %v`
-	E_NoCallNoCommands    = `%v requires either Call or Commands`
-	E_NotEnoughArgs       = `%v is not enough arguments, %v required`
-	E_TooManyArgs         = `%v is too many arguments, %v maximum`
-	E_WrongNumArgs        = `%v arguments, %v required`
-	E_InvalidMultiExeName = `%q must begin with %q: %q`
+	E_InvalidName      = `invalid name/alias detected: %v`
+	E_InvalidMultiName = `%q must begin with %q: %q`
+	E_DefCmdReqCall    = `default (first) %q Commands requires Call`
+	E_IncorrectUsage   = `usage: %v %v`
+	E_MissingVar       = `missing var for %v`
+	E_NoCallNoCommands = `%v requires either Call or Commands`
+	E_NotEnoughArgs    = `%v is not enough arguments, %v required`
+	E_TooManyArgs      = `%v is too many arguments, %v maximum`
+	E_WrongNumArgs     = `%v arguments, %v required`
+	E_UnsupportedVar   = `unsupported var: %v`
+	E_VarsInitFailed   = `var initialization failed: %v`
 )
 
-type InvalidMultiExeName struct {
+type VarsInitFailed struct {
+	Err error
+}
+
+func (e VarsInitFailed) Error() string {
+	return fmt.Sprintf(E_VarsInitFailed, e.Err)
+}
+
+type UnsupportedVar struct {
+	Name string
+}
+
+func (e UnsupportedVar) Error() string {
+	return fmt.Sprintf(E_UnsupportedVar, e.Name)
+}
+
+type InvalidMultiName struct {
 	Got  string
 	Want string
 }
 
-func (e InvalidMultiExeName) Error() string {
-	return fmt.Sprintf(E_InvalidMultiExeName,
+func (e InvalidMultiName) Error() string {
+	return fmt.Sprintf(E_InvalidMultiName,
 		e.Want, e.Got, e.Got+"-"+e.Want)
 }
 

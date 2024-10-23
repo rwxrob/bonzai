@@ -4,7 +4,6 @@ import (
 	"embed"
 	"fmt"
 	"io/fs"
-	_fs "io/fs"
 	"log"
 	"os"
 	"path"
@@ -122,8 +121,8 @@ func HereOrAbove(name string) (string, error) {
 // IsDirFS simply a shortcut for fs.Stat().IsDir(). Only returns true if
 // the path is a directory. If not a directory (or an error prevented
 // confirming it is a directory) then returns false.
-func IsDirFS(fsys _fs.FS, path string) bool {
-	info, err := _fs.Stat(fsys, path)
+func IsDirFS(fsys fs.FS, path string) bool {
+	info, err := fs.Stat(fsys, path)
 	if err != nil {
 		return false
 	}
@@ -131,8 +130,8 @@ func IsDirFS(fsys _fs.FS, path string) bool {
 }
 
 var (
-	ExtractFilePerms = _fs.FileMode(0600)
-	ExtractDirPerms  = _fs.FileMode(0700)
+	ExtractFilePerms = fs.FileMode(0600)
+	ExtractDirPerms  = fs.FileMode(0700)
 )
 
 // ExtractEmbed walks the embedded file system and duplicates its
@@ -144,9 +143,9 @@ var (
 // ExtractFilePerms and ExtractDirPerms. Note that each embedded file is
 // full buffered into memory before writing.
 func ExtractEmbed(it embed.FS, root, target string) error {
-	return _fs.WalkDir(it, root,
+	return fs.WalkDir(it, root,
 
-		func(path string, i _fs.DirEntry, err error) error {
+		func(path string, i fs.DirEntry, err error) error {
 
 			to := filepath.Join(target, strings.TrimPrefix(path, root))
 
@@ -154,7 +153,7 @@ func ExtractEmbed(it embed.FS, root, target string) error {
 				return os.MkdirAll(to, ExtractDirPerms)
 			}
 
-			buf, err := _fs.ReadFile(it, path)
+			buf, err := fs.ReadFile(it, path)
 			if err != nil {
 				return err
 			}
@@ -169,8 +168,8 @@ func ExtractEmbed(it embed.FS, root, target string) error {
 // in relative paths.
 func RelPaths(it fs.FS, root string) []string {
 	var paths []string
-	_fs.WalkDir(it, root,
-		func(path string, i _fs.DirEntry, err error) error {
+	fs.WalkDir(it, root,
+		func(path string, i fs.DirEntry, err error) error {
 			to := strings.TrimPrefix(path, root)
 			if to == "" {
 				return nil

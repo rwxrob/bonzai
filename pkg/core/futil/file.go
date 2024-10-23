@@ -16,7 +16,7 @@ import (
 	"time"
 
 	"github.com/rogpeppe/go-internal/lockedfile"
-	"github.com/rwxrob/bonzai/pkg/run"
+	"github.com/rwxrob/bonzai/pkg/core/run"
 )
 
 var DefaultFilePerms = 0600

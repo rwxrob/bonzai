@@ -6,7 +6,7 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/rwxrob/bonzai/pkg/uniq"
+	"github.com/rwxrob/bonzai/pkg/core/uniq"
 )
 
 // Multipart is meant to contain the delimited sections of output and can

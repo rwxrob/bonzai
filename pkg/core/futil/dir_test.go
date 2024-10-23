@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"os"
 
-	"github.com/rwxrob/bonzai/pkg/futil"
+	"github.com/rwxrob/bonzai/pkg/core/futil"
 )
 
 func ExampleEntries() {

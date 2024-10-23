@@ -2,6 +2,7 @@ package bon
 
 import (
 	bonzai "github.com/rwxrob/bonzai/pkg"
+	"github.com/rwxrob/bonzai/pkg/core/cmds/vars"
 	"github.com/rwxrob/bonzai/pkg/core/run"
 )
 
@@ -38,7 +39,10 @@ var fooCmd = &bonzai.Cmd{
 var barCmd = &bonzai.Cmd{
 	Name:     `bar`,
 	Aliases:  `whatever|b`,
-	Commands: []*bonzai.Cmd{otherCmd},
+	Commands: []*bonzai.Cmd{otherCmd, vars.Cmd},
+	InitVars: map[string]string{
+		`some`: `thing`,
+	},
 	Call: func(x *bonzai.Cmd, _ ...string) error {
 		x.Println(`hello from {{.Name}} in {{exepath}}`)
 		return nil

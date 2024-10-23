@@ -25,10 +25,10 @@ type Cmd struct {
 	Aliases string // ex: rm|d|del
 	Params  string // ex: mon|wed|fri
 
-	// minimal for when DocFS overkill, trigger doc command injection
+	// minimal when DocFS overkill
 	Usage   string
 	Summary string
-	Version string // sets IsBase() to true
+	Version string
 
 	// Faster than lots of "if" conditions in [Call]
 	MinArgs int
@@ -40,15 +40,14 @@ type Cmd struct {
 
 	// Descending tree of delegated commands
 	Commands []*Cmd // delegated, first is always default
-	Hidden   string // disables completion for Commands/Aliases ex: -h
+	Hidden   string // disables completion for Commands/Aliases
 
 	// When unassigned automatically assigned [DefComp] if either [Commands] or
 	// [Params] is not empty.
 	Comp Completer
 
-	// When assigned, triggers append of [VarsCmd] to [Commands] and
-	// calling [VarsCmd.SoftInit].
-	Vars Vars
+	// Default initial vars values. Does not overwrite existing vars.
+	InitVars map[string]string
 
 	// When assigned, triggers prepend of [DocCmd] to [Commands] if not
 	// already found. String is usually embedded and lazy loaded only when
@@ -73,41 +72,6 @@ type Cmd struct {
 	params         []string        // see [CacheParams]
 	hidden         []string        // see [CacheHidden]
 	commandAliases map[string]*Cmd // see [CacheCommandAliases]
-}
-
-// IsBase indicates this command can be used independently (cut from the
-// main "branch" so to speak). Any base command is a candidate for use
-// as a multicall link/copy when creating multicall binaries. Base
-// commands usually have subcommands and/or parameters but are not
-// necessarily required to.
-func (x *Cmd) IsBase() bool { return len(x.Version) > 0 }
-
-// IsBranch is a [Cmd] that returns false for [IsBase] but has one more
-// [Commands] as subcommands under it. This is typical when grouping
-// multiple commands to simplify command hierarchies. However, branches
-// may include [DocCmd] and [VarCmd].
-func (x *Cmd) IsBranch() bool { return !x.IsBase() && !x.IsLeaf() }
-
-// IsLeaf is a [Cmd] that has no [Commands] under it. [DocCmd] and
-// [VarCmd] do not count. Leafs may have optional [Params], [DocCmd], or
-// [VarCmd].
-func (x *Cmd) IsLeaf() bool {
-	for _, c := range x.Commands {
-		if c == VarCmd || c == DocCmd {
-			continue
-		}
-	}
-	return false
-}
-
-// Completer specifies a struct with a [Completer.Complete] function that will
-// complete the given [Cmd] with the given arguments.
-// The Complete function must never panic and always return at least an
-// empty slice of strings. Not all completers require the passed
-// command. By convention any unused arguments should use underscore for
-// their names.
-type Completer interface {
-	Complete(x *Cmd, args ...string) []string
 }
 
 // Method defines the main code to execute for a command [Cmd.Call]. By
@@ -230,16 +194,6 @@ func (x *Cmd) HiddenSlice() []string {
 	return x.hidden
 }
 
-// IsHidden returns true if one of [Hidden] matches the [Name].
-func (x *Cmd) IsHidden() bool {
-	for _, hidden := range x.HiddenSlice() {
-		if hidden == x.Name {
-			return true
-		}
-	}
-	return false
-}
-
 // Run method resolves [Cmd.Aliases] and seeks the leaf [Cmd]. It then
 // calls the leaf's first-class [Cmd.Call] function passing itself as
 // the first argument along with any remaining command line arguments.
@@ -319,6 +273,26 @@ func (x *Cmd) Run(args ...string) {
 	c.exitUnlessCallable()
 	c.exitIfBadArgs(args)
 	c.call(args)
+}
+
+// IsHidden returns true if one of [Hidden] matches the [Name].
+func (x *Cmd) IsHidden() bool {
+	for _, hidden := range x.HiddenSlice() {
+		if hidden == x.Name {
+			return true
+		}
+	}
+	return false
+}
+
+func (x *Cmd) has(c *Cmd) bool {
+	for _, this := range x.Commands {
+		if this.Name == c.Name {
+
+			return true
+		}
+	}
+	return false
 }
 
 func (x *Cmd) call(args []string) {
@@ -408,7 +382,7 @@ func (x *Cmd) recurseIfMulti(args []string) {
 			args = strings.Split(name, `-`)
 			first := args[0]
 			if first != ExeName {
-				run.ExitError(InvalidMultiExeName{ExeName, name})
+				run.ExitError(InvalidMultiName{ExeName, name})
 			}
 			x.Run(args[1:]...)
 			return
@@ -460,6 +434,23 @@ func (x *Cmd) Root() *Cmd {
 		return cmds[0].Caller
 	}
 	return x.Caller
+}
+
+// PrependCommand safely prepends the passed [*Cmd] to the [Commands] slice.
+func (x *Cmd) PrependCommand(cmd *Cmd) {
+	old := x.Commands
+	x.Commands = []*Cmd{cmd}
+	if old != nil {
+		x.Commands = append(x.Commands, old...)
+	}
+}
+
+// AppendCommand safely appends the passed [*Cmd] to the [Commands] slice.
+func (x *Cmd) AppendCommand(cmd *Cmd) {
+	if x.Commands == nil {
+		x.Commands = []*Cmd{}
+	}
+	x.Commands = append(x.Commands, cmd)
 }
 
 // Add creates a new Cmd and sets the [Name] and [Aliases] and adds to
@@ -557,10 +548,14 @@ func (x *Cmd) Fill(tmpl string) string {
 	return buf.String()
 }
 
-// Print calls [Fill] on string and prints it with [fmt.Print].
+// Print calls [Fill] on string and prints it with [fmt.Print]. This is
+// a rather expensive operation by comparison. Consider the simpler
+// alternative or [term.Print].
 func (x *Cmd) Print(tmpl string) { fmt.Print(x.Fill(tmpl)) }
 
-// Println calls [Fill] on string and prints it with [fmt.Print].
+// Println calls [Fill] on string and prints it with [fmt.Println]. This is
+// a rather expensive operation by comparison. Consider the simpler
+// alternative or [term.Print].
 func (x *Cmd) Println(tmpl string) { fmt.Println(x.Fill(tmpl)) }
 
 // Param returns Param matching name if found, empty string if not.
@@ -648,4 +643,38 @@ func (x *Cmd) Path(more ...string) string {
 func (x *Cmd) PathWithDashes(more ...string) string {
 	path := x.Path(more...)
 	return path[1:]
+}
+
+// Get is a shorter version of Vars.Get(x.Path()+"."+key) which fetches
+// and returns persisted cache values (see [InitVars] and [VarsDriver]).
+// If a value has not yet been assigned returns the value from [InitVars]
+// and sets it with [Set]. All var keys must be declared and assigned
+// initial values with [InitVars] or they cannot be used and throw
+// an [UnsupportedVar] [run.ExitError].
+func (x *Cmd) Get(key string) string {
+	defval, declared := x.InitVars[key]
+	if !declared {
+		run.ExitError(UnsupportedVar{key})
+		return ""
+	}
+	path := x.Path()
+	if path != "." {
+		path += "."
+	}
+	ptr := path + key
+	val, code := Vars.Get(ptr)
+	if code == NOTFOUND {
+		Vars.Set(ptr, defval)
+		val = defval
+	}
+	return val
+}
+
+// Set is shorter version of Vars.Set(x.Path()+"."+key.val).
+func (x *Cmd) Set(key, val string) {
+	path := x.Path()
+	if path != "." {
+		path += "."
+	}
+	Vars.Set(path+key, val)
 }
