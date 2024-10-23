@@ -1,9 +1,10 @@
 // Copyright 2022 Robert Muhlestein.
 // SPDX-License-Identifier: Apache-2.0
 
-// Package vars provides high-level functions that are called from the
-// Go Bonzai branch of the same name providing universal access to the
-// core functionality.
+// Package vars provides an implementation of the [bonzai.VarsDriver]
+// interface employing high-performance file persistence using the
+// [os.UserCacheDir] directory containing a single standard properties
+// text file per [Id].
 package vars
 
 import (
@@ -25,8 +26,7 @@ type Map struct {
 	sync.Mutex
 	M    map[string]string
 	Id   string // usually application name
-	Dir  string // usually os.UserCacheDir
-	File string // usually vars
+	Path string // usually os.UserCacheDir
 }
 
 // Map returns a Map with the M initialized. No other initialization is
@@ -37,15 +37,15 @@ func New() Map {
 	return m
 }
 
-// DirPath is the Dir and Id joined.
-func (c Map) DirPath() string { return filepath.Join(c.Dir, c.Id) }
+// DirPath is the [Path] and [Id] joined.
+func (c Map) DirPath() string { return filepath.Join(c.Path, c.Id) }
 
-// Path returns the combined Dir and File.
-func (c Map) Path() string { return filepath.Join(c.Dir, c.Id, c.File) }
+// FullPath returns the combined [Path], [Id], and `vars.properties` string.
+func (c Map) FullPath() string { return filepath.Join(c.Path, c.Id, `vars.properties`) }
 
-// Init initializes the cache directory (Dir) for the current user and
-// given application name (Id) using the standard os.UserCacheDir
-// location.  The directory is completely removed and new configuration
+// Init initializes the cache directory ([Path]) for the current user and
+// given application name ([Id]) using the standard [os.UserCacheDir]
+// location. The directory is completely removed and new configuration
 // file(s) are created.
 //
 // Consider placing a confirmation prompt before calling this function
@@ -66,7 +66,7 @@ func (c Map) Init() error {
 	if d == "" {
 		return fmt.Errorf("could not resolve cache path for %q", c.Id)
 	}
-	if len(c.Id) == 0 && len(c.Dir) == 0 {
+	if len(c.Id) == 0 && len(c.Path) == 0 {
 		return fmt.Errorf("empty directory id")
 	}
 
@@ -80,12 +80,12 @@ func (c Map) Init() error {
 		return err
 	}
 
-	return futil.Touch(c.Path())
+	return futil.Touch(c.FullPath())
 }
 
-// Exists returns true if a configuration file exists at Path.
+// Exists returns true if a configuration file exists at [FullPath].
 func (c Map) Exists() bool {
-	return futil.Exists(c.Path())
+	return futil.Exists(c.FullPath())
 }
 
 // SoftInit calls Init if not Exists.
@@ -99,10 +99,9 @@ func (c Map) SoftInit() error {
 // Fetch returns all the persistent cache data in text marshaled format:
 // k=v, no equal sign in key, carriage return and line returns escaped,
 // terminated by line return on each line. Logs an error and returns -1
-// (FAILED) if source of data is unavailable. Fulfills the [bonzai.Vars]
-// interface.
+// (FAILED) if source of data is unavailable.
 func (m Map) Fetch() (string, int) {
-	byt, err := os.ReadFile(m.Path())
+	byt, err := os.ReadFile(m.FullPath())
 	if err != nil {
 		log.Print(err)
 		return "", -1
@@ -129,7 +128,7 @@ func (m Map) Get(key string) (string, int) {
 // not. Fulfills the [bonzai.Vars] interface. Never returns 0 (NOTFOUND)
 // since creates if not. Errors are logged.
 func (m Map) Set(key, val string) int {
-	path := m.Path()
+	path := m.FullPath()
 	mod := futil.ModTime(path)
 	if mod.IsZero() {
 		log.Printf("failed to read mod time on file: %q", path)
@@ -225,7 +224,7 @@ func (c Map) Overwrite(with string) error {
 	if err := c.mkdir(); err != nil {
 		return err
 	}
-	return futil.Overwrite(c.Path(), with)
+	return futil.Overwrite(c.FullPath(), with)
 }
 
 // MarshalText fulfills encoding.TextMarshaler interface
@@ -262,7 +261,7 @@ func (c Map) Edit() error {
 	if err := c.mkdir(); err != nil {
 		return err
 	}
-	path := c.Path()
+	path := c.FullPath()
 	if path == "" {
 		return fmt.Errorf("unable to locate cache vars for %q", c.Id)
 	}

@@ -11,12 +11,11 @@ import (
 func ExampleVars() {
 	m := vars.New()
 	m.Id = `foo`
-	m.Dir = `testdata`
-	m.File = `vars`
-	fmt.Println(m.Path())
+	m.Path = `testdata`
+	fmt.Println(m.FullPath())
 	fmt.Println(m.DirPath())
 	// Output:
-	// testdata/foo/vars
+	// testdata/foo/vars.properties
 	// testdata/foo
 }
 
@@ -24,13 +23,12 @@ func ExampleVars_Init() {
 
 	m := vars.New()
 	m.Id = `foo`
-	m.Dir = `testdata`
-	m.File = `vars`
+	m.Path = `testdata`
 
 	defer func() { os.RemoveAll(m.DirPath()) }()
 
 	m.Init()
-	fmt.Println(futil.Exists(`testdata/foo/vars`))
+	fmt.Println(futil.Exists(`testdata/foo/vars.properties`))
 
 	// Output:
 	// true
@@ -40,14 +38,13 @@ func ExampleVars_Set() {
 
 	m := vars.New()
 	m.Id = `foo`
-	m.Dir = `testdata`
-	m.File = `vars`
+	m.Path = `testdata`
 
 	defer func() { os.RemoveAll(m.DirPath()) }()
 
 	m.Init()
 	fmt.Println(m.Set("some", "thing\nhere"))
-	byt, _ := os.ReadFile(`testdata/foo/vars`)
+	byt, _ := os.ReadFile(`testdata/foo/vars.properties`)
 	fmt.Println(string(byt) == `some=thing\nhere`+"\n")
 
 	// Output:
@@ -59,8 +56,7 @@ func ExampleVars_Get() {
 
 	m := vars.New()
 	m.Id = `foo`
-	m.Dir = `testdata`
-	m.File = `vars`
+	m.Path = `testdata`
 
 	defer func() { os.RemoveAll(m.DirPath()) }()
 
