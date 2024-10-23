@@ -12,15 +12,12 @@ var DefComp = new(defcomp)
 //
 //  1. If leaf has Comp function, delegate to it
 //
-//  2. If leaf has no arguments, return all Cmds and Params
+//  2. If leaf has no arguments, return all visible Commands and Params
 //
-//  3. If first argument is the name of a Command return it only even
-//     if in the Hidden list
+//  4. Otherwise, return all visible Commands or Params that
+//     [Cmd.HasPrefix] matching the first arg
 //
-//  4. Otherwise, return every Command or Param that is not in the
-//     Hidden list and HasPrefix matching the first arg
-//
-// See bonzai.Completer.
+// See [bonzai.Completer].
 func (defcomp) Complete(x *Cmd, args ...string) []string {
 
 	// if has completer, delegate
