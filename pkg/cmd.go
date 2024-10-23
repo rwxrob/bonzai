@@ -42,18 +42,22 @@ type Cmd struct {
 	Commands []*Cmd // delegated, first is always default
 	Hidden   string // disables completion for Commands/Aliases
 
-	// When unassigned automatically assigned [DefComp] if either [Commands] or
-	// [Params] is not empty.
+	// When unassigned [DefComp] is used (without assigning it) if either
+	// [Commands] or [Params] is not empty.
 	Comp Completer
 
-	// Default initial vars values. Does not overwrite existing vars.
+	// Default vars declaration and initial values required by [vars.Cmd]
+	// (if used). Does not overwrite existing vars.
 	InitVars map[string]string
 
-	// When assigned, triggers prepend of [DocCmd] to [Commands] if not
-	// already found. String is usually embedded and lazy loaded only when
-	// doc command is called. Format of the content of the string must be
-	// in compatible [mark]. One use case is supporting multiple languages
-	// by assigning a different language [embed.FS].
+	// Optional embedded documentation in any format used by help and
+	// documentation commands such as [doc.Cmd] from the bonzai/core/cmds
+	// package. Embedded content is usually lazy loaded only when the doc
+	// command is called. Structure of format of the files can be anything
+	// supported by any [Cmd] but Bonzai [mark] is recommended for
+	// greatest compatibility. Use of an embedded file system instead of
+	// a string allows, for example, support for multiple languages to be
+	// embedded into a single binary.
 	DocFS embed.FS
 
 	// Functions to be used for the Fill command which is automatically

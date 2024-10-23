@@ -2,7 +2,6 @@ package bon
 
 import (
 	bonzai "github.com/rwxrob/bonzai/pkg"
-	"github.com/rwxrob/bonzai/pkg/core/cmds/vars"
 	"github.com/rwxrob/bonzai/pkg/core/run"
 )
 
@@ -39,7 +38,7 @@ var fooCmd = &bonzai.Cmd{
 var barCmd = &bonzai.Cmd{
 	Name:     `bar`,
 	Aliases:  `whatever|b`,
-	Commands: []*bonzai.Cmd{otherCmd, vars.Cmd},
+	Commands: []*bonzai.Cmd{otherCmd},
 	InitVars: map[string]string{
 		`some`: `thing`,
 	},

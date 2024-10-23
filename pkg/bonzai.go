@@ -53,12 +53,12 @@ const (
 	SUCCESS  = 1
 )
 
-// Completer specifies a struct with a [Completer.Complete] function that will
-// complete the given [Cmd] with the given arguments.
-// The [Complete] method must never panic and always return at least an
-// empty slice of strings. By convention completers that do not make use
-// of either the [*Cmd] or other arguments should use an underscore for
-// the name to indicate that they are ignored.
+// Completer specifies a struct with a [Completer.Complete] function
+// that will complete the first argument (usually a command of some kind)
+// based on the remaining arguments. The [Complete] method must never
+// panic and always return at least an empty slice of strings. By
+// convention Completers that do not make use of or other arguments
+// should use an underscore identifier since they are ignored.
 type Completer interface {
-	Complete(x *Cmd, args ...string) []string
+	Complete(x any, args ...string) []string
 }

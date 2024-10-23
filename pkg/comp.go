@@ -1,6 +1,8 @@
 package bonzai
 
 import (
+	"log"
+
 	"github.com/rwxrob/bonzai/pkg/core/fn/filt"
 )
 
@@ -18,7 +20,13 @@ var DefComp = new(defcomp)
 //     [Cmd.HasPrefix] matching the first arg
 //
 // See [bonzai.Completer].
-func (defcomp) Complete(x *Cmd, args ...string) []string {
+func (defcomp) Complete(an any, args ...string) []string {
+
+	x, is := an.(*Cmd)
+	if !is {
+		log.Printf(`%v is a %T not *Cmd`, an, an)
+		return []string{}
+	}
 
 	// if has completer, delegate
 	if c := x.Comp; c != nil {

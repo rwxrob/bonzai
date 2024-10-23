@@ -1,6 +1,9 @@
 // Copyright 2022 Robert Muhlestein.
 // SPDX-License-Identifier: Apache-2.0
 
+/*
+Package vars contains a [bonzai.Cmd] branch that can be grafted (imported) into any other command but is usually reserved for the root level or even as a standalone `var` application since no matter where it is grafted, it always deals with the same [bonzai.Vars] driver and only one [bonzai.VarsDriver] may exist in any executable (given its bonzai package scope). Subcommands do, however, recognize their place in the command tree.
+*/
 package vars
 
 import (
@@ -9,15 +12,17 @@ import (
 )
 
 var Cmd = &bonzai.Cmd{
-	Name:     `var`,
-	Summary:  `cache variables in {{ execachedir "vars"}}`,
+	Name:    `var`,
+	Version: `v0.7.0`,
+	Summary: `cache variables in {{ execachedir "vars.properties"}}`,
+	// Comp: vars.Comp
 	Commands: []*bonzai.Cmd{getCmd}, //	initCmd, setCmd, fileCmd, dataCmd, editCmd, deleteCmd,
 
 }
 
 var getCmd = &bonzai.Cmd{
 	Name:    `get`,
-	Summary: `print a cached variable with a new line`,
+	Summary: `print a cached variable`,
 	NumArgs: 1,
 	Call: func(x *bonzai.Cmd, args ...string) error {
 		val := x.Caller.Caller.Get(args[0])
