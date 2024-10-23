@@ -27,15 +27,15 @@ func DirEntries(path string) []string {
 	return list
 }
 
-// DirEntriesAddSlash returns Entries passed to AddSlash so that all
+// DirEntriesAddSlashPath returns Entries passed to AddSlash so that all
 // directories will have a trailing slash.
-func DirEntriesAddSlash(path string) []string {
-	return AddSlash(DirEntries(path))
+func DirEntriesAddSlashPath(path string) []string {
+	return DirEntriesAddSlash(DirEntries(path))
 }
 
-// AddSlash adds a filepath.Separator to the end of all entries passed
-// that are directories.
-func AddSlash(entries []string) []string {
+// DirEntriesAddSlash adds a [filepath.Separator] to the end of all
+// entries passed that are directories.
+func DirEntriesAddSlash(entries []string) []string {
 	var list []string
 	for _, entry := range entries {
 		if IsDir(entry) {

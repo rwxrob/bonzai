@@ -7,7 +7,7 @@ import (
 	"path/filepath"
 	"strings"
 
-	"github.com/rwxrob/bonzai/pkg/futil"
+	"github.com/rwxrob/bonzai/pkg/core/futil"
 )
 
 //go:embed all:testdata/testfs
