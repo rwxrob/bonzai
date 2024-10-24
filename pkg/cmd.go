@@ -415,7 +415,8 @@ func (x *Cmd) detectBashCompletion(args []string) {
 
 		// not sure we've completed the command name itself yet
 		if len(args) == 0 {
-			fmt.Println(" ")
+			fmt.Println(cmd.Name)
+			run.Exit()
 			return
 		}
 

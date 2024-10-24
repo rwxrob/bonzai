@@ -11,11 +11,11 @@ func init() {
 }
 
 var Cmd = &bonzai.Cmd{
-	Name:     `bon`,
-	Summary:  `manage bonzai composite command trees`,
-	Comp:     comp.CmdsParams,
-	Version:  `v0.0.1`,
-	Commands: []*bonzai.Cmd{barCmd, fooCmd},
+	Name:    `bon`,
+	Summary: `manage bonzai composite command trees`,
+	Comp:    comp.Cmds,
+	Version: `v0.0.1`,
+	Cmds:    []*bonzai.Cmd{barCmd, fooCmd},
 }
 
 var otherCmd = &bonzai.Cmd{
@@ -39,10 +39,10 @@ var fooCmd = &bonzai.Cmd{
 }
 
 var barCmd = &bonzai.Cmd{
-	Name:     `bar`,
-	Aliases:  `whatever|b`,
-	Comp:     comp.FileDirCmdsParams,
-	Commands: []*bonzai.Cmd{otherCmd},
+	Name:    `bar`,
+	Aliases: `whatever|b`,
+	Comp:    comp.FileDirCmdsParams,
+	Cmds:    []*bonzai.Cmd{otherCmd},
 	InitVars: map[string]string{
 		`some`: `thing`,
 	},

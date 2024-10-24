@@ -12,4 +12,7 @@ func (completers Combine) Complete(an any, args ...string) []string {
 	return list
 }
 
-var FileDirCmdsParams = Combine{FileDir, CmdsParams}
+var (
+	CmdsParams        = Combine{Cmds, Params}
+	FileDirCmdsParams = Combine{FileDir, CmdsParams}
+)

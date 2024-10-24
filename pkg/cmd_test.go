@@ -19,8 +19,8 @@ func ExampleCmd_AliasesSlice() {
 	fmt.Printf("%q", barCmd.AliasesSlice())
 
 	fooCmd := &bonzai.Cmd{
-		Name:     `foo`,
-		Commands: []*bonzai.Cmd{barCmd},
+		Name: `foo`,
+		Cmds: []*bonzai.Cmd{barCmd},
 	}
 
 	fmt.Printf("%q", fooCmd.AliasesSlice())
@@ -41,8 +41,8 @@ func ExampleCmd_Can() {
 	}
 
 	fooCmd := &bonzai.Cmd{
-		Name:     `foo`,
-		Commands: []*bonzai.Cmd{barCmd},
+		Name: `foo`,
+		Cmds: []*bonzai.Cmd{barCmd},
 	}
 
 	fmt.Println(fooCmd.Can(`bar`))

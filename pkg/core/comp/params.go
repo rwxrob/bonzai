@@ -21,11 +21,6 @@ func (_Params) Complete(an any, args ...string) []string {
 		return []string{}
 	}
 
-	// not sure we've completed the command name itself yet
-	if len(args) == 0 {
-		return []string{x.Name}
-	}
-
 	list := x.ParamsSlice()
 
 	if len(args) == 0 {

@@ -7,10 +7,10 @@ import (
 const (
 	E_InvalidName      = `invalid name/alias detected: %v`
 	E_InvalidMultiName = `%q must begin with %q: %q`
-	E_DefCmdReqCall    = `default (first) %q Commands requires Call`
+	E_DefCmdReqCall    = `default (first) of Cmds requires Call: %q`
 	E_IncorrectUsage   = `usage: %v %v`
 	E_MissingVar       = `missing var for %v`
-	E_NoCallNoCommands = `%v requires either Call or Commands`
+	E_NoCallNoCmds     = `%v requires either Call or Cmds`
 	E_NotEnoughArgs    = `%v is not enough arguments, %v required`
 	E_TooManyArgs      = `%v is too many arguments, %v maximum`
 	E_WrongNumArgs     = `%v arguments, %v required`
@@ -79,12 +79,12 @@ func (e WrongNumArgs) Error() string {
 	return fmt.Sprintf(E_WrongNumArgs, e.Count, e.Num)
 }
 
-type NoCallNoCommands struct {
+type NoCallNoCmds struct {
 	Cmd *Cmd
 }
 
-func (e NoCallNoCommands) Error() string {
-	return fmt.Sprintf(E_NoCallNoCommands, e.Cmd.Name)
+func (e NoCallNoCmds) Error() string {
+	return fmt.Sprintf(E_NoCallNoCmds, e.Cmd.Name)
 }
 
 type DefCmdReqCall struct {
