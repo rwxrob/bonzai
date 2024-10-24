@@ -4,7 +4,6 @@
 package comp
 
 import (
-	bonzai "github.com/rwxrob/bonzai/pkg"
 	"github.com/rwxrob/bonzai/pkg/core/fn/filt"
 )
 
@@ -12,7 +11,7 @@ type _ThreeLetterEngWeekday struct{}
 
 var ThreeLetterEngWeekday = new(_ThreeLetterEngWeekday)
 
-func (_ThreeLetterEngWeekday) Complete(_ *bonzai.Cmd, args ...string) []string {
+func (_ThreeLetterEngWeekday) Complete(_ any, args ...string) []string {
 	list := []string{"mon", "tue", "wed", "thu", "fri", "sat", "sun"}
 	if len(args) == 0 {
 		return list
