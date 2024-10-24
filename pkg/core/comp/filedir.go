@@ -13,16 +13,6 @@ import (
 	"github.com/rwxrob/bonzai/pkg/core/futil"
 )
 
-// New returns a pointer to a struct that fulfills [bonzai.Completer].
-//
-//	var Cmd = &bonzai.Cmd{
-//	  Name: `some`,
-//	  Comp: comp.FileDir,
-//	}
-//
-// However, this can be used in anything that supports an interface
-// compatible with [bonzai.Completer].
-
 type _FileDir struct{}
 
 var FileDir = _FileDir{}

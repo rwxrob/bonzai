@@ -11,7 +11,7 @@ type _Params struct{}
 
 var Params = new(_Params)
 
-// Returns all  [Cmd.Params] that match [futil.HasPrefix] passed the
+// Complete returns all [Cmd.Params] that match [futil.HasPrefix] passed the
 // first argument. See [bonzai.Completer].
 func (_Params) Complete(an any, args ...string) []string {
 

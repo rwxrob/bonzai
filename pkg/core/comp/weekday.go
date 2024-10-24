@@ -11,6 +11,8 @@ type _ThreeLetterEngWeekday struct{}
 
 var ThreeLetterEngWeekday = new(_ThreeLetterEngWeekday)
 
+// Complete returns the lowercase English three-letter weekday
+// abbreviation (ex: mon) that matches the first argument.
 func (_ThreeLetterEngWeekday) Complete(_ any, args ...string) []string {
 	list := []string{"mon", "tue", "wed", "thu", "fri", "sat", "sun"}
 	if len(args) == 0 {

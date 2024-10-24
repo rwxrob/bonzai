@@ -11,8 +11,8 @@ type _Cmds struct{}
 
 var Cmds = new(_Cmds)
 
-// Returns all visible [Cmd.Cmds] that match [futil.HasPrefix] for arg[0]
-// . See [bonzai.Completer].
+// Complete returns all visible [Cmd.Cmds] that match [futil.HasPrefix]
+// for arg[0] . See [bonzai.Completer].
 func (_Cmds) Complete(an any, args ...string) []string {
 
 	x, is := an.(*bonzai.Cmd)
