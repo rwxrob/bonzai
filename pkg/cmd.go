@@ -42,8 +42,7 @@ type Cmd struct {
 	Commands []*Cmd // delegated, first is always default
 	Hidden   string // disables completion for Commands/Aliases
 
-	// When unassigned [DefComp] is used (without assigning it) if either
-	// [Commands] or [Params] is not empty.
+	// Bash completion support (only)
 	Comp Completer
 
 	// Default vars declaration and initial values required by [vars.Cmd]
@@ -212,23 +211,23 @@ func (x *Cmd) HiddenSlice() []string {
 // # Completion
 //
 // Since Run is the main execution entry point for all Bonzai command
-// trees it is also responsible for handling completion (tab or
-// otherwise). Therefore, all Run methods have two modes: delegation and
-// completion (both are executions of the Bonzai binary command tree).
-// Delegation is the default mode.
+// trees it is also responsible for handling bash completion. Only bash
+// completion is supported within the binary itself because only bash
+// provides self-completion (complete -C foo foo). However, zsh can also be
+// made to support it by adding a few functions from the
+// oh-my-zsh code base).
 //
 // Completion mode is triggered by the detection of the bash shell and
-// the COMP_LINE environment variable triggering the self-completion
-// (complete -C cmd cmd) that is unique to bash. All other shells can
-// use the "help json" structured data create external completion
-// scripts.
+// the COMP_LINE environment variable. (complete -C cmd cmd) that is
+// unique to bash. All other shells can use the "help json" structured
+// data create external completion scripts.
 //
 // When COMP_LINE is set, Run prints a list of possible completions to
 // standard output by calling the [Completer.Complete] function of its
-// [Comp] field or [DefComp] if [Commands] or [Params] are set. Each
-// Cmd therefore manages its own completion and can draw from an
-// ecosystem of Completers or assign its own. See the
-// [core/comp] package for more.
+// [Comp] field. If [Comp] is nil no completion is attempted. Each
+// [Cmd] explicitly manages its own completion and can draw from an
+// growing ecosystem of Completers or assign its own. See the
+// [core/comp] package for more examples.
 //
 // # Multicall binary and links
 //
@@ -401,7 +400,6 @@ func (x *Cmd) recurseIfMulti(args []string) {
 
 // complete -C foo foo (man bash, Programmable Completion)
 func (x *Cmd) detectBashCompletion(args []string) {
-	list := []string{}
 
 	if line := os.Getenv("COMP_LINE"); len(line) > 0 && run.ShellIsBash() {
 
@@ -411,8 +409,6 @@ func (x *Cmd) detectBashCompletion(args []string) {
 
 		// default completer or package aliases, always exits
 		if cmd.Comp == nil {
-			list = append(list, DefComp.Complete(cmd, args...)...)
-			each.Println(list)
 			run.Exit()
 			return
 		}

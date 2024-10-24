@@ -2,6 +2,7 @@ package bon
 
 import (
 	bonzai "github.com/rwxrob/bonzai/pkg"
+	"github.com/rwxrob/bonzai/pkg/core/comp"
 	"github.com/rwxrob/bonzai/pkg/core/run"
 )
 
@@ -12,6 +13,7 @@ func init() {
 var Cmd = &bonzai.Cmd{
 	Name:     `bon`,
 	Summary:  `manage bonzai composite command trees`,
+	Comp:     comp.CmdsParams,
 	Version:  `v0.0.1`,
 	Commands: []*bonzai.Cmd{barCmd, fooCmd},
 }
@@ -29,6 +31,7 @@ var fooCmd = &bonzai.Cmd{
 	Name:    `foo`,
 	Aliases: `f|something`,
 	Params:  `one|two|three`,
+	Comp:    comp.CmdsParams,
 	Call: func(x *bonzai.Cmd, _ ...string) error {
 		x.Println(`hello from {{.Name}} in {{exepath}}`)
 		return nil
@@ -38,6 +41,7 @@ var fooCmd = &bonzai.Cmd{
 var barCmd = &bonzai.Cmd{
 	Name:     `bar`,
 	Aliases:  `whatever|b`,
+	Comp:     comp.CmdsParams,
 	Commands: []*bonzai.Cmd{otherCmd},
 	InitVars: map[string]string{
 		`some`: `thing`,
