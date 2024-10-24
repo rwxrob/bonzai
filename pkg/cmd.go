@@ -39,8 +39,8 @@ type Cmd struct {
 	MaxParm int
 
 	// Descending tree of delegated commands
-	Commands []*Cmd // delegated, first is always default
-	Hidden   string // disables completion for Commands/Aliases
+	Cmds   []*Cmd // delegated, first is always default
+	Hidden string // disables completion for Cmds
 
 	// Bash completion support (only)
 	Comp Completer
@@ -64,17 +64,17 @@ type Cmd struct {
 	FuncMap template.FuncMap
 
 	// Where the work happens
-	Init   Method // before Commands/Call, good for validation
-	Call   Method // optional if Commands
+	Init   Method // before Cmds/Call, good for validation
+	Call   Method // optional if Cmds
 	Caller *Cmd
 
 	// Pass bulk input efficiently (when args won't do)
 	Input io.Reader
 
-	aliases        []string        // see [CacheAliases]
-	params         []string        // see [CacheParams]
-	hidden         []string        // see [CacheHidden]
-	commandAliases map[string]*Cmd // see [CacheCommandAliases]
+	aliases    []string        // see [CacheAliases]
+	params     []string        // see [CacheParams]
+	hidden     []string        // see [CacheHidden]
+	cmdAliases map[string]*Cmd // see [CacheCmdAliases]
 }
 
 // Method defines the main code to execute for a command [Cmd.Call]. By
@@ -101,34 +101,34 @@ func (x *Cmd) Names() []string {
 // creation of multicall binary links and bash completion.
 var IsValidName = is.AllLatinASCIILower
 
-// CacheCommandAliases splits the [Cmd.Aliases] for each [Cmd] in
-// [Commands] with its respective [Cmd.AliasesSlice] and assigns them
-// the [Cmd.CommandAliasesMap] cache map. This is primarily used for bash
+// CacheCmdAliases splits the [Cmd.Aliases] for each [Cmd] in
+// [Cmds] with its respective [Cmd.AliasesSlice] and assigns them
+// the [Cmd.CmdAliasesMap] cache map. This is primarily used for bash
 // tab completion support in [Run] and use as a multicall binary. If
-// [Commands] is nil or [Name] is empty silently returns.
-func (x *Cmd) CacheCommandAliases() {
-	x.commandAliases = map[string]*Cmd{}
-	if x.Commands == nil || len(x.Name) == 0 {
+// [Cmds] is nil or [Name] is empty silently returns.
+func (x *Cmd) CacheCmdAliases() {
+	x.cmdAliases = map[string]*Cmd{}
+	if x.Cmds == nil || len(x.Name) == 0 {
 		return
 	}
-	for _, c := range x.Commands {
+	for _, c := range x.Cmds {
 		aliases := c.AliasesSlice()
 		if len(aliases) == 0 {
 			continue
 		}
 		for _, a := range aliases {
-			x.commandAliases[a] = c
+			x.cmdAliases[a] = c
 		}
 	}
 }
 
-// CommandAliasesMap calls [CacheCommandAliases] to update cache if it
+// CmdAliasesMap calls [CacheCmdAliases] to update cache if it
 // is nil and then returns it. [Hidden] is not applied.
-func (x *Cmd) CommandAliasesMap() map[string]*Cmd {
-	if x.commandAliases == nil {
-		x.CacheCommandAliases()
+func (x *Cmd) CmdAliasesMap() map[string]*Cmd {
+	if x.cmdAliases == nil {
+		x.CacheCmdAliases()
 	}
-	return x.commandAliases
+	return x.cmdAliases
 }
 
 // CacheParams updates the [params] cache by splitting [Params]
@@ -289,7 +289,7 @@ func (x *Cmd) IsHidden() bool {
 }
 
 func (x *Cmd) has(c *Cmd) bool {
-	for _, this := range x.Commands {
+	for _, this := range x.Cmds {
 		if this.Name == c.Name {
 
 			return true
@@ -309,11 +309,11 @@ func (x *Cmd) call(args []string) {
 	run.Exit()
 }
 
-// default to first Command if no Call defined
+// default to first Cmds if no Call defined
 func (x *Cmd) exitUnlessCallable() {
 	if x.Call == nil {
-		if len(x.Commands) > 0 {
-			fcmd := x.Commands[0]
+		if len(x.Cmds) > 0 {
+			fcmd := x.Cmds[0]
 			if fcmd.Call == nil {
 				run.ExitError(DefCmdReqCall{x})
 				return
@@ -321,7 +321,7 @@ func (x *Cmd) exitUnlessCallable() {
 			fcmd.Caller = x
 			x = fcmd
 		} else {
-			run.ExitError(NoCallNoCommands{x})
+			run.ExitError(NoCallNoCmds{x})
 			return
 		}
 	}
@@ -413,6 +413,12 @@ func (x *Cmd) detectBashCompletion(args []string) {
 			return
 		}
 
+		// not sure we've completed the command name itself yet
+		if len(args) == 0 {
+			fmt.Println(" ")
+			return
+		}
+
 		// own completer, delegate
 		each.Println(cmd.Comp.Complete(cmd, args...))
 		run.Exit()
@@ -436,25 +442,25 @@ func (x *Cmd) Root() *Cmd {
 	return x.Caller
 }
 
-// PrependCommand safely prepends the passed [*Cmd] to the [Commands] slice.
-func (x *Cmd) PrependCommand(cmd *Cmd) {
-	old := x.Commands
-	x.Commands = []*Cmd{cmd}
+// PrependCmd safely prepends the passed [*Cmd] to the [Cmds] slice.
+func (x *Cmd) PrependCmd(cmd *Cmd) {
+	old := x.Cmds
+	x.Cmds = []*Cmd{cmd}
 	if old != nil {
-		x.Commands = append(x.Commands, old...)
+		x.Cmds = append(x.Cmds, old...)
 	}
 }
 
-// AppendCommand safely appends the passed [*Cmd] to the [Commands] slice.
-func (x *Cmd) AppendCommand(cmd *Cmd) {
-	if x.Commands == nil {
-		x.Commands = []*Cmd{}
+// AppendCmd safely appends the passed [*Cmd] to the [Cmds] slice.
+func (x *Cmd) AppendCmd(cmd *Cmd) {
+	if x.Cmds == nil {
+		x.Cmds = []*Cmd{}
 	}
-	x.Commands = append(x.Commands, cmd)
+	x.Cmds = append(x.Cmds, cmd)
 }
 
 // Add creates a new Cmd and sets the [Name] and [Aliases] and adds to
-// [Commands] returning a reference to the new Cmd. Name must be
+// [Cmds] returning a reference to the new Cmd. Name must be
 // first.
 func (x *Cmd) Add(name string, aliases ...string) *Cmd {
 	c := &Cmd{
@@ -462,32 +468,32 @@ func (x *Cmd) Add(name string, aliases ...string) *Cmd {
 		Aliases: strings.Join(aliases, `|`),
 	}
 	x.aliases = aliases
-	x.Commands = append(x.Commands, c)
+	x.Cmds = append(x.Cmds, c)
 	return c
 }
 
-// Resolve looks up a given Command by name or alias from Aliases
+// Resolve looks up a given [Cmd] by name or alias from [Aliases]
 // (caching a lookup map of aliases in the process).
 func (x *Cmd) Resolve(name string) *Cmd {
 
-	if x.Commands == nil {
+	if x.Cmds == nil {
 		return nil
 	}
 
-	for _, c := range x.Commands {
+	for _, c := range x.Cmds {
 		if name == c.Name {
 			return c
 		}
 	}
 
-	aliases := x.CommandAliasesMap()
+	aliases := x.CmdAliasesMap()
 	if c, has := aliases[name]; has {
 		return c
 	}
 	return nil
 }
 
-// Can returns the [*Cmd] from [Commands] if the [Cmd.Name] or any
+// Can returns the [*Cmd] from [Cmds] if the [Cmd.Name] or any
 // alias in [Cmd.Aliases] for that command matches the name passed. If
 // more than one argument is passed calls itself recursively on each
 // item in the list.
@@ -509,22 +515,22 @@ func (x *Cmd) Can(names ...string) *Cmd {
 }
 
 func (x *Cmd) can(name string) *Cmd {
-	for _, c := range x.Commands {
+	for _, c := range x.Cmds {
 		if c.Name == name {
 			return c
 		}
 	}
-	aliases := x.CommandAliasesMap() // to trigger cache if needed
+	aliases := x.CmdAliasesMap() // to trigger cache if needed
 	if c, has := aliases[name]; has {
 		return c
 	}
 	return nil
 }
 
-// CommandNames returns the names of every [Command].
-func (x *Cmd) CommandNames() []string {
+// CmdNames returns the names of every [Cmd] from [Cmds]
+func (x *Cmd) CmdNames() []string {
 	list := []string{}
-	for _, c := range x.Commands {
+	for _, c := range x.Cmds {
 		if c.Name == "" {
 			continue
 		}
@@ -576,7 +582,7 @@ func (x *Cmd) Param(p string) string {
 // from the command line. Seek also sets the Caller on each Cmd found
 // during resolution.
 func (x *Cmd) Seek(args []string) (*Cmd, []string) {
-	if (len(args) == 1 && args[0] == "") || x.Commands == nil {
+	if (len(args) == 1 && args[0] == "") || x.Cmds == nil {
 		return x, args
 	}
 	cur := x
