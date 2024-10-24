@@ -25,10 +25,6 @@ Most realize Bonzai really distinguishes itself from anything else out there the
 
 ## Getting Started
 
-Read the book:
-
-* https://github.com/rwxrob/book-bonzai
-
 Copy or clone the example template:
 
 * https://github.com/rwxrob/bonzai-example
@@ -37,10 +33,11 @@ Get ideas for your own by looking at others
 
 * https://github.com/rwxrob/z
 * https://github.com/rwxrob/pomo
+* https://github.com/BuddhiLW/lazywal
 
 ## Legal
 
-Copyright 2022 Robert S. Muhlestein (<mailto:rob@rwx.gg>)  
+Copyright 2024 Robert S. Muhlestein (<mailto:rob@rwx.gg>)  
 SPDX-License-Identifier: Apache-2.0
 
 "Bonzai" and "bonzai" are legal trademarks of Robert S. Muhlestein but
