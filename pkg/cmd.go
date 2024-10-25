@@ -25,15 +25,13 @@ type Cmd struct {
 	Alias  string // ex: rm|d|del
 	Params string // ex: mon|wed|fri
 
-	// minimal when DocFS overkill
-	Usage       string
-	Version     string
-	Summary     string
-	Short       string // alias for Summary
-	Description string
-	Long        string // alias for Description
+	// minimal when [Cmd.Docs] is overkill
+	Usage string
+	Vers  string
+	Short string
+	Long  string
 
-	// Faster than lots of "if" conditions in [Call]
+	// Faster than lots of "if" conditions in [Cmd.Call]
 	MinArgs int
 	MaxArgs int
 	NumArgs int
@@ -45,26 +43,25 @@ type Cmd struct {
 	Cmds []*Cmd // delegated, first is always default
 	Hide string // disables completion for Cmds
 
-	// Bash completion support (only)
+	// self-completion support: complete -C foo foo
 	Comp Completer
 
 	// Default vars declaration and initial values. Does not overwrite
-	// existing vars. All vars used with [Get] and [Set] must be declared
-	// even if empty. See [bonzai.Vars], [bonzai.VarsDriver], and package
-	// [vars].
+	// existing vars. All vars used with [Cmd.Get] and [Cmd.Set] must be declared
+	// even if empty. See [Vars], [VarsDriver], and package [is].
 	Vars map[string]string
 
 	// Optional embedded documentation in any format used by help and
-	// documentation commands such as [doc.Cmd] from the bonzai/core/cmds
+	// documentation commands such as [doc.Cmd] from the core/cmds
 	// package. Embedded content is usually lazy loaded only when the doc
-	// command is called. Structure of format of the files can be anything
+	// command is called. Structure and format of the files can be anything
 	// supported by any [Cmd] but Bonzai [mark] is recommended for
 	// greatest compatibility. Use of an embedded file system instead of
 	// a string allows, for example, support for multiple languages to be
 	// embedded into a single binary.
-	DocFS embed.FS
+	Docs embed.FS
 
-	// Functions to be used for the Fill command which is automatically
+	// Functions to be used for the [Cmd.Fill] command which is automatically
 	// called on most string properties (ex: {{ exename }})
 	FuncMap template.FuncMap
 
@@ -76,9 +73,9 @@ type Cmd struct {
 	// Pass bulk input efficiently (when args won't do)
 	Input io.Reader
 
-	aliases    []string        // see [CacheAlias]
-	params     []string        // see [CacheParams]
-	hidden     []string        // see [CacheHide]
+	aliases  []string        // see [CacheAlias]
+	params   []string        // see [CacheParams]
+	hidden   []string        // see [CacheHide]
 	cmdAlias map[string]*Cmd // see [CacheCmdAlias]
 }
 
@@ -283,8 +280,8 @@ func (x *Cmd) Run(args ...string) {
 	c.call(args)
 }
 
-// IsHide returns true if one of [Hide] matches the [Name].
-func (x *Cmd) IsHide() bool {
+// IsHidden returns true if one of [Hide] matches the [Name].
+func (x *Cmd) IsHidden() bool {
 	for _, hidden := range x.HideSlice() {
 		if hidden == x.Name {
 			return true
@@ -470,7 +467,7 @@ func (x *Cmd) AppendCmd(cmd *Cmd) {
 // first.
 func (x *Cmd) Add(name string, aliases ...string) *Cmd {
 	c := &Cmd{
-		Name:    name,
+		Name:  name,
 		Alias: strings.Join(aliases, `|`),
 	}
 	x.aliases = aliases
