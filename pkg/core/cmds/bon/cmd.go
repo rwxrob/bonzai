@@ -11,15 +11,15 @@ func init() {
 }
 
 var Cmd = &bonzai.Cmd{
-	Name:    `bon`,
-	Summary: `manage bonzai composite command trees`,
-	Comp:    comp.Cmds,
-	Version: `v0.0.1`,
-	Cmds:    []*bonzai.Cmd{barCmd, fooCmd},
+	Name:  `bon`,
+	Short: `manage bonzai composite command trees`,
+	Comp:  comp.Cmds,
+	Vers:  `v0.0.1`,
+	Cmds:  []*bonzai.Cmd{barCmd, fooCmd},
 }
 
 var otherCmd = &bonzai.Cmd{
-	Name:    `other`,
+	Name:  `other`,
 	Alias: `o`,
 	Call: func(x *bonzai.Cmd, _ ...string) error {
 		x.Println(`hello from {{.Name}} in {{exepath}}`)
@@ -28,10 +28,10 @@ var otherCmd = &bonzai.Cmd{
 }
 
 var fooCmd = &bonzai.Cmd{
-	Name:    `foo`,
-	Alias: `f|something`,
-	Params:  `one|two|three`,
-	Comp:    comp.Combine{comp.CmdsParams, comp.ThreeLetterEngWeekday},
+	Name:   `foo`,
+	Alias:  `f|something`,
+	Params: `one|two|three`,
+	Comp:   comp.Combine{comp.CmdsParams, comp.ThreeLetterEngWeekday},
 	Call: func(x *bonzai.Cmd, _ ...string) error {
 		x.Println(`hello from {{.Name}} in {{exepath}}`)
 		return nil
@@ -39,10 +39,10 @@ var fooCmd = &bonzai.Cmd{
 }
 
 var barCmd = &bonzai.Cmd{
-	Name:    `bar`,
+	Name:  `bar`,
 	Alias: `whatever|b`,
-	Comp:    comp.FileDirCmdsParams,
-	Cmds:    []*bonzai.Cmd{otherCmd},
+	Comp:  comp.FileDirCmdsParams,
+	Cmds:  []*bonzai.Cmd{otherCmd},
 	Vars: map[string]string{
 		`some`: `thing`,
 	},
