@@ -55,11 +55,11 @@ import (
 var UsageFunc = InferredUsage
 
 // InferredUsage returns a single line of text summarizing only the
-// Commands (less any Hidden commands), Params, and Aliases. If a Cmd
+// Commands (less any Hide commands), Params, and Alias. If a Cmd
 // is currently in an invalid state (Params without Call, no Call and no
 // Commands) a string beginning with ERROR and wrapped in braces ({}) is
 // returned instead. The string depends on the current language (see
-// lang.go). Note that aliases does not include package bonzai.Aliases.
+// lang.go). Note that aliases does not include package bonzai.Alias.
 func InferredUsage(x *Cmd) string {
 
 	if x.Call == nil && x.Commands == nil {

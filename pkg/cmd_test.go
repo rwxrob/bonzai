@@ -6,24 +6,24 @@ import (
 	bonzai "github.com/rwxrob/bonzai/pkg"
 )
 
-func ExampleCmd_AliasesSlice() {
+func ExampleCmd_AliasSlice() {
 
 	barCmd := &bonzai.Cmd{
 		Name:    `bar`,
-		Aliases: `b|rab`,
+		Alias: `b|rab`,
 		Call: func(_ *bonzai.Cmd, _ ...string) error {
 			fmt.Println(`i am bar`)
 			return nil
 		},
 	}
-	fmt.Printf("%q", barCmd.AliasesSlice())
+	fmt.Printf("%q", barCmd.AliasSlice())
 
 	fooCmd := &bonzai.Cmd{
 		Name: `foo`,
 		Cmds: []*bonzai.Cmd{barCmd},
 	}
 
-	fmt.Printf("%q", fooCmd.AliasesSlice())
+	fmt.Printf("%q", fooCmd.AliasSlice())
 
 	// Output:
 	// ["b" "rab"][]

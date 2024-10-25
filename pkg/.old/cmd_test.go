@@ -61,7 +61,7 @@ func ExampleCmd_Seek() {
 
 	french := &bonzai.Cmd{
 		Name:     `french`,
-		Aliases:  []string{"fr"},
+		Alias:  []string{"fr"},
 		Commands: []*bonzai.Cmd{salut},
 	}
 
@@ -144,7 +144,7 @@ func ExampleCmd_Names() {
 
 	x := &bonzai.Cmd{
 		Name:    `foo`,
-		Aliases: []string{"-f", "@f", "f", "FOO"},
+		Alias: []string{"-f", "@f", "f", "FOO"},
 	}
 	fmt.Println(x.Names())
 
@@ -156,7 +156,7 @@ func ExampleCmd_UsageNames() {
 
 	x := &bonzai.Cmd{
 		Name:    `foo`,
-		Aliases: []string{"f", "FOO"},
+		Alias: []string{"f", "FOO"},
 	}
 	fmt.Println(x.UsageNames())
 
@@ -184,11 +184,11 @@ func ExampleCmd_UsageParams() {
 	// (p1|p2)
 }
 
-func ExampleCmd_UsageError_commands_with_Aliases() {
+func ExampleCmd_UsageError_commands_with_Alias() {
 	x := &bonzai.Cmd{
 		Name: `cmd`,
 		Commands: []*bonzai.Cmd{
-			&bonzai.Cmd{Name: "foo", Aliases: []string{"f"}},
+			&bonzai.Cmd{Name: "foo", Alias: []string{"f"}},
 			&bonzai.Cmd{Name: "bar"},
 		},
 	}
@@ -203,7 +203,7 @@ func ExampleCmd_UsageError_params_but_No_Call() {
 		Name:   `cmd`,
 		Params: []string{"p1", "p2"},
 		Commands: []*bonzai.Cmd{
-			&bonzai.Cmd{Name: "foo", Aliases: []string{"f"}},
+			&bonzai.Cmd{Name: "foo", Alias: []string{"f"}},
 			&bonzai.Cmd{Name: "bar"},
 		},
 	}
@@ -226,11 +226,11 @@ func ExampleCmd_UsageCmdTitles() {
 	x := &bonzai.Cmd{
 		Name:   `cmd`,
 		Params: []string{"p1", "p2"},
-		Hidden: []string{"hidden"},
+		Hide: []string{"hidden"},
 		Commands: []*bonzai.Cmd{
 			&bonzai.Cmd{
 				Name:    "foo",
-				Aliases: []string{"f"},
+				Alias: []string{"f"},
 				Summary: "foo the things",
 			},
 			&bonzai.Cmd{

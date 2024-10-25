@@ -21,14 +21,17 @@ import (
 )
 
 type Cmd struct {
-	Name    string // ex: delete
-	Aliases string // ex: rm|d|del
-	Params  string // ex: mon|wed|fri
+	Name   string // ex: delete
+	Alias  string // ex: rm|d|del
+	Params string // ex: mon|wed|fri
 
 	// minimal when DocFS overkill
-	Usage   string
-	Summary string
-	Version string
+	Usage       string
+	Version     string
+	Summary     string
+	Short       string // alias for Summary
+	Description string
+	Long        string // alias for Description
 
 	// Faster than lots of "if" conditions in [Call]
 	MinArgs int
@@ -39,15 +42,17 @@ type Cmd struct {
 	MaxParm int
 
 	// Descending tree of delegated commands
-	Cmds   []*Cmd // delegated, first is always default
-	Hidden string // disables completion for Cmds
+	Cmds []*Cmd // delegated, first is always default
+	Hide string // disables completion for Cmds
 
 	// Bash completion support (only)
 	Comp Completer
 
-	// Default vars declaration and initial values required by [vars.Cmd]
-	// (if used). Does not overwrite existing vars.
-	InitVars map[string]string
+	// Default vars declaration and initial values. Does not overwrite
+	// existing vars. All vars used with [Get] and [Set] must be declared
+	// even if empty. See [bonzai.Vars], [bonzai.VarsDriver], and package
+	// [vars].
+	Vars map[string]string
 
 	// Optional embedded documentation in any format used by help and
 	// documentation commands such as [doc.Cmd] from the bonzai/core/cmds
@@ -71,10 +76,10 @@ type Cmd struct {
 	// Pass bulk input efficiently (when args won't do)
 	Input io.Reader
 
-	aliases    []string        // see [CacheAliases]
+	aliases    []string        // see [CacheAlias]
 	params     []string        // see [CacheParams]
-	hidden     []string        // see [CacheHidden]
-	cmdAliases map[string]*Cmd // see [CacheCmdAliases]
+	hidden     []string        // see [CacheHide]
+	cmdAlias map[string]*Cmd // see [CacheCmdAlias]
 }
 
 // Method defines the main code to execute for a command [Cmd.Call]. By
@@ -82,10 +87,10 @@ type Cmd struct {
 // "x". If either is unused an underscore should be used instead.
 type Method func(x *Cmd, args ...string) error
 
-// Names returns slice of all [Aliases] and the [Name] as the last item.
+// Names returns slice of all [Alias] and the [Name] as the last item.
 func (x *Cmd) Names() []string {
 	var names []string
-	for _, alias := range x.AliasesSlice() {
+	for _, alias := range x.AliasSlice() {
 		if len(alias) == 0 {
 			continue
 		}
@@ -101,34 +106,34 @@ func (x *Cmd) Names() []string {
 // creation of multicall binary links and bash completion.
 var IsValidName = is.AllLatinASCIILower
 
-// CacheCmdAliases splits the [Cmd.Aliases] for each [Cmd] in
-// [Cmds] with its respective [Cmd.AliasesSlice] and assigns them
-// the [Cmd.CmdAliasesMap] cache map. This is primarily used for bash
+// CacheCmdAlias splits the [Cmd.Alias] for each [Cmd] in
+// [Cmds] with its respective [Cmd.AliasSlice] and assigns them
+// the [Cmd.CmdAliasMap] cache map. This is primarily used for bash
 // tab completion support in [Run] and use as a multicall binary. If
 // [Cmds] is nil or [Name] is empty silently returns.
-func (x *Cmd) CacheCmdAliases() {
-	x.cmdAliases = map[string]*Cmd{}
+func (x *Cmd) CacheCmdAlias() {
+	x.cmdAlias = map[string]*Cmd{}
 	if x.Cmds == nil || len(x.Name) == 0 {
 		return
 	}
 	for _, c := range x.Cmds {
-		aliases := c.AliasesSlice()
+		aliases := c.AliasSlice()
 		if len(aliases) == 0 {
 			continue
 		}
 		for _, a := range aliases {
-			x.cmdAliases[a] = c
+			x.cmdAlias[a] = c
 		}
 	}
 }
 
-// CmdAliasesMap calls [CacheCmdAliases] to update cache if it
-// is nil and then returns it. [Hidden] is not applied.
-func (x *Cmd) CmdAliasesMap() map[string]*Cmd {
-	if x.cmdAliases == nil {
-		x.CacheCmdAliases()
+// CmdAliasMap calls [CacheCmdAlias] to update cache if it
+// is nil and then returns it. [Hide] is not applied.
+func (x *Cmd) CmdAliasMap() map[string]*Cmd {
+	if x.cmdAlias == nil {
+		x.CacheCmdAlias()
 	}
-	return x.cmdAliases
+	return x.cmdAlias
 }
 
 // CacheParams updates the [params] cache by splitting [Params]
@@ -151,12 +156,12 @@ func (x *Cmd) ParamsSlice() []string {
 	return x.params
 }
 
-// CacheAliases updates the [aliases] cache by splitting [Aliases]
+// CacheAlias updates the [aliases] cache by splitting [Alias]
 // and adding the [Name] to the end. Remember to call this whenever
 // dynamically altering the value at runtime.
-func (x *Cmd) CacheAliases() {
-	if len(x.Aliases) > 0 {
-		x.aliases = strings.Split(x.Aliases, `|`)
+func (x *Cmd) CacheAlias() {
+	if len(x.Alias) > 0 {
+		x.aliases = strings.Split(x.Alias, `|`)
 		for _, alias := range x.aliases {
 			if !IsValidName(alias) {
 				run.ExitError(InvalidName{alias})
@@ -168,36 +173,36 @@ func (x *Cmd) CacheAliases() {
 	x.aliases = []string{}
 }
 
-// AliasesSlice updates the [aliases] internal cache ([CacheAliases]) and
+// AliasSlice updates the [aliases] internal cache ([CacheAlias]) and
 // returns it as a slice.
-func (x *Cmd) AliasesSlice() []string {
+func (x *Cmd) AliasSlice() []string {
 	if x.aliases == nil {
-		x.CacheAliases()
+		x.CacheAlias()
 	}
 	return x.aliases
 }
 
-// CacheHidden updates the [hidden] cache by splitting [Hidden]
+// CacheHide updates the [hidden] cache by splitting [Hide]
 // . Remember to call this whenever dynamically altering the value at
 // runtime.
-func (x *Cmd) CacheHidden() {
-	if len(x.Hidden) > 0 {
-		x.hidden = strings.Split(x.Hidden, `|`)
+func (x *Cmd) CacheHide() {
+	if len(x.Hide) > 0 {
+		x.hidden = strings.Split(x.Hide, `|`)
 		return
 	}
 	x.hidden = []string{}
 }
 
-// HiddenSlice updates the [hidden] internal cache ([CacheHidden]) and
+// HideSlice updates the [hidden] internal cache ([CacheHide]) and
 // returns it as a slice.
-func (x *Cmd) HiddenSlice() []string {
+func (x *Cmd) HideSlice() []string {
 	if x.hidden == nil {
-		x.CacheHidden()
+		x.CacheHide()
 	}
 	return x.hidden
 }
 
-// Run method resolves [Cmd.Aliases] and seeks the leaf [Cmd]. It then
+// Run method resolves [Cmd.Alias] and seeks the leaf [Cmd]. It then
 // calls the leaf's first-class [Cmd.Call] function passing itself as
 // the first argument along with any remaining command line arguments.
 // Run returns nothing because it usually exits the program. Normally,
@@ -256,7 +261,7 @@ func (x *Cmd) HiddenSlice() []string {
 //
 // If any argument is detected, delegation through recursive Run calls
 // to subcommands is attempted. If more than one argument, each
-// argument is assumed to be a [Name] or alias from [Aliases] and so on
+// argument is assumed to be a [Name] or alias from [Alias] and so on
 // (see [Can] for details). As a convenience, if only one argument is
 // passed and that argument contains a dash, it is assumed to be
 // a [PathWithDashes] and is split and expanded into a new args list as
@@ -278,9 +283,9 @@ func (x *Cmd) Run(args ...string) {
 	c.call(args)
 }
 
-// IsHidden returns true if one of [Hidden] matches the [Name].
-func (x *Cmd) IsHidden() bool {
-	for _, hidden := range x.HiddenSlice() {
+// IsHide returns true if one of [Hide] matches the [Name].
+func (x *Cmd) IsHide() bool {
+	for _, hidden := range x.HideSlice() {
 		if hidden == x.Name {
 			return true
 		}
@@ -460,20 +465,20 @@ func (x *Cmd) AppendCmd(cmd *Cmd) {
 	x.Cmds = append(x.Cmds, cmd)
 }
 
-// Add creates a new Cmd and sets the [Name] and [Aliases] and adds to
+// Add creates a new Cmd and sets the [Name] and [Alias] and adds to
 // [Cmds] returning a reference to the new Cmd. Name must be
 // first.
 func (x *Cmd) Add(name string, aliases ...string) *Cmd {
 	c := &Cmd{
 		Name:    name,
-		Aliases: strings.Join(aliases, `|`),
+		Alias: strings.Join(aliases, `|`),
 	}
 	x.aliases = aliases
 	x.Cmds = append(x.Cmds, c)
 	return c
 }
 
-// Resolve looks up a given [Cmd] by name or alias from [Aliases]
+// Resolve looks up a given [Cmd] by name or alias from [Alias]
 // (caching a lookup map of aliases in the process).
 func (x *Cmd) Resolve(name string) *Cmd {
 
@@ -487,7 +492,7 @@ func (x *Cmd) Resolve(name string) *Cmd {
 		}
 	}
 
-	aliases := x.CmdAliasesMap()
+	aliases := x.CmdAliasMap()
 	if c, has := aliases[name]; has {
 		return c
 	}
@@ -495,7 +500,7 @@ func (x *Cmd) Resolve(name string) *Cmd {
 }
 
 // Can returns the [*Cmd] from [Cmds] if the [Cmd.Name] or any
-// alias in [Cmd.Aliases] for that command matches the name passed. If
+// alias in [Cmd.Alias] for that command matches the name passed. If
 // more than one argument is passed calls itself recursively on each
 // item in the list.
 func (x *Cmd) Can(names ...string) *Cmd {
@@ -521,7 +526,7 @@ func (x *Cmd) can(name string) *Cmd {
 			return c
 		}
 	}
-	aliases := x.CmdAliasesMap() // to trigger cache if needed
+	aliases := x.CmdAliasMap() // to trigger cache if needed
 	if c, has := aliases[name]; has {
 		return c
 	}
@@ -653,13 +658,13 @@ func (x *Cmd) PathWithDashes(more ...string) string {
 }
 
 // Get is a shorter version of Vars.Get(x.Path()+"."+key) which fetches
-// and returns persisted cache values (see [InitVars] and [VarsDriver]).
-// If a value has not yet been assigned returns the value from [InitVars]
+// and returns persisted cache values (see [Vars] and [VarsDriver]).
+// If a value has not yet been assigned returns the value from [Vars]
 // and sets it with [Set]. All var keys must be declared and assigned
-// initial values with [InitVars] or they cannot be used and throw
+// initial values with [Vars] or they cannot be used and throw
 // an [UnsupportedVar] [run.ExitError].
 func (x *Cmd) Get(key string) string {
-	defval, declared := x.InitVars[key]
+	defval, declared := x.Vars[key]
 	if !declared {
 		run.ExitError(UnsupportedVar{key})
 		return ""

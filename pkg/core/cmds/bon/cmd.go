@@ -20,7 +20,7 @@ var Cmd = &bonzai.Cmd{
 
 var otherCmd = &bonzai.Cmd{
 	Name:    `other`,
-	Aliases: `o`,
+	Alias: `o`,
 	Call: func(x *bonzai.Cmd, _ ...string) error {
 		x.Println(`hello from {{.Name}} in {{exepath}}`)
 		return nil
@@ -29,7 +29,7 @@ var otherCmd = &bonzai.Cmd{
 
 var fooCmd = &bonzai.Cmd{
 	Name:    `foo`,
-	Aliases: `f|something`,
+	Alias: `f|something`,
 	Params:  `one|two|three`,
 	Comp:    comp.Combine{comp.CmdsParams, comp.ThreeLetterEngWeekday},
 	Call: func(x *bonzai.Cmd, _ ...string) error {
@@ -40,10 +40,10 @@ var fooCmd = &bonzai.Cmd{
 
 var barCmd = &bonzai.Cmd{
 	Name:    `bar`,
-	Aliases: `whatever|b`,
+	Alias: `whatever|b`,
 	Comp:    comp.FileDirCmdsParams,
 	Cmds:    []*bonzai.Cmd{otherCmd},
-	InitVars: map[string]string{
+	Vars: map[string]string{
 		`some`: `thing`,
 	},
 	Call: func(x *bonzai.Cmd, _ ...string) error {

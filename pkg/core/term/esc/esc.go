@@ -71,7 +71,7 @@ const (
 	Blink      = "\033[5m"
 	BlinkF     = "\033[6m" // usually not supported
 	Reverse    = "\033[7m"
-	Hidden     = "\033[8m"
+	Hide     = "\033[8m"
 	Strike     = "\033[9m" // modern support
 	BoldItalic = Bold + Italic
 

@@ -24,7 +24,7 @@ import (
 var Cmd = &bonzai.Cmd{
 	Name:    `help`,
 	Version: `v0.5.2`,
-	Aliases: []string{`-h`, `--help`, `--h`, `/?`},
+	Alias: []string{`-h`, `--help`, `--h`, `/?`},
 	Summary: `display help similar to man page format`,
 	Usage:   `[SECTION|all]`,
 	Params: []string{
@@ -231,7 +231,7 @@ func ForTerminal(x *bonzai.Cmd, section string) {
 		Z.PrintEmph("**NAME**\n")
 		Z.PrintMark(x.GetTitle() + "\n\n")
 
-		if len(x.Aliases) > 0 {
+		if len(x.Alias) > 0 {
 			Z.PrintEmph("**ALIASES**\n")
 			Z.PrintMark(AKA(x) + "\n\n")
 		}
@@ -367,7 +367,7 @@ func getContact(x *Z.Cmd) string {
 // documentation. It is available as aka help template command as well.
 func AKA(x *Z.Cmd) string {
 	var aliases []string
-	for _, a := range x.Aliases {
+	for _, a := range x.Alias {
 		if len(a) == 0 {
 			continue
 		}

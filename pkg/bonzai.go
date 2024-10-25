@@ -1,14 +1,10 @@
 package bonzai
 
-import (
-	"os"
+import "github.com/rwxrob/bonzai/pkg/core/vars"
 
-	"github.com/rwxrob/bonzai/pkg/core/vars"
-)
-
-// VarsDriver specifies the package persistent variables driver interface. All
-// implementations must assign themselves to [Vars] package-scoped
-// variable during init.
+// VarsDriver specifies the package persistent variables driver
+// interface. All implementations must assign themselves to [Vars]
+// package-scoped variable during init.
 //
 // Implementations must persist (cache) simple string key/value
 // variables. Implementations of Vars can persist in different ways, but
@@ -17,17 +13,6 @@ import (
 // always present the data in a .key=val format with \r and \n escaped
 // and the key never must contain an equal (=). (Equal signs in the
 // value are ignored.) This is the fastest format to read and parse.
-//
-// For maximum compatibility the following codes (which can be easily
-// assigned to constants) are returned indicating status of requested
-// operation rather than error codes:
-//
-//	 -1 - unable to successfully complete operation
-//		0 - not found
-//	 1 - successful
-//
-// Status codes are particular important when an empty string is
-// a valid/preferred value or default.
 type VarsDriver interface {
 	Get(key string) (string, int) // accessor, "" if non-existent
 	Set(key, val string) int      // mutator
@@ -39,12 +24,16 @@ type VarsDriver interface {
 var Vars VarsDriver
 
 func init() {
-	v := vars.New()
-	dir, _ := os.UserCacheDir()
-	v.Id = ExeName
-	v.Path = dir
+	v, _ := vars.NewMap()
+	// TODO handle error
+	v.Init()
+
+	// FIXME
+	//v := vars.NewMap()
+	//dir, _ := os.UserCacheDir()
+	//v.File = dir
 	//	v.SoftInit() // FIXME
-	Vars = v
+	//Vars = v
 }
 
 const (

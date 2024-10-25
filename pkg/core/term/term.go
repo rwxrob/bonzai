@@ -31,7 +31,7 @@ var (
 	Blink      string
 	BlinkF     string
 	Reverse    string
-	Hidden     string
+	Hide     string
 	Strike     string
 	BoldItalic string
 	Black      string
@@ -140,7 +140,7 @@ func AttrOff() {
 	Blink = ""
 	BlinkF = ""
 	Reverse = ""
-	Hidden = ""
+	Hide = ""
 	Strike = ""
 	BoldItalic = ""
 	Black = ""
@@ -197,7 +197,7 @@ func AttrOn() {
 	Blink = esc.Blink
 	BlinkF = esc.BlinkF
 	Reverse = esc.Reverse
-	Hidden = esc.Hidden
+	Hide = esc.Hide
 	Strike = esc.Strike
 	Black = esc.Black
 	Red = esc.Red
@@ -258,7 +258,7 @@ func Printf(format string, a ...any) (int, error) {
 }
 
 // Read reads a single line of input and chomps the \r?\n. Also see
-// ReadHidden.
+// ReadHide.
 func Read() string {
 	scanner := bufio.NewScanner(os.Stdin)
 	scanner.Scan()
@@ -314,10 +314,10 @@ func REPL(prompt, respond InOutFunc) {
 	}
 }
 
-// ReadHidden disables the cursor and echoing to the screen and reads
+// ReadHide disables the cursor and echoing to the screen and reads
 // a single line of input. Leading and trailing whitespace are removed.
 // Also see Read.
-func ReadHidden() string {
+func ReadHide() string {
 	byt, err := terminal.ReadPassword(int(syscall.Stdin))
 	if err != nil {
 		log.Fatal(err)
@@ -335,15 +335,15 @@ func Prompt(form string, args ...any) string {
 	return Read()
 }
 
-// PromptHidden prints the given message if the terminal IsInteractive
-// and reads the string by calling ReadHidden (which does not echo to
+// PromptHide prints the given message if the terminal IsInteractive
+// and reads the string by calling ReadHide (which does not echo to
 // the screen). The argument signature is identical and passed to to
 // fmt.Printf().
-func PromptHidden(form string, args ...any) string {
+func PromptHide(form string, args ...any) string {
 	if IsInteractive() {
 		fmt.Printf(form, args...)
 	}
-	return ReadHidden()
+	return ReadHide()
 }
 
 // StripNonPrint remove non-printable runes, e.g. control characters in

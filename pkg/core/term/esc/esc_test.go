@@ -12,7 +12,7 @@ func TestAttributes(t *testing.T) {
 	fmt.Println(esc.Blink + "Blink" + esc.Reset)
 	fmt.Println(esc.BlinkF + "BlinkF" + esc.Reset)
 	fmt.Println(esc.Reverse + "Reverse" + esc.Reset)
-	fmt.Println(esc.Hidden + "Hidden" + esc.Reset)
+	fmt.Println(esc.Hide + "Hide" + esc.Reset)
 	fmt.Println(esc.Strike + "Strike" + esc.Reset)
 	fmt.Println(esc.Black + "Black" + esc.Reset)
 	fmt.Println(esc.Red + "Red" + esc.Reset)

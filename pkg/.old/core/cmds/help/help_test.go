@@ -108,7 +108,7 @@ func ExampleCmd_all_Call_With_Optional_Params_and_Commands() {
 		Commands: []*Z.Cmd{
 			&Z.Cmd{
 				Name:    "foo",
-				Aliases: []string{"f"},
+				Alias: []string{"f"},
 				Summary: "foo the things",
 			},
 			&Z.Cmd{

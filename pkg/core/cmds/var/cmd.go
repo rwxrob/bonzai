@@ -57,7 +57,7 @@ var setDoc string
 
 var fileCmd = &Z.Cmd{
 	Name:     `file`,
-	Aliases:  []string{"f"},
+	Alias:  []string{"f"},
 	Summary:  `outputs full path to the cached vars file`,
 	Commands: []*Z.Cmd{help.Cmd},
 	Call: func(x *Z.Cmd, _ ...string) error {
@@ -71,7 +71,7 @@ var initDoc string
 
 var initCmd = &Z.Cmd{
 	Name:        `init`,
-	Aliases:     []string{"i"},
+	Alias:     []string{"i"},
 	Summary:     `(re)initializes current variable cache`,
 	Commands:    []*Z.Cmd{help.Cmd},
 	UseVars:     true, // but fulfills at init() above
@@ -92,7 +92,7 @@ var dataDoc string
 
 var dataCmd = &Z.Cmd{
 	Name:        `data`,
-	Aliases:     []string{"d"},
+	Alias:     []string{"d"},
 	Summary:     `outputs contents of the cached variables file`,
 	Description: dataDoc,
 	Commands:    []*Z.Cmd{help.Cmd},
@@ -109,14 +109,14 @@ var editCmd = &Z.Cmd{
 	Name:        `edit`,
 	Summary:     `edit variables file ({{execachedir "vars"}}) `,
 	Description: editDoc,
-	Aliases:     []string{"e"},
+	Alias:     []string{"e"},
 	Commands:    []*Z.Cmd{help.Cmd},
 	Call:        func(x *Z.Cmd, _ ...string) error { return vars.Edit() },
 }
 
 var deleteCmd = &Z.Cmd{
 	Name:        `delete`,
-	Aliases:     []string{`d`, `del`, `unset`},
+	Alias:     []string{`d`, `del`, `unset`},
 	Summary:     `delete variable(s) from cache`,
 	Usage:       `(help|<name>...)`,
 	Commands:    []*Z.Cmd{help.Cmd},

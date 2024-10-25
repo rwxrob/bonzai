@@ -11,7 +11,7 @@ func main() {
 	p := term.Read()
 	fmt.Println("You entered: ", p)
 	fmt.Print("Enter sample hidden text: ")
-	p = term.ReadHidden()
+	p = term.ReadHide()
 	fmt.Println()
 	fmt.Println("You entered while hidden: ", p)
 
