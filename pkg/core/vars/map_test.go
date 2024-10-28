@@ -8,27 +8,60 @@ import (
 	"github.com/rwxrob/bonzai/pkg/core/vars"
 )
 
-func ExampleVars() {
-	m := vars.New()
-	m.Id = `foo`
-	m.Path = `testdata`
-	fmt.Println(m.FullPath())
-	fmt.Println(m.DirPath())
+func ExampleNewMapFrom() {
+
+	m, err := vars.NewMapFrom(`testdata/vars.properties`)
+	if err != nil {
+		fmt.Println(err)
+	}
+	fmt.Println(m.M[`.pomo.warn`])
+
 	// Output:
-	// testdata/foo/vars.properties
-	// testdata/foo
+	// 1m
+}
+
+func ExampleMap_Get() {
+
+	m, err := vars.NewMapFrom(`testdata/vars.properties`)
+	if err != nil {
+		fmt.Println(err)
+	}
+	fmt.Println(m.Get(`.pomo.warn`))
+
+	// Output:
+	// 1m <nil>
+
+}
+
+func ExampleMap_Get_not_found() {
+
+	m, err := vars.NewMapFrom(`testdata/vars.properties`)
+	if err != nil {
+		fmt.Println(err)
+	}
+	fmt.Println(m.Get(`.pomo.wain`))
+
+	// Output:
+	// could not find key: .pomo.wain
+
 }
 
 func ExampleVars_Init() {
 
-	m := vars.New()
-	m.Id = `foo`
-	m.Path = `testdata`
+	m := vars.NewMap()
+	m.File = `testdata/other.properties`
 
-	defer func() { os.RemoveAll(m.DirPath()) }()
+	defer func() {
+		if err := os.RemoveAll(m.File); err != nil {
+			fmt.Println(err)
+		}
+	}()
 
-	m.Init()
-	fmt.Println(futil.Exists(`testdata/foo/vars.properties`))
+	if err := m.Init(); err != nil {
+		fmt.Println(err)
+	}
+
+	fmt.Println(futil.Exists(`testdata/other.properties`))
 
 	// Output:
 	// true
@@ -36,62 +69,29 @@ func ExampleVars_Init() {
 
 func ExampleVars_Set() {
 
-	m := vars.New()
-	m.Id = `foo`
-	m.Path = `testdata`
-
-	defer func() { os.RemoveAll(m.DirPath()) }()
-
+	m := vars.NewMap()
+	m.File = `testdata/settest.properties`
 	m.Init()
+
+	// cleanup after the test completes
+	defer func() {
+		if err := os.RemoveAll(m.File); err != nil {
+			fmt.Println(err)
+		}
+	}()
+
 	fmt.Println(m.Set("some", "thing\nhere"))
-	byt, _ := os.ReadFile(`testdata/foo/vars.properties`)
+	byt, _ := os.ReadFile(`testdata/settest.properties`)
 	fmt.Println(string(byt) == `some=thing\nhere`+"\n")
 
 	// Output:
-	// 1
+	// <nil>
 	// true
-}
-
-func ExampleVars_Get() {
-
-	m := vars.New()
-	m.Id = `foo`
-	m.Path = `testdata`
-
-	defer func() { os.RemoveAll(m.DirPath()) }()
-
-	m.Init()
-	fmt.Println(m.Set("some", "thing\nhere"))
-	val, code := m.Get(`some`)
-	fmt.Printf("%q %v\n", val, code)
-
-	// Output:
-	// 1
-	// "thing\nhere" 1
-}
-
-func ExampleVars_UnmarshalText() {
-
-	in := `
-some=thing here
-another=one over here
-`
-
-	m := vars.New()
-	m.UnmarshalText([]byte(in))
-	fmt.Println(len(m.M))
-	fmt.Println(m.M["some"])
-	fmt.Println(m.M["another"])
-
-	// Output:
-	// 2
-	// thing here
-	// one over here
 }
 
 func ExampleVars_MarshalText() {
 
-	m := vars.New()
+	m := vars.NewMap()
 	m.M["some"] = "thing here"
 	m.M["another"] = "one\rhere\nbut all good"
 
@@ -105,4 +105,96 @@ func ExampleVars_MarshalText() {
 	// Ordered Output:
 	// some:thing here
 	// another:one\rhere\nbut all good
+}
+
+func ExampleMap_Clear() {
+	m := vars.NewMap()
+	m.M = map[string]string{
+		"key1": "value1",
+		"key2": "value2",
+	}
+
+	err := m.Clear()
+	if err != nil {
+		fmt.Println(err)
+	}
+
+	// The map should be empty after clearing
+	fmt.Println(len(m.M))
+
+	// Output:
+	// 0
+}
+
+func ExampleMap_Match() {
+	m := vars.NewMap()
+	m.M = map[string]string{
+		"key1": "value1",
+		"key2": "value2",
+	}
+
+	val, err := m.Match(`y2`)
+	if err != nil {
+		fmt.Println(err)
+	}
+
+	// The map should be empty after clearing
+	fmt.Println(val)
+
+	// Output:
+	// value2
+}
+
+func ExampleMap_Match_nokey() {
+	m := vars.NewMap()
+	m.M = map[string]string{
+		"key1": "value1",
+		"key2": "value2",
+	}
+
+	val, err := m.Match(`foo`)
+	if err != nil {
+		fmt.Println(err)
+	}
+
+	// The map should be empty after clearing
+	fmt.Println(val)
+
+	// Output:
+	// could not find key: foo
+
+}
+
+func ExampleMap_Data() {
+
+	m, err := vars.NewMapFrom(`testdata/vars.properties`)
+	if err != nil {
+		fmt.Println(err)
+	}
+	fmt.Println(m.Data())
+
+	// Output:
+	// .pomo.warn=1m
+	// .pomo.prefix=🍅
+	// .pomo.prefixwarn=💢
+	// .pomo.duration=52m
+	// .pomo.interval=20s
+	//  <nil>
+
+}
+
+func ExampleMap_Print() {
+	m, err := vars.NewMapFrom(`testdata/vars.properties`)
+	if err != nil {
+		fmt.Println(err)
+	}
+	m.Print()
+
+	// Output:
+	// .pomo.warn=1m
+	// .pomo.prefix=🍅
+	// .pomo.prefixwarn=💢
+	// .pomo.duration=52m
+	// .pomo.interval=20s
+
 }

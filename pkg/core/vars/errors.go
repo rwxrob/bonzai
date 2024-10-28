@@ -7,5 +7,5 @@ type NotFound struct {
 }
 
 func (e NotFound) Error() string {
-	return fmt.Sprintf(`could not find key: %v`, e)
+	return fmt.Sprintf(`could not find key: %v`, e.Key)
 }
