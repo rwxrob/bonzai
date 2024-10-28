@@ -203,6 +203,15 @@ func (m *Map) Get(key string) (string, error) {
 	return "", NotFound{key}
 }
 
+// Has checks if the map [m.M] contains the specified [key]
+// after refreshing the map's data. Returns true if the
+// key is present; otherwise, it returns false.
+func (m *Map) Has(key string) bool {
+	m.refresh()
+	_, has := m.M[key]
+	return has
+}
+
 // Match retrieves the value associated with a key that matches the
 // given regular expression, returning [NotFound] if the key does not
 // exist. Fulfills the [Driver] interface.

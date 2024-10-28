@@ -63,6 +63,7 @@ package vars
 type Driver interface {
 	Init() error                       // initialize (not clear)
 	Clear() error                      // delete ever key=value pair
+	Has(key string) bool               // exists?
 	Get(key string) (string, error)    // accessor, "" if non-existent
 	Set(key, val string) error         // mutator
 	Match(regx string) (string, error) // query
