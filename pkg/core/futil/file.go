@@ -6,17 +6,15 @@ import (
 	"errors"
 	"fmt"
 	"io"
-	_fs "io/fs"
+	"io/fs"
 	"net/http"
 	"os"
-	"os/exec"
 	"path/filepath"
 	"regexp"
 	"strings"
 	"time"
 
 	"github.com/rogpeppe/go-internal/lockedfile"
-	"github.com/rwxrob/bonzai/pkg/core/run"
 )
 
 var DefaultFilePerms = 0600
@@ -31,7 +29,7 @@ func Touch(path string) error {
 	if NotExists(path) {
 		if err := os.MkdirAll(
 			filepath.Dir(path),
-			_fs.FileMode(DefaultDirPerms),
+			fs.FileMode(DefaultDirPerms),
 		); err != nil {
 			return err
 		}
@@ -39,8 +37,10 @@ func Touch(path string) error {
 		if err != nil {
 			return err
 		}
-		file.Close()
-		return os.Chmod(path, _fs.FileMode(DefaultFilePerms))
+		if err := file.Close(); err != nil {
+			return err
+		}
+		return os.Chmod(path, fs.FileMode(DefaultFilePerms))
 	}
 	now := time.Now().Local()
 	if err := os.Chtimes(path, now, now); err != nil {
@@ -103,58 +103,6 @@ func Fetch(from, to string) error {
 	}
 
 	return nil
-}
-
-// Edit opens the file at the given path for editing searching for an
-// editor on the system using the following (in order of priority):
-//
-// * VISUAL
-// * EDITOR
-// * code
-// * nvim
-// * vim
-// * vi
-// * nvi
-// * emacs
-// * nano
-func Edit(path string) error {
-	ed := os.Getenv("VISUAL")
-	if ed != "" {
-		return run.Exe(ed, path)
-	}
-	ed = os.Getenv("EDITOR")
-	if ed != "" {
-		return run.Exe(ed, path)
-	}
-	ed, _ = exec.LookPath("code")
-	if ed != "" {
-		return run.Exe(ed, path)
-	}
-	ed, _ = exec.LookPath("nvim")
-	if ed != "" {
-		return run.Exe(ed, path)
-	}
-	ed, _ = exec.LookPath("vim")
-	if ed != "" {
-		return run.Exe(ed, path)
-	}
-	ed, _ = exec.LookPath("vi")
-	if ed != "" {
-		return run.Exe(ed, path)
-	}
-	ed, _ = exec.LookPath("nvi")
-	if ed != "" {
-		return run.Exe(ed, path)
-	}
-	ed, _ = exec.LookPath("emacs")
-	if ed != "" {
-		return run.Exe(ed, path)
-	}
-	ed, _ = exec.LookPath("nano")
-	if ed != "" {
-		return run.Exe(ed, path)
-	}
-	return fmt.Errorf("unable to find editor")
 }
 
 // Head is like the UNIX head command returning only that number of
@@ -243,7 +191,7 @@ func FindString(path, regx string) (string, error) {
 // permissions are preserved if file exists.
 func Overwrite(path, buf string) error {
 	f, err := os.Open(path)
-	var mode _fs.FileMode
+	var mode fs.FileMode
 	if err != nil {
 		if errors.Is(err, os.ErrNotExist) {
 			if err := Touch(path); err != nil {

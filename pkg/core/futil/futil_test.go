@@ -245,3 +245,32 @@ func ExampleNameIsInt() {
 	// false
 	// false
 }
+
+func ExampleUserStateDir() {
+	originalEnv := os.Getenv("XDG_STATE_HOME")
+	defer os.Setenv("XDG_STATE_HOME", originalEnv)
+	os.Setenv("XDG_STATE_HOME", "/custom/state")
+
+	originalHome := os.Getenv("HOME")
+	defer os.Setenv("HOME", originalHome)
+	os.Setenv("HOME", "/home/testuser")
+
+	path, err := futil.UserStateDir()
+	if err != nil {
+		fmt.Println("error:", err)
+	} else {
+		fmt.Println(path)
+	}
+
+	os.Unsetenv("XDG_STATE_HOME")
+	path, err = futil.UserStateDir()
+	if err != nil {
+		fmt.Println("error:", err)
+	} else {
+		fmt.Println(path)
+	}
+
+	// Output:
+	// /custom/state
+	// /home/testuser/.local/state
+}

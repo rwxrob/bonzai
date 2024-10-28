@@ -10,6 +10,7 @@ import (
 	"path/filepath"
 	"strconv"
 	"strings"
+	"syscall"
 	"time"
 )
 
@@ -340,4 +341,49 @@ func RevertIfMissing(target, backup string) error {
 		}
 	}
 	return nil
+}
+
+// IsSymLink returns true if the file at the base of path (not any
+// intermediate directories) is itself a symbolic link.
+func IsSymLink(path string) (bool, error) {
+	info, err := os.Lstat(path)
+	if err != nil {
+		return false, err
+	}
+	return info.Mode()&os.ModeSymlink != 0, nil
+}
+
+// IsHardLink attempts to determine if the file at the end of path is
+// a unix/linux hard link by counting its number of links. On Windows
+// always returns false.
+func IsHardLink(path string) (bool, error) {
+	info, err := os.Lstat(path)
+	if err != nil {
+		return false, err
+	}
+	stat, ok := info.Sys().(*syscall.Stat_t)
+	if !ok {
+		return false, fmt.Errorf("unable to retrieve file information")
+	}
+	return stat.Nlink > 1, nil
+}
+
+var UserHomeDir = os.UserHomeDir
+var UserCacheDir = os.UserCacheDir
+var UserConfigDir = os.UserConfigDir
+
+// UserStateDir returns the path to the user's state directory,
+// checking [XDG_STATE_HOME] environment variable first. It defaults
+// to joining [UserHomeDir] with `.local/state` if the variable is
+// unset. It returns an error if [UserHomeDir] fails.
+func UserStateDir() (string, error) {
+	path, has := os.LookupEnv(`XDG_STATE_HOME`)
+	if !has {
+		dir, err := UserHomeDir()
+		if err != nil {
+			return "", err
+		}
+		path = filepath.Join(dir, `.local`, `state`)
+	}
+	return path, nil
 }
