@@ -14,7 +14,7 @@ import (
 var Cmd = &bonzai.Cmd{
 	Name:    `var`,
 	Version: `v0.7.0`,
-	Summary: `cache variables in {{ execachedir "vars.properties"}}`,
+	Summary: `cache variables in {{ exestatedir "vars.properties"}}`,
 	// Comp: vars.Comp
 	Commands: []*bonzai.Cmd{getCmd}, //	initCmd, setCmd, fileCmd, dataCmd, editCmd, deleteCmd,
 

@@ -42,3 +42,11 @@ func KeysWithPrefix[T any](m map[string]T, pre string) []string {
 	sort.Strings(keys)
 	return keys
 }
+
+// Clear removes all elements from a map [m] defined by key type [K]
+// and value type [V].
+func Clear[K comparable, V any](m map[K]V) {
+	for key := range m {
+		delete(m, key)
+	}
+}
