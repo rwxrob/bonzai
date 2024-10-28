@@ -151,11 +151,11 @@ func (m *Map) refresh() error {
 
 // defaultFile returns the default file path for the Map by combining the
 // executable cache directory with the properties file name. It calls the
-// RealExeCacheDir method from the run package to get the directory. If
+// RealExeStateDir method from the run package to get the directory. If
 // there is an error retrieving the directory, it returns an empty string
 // and the error.
 func (m *Map) defaultFile() (string, error) {
-	dir, err := run.RealExeCacheDir()
+	dir, err := run.RealExeStateDir()
 	if err != nil {
 		return "", err
 	}

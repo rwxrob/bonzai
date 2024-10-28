@@ -173,7 +173,7 @@ func ExampleMap_Data() {
 	}
 	fmt.Println(m.Data())
 
-	// Output:
+	// Unordered output:
 	// .pomo.warn=1m
 	// .pomo.prefix=🍅
 	// .pomo.prefixwarn=💢
@@ -190,11 +190,27 @@ func ExampleMap_Print() {
 	}
 	m.Print()
 
-	// Output:
+	// Unordered output:
 	// .pomo.warn=1m
 	// .pomo.prefix=🍅
 	// .pomo.prefixwarn=💢
 	// .pomo.duration=52m
 	// .pomo.interval=20s
 
+}
+
+func ExampleMap_Delete() {
+	m, err := vars.NewMapFrom(`testdata/vars.properties`)
+	if err != nil {
+		fmt.Println(err)
+	}
+	defer m.Set(`.pomo.prefix`, `🍅`)
+	m.Delete(`.pomo.prefix`)
+	m.Print()
+
+	// Unordered output:
+	// .pomo.warn=1m
+	// .pomo.prefixwarn=💢
+	// .pomo.duration=52m
+	// .pomo.interval=20s
 }
