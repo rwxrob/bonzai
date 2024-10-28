@@ -9,13 +9,115 @@ import (
 	"log"
 	"os"
 	"os/exec"
+	"path/filepath"
 	"strings"
 	"syscall"
 
+	"github.com/rwxrob/bonzai/pkg/core/futil"
 	"github.com/rwxrob/bonzai/pkg/core/mark"
 )
 
-// SysExe will check for the existence of the first argument as an
+// ExeName returns just the base name of the executable from
+// [os.Executable] without the path or any suffix (ex: .exe). Note that
+// the name may actually be a symbolic link. Use [RealExeName] if the
+// resolved version is wanted.
+func ExeName() (string, error) {
+	path, err := os.Executable()
+	if err != nil {
+		return path, err
+	}
+	name := strings.TrimSuffix(filepath.Base(path), filepath.Ext(path))
+	return name, nil
+}
+
+// RealExeName returns same as [ExeName] but with all symbolic links
+// resolved.
+func RealExeName() (string, error) {
+	path, err := os.Executable()
+	if err != nil {
+		return path, err
+	}
+	path, err = filepath.EvalSymlinks(path)
+	if err != nil {
+		return path, err
+	}
+	name := strings.TrimSuffix(filepath.Base(path), filepath.Ext(path))
+	return name, nil
+}
+
+func addExeName(base string) (string, error) {
+	name, err := ExeName()
+	if err != nil {
+		return "", err
+	}
+	return filepath.Join(base, name), nil
+}
+
+func addRealExeName(base string) (string, error) {
+	name, err := RealExeName()
+	if err != nil {
+		return "", err
+	}
+	return filepath.Join(base, name), nil
+}
+
+func ExeCacheDir() (string, error) {
+	dir, err := os.UserCacheDir()
+	if err != nil {
+		return "", err
+	}
+	return addExeName(dir)
+}
+
+func RealExeCacheDir() (string, error) {
+	dir, err := os.UserCacheDir()
+	if err != nil {
+		return "", err
+	}
+	return addRealExeName(dir)
+}
+
+func ExeConfigDir() (string, error) {
+	dir, err := futil.UserConfigDir()
+	if err != nil {
+		return "", err
+	}
+	return addExeName(dir)
+}
+
+func RealExeStateDir() (string, error) {
+	dir, err := futil.UserStateDir()
+	if err != nil {
+		return "", err
+	}
+	return addExeName(dir)
+}
+
+func ExeStateDir() (string, error) {
+	dir, err := futil.UserStateDir()
+	if err != nil {
+		return "", err
+	}
+	return addExeName(dir)
+}
+
+func ExeIsSymLink() (bool, error) {
+	path, err := os.Executable()
+	if err != nil {
+		return false, err
+	}
+	return futil.IsSymLink(path)
+}
+
+func ExeIsHardLink() (bool, error) {
+	path, err := os.Executable()
+	if err != nil {
+		return false, err
+	}
+	return futil.IsHardLink(path)
+}
+
+// SysExec will check for the existence of the first argument as an
 // executable on the system and then execute it using syscall.Exec(),
 // which replaces the currently running program with the new one in all
 // respects (stdin, stdout, stderr, process ID, signal handling, etc).
@@ -23,7 +125,7 @@ import (
 // is exceptionally faster and cleaner than calling any of the os/exec
 // variations, but it can make your code far be less compatible
 // with different operating systems.
-func SysExe(args ...string) error {
+func SysExec(args ...string) error {
 	if len(args) == 0 {
 		return fmt.Errorf("missing name of executable")
 	}
@@ -35,14 +137,13 @@ func SysExe(args ...string) error {
 	return syscall.Exec(path, args, os.Environ())
 }
 
-// Exe checks for existence of first argument as an executable on the
-// system and then runs it with exec.Command.Run  exiting in a way that
-// is supported across all architectures that Go supports. The stdin,
-// stdout, and stderr are connected directly to that of the calling
+// Exec checks for existence of first argument as an executable on the
+// system and then runs it with [exec.Command.Run]  exiting in a way that
+// is supported across all architectures that Go supports. The [os.Stdin],
+// [os.Stdout], and [os.Stderr] are connected directly to that of the calling
 // program. Sometimes this is insufficient and the UNIX-specific SysExec
-// is preferred. See exec.Command.Run for more about distinguishing
-// ExitErrors from others.
-func Exe(args ...string) error {
+// is preferred.
+func Exec(args ...string) error {
 	if len(args) == 0 {
 		return fmt.Errorf("missing name of executable")
 	}
@@ -78,6 +179,18 @@ func Out(args ...string) string {
 
 func ShellIsBash() bool {
 	return strings.Contains(os.Getenv("SHELL"), `bash`)
+}
+
+func ShellIsFish() bool {
+	return len(os.Getenv("FISH_VERSION")) > 0
+}
+
+func ShellIsZsh() bool {
+	return strings.Contains(os.Getenv("SHELL"), `zsh`)
+}
+
+func ShellIsPowerShell() bool {
+	return len(os.Getenv(`PSModulePath`)) > 0
 }
 
 // ArgsFrom returns a list of field strings split on space (using

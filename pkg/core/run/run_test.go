@@ -8,20 +8,20 @@ import (
 	"os/exec"
 	"testing"
 
-	"github.com/rwxrob/bonzai/pkg/run"
+	"github.com/rwxrob/bonzai/pkg/core/run"
 )
 
-// go coverage detection is fucked for this sort of stuff, oh well, we
+// go coverage detection is bork for this sort of stuff, oh well, we
 // did the test even if coverage falsely reports 50%
-func TestSysExe(t *testing.T) {
+func TestSysExec(t *testing.T) {
 	if os.Getenv("TESTING_EXEC") == "1" {
-		err := run.Exe("go", "version")
+		err := run.Exec("go", "version")
 		if err != nil {
 			t.Fatal(err)
 		}
 		return
 	}
-	cmd := exec.Command(os.Args[0], "-test.run=TestSysExe")
+	cmd := exec.Command(os.Args[0], "-test.run=TestSysExec")
 	cmd.Env = append(os.Environ(), "TESTING_EXEC=1")
 	err := cmd.Run()
 	if err != nil {
@@ -29,29 +29,29 @@ func TestSysExe(t *testing.T) {
 	}
 }
 
-func TestSysExe_noargs(t *testing.T) {
-	err := run.SysExe()
+func TestSysExec_noargs(t *testing.T) {
+	err := run.SysExec()
 	if err == nil {
 		t.Error("should have failed since no command")
 	}
 }
 
-func TestExe_noargs(t *testing.T) {
-	err := run.Exe()
+func TestExec_noargs(t *testing.T) {
+	err := run.Exec()
 	if err == nil {
 		t.Error("should have failed since no command")
 	}
 }
 
-func TestExe_nocmd(t *testing.T) {
-	err := run.Exe("__inoexist")
+func TestExec_nocmd(t *testing.T) {
+	err := run.Exec("__inoexist")
 	if err == nil {
 		t.Error("should have failed since no command")
 	}
 }
 
-func TestExe(t *testing.T) {
-	err := run.Exe("go", "version")
+func TestExec(t *testing.T) {
+	err := run.Exec("go", "version")
 	if err != nil {
 		t.Error(err)
 	}
