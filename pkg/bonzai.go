@@ -1,20 +1,20 @@
 package bonzai
 
-import "github.com/rwxrob/bonzai/pkg/core/vars"
+import (
+	"log"
+
+	"github.com/rwxrob/bonzai/pkg/core/vars"
+)
 
 var Vars vars.Driver
 
 func init() {
-	v, _ := vars.NewMap()
-	// TODO handle error
-	v.Init()
-
-	// FIXME
-	//v := vars.NewMap()
-	//dir, _ := os.UserCacheDir()
-	//v.File = dir
-	//	v.SoftInit() // FIXME
-	//Vars = v
+	m := vars.NewMap()
+	if err := m.Init(); err != nil {
+		log.Print(err)
+		return
+	}
+	Vars = m
 }
 
 const (

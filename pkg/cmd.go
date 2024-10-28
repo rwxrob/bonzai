@@ -377,17 +377,14 @@ func (x *Cmd) exitUnlessValidName() {
 
 func (x *Cmd) recurseIfMulti(args []string) {
 	// called as multicall binary
-	name := ExeName
-	if name == x.Name {
-		name = ExeSymLink
-	}
+	name, _ := run.RealExeName()
 	if name != x.Name {
 		// dashed/long (ex: z-bon-multi-symlink)
 		if strings.Contains(name, `-`) {
 			args = strings.Split(name, `-`)
 			first := args[0]
-			if first != ExeName {
-				run.ExitError(InvalidMultiName{ExeName, name})
+			if first != name {
+				run.ExitError(InvalidMultiName{name, name})
 			}
 			x.Run(args[1:]...)
 			return
@@ -660,30 +657,32 @@ func (x *Cmd) PathWithDashes(more ...string) string {
 // and sets it with [Set]. All var keys must be declared and assigned
 // initial values with [Vars] or they cannot be used and throw
 // an [UnsupportedVar] [run.ExitError].
-func (x *Cmd) Get(key string) string {
+func (x *Cmd) Get(key string) (string, error) {
 	defval, declared := x.Vars[key]
 	if !declared {
-		run.ExitError(UnsupportedVar{key})
-		return ""
+		err := UnsupportedVar{key} // like a panic
+		run.ExitError(err)
+		return "", err
 	}
 	path := x.Path()
 	if path != "." {
 		path += "."
 	}
 	ptr := path + key
-	val, code := Vars.Get(ptr)
-	if code == NOTFOUND {
-		Vars.Set(ptr, defval)
-		val = defval
+	if Vars.Has(ptr) {
+		return Vars.Get(ptr)
 	}
-	return val
+	if err := x.Set(key, defval); err != nil {
+		return "", err
+	}
+	return defval, nil
 }
 
 // Set is shorter version of Vars.Set(x.Path()+"."+key.val).
-func (x *Cmd) Set(key, val string) {
+func (x *Cmd) Set(key, val string) error {
 	path := x.Path()
 	if path != "." {
 		path += "."
 	}
-	Vars.Set(path+key, val)
+	return Vars.Set(path+key, val)
 }

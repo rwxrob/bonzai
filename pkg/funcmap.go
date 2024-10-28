@@ -5,7 +5,9 @@ import (
 	"path/filepath"
 	"text/template"
 
+	"github.com/rwxrob/bonzai/pkg/core/futil"
 	"github.com/rwxrob/bonzai/pkg/core/mark"
+	"github.com/rwxrob/bonzai/pkg/core/run"
 	"github.com/rwxrob/bonzai/pkg/core/term"
 	"github.com/rwxrob/bonzai/pkg/core/to"
 )
@@ -42,32 +44,14 @@ var FuncMap = template.FuncMap{
 	"execachedir":  run.ExeCacheDir,
 	"exestatedir":  run.ExeStateDir,
 	"execonfigdir": run.ExeConfigDir,
-	"cachedir":     os.UserCacheDir,
-	"confdir":      os.UserConfigDir,
-	"homedir":      os.UserHomeDir,
+	"cachedir":     futil.UserCacheDir,
+	"confdir":      futil.UserConfigDir,
+	"homedir":      futil.UserHomeDir,
+	"statedir":     futil.UserStateDir,
 	"pathsep":      func() string { return string(os.PathSeparator) },
 	"pathjoin":     filepath.Join,
 }
 
 func indent(n int, in string) string {
 	return to.Indented(in, mark.IndentBy+n)
-}
-
-func homedir(a ...string) string {
-	dir, _ := os.UserHomeDir()
-	extra := filepath.Join(a...)
-	path := filepath.Join(dir, extra)
-	return path
-}
-
-func execachedir(a ...string) string {
-	path := filepath.Join(cachedir(), ExeName)
-	extra := filepath.Join(a...)
-	return filepath.Join(path, extra)
-}
-
-func execonfdir(a ...string) string {
-	path := filepath.Join(confdir(), ExeName)
-	extra := filepath.Join(a...)
-	return filepath.Join(path, extra)
 }

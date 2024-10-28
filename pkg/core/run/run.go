@@ -17,6 +17,20 @@ import (
 	"github.com/rwxrob/bonzai/pkg/core/mark"
 )
 
+var ExePath = os.Executable
+
+// RealExePath returns the absolute path of the executable, resolving
+// any symbolic links. It first retrieves the executable path using
+// [os.Executable] and, if successful, evaluates any symbolic links
+// in the path using [filepath.EvalSymlinks].
+func RealExePath() (string, error) {
+	path, err := os.Executable()
+	if err != nil {
+		return path, err
+	}
+	return filepath.EvalSymlinks(path)
+}
+
 // ExeName returns just the base name of the executable from
 // [os.Executable] without the path or any suffix (ex: .exe). Note that
 // the name may actually be a symbolic link. Use [RealExeName] if the
