@@ -5,7 +5,7 @@ import (
 	"log"
 	"os"
 
-	"github.com/rwxrob/bonzai/pkg/qstack"
+	"github.com/rwxrob/bonzai/pkg/core/ds/qstack"
 )
 
 func ExampleQS_Push() {
@@ -40,7 +40,6 @@ func ExampleQS_Peek() {
 }
 
 func ExampleQS_references() {
-
 	type Some struct {
 		Val string
 	}
@@ -51,14 +50,14 @@ func ExampleQS_references() {
 	x := &Some{"some"}
 	s.Push(x)
 	y := s.Peek()
-	//log.Printf("Is %p == %p?", x, y)
+	// log.Printf("Is %p == %p?", x, y)
 	fmt.Println(x == y)
 
 	// two
 	xx := &Some{"other"}
 	s.Push(xx)
 	yy := s.Peek()
-	//log.Printf("Is %p == %p?", xx, yy)
+	// log.Printf("Is %p == %p?", xx, yy)
 	fmt.Println(xx == yy)
 
 	// Output:
@@ -157,7 +156,6 @@ func ExampleQS_invalid_JSON_Types() {
 
 	// Output:
 	// json: unsupported type: func()
-
 }
 
 func ExampleQS_Copy() {

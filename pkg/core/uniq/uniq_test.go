@@ -4,11 +4,10 @@ import (
 	"fmt"
 	"log"
 
-	"github.com/rwxrob/bonzai/pkg/uniq"
+	"github.com/rwxrob/bonzai/pkg/core/uniq"
 )
 
 func ExampleBytes() {
-
 	bytes := fmt.Sprintf("%x", uniq.Bytes(4))
 	fmt.Println(len(bytes))
 
@@ -17,7 +16,6 @@ func ExampleBytes() {
 }
 
 func ExampleUUID() {
-
 	uuid := uniq.UUID()
 	fmt.Println(len(uuid))
 
@@ -26,7 +24,6 @@ func ExampleUUID() {
 }
 
 func ExampleBase32() {
-
 	uid32 := uniq.Base32()
 	fmt.Println(len(uid32))
 
@@ -35,7 +32,6 @@ func ExampleBase32() {
 }
 
 func ExampleHex() {
-
 	hex1 := uniq.Hex(1)
 	hex3 := uniq.Hex(3)
 	hex18 := uniq.Hex(18)
