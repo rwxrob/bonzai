@@ -5,7 +5,7 @@ import (
 	_http "net/http"
 	ht "net/http/httptest"
 
-	json "github.com/rwxrob/bonzai/pkg/json"
+	json "github.com/rwxrob/bonzai/pkg/core/json"
 )
 
 func ExampleFetch() {

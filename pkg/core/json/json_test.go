@@ -5,7 +5,7 @@ import (
 	"fmt"
 
 	"github.com/rwxrob/bonzai/pkg/core/fn"
-	json "github.com/rwxrob/bonzai/pkg/json"
+	json "github.com/rwxrob/bonzai/pkg/core/json"
 )
 
 func ExampleEscape() {
