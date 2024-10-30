@@ -6,7 +6,7 @@ package set_test
 import (
 	"fmt"
 
-	"github.com/rwxrob/bonzai/pkg/set"
+	"github.com/rwxrob/bonzai/pkg/core/ds/set"
 )
 
 func ExampleMinus() {
