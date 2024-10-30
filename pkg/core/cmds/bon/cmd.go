@@ -13,9 +13,10 @@ func init() {
 var Cmd = &bonzai.Cmd{
 	Name:  `bon`,
 	Short: `manage bonzai composite command trees`,
-	Comp:  comp.Cmds,
-	Vers:  `v0.0.1`,
-	Cmds:  []*bonzai.Cmd{barCmd, fooCmd},
+	//Comp:  comp.Cmds,
+	Comp: comp.ThreeLetterEngWeekday,
+	Vers: `v0.0.1`,
+	Cmds: []*bonzai.Cmd{barCmd, fooCmd},
 }
 
 var otherCmd = &bonzai.Cmd{

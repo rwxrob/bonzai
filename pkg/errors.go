@@ -4,26 +4,12 @@ import (
 	"fmt"
 )
 
-const (
-	E_InvalidName      = `invalid name/alias detected: %v`
-	E_InvalidMultiName = `%q must begin with %q: %q`
-	E_DefCmdReqCall    = `default (first) of Cmds requires Call: %q`
-	E_IncorrectUsage   = `usage: %v %v`
-	E_MissingVar       = `missing var for %v`
-	E_NoCallNoCmds     = `%v requires either Call or Cmds`
-	E_NotEnoughArgs    = `%v is not enough arguments, %v required`
-	E_TooManyArgs      = `%v is too many arguments, %v maximum`
-	E_WrongNumArgs     = `%v arguments, %v required`
-	E_UnsupportedVar   = `unsupported var: %v`
-	E_VarsInitFailed   = `var initialization failed: %v`
-)
-
 type VarsInitFailed struct {
 	Err error
 }
 
 func (e VarsInitFailed) Error() string {
-	return fmt.Sprintf(E_VarsInitFailed, e.Err)
+	return fmt.Sprintf(`var initialization failed: %v`, e.Err)
 }
 
 type UnsupportedVar struct {
@@ -31,7 +17,8 @@ type UnsupportedVar struct {
 }
 
 func (e UnsupportedVar) Error() string {
-	return fmt.Sprintf(E_UnsupportedVar, e.Name)
+	return fmt.Sprintf(
+		`unsupported var: %v`, e.Name)
 }
 
 type InvalidMultiName struct {
@@ -40,7 +27,7 @@ type InvalidMultiName struct {
 }
 
 func (e InvalidMultiName) Error() string {
-	return fmt.Sprintf(E_InvalidMultiName,
+	return fmt.Sprintf(`%q must begin with %q: %q`,
 		e.Want, e.Got, e.Got+"-"+e.Want)
 }
 
@@ -49,7 +36,7 @@ type InvalidName struct {
 }
 
 func (e InvalidName) Error() string {
-	return fmt.Sprintf(E_InvalidName, e.Name)
+	return fmt.Sprintf(`invalid name: %v`, e.Name)
 }
 
 type NotEnoughArgs struct {
@@ -58,7 +45,8 @@ type NotEnoughArgs struct {
 }
 
 func (e NotEnoughArgs) Error() string {
-	return fmt.Sprintf(E_NotEnoughArgs, e.Count, e.Min)
+	return fmt.Sprintf(`%v is not enough arguments, %v required`,
+		e.Count, e.Min)
 }
 
 type TooManyArgs struct {
@@ -67,7 +55,8 @@ type TooManyArgs struct {
 }
 
 func (e TooManyArgs) Error() string {
-	return fmt.Sprintf(E_TooManyArgs, e.Count, e.Max)
+	return fmt.Sprintf(`%v is too many arguments, %v maximum`,
+		e.Count, e.Max)
 }
 
 type WrongNumArgs struct {
@@ -76,7 +65,9 @@ type WrongNumArgs struct {
 }
 
 func (e WrongNumArgs) Error() string {
-	return fmt.Sprintf(E_WrongNumArgs, e.Count, e.Num)
+	return fmt.Sprintf(
+		`%v arguments, %v required`,
+		e.Count, e.Num)
 }
 
 type NoCallNoCmds struct {
@@ -84,7 +75,7 @@ type NoCallNoCmds struct {
 }
 
 func (e NoCallNoCmds) Error() string {
-	return fmt.Sprintf(E_NoCallNoCmds, e.Cmd.Name)
+	return fmt.Sprintf(`%v requires either Call or Cmds`, e.Cmd.Name)
 }
 
 type DefCmdReqCall struct {
@@ -92,7 +83,9 @@ type DefCmdReqCall struct {
 }
 
 func (e DefCmdReqCall) Error() string {
-	return fmt.Sprintf(E_DefCmdReqCall, e.Cmd.Name)
+	return fmt.Sprintf(
+		`default (first) of Cmds requires Call: %q`,
+		e.Cmd.Name)
 }
 
 type IncorrectUsage struct {
@@ -100,7 +93,7 @@ type IncorrectUsage struct {
 }
 
 func (e IncorrectUsage) Error() string {
-	return fmt.Sprintf(E_IncorrectUsage,
+	return fmt.Sprintf(`usage: %v %v`,
 		e.Cmd.Name,
 		e.Cmd.Fill(e.Cmd.Usage),
 	)
@@ -111,5 +104,5 @@ type MissingVar struct {
 }
 
 func (e MissingVar) Error() string {
-	return fmt.Sprintf(E_MissingVar, e.Path)
+	return fmt.Sprintf(`missing var for %v`, e.Path)
 }

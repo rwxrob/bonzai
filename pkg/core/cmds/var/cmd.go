@@ -15,7 +15,7 @@ var Cmd = &bonzai.Cmd{
 	Name:  `var`,
 	Vers:  `v0.8.0`,
 	Short: `persistent variables in {{ exestatedir "vars.properties"}}`,
-	Cmds:  []*bonzai.Cmd{getCmd}, //	initCmd, setCmd, fileCmd, dataCmd, editCmd, deleteCmd,
+	Cmds:  []*bonzai.Cmd{getCmd},
 }
 
 var getCmd = &bonzai.Cmd{
