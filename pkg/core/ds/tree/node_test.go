@@ -1,9 +1,9 @@
-package node_test
+package tree_test
 
 import (
 	"fmt"
 
-	tree "github.com/rwxrob/bonzai/pkg/node"
+	"github.com/rwxrob/bonzai/pkg/core/ds/tree"
 )
 
 func ExampleNode_type_is_Integer() {
