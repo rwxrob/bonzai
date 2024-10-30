@@ -1,5 +1,7 @@
 package vars
 
+import "github.com/rwxrob/bonzai/pkg/core/futil"
+
 // Driver specifies anything that implements a persistence layer for
 // high-speed caching of key/value combinations. Implementations may use
 // whatever technology for storing the cache but must represent the data
@@ -72,4 +74,32 @@ type Driver interface {
 	Data() (string, error)             // k=v with \r and \n escaped in v
 	Print() error                      // prints Data to os.Stdout
 	Edit() error                       // open default editor, then load
+}
+
+func Add(key, value, file string) error {
+	var m *Map
+
+	if len(file) == 0 {
+		return MissingArg{`file`}
+	}
+
+	if len(key) == 0 {
+		return EmptyKey{}
+	}
+
+	if futil.Exists(file) {
+		var err error
+		m, err = NewMapFrom(file)
+		if err != nil {
+			return err
+		}
+	} else {
+		m = NewMap()
+		m.File = file
+		if err := m.Init(); err != nil {
+			return err
+		}
+	}
+
+	return m.Set(key, value)
 }
