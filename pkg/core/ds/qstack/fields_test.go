@@ -3,7 +3,7 @@ package qstack_test
 import (
 	"fmt"
 
-	"github.com/rwxrob/bonzai/pkg/qstack"
+	"github.com/rwxrob/bonzai/pkg/core/ds/qstack"
 )
 
 func ExampleFields() {
