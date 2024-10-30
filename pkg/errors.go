@@ -70,22 +70,28 @@ func (e WrongNumArgs) Error() string {
 		e.Count, e.Num)
 }
 
-type NoCallNoCmds struct {
+type Uncallable struct {
 	Cmd *Cmd
 }
 
-func (e NoCallNoCmds) Error() string {
-	return fmt.Sprintf(`%v requires either Call or Cmds`, e.Cmd.Name)
+func (e Uncallable) Error() string {
+	return fmt.Sprintf(`requires Call, Cmds, or Default: %v`, e.Cmd.Name)
 }
 
-type DefCmdReqCall struct {
+type CallOrDefault struct {
 	Cmd *Cmd
 }
 
-func (e DefCmdReqCall) Error() string {
-	return fmt.Sprintf(
-		`default (first) of Cmds requires Call: %q`,
-		e.Cmd.Name)
+func (e CallOrDefault) Error() string {
+	return fmt.Sprintf(`Call or Default (not both): %v`, e.Cmd.Name)
+}
+
+type NoCallNoDefault struct {
+	Cmd *Cmd
+}
+
+func (e NoCallNoDefault) Error() string {
+	return fmt.Sprintf(`either Call or Default required if no Cmds: %v`, e.Cmd.Name)
 }
 
 type IncorrectUsage struct {

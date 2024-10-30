@@ -14,9 +14,16 @@ var Cmd = &bonzai.Cmd{
 	Name:  `bon`,
 	Short: `manage bonzai composite command trees`,
 	//Comp:  comp.Cmds,
-	Comp: comp.ThreeLetterEngWeekday,
-	Vers: `v0.0.1`,
-	Cmds: []*bonzai.Cmd{barCmd, fooCmd},
+	Comp:    comp.ThreeLetterEngWeekday,
+	Vers:    `v0.0.1`,
+	Cmds:    []*bonzai.Cmd{barCmd, fooCmd},
+	Default: fooCmd,
+	/*
+		Call: func(x *bonzai.Cmd, _ ...string) error {
+			fmt.Println(`hello`)
+			return nil
+		},
+	*/
 }
 
 var otherCmd = &bonzai.Cmd{

@@ -32,12 +32,12 @@ type Cmd struct {
 	Long  string
 
 	// Faster than lots of "if" conditions in [Cmd.Call]
-	MinArgs int
-	MaxArgs int
-	NumArgs int
-	NoArgs  bool
-	MinParm int
-	MaxParm int
+	MinArgs  int
+	MaxArgs  int
+	NumArgs  int
+	NoArgs   bool
+	MinParam int
+	MaxParam int
 
 	// Descending tree of delegated commands
 	Cmds []*Cmd // delegated, first is always default
@@ -66,9 +66,10 @@ type Cmd struct {
 	FuncMap template.FuncMap
 
 	// Where the work happens
-	Init   Method // before Cmds/Call, good for validation
-	Call   Method // optional if Cmds
-	Caller *Cmd
+	Init    Method // before Cmds/Call, good for validation
+	Call    Method // optional if Cmds
+	Default *Cmd   // default command if no Call and no matching Cmds
+	Caller  *Cmd
 
 	// Pass bulk input efficiently (when args won't do)
 	Input io.Reader
@@ -304,28 +305,33 @@ func (x *Cmd) call(args []string) {
 	if x.Caller == nil {
 		x.Caller = x
 	}
-	if err := x.Call(x, args...); err != nil {
-		run.ExitError(err)
+	if x.Call != nil {
+		if err := x.Call(x, args...); err != nil {
+			run.ExitError(err)
+			return
+		}
+		run.Exit()
 		return
 	}
+	if x.Default != nil {
+		if err := x.Default.Call(x.Default, args...); err != nil {
+			run.ExitError(err)
+			return
+		}
+	}
 	run.Exit()
+	return
 }
 
 // default to first Cmds if no Call defined
 func (x *Cmd) exitUnlessCallable() {
-	if x.Call == nil {
-		if len(x.Cmds) > 0 {
-			fcmd := x.Cmds[0]
-			if fcmd.Call == nil {
-				run.ExitError(DefCmdReqCall{x})
-				return
-			}
-			fcmd.Caller = x
-			x = fcmd
-		} else {
-			run.ExitError(NoCallNoCmds{x})
-			return
-		}
+	switch {
+	case x.Call == nil && x.Default == nil:
+		run.ExitError(Uncallable{x})
+		return
+	case x.Call != nil && x.Default != nil:
+		run.ExitError(CallOrDefault{x})
+		return
 	}
 }
 
