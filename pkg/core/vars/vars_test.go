@@ -8,20 +8,20 @@ import (
 	"github.com/rwxrob/bonzai/pkg/core/vars"
 )
 
-func ExampleAdd() {
+func ExampleSet() {
 
-	file := `testdata/addtest.properties`
+	file := `testdata/settest.properties`
 
 	defer func() {
 		err := os.Remove(file)
 		fmt.Println(err)
 	}()
 
-	if err := vars.Add(`somekey`, `someval`, file); err != nil {
+	if err := vars.Set(`somekey`, `someval`, file); err != nil {
 		fmt.Println(err)
 	}
 
-	if err := vars.Add(`otherkey`, ``, file); err != nil {
+	if err := vars.Set(`otherkey`, ``, file); err != nil {
 		fmt.Println(err)
 	}
 

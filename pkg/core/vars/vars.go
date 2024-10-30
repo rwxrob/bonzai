@@ -76,11 +76,11 @@ type Driver interface {
 	Edit() error                       // open default editor, then load
 }
 
-// Add inserts a key/value pair into a [Map], loading from file if it
+// Set inserts a key/value pair into a [Map], loading from file if it
 // exists and initializing a new one if it does not with [Map.Init].
 // Returns a [MissingArg] error if any required arguments are missing or
 // if a failure occurs while initializing or setting the map.
-func Add(key, value, file string) error {
+func Set(key, value, file string) error {
 	var m *Map
 
 	if len(file) == 0 {
