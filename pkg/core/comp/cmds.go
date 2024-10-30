@@ -23,7 +23,7 @@ func (_Cmds) Complete(an any, args ...string) []string {
 
 	list := []string{}
 	for _, c := range x.Cmds {
-		if c.IsHide() {
+		if c.IsHidden() {
 			continue
 		}
 		list = append(list, c.Name)

@@ -8,20 +8,23 @@ import (
 )
 
 var Cmd = &bonzai.Cmd{
-	Name:    `clip`,
-	Summary: `manage and play YouTube clips with mpv`,
-	Version: `v0.0.1`,
-	Cmds:    []*bonzai.Cmd{PlayCmd},
+	Name:  `clip`,
+	Short: `manage and play YouTube clips with mpv`,
+	Vers:  `v0.0.1`,
+	Cmds:  []*bonzai.Cmd{PlayCmd},
 }
 
 var PlayCmd = &bonzai.Cmd{
 	Name: `play`,
 	Call: func(_ *bonzai.Cmd, _ ...string) error {
-		data := vars.Get(
+		data, err := vars.Get(
 			`.clip.data`,
 			`CLIP_DATA`,
 			os.UserCacheDir(),
 		)
+		if err != nil {
+			return err
+		}
 		_ = data
 		//dir = os.Getenv(`CLIP_DIR`)
 		//screen = os.Getenv(`CLIP_SCREEN`)

@@ -12,20 +12,21 @@ import (
 )
 
 var Cmd = &bonzai.Cmd{
-	Name:    `var`,
-	Version: `v0.7.0`,
-	Summary: `cache variables in {{ exestatedir "vars.properties"}}`,
-	// Comp: vars.Comp
-	Commands: []*bonzai.Cmd{getCmd}, //	initCmd, setCmd, fileCmd, dataCmd, editCmd, deleteCmd,
-
+	Name:  `var`,
+	Vers:  `v0.8.0`,
+	Short: `persistent variables in {{ exestatedir "vars.properties"}}`,
+	Cmds:  []*bonzai.Cmd{getCmd}, //	initCmd, setCmd, fileCmd, dataCmd, editCmd, deleteCmd,
 }
 
 var getCmd = &bonzai.Cmd{
 	Name:    `get`,
-	Summary: `print a cached variable`,
+	Short:   `print a variable`,
 	NumArgs: 1,
 	Call: func(x *bonzai.Cmd, args ...string) error {
-		val := x.Caller.Caller.Get(args[0])
+		val, err := x.Caller.Caller.Get(args[0])
+		if err != nil {
+			return err
+		}
 		term.Print(val)
 		return nil
 	},
