@@ -70,9 +70,36 @@ func NewMap() *Map {
 // the new map. The map is always returned (never nil).
 func NewMapFrom(file string) (*Map, error) {
 	m := NewMap()
+	if len(file) == 0 {
+		return nil, MissingArg{`file`}
+	}
 	m.File = file
 	err := m.loadFile(m.File)
 	return m, err
+}
+
+// NewMapFromInit is the same as [NewMapFrom] except it creates a file
+// at the location if it does not already exist by calling [Init] on
+// a new [Map] created from [NewMap].
+func NewMapFromInit(file string) (*Map, error) {
+	var m *Map
+	if len(file) == 0 {
+		return nil, MissingArg{`file`}
+	}
+	if futil.Exists(file) {
+		var err error
+		m, err = NewMapFrom(file)
+		if err != nil {
+			return nil, err
+		}
+	} else {
+		m = NewMap()
+		m.File = file
+		if err := m.Init(); err != nil {
+			return nil, err
+		}
+	}
+	return m, nil
 }
 
 // loadFile calls [Load] after buffering the file.

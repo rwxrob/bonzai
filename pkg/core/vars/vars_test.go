@@ -32,3 +32,18 @@ func ExampleSet() {
 	// otherkey=
 	// <nil>
 }
+
+func ExampleGet() {
+
+	file := `testdata/vars.properties`
+
+	value, err := vars.Get(`.pomo.warn`, file)
+	if err != nil {
+		fmt.Println(err)
+	}
+
+	fmt.Println(value)
+
+	// Output:
+	// 1m
+}

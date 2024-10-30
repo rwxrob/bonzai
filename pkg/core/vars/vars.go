@@ -1,7 +1,5 @@
 package vars
 
-import "github.com/rwxrob/bonzai/pkg/core/futil"
-
 // Driver specifies anything that implements a persistence layer for
 // high-speed caching of key/value combinations. Implementations may use
 // whatever technology for storing the cache but must represent the data
@@ -76,34 +74,24 @@ type Driver interface {
 	Edit() error                       // open default editor, then load
 }
 
-// Set inserts a key/value pair into a [Map], loading from file if it
-// exists and initializing a new one if it does not with [Map.Init].
-// Returns a [MissingArg] error if any required arguments are missing or
-// if a failure occurs while initializing or setting the map.
+// Set saves a key/value pair to the specified file. Returning and error
+// if any args are missing or file does not exist or could not be
+// created .
 func Set(key, value, file string) error {
-	var m *Map
-
-	if len(file) == 0 {
-		return MissingArg{`file`}
+	m, err := NewMapFromInit(file)
+	if err != nil {
+		return err
 	}
-
-	if len(key) == 0 {
-		return EmptyKey{}
-	}
-
-	if futil.Exists(file) {
-		var err error
-		m, err = NewMapFrom(file)
-		if err != nil {
-			return err
-		}
-	} else {
-		m = NewMap()
-		m.File = file
-		if err := m.Init(); err != nil {
-			return err
-		}
-	}
-
 	return m.Set(key, value)
+}
+
+// Get retrieves the value associated with the key from the [Map]
+// initialized from the specified file. It returns an error if the map
+// cannot be initialized.
+func Get(key, file string) (string, error) {
+	m, err := NewMapFromInit(file)
+	if err != nil {
+		return "", err
+	}
+	return m.Get(key)
 }
