@@ -8,7 +8,7 @@ import (
 	"log"
 
 	"github.com/rwxrob/bonzai/pkg/core/ds/qstack"
-	"github.com/rwxrob/bonzai/pkg/json"
+	"github.com/rwxrob/bonzai/pkg/core/json"
 )
 
 // Node is an implementation of a "node" from traditional rooted node
