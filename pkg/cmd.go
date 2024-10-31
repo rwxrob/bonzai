@@ -267,7 +267,7 @@ func (x *Cmd) Run(args ...string) {
 	x.recurseIfArgs(args)
 	x.exitUnlessValidName()
 	x.recurseIfMulti(args)
-	x.detectBashCompletion(args)
+	x.detectCompletion(args)
 	c, args := x.Seek(os.Args[1:])
 	if c == nil {
 		run.ExitError(IncorrectUsage{c})
@@ -402,7 +402,7 @@ func (x *Cmd) recurseIfMulti(args []string) {
 }
 
 // complete -C foo foo (man bash, Programmable Completion)
-func (x *Cmd) detectBashCompletion(args []string) {
+func (x *Cmd) detectCompletion(args []string) {
 
 	if line := os.Getenv("COMP_LINE"); len(line) > 0 {
 
