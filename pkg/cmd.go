@@ -220,10 +220,8 @@ func (x *Cmd) HideSlice() []string {
 // made to support it by adding a few functions from the
 // oh-my-zsh code base).
 //
-// Completion mode is triggered by the detection of the bash shell and
-// the COMP_LINE environment variable. (complete -C cmd cmd) that is
-// unique to bash. All other shells can use the "help json" structured
-// data create external completion scripts.
+// Completion mode is triggered by the detection of the COMP_LINE
+// environment variable. (complete -C cmd cmd).
 //
 // When COMP_LINE is set, Run prints a list of possible completions to
 // standard output by calling the [Completer.Complete] function of its
@@ -406,7 +404,7 @@ func (x *Cmd) recurseIfMulti(args []string) {
 // complete -C foo foo (man bash, Programmable Completion)
 func (x *Cmd) detectBashCompletion(args []string) {
 
-	if line := os.Getenv("COMP_LINE"); len(line) > 0 && run.ShellIsBash() {
+	if line := os.Getenv("COMP_LINE"); len(line) > 0 {
 
 		// find the leaf command
 		lineargs := run.ArgsFrom(line)
