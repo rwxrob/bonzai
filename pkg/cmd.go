@@ -25,7 +25,7 @@ type Cmd struct {
 	Alias  string // ex: rm|d|del
 	Params string // ex: mon|wed|fri
 
-	// minimal when [Cmd.Docs] is overkill
+	// Minimal when [Cmd.Docs] is overkill
 	Usage string
 	Vers  string
 	Short string
@@ -43,7 +43,7 @@ type Cmd struct {
 	Cmds []*Cmd // delegated, first is always default
 	Hide string // disables completion for Cmds
 
-	// self-completion support: complete -C foo foo
+	// Self-completion support: complete -C foo foo
 	Comp Completer
 
 	// Default vars declaration and initial values. Does not overwrite
