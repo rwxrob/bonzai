@@ -9,7 +9,7 @@ import (
 
 func ExampleCmds_Complete() {
 	foo := new(bonzai.Cmd)
-	foo.Params = `box`
+	foo.Opts = `box`
 	foo.Add(`bar`)
 	foo.Add(`blah`)
 	/*

@@ -10,17 +10,18 @@ import (
 	"github.com/rwxrob/bonzai/pkg/core/comp"
 )
 
-func ExampleParams_Complete() {
+func ExampleOpts_Complete() {
 	foo := new(bonzai.Cmd)
-	foo.Params = `box`
+	foo.Opts = `box`
+	foo.Comp = comp.Opts
 	foo.Add(`bar`)
 	foo.Add(`blah`)
 
 	// everything that begins with b (which is everything)
-	fmt.Println(comp.Params.Complete(foo, `b`))
+	fmt.Println(comp.Opts.Complete(foo, `b`))
 
 	// everything that begins with bl (just blah)
-	fmt.Println(comp.Params.Complete(foo, `bl`))
+	fmt.Println(comp.Opts.Complete(foo, `bl`))
 
 	//Output:
 	// [box]

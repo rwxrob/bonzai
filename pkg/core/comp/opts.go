@@ -7,13 +7,13 @@ import (
 	"github.com/rwxrob/bonzai/pkg/core/fn/filt"
 )
 
-type _Params struct{}
+type _Opts struct{}
 
-var Params = new(_Params)
+var Opts = new(_Opts)
 
-// Complete returns all [Cmd.Params] that match [futil.HasPrefix] passed the
+// Complete returns all [Cmd.Opts] that match [futil.HasPrefix] passed the
 // first argument. See [bonzai.Completer].
-func (_Params) Complete(an any, args ...string) []string {
+func (_Opts) Complete(an any, args ...string) []string {
 
 	x, is := an.(*bonzai.Cmd)
 	if !is {
@@ -21,7 +21,7 @@ func (_Params) Complete(an any, args ...string) []string {
 		return []string{}
 	}
 
-	list := x.ParamsSlice()
+	list := x.OptsSlice()
 
 	if len(args) == 0 {
 		return list

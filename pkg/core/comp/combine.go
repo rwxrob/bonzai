@@ -1,6 +1,9 @@
 package comp
 
-import bonzai "github.com/rwxrob/bonzai/pkg"
+import (
+	bonzai "github.com/rwxrob/bonzai/pkg"
+	"github.com/rwxrob/bonzai/pkg/core/fn/redu"
+)
 
 type Combine []bonzai.Completer
 
@@ -11,10 +14,10 @@ func (completers Combine) Complete(an any, args ...string) []string {
 	for _, comp := range completers {
 		list = append(list, comp.Complete(an, args...)...)
 	}
-	return list
+	return redu.Unique(list)
 }
 
 var (
-	CmdsParams        = Combine{Cmds, Params}
-	FileDirCmdsParams = Combine{FileDir, CmdsParams}
+	CmdsOpts        = Combine{Cmds, Opts}
+	FileDirCmdsOpts = Combine{FileDir, CmdsOpts}
 )

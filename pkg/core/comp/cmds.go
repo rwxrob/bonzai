@@ -29,5 +29,9 @@ func (_Cmds) Complete(an any, args ...string) []string {
 		list = append(list, c.Name)
 	}
 
+	if len(args) == 0 {
+		return list
+	}
+
 	return filt.HasPrefix(list, args[0])
 }
