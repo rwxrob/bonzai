@@ -7,7 +7,6 @@ import (
 	"bytes"
 	"embed"
 	"fmt"
-	"io"
 	"log"
 	"os"
 	"strings"
@@ -21,9 +20,18 @@ import (
 )
 
 type Cmd struct {
-	Name   string // ex: delete
-	Alias  string // ex: rm|d|del
-	Params string // ex: mon|wed|fri
+	Name  string // ex: delete
+	Alias string // ex: rm|d|del
+	Opts  string // ex: mon|wed|fri
+
+	// Work done by this command
+	Init Method // run-time initialization/validation
+	Call Method // if nil, Def must be set
+
+	// Delegation to subcommands
+	Def  *Cmd   // default [Cmd] if no Call and no matching Cmds
+	Cmds []*Cmd // compiled/composed commands in no particular order
+	Hide string // disable completion: ex: old|defunct
 
 	// Minimal when [Cmd.Docs] is overkill
 	Usage string
@@ -31,22 +39,17 @@ type Cmd struct {
 	Short string
 	Long  string
 
-	// Faster than lots of "if" conditions in [Cmd.Call]
-	MinArgs  int
-	MaxArgs  int
-	NumArgs  int
-	NoArgs   bool
-	MinParam int
-	MaxParam int
-
-	// Descending tree of delegated commands
-	Cmds []*Cmd // delegated, first is always default
-	Hide string // disables completion for Cmds
+	// Faster than lots of "if" conditions in [Cmd.Call]. Consider
+	// [Cmd.Init] when more complex argument validation is needed.
+	MinArgs   int    // min
+	MaxArgs   int    // max
+	NumArgs   int    // exact, also used for NoArg (0)
+	MatchArgs string // PCRE/Go regular expression (requires Usage)
 
 	// Self-completion support: complete -C foo foo
 	Comp Completer
 
-	// Default vars declaration and initial values. Does not overwrite
+	// Def vars declaration and initial values. Does not overwrite
 	// existing vars. All vars used with [Cmd.Get] and [Cmd.Set] must be declared
 	// even if empty. See [Vars], [VarsDriver], and package [is].
 	Vars map[string]string
@@ -61,21 +64,19 @@ type Cmd struct {
 	// embedded into a single binary.
 	Docs embed.FS
 
-	// Functions to be used for the [Cmd.Fill] command which is automatically
-	// called on most string properties (ex: {{ exename }})
+	// Template commands/functions to be added (or overwrite) the internal
+	// [FuncMap] collection of template commands used by the [Cmd.Fill]
+	// command. These apply to this [Cmd] only and will not be available
+	// to subcommands. To share between commands (including subcommands)
+	// assign the same FuncMap to all of them.
 	FuncMap template.FuncMap
 
-	// Where the work happens
-	Init    Method // before Cmds/Call, good for validation
-	Call    Method // optional if Cmds
-	Default *Cmd   // default command if no Call and no matching Cmds
-	Caller  *Cmd
-
-	// Pass bulk input efficiently (when args won't do)
-	Input io.Reader
+	// Following are never assigned in declarations but are instead
+	// set at [Run] time for use in [Call] methods:
+	Caller *Cmd // delegation
 
 	aliases  []string        // see [CacheAlias]
-	params   []string        // see [CacheParams]
+	opts     []string        // see [CacheOpts]
 	hidden   []string        // see [CacheHide]
 	cmdAlias map[string]*Cmd // see [CacheCmdAlias]
 }
@@ -134,24 +135,24 @@ func (x *Cmd) CmdAliasMap() map[string]*Cmd {
 	return x.cmdAlias
 }
 
-// CacheParams updates the [params] cache by splitting [Params]
-// . Remember to call this whenever dynamically altering the value at
+// CacheOpts updates the [opts] cache by splitting [Opts]. Remember
+// to call this whenever dynamically altering the value at
 // runtime.
-func (x *Cmd) CacheParams() {
-	if len(x.Params) > 0 {
-		x.params = strings.Split(x.Params, `|`)
+func (x *Cmd) CacheOpts() {
+	if len(x.Opts) > 0 {
+		x.opts = strings.Split(x.Opts, `|`)
 		return
 	}
-	x.params = []string{}
+	x.opts = []string{}
 }
 
-// ParamsSlice updates the [params] internal cache ([CacheParams]) and
+// OptsSlice updates the [params] internal cache ([CacheOpts]) and
 // returns it as a slice.
-func (x *Cmd) ParamsSlice() []string {
-	if x.params == nil {
-		x.CacheParams()
+func (x *Cmd) OptsSlice() []string {
+	if x.opts == nil {
+		x.CacheOpts()
 	}
-	return x.params
+	return x.opts
 }
 
 // CacheAlias updates the [aliases] cache by splitting [Alias]
@@ -311,8 +312,8 @@ func (x *Cmd) call(args []string) {
 		run.Exit()
 		return
 	}
-	if x.Default != nil {
-		if err := x.Default.Call(x.Default, args...); err != nil {
+	if x.Def != nil {
+		if err := x.Def.Call(x.Def, args...); err != nil {
 			run.ExitError(err)
 			return
 		}
@@ -324,11 +325,11 @@ func (x *Cmd) call(args []string) {
 // default to first Cmds if no Call defined
 func (x *Cmd) exitUnlessCallable() {
 	switch {
-	case x.Call == nil && x.Default == nil:
+	case x.Call == nil && x.Def == nil:
 		run.ExitError(Uncallable{x})
 		return
-	case x.Call != nil && x.Default != nil:
-		run.ExitError(CallOrDefault{x})
+	case x.Call != nil && x.Def != nil:
+		run.ExitError(CallOrDef{x})
 		return
 	}
 }
@@ -357,9 +358,6 @@ func (x *Cmd) recurseIfArgs(args []string) {
 
 func (x *Cmd) exitIfBadArgs(args []string) {
 	switch {
-	case len(args) > 0 && x.NoArgs:
-		run.ExitError(TooManyArgs{len(args), 0})
-		return
 	case len(args) < x.MinArgs:
 		run.ExitError(NotEnoughArgs{len(args), x.MinArgs})
 		return
@@ -568,12 +566,12 @@ func (x *Cmd) Print(tmpl string) { fmt.Print(x.Fill(tmpl)) }
 // alternative or [term.Print].
 func (x *Cmd) Println(tmpl string) { fmt.Println(x.Fill(tmpl)) }
 
-// Param returns Param matching name if found, empty string if not.
-func (x *Cmd) Param(p string) string {
-	if x.params == nil {
-		x.CacheParams()
+// Opt returns the [Opts] entry matching name if found, empty string if not.
+func (x *Cmd) Opt(p string) string {
+	if x.opts == nil {
+		x.CacheOpts()
 	}
-	for _, c := range x.params {
+	for _, c := range x.opts {
 		if p == c {
 			return c
 		}
