@@ -4,5 +4,5 @@ go 1.23.0
 
 require (
 	github.com/rogpeppe/go-internal v1.13.1
-	github.com/rwxrob/bonzai/uniq v0.0.1-beta.1
+	github.com/rwxrob/bonzai/uniq v0.0.1-beta.2
 )
