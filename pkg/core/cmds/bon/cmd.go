@@ -1,9 +1,13 @@
 package bon
 
 import (
+	"text/template"
+
 	bonzai "github.com/rwxrob/bonzai/pkg"
 	"github.com/rwxrob/bonzai/pkg/core/comp"
+	"github.com/rwxrob/bonzai/pkg/core/opts"
 	"github.com/rwxrob/bonzai/pkg/core/run"
+	"github.com/rwxrob/bonzai/pkg/core/to"
 )
 
 func init() {
@@ -13,17 +17,15 @@ func init() {
 var Cmd = &bonzai.Cmd{
 	Name:  `bon`,
 	Short: `manage bonzai composite command trees`,
-	//Comp:  comp.Cmds,
-	Comp:    comp.ThreeLetterEngWeekday,
-	Vers:    `v0.0.1`,
-	Cmds:    []*bonzai.Cmd{barCmd, fooCmd},
-	Default: fooCmd,
-	/*
-		Call: func(x *bonzai.Cmd, _ ...string) error {
-			fmt.Println(`hello`)
-			return nil
-		},
-	*/
+	Comp:  comp.Opts,
+	Opts:  opts.WeekDaysAbbr,
+	Vers:  `v0.0.1`,
+	Cmds:  []*bonzai.Cmd{barCmd, fooCmd},
+	Def:   fooCmd,
+	Long:  ``,
+
+	//Comp:    comp.Cmds,
+	//Comp:    comp.ThreeLetterEngWeekday,
 }
 
 var otherCmd = &bonzai.Cmd{
@@ -36,12 +38,14 @@ var otherCmd = &bonzai.Cmd{
 }
 
 var fooCmd = &bonzai.Cmd{
-	Name:   `foo`,
-	Alias:  `f|something`,
-	Params: `one|two|three`,
-	Comp:   comp.Combine{comp.CmdsParams, comp.ThreeLetterEngWeekday},
-	Call: func(x *bonzai.Cmd, _ ...string) error {
-		x.Println(`hello from {{.Name}} in {{exepath}}`)
+	Name:    `foo`,
+	Alias:   `f|something`,
+	Opts:    `one|two|three`,
+	Comp:    comp.Opts,
+	FuncMap: template.FuncMap{},
+	Call: func(x *bonzai.Cmd, args ...string) error {
+		x.FuncMap[`args`] = func() string { return to.Human(args) }
+		x.Println(`hello from {{pre .Name}} with args {{args}} in {{exepath}}`)
 		return nil
 	},
 }
@@ -49,7 +53,7 @@ var fooCmd = &bonzai.Cmd{
 var barCmd = &bonzai.Cmd{
 	Name:  `bar`,
 	Alias: `whatever|b`,
-	Comp:  comp.FileDirCmdsParams,
+	Comp:  comp.FileDirCmdsOpts,
 	Cmds:  []*bonzai.Cmd{otherCmd},
 	Vars: map[string]string{
 		`some`: `thing`,

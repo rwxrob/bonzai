@@ -75,23 +75,23 @@ type Uncallable struct {
 }
 
 func (e Uncallable) Error() string {
-	return fmt.Sprintf(`requires Call, Cmds, or Default: %v`, e.Cmd.Name)
+	return fmt.Sprintf(`requires Call, Cmds, or Def: %v`, e.Cmd.Name)
 }
 
-type CallOrDefault struct {
+type CallOrDef struct {
 	Cmd *Cmd
 }
 
-func (e CallOrDefault) Error() string {
-	return fmt.Sprintf(`Call or Default (not both): %v`, e.Cmd.Name)
+func (e CallOrDef) Error() string {
+	return fmt.Sprintf(`Call or Def (not both): %v`, e.Cmd.Name)
 }
 
-type NoCallNoDefault struct {
+type NoCallNoDef struct {
 	Cmd *Cmd
 }
 
-func (e NoCallNoDefault) Error() string {
-	return fmt.Sprintf(`either Call or Default required if no Cmds: %v`, e.Cmd.Name)
+func (e NoCallNoDef) Error() string {
+	return fmt.Sprintf(`either Call or Def required if no Cmds: %v`, e.Cmd.Name)
 }
 
 type IncorrectUsage struct {
