@@ -12,11 +12,11 @@ import (
 	"strings"
 	"text/template"
 
-	"github.com/rwxrob/bonzai/pkg/core/ds/qstack"
-	"github.com/rwxrob/bonzai/pkg/core/fn/each"
-	"github.com/rwxrob/bonzai/pkg/core/is"
-	"github.com/rwxrob/bonzai/pkg/core/run"
-	"github.com/rwxrob/bonzai/pkg/core/to"
+	"github.com/rwxrob/bonzai/ds/qstack"
+	"github.com/rwxrob/bonzai/fn/each"
+	"github.com/rwxrob/bonzai/is"
+	"github.com/rwxrob/bonzai/run"
+	"github.com/rwxrob/bonzai/to"
 )
 
 type Cmd struct {

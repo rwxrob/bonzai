@@ -5,11 +5,11 @@ import (
 	"path/filepath"
 	"text/template"
 
-	"github.com/rwxrob/bonzai/pkg/core/futil"
-	"github.com/rwxrob/bonzai/pkg/core/mark"
-	"github.com/rwxrob/bonzai/pkg/core/run"
-	"github.com/rwxrob/bonzai/pkg/core/term"
-	"github.com/rwxrob/bonzai/pkg/core/to"
+	"github.com/rwxrob/bonzai/futil"
+	"github.com/rwxrob/bonzai/mark"
+	"github.com/rwxrob/bonzai/run"
+	"github.com/rwxrob/bonzai/term"
+	"github.com/rwxrob/bonzai/to"
 )
 
 // This file contains the BonzaiMark builtins that Cmd authors can use

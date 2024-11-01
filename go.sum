@@ -1,5 +1,11 @@
 github.com/rogpeppe/go-internal v1.13.1 h1:KvO1DLK/DRN07sQ1LQKScxyZJuNnedQ5/wKSR38lUII=
 github.com/rogpeppe/go-internal v1.13.1/go.mod h1:uMEvuHeurkdAXX61udpOXGD/AzZDWNMNyH2VO9fmH0o=
+github.com/rwxrob/bonzai/pkg/core/futil v0.0.1-beta.1 h1:xxPeC667ZMuVulr3EOWOoldZCeXHTmFlHMOIjEacma0=
+github.com/rwxrob/bonzai/pkg/core/futil v0.0.1-beta.1/go.mod h1:7/o3U0Am21ZGLeIlFB0FZ7Kt9qJ4WKCKsnhAww2g450=
+github.com/rwxrob/bonzai/pkg/core/term v0.0.1-beta.1 h1:D6w/4Q+hjXiNA26z31wNRioLYWwYjjPZYTVBfLI945Q=
+github.com/rwxrob/bonzai/pkg/core/term v0.0.1-beta.1/go.mod h1:ZM++InOayRCaYBXYHmaX2TkJYp7jpYl2TUbgw+rDG8o=
+github.com/rwxrob/bonzai/pkg/core/uniq v0.0.1-beta.1 h1:HhlagHF8/AGpf/8862MXvQcw2/vPnCDWec6M6f62x8Y=
+github.com/rwxrob/bonzai/pkg/core/uniq v0.0.1-beta.1/go.mod h1:fHO8zzPTaxbk//6hPDGPPLzAfQ2gJNfps1EaMm3tvQM=
 golang.org/x/crypto v0.28.0 h1:GBDwsMXVQi34v5CCYUm2jkJvu4cbtru2U4TN2PSyQnw=
 golang.org/x/crypto v0.28.0/go.mod h1:rmgy+3RHxRZMyY0jjAJShp2zgEdOqj2AO7U0pYmeQ7U=
 golang.org/x/sys v0.26.0 h1:KHjCJyddX0LoSTb3J+vWpupP9p0oznkqVk/IfjymZbo=

@@ -3,7 +3,7 @@ package bonzai
 import (
 	"log"
 
-	"github.com/rwxrob/bonzai/pkg/core/vars"
+	"github.com/rwxrob/bonzai/vars"
 )
 
 var Vars vars.Driver

@@ -9,7 +9,7 @@ import (
 func ExampleCmd_AliasSlice() {
 
 	barCmd := &bonzai.Cmd{
-		Name:    `bar`,
+		Name:  `bar`,
 		Alias: `b|rab`,
 		Call: func(_ *bonzai.Cmd, _ ...string) error {
 			fmt.Println(`i am bar`)

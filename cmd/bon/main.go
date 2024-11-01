@@ -1,6 +1,6 @@
 package main
 
-import "github.com/rwxrob/bonzai/pkg/core/cmds/bon"
+import "github.com/rwxrob/bonzai/pkg/cmd/bon"
 
 func main() {
 	bon.Cmd.Run()
