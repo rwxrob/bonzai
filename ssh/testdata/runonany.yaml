@@ -1,0 +1,35 @@
+pem: &ukey |
+   -----BEGIN OPENSSH PRIVATE KEY-----
+   b3BlbnNzaC1rZXktdjEAAAAABG5vbmUAAAAEbm9uZQAAAAAAAAABAAAAMwAAAAtzc2gtZW
+   QyNTUxOQAAACB0jdh2hglPJchsrVgnJjTb9bVHIjugS5wlJipnIJiO8gAAAJAZeyGhGXsh
+   oQAAAAtzc2gtZWQyNTUxOQAAACB0jdh2hglPJchsrVgnJjTb9bVHIjugS5wlJipnIJiO8g
+   AAAEDdV9IJ3LNTiK7D0MFz7IR1Cz/VdqqH6SgOtiDz8/5073SN2HaGCU8lyGytWCcmNNv1
+   tUciO6BLnCUmKmcgmI7yAAAACXJ3eHJvYkB0dgECAwQ=
+   -----END OPENSSH PRIVATE KEY-----
+
+user1: &user1
+  name: user
+  key: *ukey
+user2: &user2
+  name: user
+  key: *ukey
+user3: &user3
+  name: user
+  key: *ukey
+
+hosts:
+  ssh-server-common: &server
+    addr: localhost
+      #auth: |
+      #|1|5J/P0GYdfPv9tBWFyT7acyaS13k=|3qbzPi/HhiClHcPKLBxnl85E8l4= ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIFx9+GXY1oXluW6TKKGML2nVJ3EAE1ge10dyxNe06hkZ
+
+clients:
+  - host: *server
+    user: *user1
+    port: 2221
+  - host: *server
+    user: *user2
+    port: 2222
+  - host: *server
+    user: *user3
+    port: 2223

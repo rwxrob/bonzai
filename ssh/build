@@ -1,0 +1,116 @@
+#!/usr/bin/env bash
+
+read -r -d '' helptxt <<EOF
+
+This script is used for building and running a podman test container
+image locally.
+
+	help          - print this help message
+	image         - build the multi-use runonany image
+	clean         - stop the servers and remove runonany image
+	start-server  - start a single server (requires 1, 2, or 3)
+	start-servers - start all three servers (skip if started)
+	stop-server   - stop a single server (requires 1, 2, or 3)
+	stop-servers  - stop all three servers (takes a while)
+	check-servers - check all three servers with ssh
+	watch         - watch output of 'runonany hostname' on all
+
+Full documentation for how to run the tests is included in the
+README.md file.
+
+EOF
+
+# Functions that begin with "x." are automatically enabled
+# for completion for those that wish to enable it (see "completion and
+# delegation" within the script for details):
+
+x.help() {
+	echo "$helptxt"
+}
+
+x.image() {
+	podman build -t runonany .
+}
+
+x.clean() {
+	x.stop-servers
+	podman rmi runonany
+}
+
+x.start-server() {
+	[[ -z "$1" ]] && echo "missing server number" && return 1
+	podman run -d -p "222$1:22" --rm --name "server$1" \
+		--hostname "server$1" runonany server
+}
+
+x.stop-server() {
+	[[ -z "$1" ]] && echo "missing server number" && return 1
+	podman stop "server$1"
+}
+
+x.start-servers() {
+	for i in {1..3}; do
+		if [[ -z "$(podman ps -q --filter "name=server$i")" ]]; then
+			x.start-server "$i"
+		fi
+	done
+}
+
+x.stop-servers() {
+	for i in {1..3}; do
+		x.stop-server "$i"
+	done
+}
+
+x.check-servers() {
+	[[ -z "$RUNONANY_TARGET" ]] && echo 'RUNONANY_TARGET' required && return 1
+	for i in {1..3}; do
+		podman run -it --rm runonany check "$RUNONANY_TARGET" "$i"
+	done
+}
+
+x.watch() {
+	[[ -z "$RUNONANY_TARGET" ]] && echo 'RUNONANY_TARGET' required && return 1
+	podman run -it --rm -e RUNONANY_TARGET="$RUNONANY_TARGET" runonany watch "$@" <&1
+}
+
+# --------------------- completion and delegation --------------------
+
+# The following provides bash completion with `complete -C build build`
+# by deriving the names of the verbs for tab completion from those
+# beginning with x. above. No other argument completion is provided.
+
+while IFS= read -r line; do
+	[[ $line =~ ^declare\ -f\ x\. ]] || continue
+	COMMANDS+=("${line##declare -f x.}")
+done < <(declare -F)
+mapfile -t COMMANDS < \
+	<(LC_COLLATE=C sort < <(printf "%s\n" "${COMMANDS[@]}"))
+
+if [[ -n $COMP_LINE ]]; then
+	line=${COMP_LINE#* }
+	for c in "${COMMANDS[@]}"; do
+		[[ ${c:0:${#line}} == "${line,,}" ]] && echo "$c"
+	done
+	exit
+fi
+
+for c in "${COMMANDS[@]}"; do
+	if [[ $c == "$EXE" ]]; then
+		"x.$EXE" "$@"
+		exit $?
+	fi
+done
+
+if [[ -n "$1" ]]; then
+	declare CMD="$1"
+	shift
+	for c in "${COMMANDS[@]}"; do
+		declare cmd
+		cmd=$(command -v "x.$c")
+		if [[ $c == "$CMD" && -n "$cmd" ]]; then
+			"x.$CMD" "$@"
+			exit $?
+		fi
+	done
+fi

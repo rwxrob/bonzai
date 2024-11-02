@@ -1,0 +1,2030 @@
+Name: CommonMark
+Tests:
+- I: some
+  O: thing
+Sections:
+- Name: Tabs
+  Tests:
+
+  - I: "\tfoo\tbaz\t\tbim\n"
+    O: "<pre><code>foo\tbaz\t\tbim\n</code></pre>\n"
+
+  - I: "  \tfoo\tbaz\t\tbim\n"
+    O: "<pre><code>foo\tbaz\t\tbim\n</code></pre>\n"
+
+  - I: "    a\ta\n    ὐ\ta\n"
+    O: "<pre><code>a\ta\nὐ\ta\n</code></pre>\n"
+
+  - I: "  - foo\n\n\tbar\n"
+    O: "<ul>\n<li>\n<p>foo</p>\n<p>bar</p>\n</li>\n</ul>\n"
+
+  - I: "- foo\n\n\t\tbar\n"
+    O: "<ul>\n<li>\n<p>foo</p>\n<pre><code>  bar\n</code></pre>\n</li>\n</ul>\n"
+
+  - I: ">\t\tfoo\n"
+    O: "<blockquote>\n<pre><code>  foo\n</code></pre>\n</blockquote>\n"
+
+  - I: "-\t\tfoo\n"
+    O: "<ul>\n<li>\n<pre><code>  foo\n</code></pre>\n</li>\n</ul>\n"
+
+  - I: "    foo\n\tbar\n"
+    O: "<pre><code>foo\nbar\n</code></pre>\n"
+
+  - I: " - foo\n   - bar\n\t - baz\n"
+    O: "<ul>\n<li>foo\n<ul>\n<li>bar\n<ul>\n<li>baz</li>\n</ul>\n</li>\n</ul>\n</li>\n</ul>\n"
+
+  - I: "#\tFoo\n"
+    O: "<h1>Foo</h1>\n"
+
+  - I: "*\t*\t*\t\n"
+    O: "<hr />\n"
+
+- Name: Precedence
+  Tests:
+
+  - I: "- `one\n- two`\n"
+    O: "<ul>\n<li>`one</li>\n<li>two`</li>\n</ul>\n"
+
+- Name: Thematic breaks
+  Tests:
+
+  - I: "***\n---\n___\n"
+    O: "<hr />\n<hr />\n<hr />\n"
+
+  - I: "+++\n"
+    O: "<p>+++</p>\n"
+
+  - I: "===\n"
+    O: "<p>===</p>\n"
+
+  - I: "--\n**\n__\n"
+    O: "<p>--\n**\n__</p>\n"
+
+  - I: " ***\n  ***\n   ***\n"
+    O: "<hr />\n<hr />\n<hr />\n"
+
+  - I: "    ***\n"
+    O: "<pre><code>***\n</code></pre>\n"
+
+  - I: "Foo\n    ***\n"
+    O: "<p>Foo\n***</p>\n"
+
+  - I: "_____________________________________\n"
+    O: "<hr />\n"
+
+  - I: " - - -\n"
+    O: "<hr />\n"
+
+  - I: " **  * ** * ** * **\n"
+    O: "<hr />\n"
+
+  - I: "-     -      -      -\n"
+    O: "<hr />\n"
+
+  - I: "- - - -    \n"
+    O: "<hr />\n"
+
+  - I: "_ _ _ _ a\n\na------\n\n---a---\n"
+    O: "<p>_ _ _ _ a</p>\n<p>a------</p>\n<p>---a---</p>\n"
+
+  - I: " *-*\n"
+    O: "<p><em>-</em></p>\n"
+
+  - I: "- foo\n***\n- bar\n"
+    O: "<ul>\n<li>foo</li>\n</ul>\n<hr />\n<ul>\n<li>bar</li>\n</ul>\n"
+
+  - I: "Foo\n***\nbar\n"
+    O: "<p>Foo</p>\n<hr />\n<p>bar</p>\n"
+
+  - I: "Foo\n---\nbar\n"
+    O: "<h2>Foo</h2>\n<p>bar</p>\n"
+
+  - I: "* Foo\n* * *\n* Bar\n"
+    O: "<ul>\n<li>Foo</li>\n</ul>\n<hr />\n<ul>\n<li>Bar</li>\n</ul>\n"
+
+  - I: "- Foo\n- * * *\n"
+    O: "<ul>\n<li>Foo</li>\n<li>\n<hr />\n</li>\n</ul>\n"
+
+- Name: ATX headings
+  Tests:
+
+  - I: "# foo\n## foo\n### foo\n#### foo\n##### foo\n###### foo\n"
+    O: "<h1>foo</h1>\n<h2>foo</h2>\n<h3>foo</h3>\n<h4>foo</h4>\n<h5>foo</h5>\n<h6>foo</h6>\n"
+
+  - I: "####### foo\n"
+    O: "<p>####### foo</p>\n"
+
+  - I: "#5 bolt\n\n#hashtag\n"
+    O: "<p>#5 bolt</p>\n<p>#hashtag</p>\n"
+
+  - I: "\\## foo\n"
+    O: "<p>## foo</p>\n"
+
+  - I: "# foo *bar* \\*baz\\*\n"
+    O: "<h1>foo <em>bar</em> *baz*</h1>\n"
+
+  - I: "#                  foo                     \n"
+    O: "<h1>foo</h1>\n"
+
+  - I: " ### foo\n  ## foo\n   # foo\n"
+    O: "<h3>foo</h3>\n<h2>foo</h2>\n<h1>foo</h1>\n"
+
+  - I: "    # foo\n"
+    O: "<pre><code># foo\n</code></pre>\n"
+
+  - I: "foo\n    # bar\n"
+    O: "<p>foo\n# bar</p>\n"
+
+  - I: "## foo ##\n  ###   bar    ###\n"
+    O: "<h2>foo</h2>\n<h3>bar</h3>\n"
+
+  - I: "# foo ##################################\n##### foo ##\n"
+    O: "<h1>foo</h1>\n<h5>foo</h5>\n"
+
+  - I: "### foo ###     \n"
+    O: "<h3>foo</h3>\n"
+
+  - I: "### foo ### b\n"
+    O: "<h3>foo ### b</h3>\n"
+
+  - I: "# foo#\n"
+    O: "<h1>foo#</h1>\n"
+
+  - I: "### foo \\###\n## foo #\\##\n# foo \\#\n"
+    O: "<h3>foo ###</h3>\n<h2>foo ###</h2>\n<h1>foo #</h1>\n"
+
+  - I: "****\n## foo\n****\n"
+    O: "<hr />\n<h2>foo</h2>\n<hr />\n"
+
+  - I: "Foo bar\n# baz\nBar foo\n"
+    O: "<p>Foo bar</p>\n<h1>baz</h1>\n<p>Bar foo</p>\n"
+
+  - I: "## \n#\n### ###\n"
+    O: "<h2></h2>\n<h1></h1>\n<h3></h3>\n"
+
+- Name: Setext headings
+  Tests:
+
+  - I: "Foo *bar*\n=========\n\nFoo *bar*\n---------\n"
+    O: "<h1>Foo <em>bar</em></h1>\n<h2>Foo <em>bar</em></h2>\n"
+
+  - I: "Foo *bar\nbaz*\n====\n"
+    O: "<h1>Foo <em>bar\nbaz</em></h1>\n"
+
+  - I: "  Foo *bar\nbaz*\t\n====\n"
+    O: "<h1>Foo <em>bar\nbaz</em></h1>\n"
+
+  - I: "Foo\n-------------------------\n\nFoo\n=\n"
+    O: "<h2>Foo</h2>\n<h1>Foo</h1>\n"
+
+  - I: "   Foo\n---\n\n  Foo\n-----\n\n  Foo\n  ===\n"
+    O: "<h2>Foo</h2>\n<h2>Foo</h2>\n<h1>Foo</h1>\n"
+
+  - I: "    Foo\n    ---\n\n    Foo\n---\n"
+    O: "<pre><code>Foo\n---\n\nFoo\n</code></pre>\n<hr />\n"
+
+  - I: "Foo\n   ----      \n"
+    O: "<h2>Foo</h2>\n"
+
+  - I: "Foo\n    ---\n"
+    O: "<p>Foo\n---</p>\n"
+
+  - I: "Foo\n= =\n\nFoo\n--- -\n"
+    O: "<p>Foo\n= =</p>\n<p>Foo</p>\n<hr />\n"
+
+  - I: "Foo  \n-----\n"
+    O: "<h2>Foo</h2>\n"
+
+  - I: "Foo\\\n----\n"
+    O: "<h2>Foo\\</h2>\n"
+
+  - I: "`Foo\n----\n`\n\n<a title=\"a lot\n---\nof dashes\"/>\n"
+    O: "<h2>`Foo</h2>\n<p>`</p>\n<h2>&lt;a title=&quot;a lot</h2>\n<p>of dashes&quot;/&gt;</p>\n"
+
+  - I: "> Foo\n---\n"
+    O: "<blockquote>\n<p>Foo</p>\n</blockquote>\n<hr />\n"
+
+  - I: "> foo\nbar\n===\n"
+    O: "<blockquote>\n<p>foo\nbar\n===</p>\n</blockquote>\n"
+
+  - I: "- Foo\n---\n"
+    O: "<ul>\n<li>Foo</li>\n</ul>\n<hr />\n"
+
+  - I: "Foo\nBar\n---\n"
+    O: "<h2>Foo\nBar</h2>\n"
+
+  - I: "---\nFoo\n---\nBar\n---\nBaz\n"
+    O: "<hr />\n<h2>Foo</h2>\n<h2>Bar</h2>\n<p>Baz</p>\n"
+
+  - I: "\n====\n"
+    O: "<p>====</p>\n"
+
+  - I: "---\n---\n"
+    O: "<hr />\n<hr />\n"
+
+  - I: "- foo\n-----\n"
+    O: "<ul>\n<li>foo</li>\n</ul>\n<hr />\n"
+
+  - I: "    foo\n---\n"
+    O: "<pre><code>foo\n</code></pre>\n<hr />\n"
+
+  - I: "> foo\n-----\n"
+    O: "<blockquote>\n<p>foo</p>\n</blockquote>\n<hr />\n"
+
+  - I: "\\> foo\n------\n"
+    O: "<h2>&gt; foo</h2>\n"
+
+  - I: "Foo\n\nbar\n---\nbaz\n"
+    O: "<p>Foo</p>\n<h2>bar</h2>\n<p>baz</p>\n"
+
+  - I: "Foo\nbar\n\n---\n\nbaz\n"
+    O: "<p>Foo\nbar</p>\n<hr />\n<p>baz</p>\n"
+
+  - I: "Foo\nbar\n* * *\nbaz\n"
+    O: "<p>Foo\nbar</p>\n<hr />\n<p>baz</p>\n"
+
+  - I: "Foo\nbar\n\\---\nbaz\n"
+    O: "<p>Foo\nbar\n---\nbaz</p>\n"
+
+- Name: Indented code blocks
+  Tests:
+
+  - I: "    a simple\n      indented code block\n"
+    O: "<pre><code>a simple\n  indented code block\n</code></pre>\n"
+
+  - I: "  - foo\n\n    bar\n"
+    O: "<ul>\n<li>\n<p>foo</p>\n<p>bar</p>\n</li>\n</ul>\n"
+
+  - I: "1.  foo\n\n    - bar\n"
+    O: "<ol>\n<li>\n<p>foo</p>\n<ul>\n<li>bar</li>\n</ul>\n</li>\n</ol>\n"
+
+  - I: "    <a/>\n    *hi*\n\n    - one\n"
+    O: "<pre><code>&lt;a/&gt;\n*hi*\n\n- one\n</code></pre>\n"
+
+  - I: "    chunk1\n\n    chunk2\n  \n \n \n    chunk3\n"
+    O: "<pre><code>chunk1\n\nchunk2\n\n\n\nchunk3\n</code></pre>\n"
+
+  - I: "    chunk1\n      \n      chunk2\n"
+    O: "<pre><code>chunk1\n  \n  chunk2\n</code></pre>\n"
+
+  - I: "Foo\n    bar\n\n"
+    O: "<p>Foo\nbar</p>\n"
+
+  - I: "    foo\nbar\n"
+    O: "<pre><code>foo\n</code></pre>\n<p>bar</p>\n"
+
+  - I: "# Heading\n    foo\nHeading\n------\n    foo\n----\n"
+    O: "<h1>Heading</h1>\n<pre><code>foo\n</code></pre>\n<h2>Heading</h2>\n<pre><code>foo\n</code></pre>\n<hr />\n"
+
+  - I: "        foo\n    bar\n"
+    O: "<pre><code>    foo\nbar\n</code></pre>\n"
+
+  - I: "\n    \n    foo\n    \n\n"
+    O: "<pre><code>foo\n</code></pre>\n"
+
+  - I: "    foo  \n"
+    O: "<pre><code>foo  \n</code></pre>\n"
+
+- Name: Fenced code blocks
+  Tests:
+
+  - I: "```\n<\n >\n```\n"
+    O: "<pre><code>&lt;\n &gt;\n</code></pre>\n"
+
+  - I: "~~~\n<\n >\n~~~\n"
+    O: "<pre><code>&lt;\n &gt;\n</code></pre>\n"
+
+  - I: "``\nfoo\n``\n"
+    O: "<p><code>foo</code></p>\n"
+
+  - I: "```\naaa\n~~~\n```\n"
+    O: "<pre><code>aaa\n~~~\n</code></pre>\n"
+
+  - I: "~~~\naaa\n```\n~~~\n"
+    O: "<pre><code>aaa\n```\n</code></pre>\n"
+
+  - I: "````\naaa\n```\n``````\n"
+    O: "<pre><code>aaa\n```\n</code></pre>\n"
+
+  - I: "~~~~\naaa\n~~~\n~~~~\n"
+    O: "<pre><code>aaa\n~~~\n</code></pre>\n"
+
+  - I: "```\n"
+    O: "<pre><code></code></pre>\n"
+
+  - I: "`````\n\n```\naaa\n"
+    O: "<pre><code>\n```\naaa\n</code></pre>\n"
+
+  - I: "> ```\n> aaa\n\nbbb\n"
+    O: "<blockquote>\n<pre><code>aaa\n</code></pre>\n</blockquote>\n<p>bbb</p>\n"
+
+  - I: "```\n\n  \n```\n"
+    O: "<pre><code>\n  \n</code></pre>\n"
+
+  - I: "```\n```\n"
+    O: "<pre><code></code></pre>\n"
+
+  - I: " ```\n aaa\naaa\n```\n"
+    O: "<pre><code>aaa\naaa\n</code></pre>\n"
+
+  - I: "  ```\naaa\n  aaa\naaa\n  ```\n"
+    O: "<pre><code>aaa\naaa\naaa\n</code></pre>\n"
+
+  - I: "   ```\n   aaa\n    aaa\n  aaa\n   ```\n"
+    O: "<pre><code>aaa\n aaa\naaa\n</code></pre>\n"
+
+  - I: "    ```\n    aaa\n    ```\n"
+    O: "<pre><code>```\naaa\n```\n</code></pre>\n"
+
+  - I: "```\naaa\n  ```\n"
+    O: "<pre><code>aaa\n</code></pre>\n"
+
+  - I: "   ```\naaa\n  ```\n"
+    O: "<pre><code>aaa\n</code></pre>\n"
+
+  - I: "```\naaa\n    ```\n"
+    O: "<pre><code>aaa\n    ```\n</code></pre>\n"
+
+  - I: "``` ```\naaa\n"
+    O: "<p><code> </code>\naaa</p>\n"
+
+  - I: "~~~~~~\naaa\n~~~ ~~\n"
+    O: "<pre><code>aaa\n~~~ ~~\n</code></pre>\n"
+
+  - I: "foo\n```\nbar\n```\nbaz\n"
+    O: "<p>foo</p>\n<pre><code>bar\n</code></pre>\n<p>baz</p>\n"
+
+  - I: "foo\n---\n~~~\nbar\n~~~\n# baz\n"
+    O: "<h2>foo</h2>\n<pre><code>bar\n</code></pre>\n<h1>baz</h1>\n"
+
+  - I: "```ruby\ndef foo(x)\n  return 3\nend\n```\n"
+    O: "<pre><code class=\"language-ruby\">def foo(x)\n  return 3\nend\n</code></pre>\n"
+
+  - I: "~~~~    ruby startline=3 $%@#$\ndef foo(x)\n  return 3\nend\n~~~~~~~\n"
+    O: "<pre><code class=\"language-ruby\">def foo(x)\n  return 3\nend\n</code></pre>\n"
+
+  - I: "````;\n````\n"
+    O: "<pre><code class=\"language-;\"></code></pre>\n"
+
+  - I: "``` aa ```\nfoo\n"
+    O: "<p><code>aa</code>\nfoo</p>\n"
+
+  - I: "~~~ aa ``` ~~~\nfoo\n~~~\n"
+    O: "<pre><code class=\"language-aa\">foo\n</code></pre>\n"
+
+  - I: "```\n``` aaa\n```\n"
+    O: "<pre><code>``` aaa\n</code></pre>\n"
+
+- Name: HTML blocks
+  Tests:
+
+  - I: "<table><tr><td>\n<pre>\n**Hello**,\n\n_world_.\n</pre>\n</td></tr></table>\n"
+    O: "<table><tr><td>\n<pre>\n**Hello**,\n<p><em>world</em>.\n</pre></p>\n</td></tr></table>\n"
+
+  - I: "<table>\n  <tr>\n    <td>\n           hi\n    </td>\n  </tr>\n</table>\n\nokay.\n"
+    O: "<table>\n  <tr>\n    <td>\n           hi\n    </td>\n  </tr>\n</table>\n<p>okay.</p>\n"
+
+  - I: " <div>\n  *hello*\n         <foo><a>\n"
+    O: " <div>\n  *hello*\n         <foo><a>\n"
+
+  - I: "</div>\n*foo*\n"
+    O: "</div>\n*foo*\n"
+
+  - I: "<DIV CLASS=\"foo\">\n\n*Markdown*\n\n</DIV>\n"
+    O: "<DIV CLASS=\"foo\">\n<p><em>Markdown</em></p>\n</DIV>\n"
+
+  - I: "<div id=\"foo\"\n  class=\"bar\">\n</div>\n"
+    O: "<div id=\"foo\"\n  class=\"bar\">\n</div>\n"
+
+  - I: "<div id=\"foo\" class=\"bar\n  baz\">\n</div>\n"
+    O: "<div id=\"foo\" class=\"bar\n  baz\">\n</div>\n"
+
+  - I: "<div>\n*foo*\n\n*bar*\n"
+    O: "<div>\n*foo*\n<p><em>bar</em></p>\n"
+
+  - I: "<div id=\"foo\"\n*hi*\n"
+    O: "<div id=\"foo\"\n*hi*\n"
+
+  - I: "<div class\nfoo\n"
+    O: "<div class\nfoo\n"
+
+  - I: "<div *???-&&&-<---\n*foo*\n"
+    O: "<div *???-&&&-<---\n*foo*\n"
+
+  - I: "<div><a href=\"bar\">*foo*</a></div>\n"
+    O: "<div><a href=\"bar\">*foo*</a></div>\n"
+
+  - I: "<table><tr><td>\nfoo\n</td></tr></table>\n"
+    O: "<table><tr><td>\nfoo\n</td></tr></table>\n"
+
+  - I: "<div></div>\n``` c\nint x = 33;\n```\n"
+    O: "<div></div>\n``` c\nint x = 33;\n```\n"
+
+  - I: "<a href=\"foo\">\n*bar*\n</a>\n"
+    O: "<a href=\"foo\">\n*bar*\n</a>\n"
+
+  - I: "<Warning>\n*bar*\n</Warning>\n"
+    O: "<Warning>\n*bar*\n</Warning>\n"
+
+  - I: "<i class=\"foo\">\n*bar*\n</i>\n"
+    O: "<i class=\"foo\">\n*bar*\n</i>\n"
+
+  - I: "</ins>\n*bar*\n"
+    O: "</ins>\n*bar*\n"
+
+  - I: "<del>\n*foo*\n</del>\n"
+    O: "<del>\n*foo*\n</del>\n"
+
+  - I: "<del>\n\n*foo*\n\n</del>\n"
+    O: "<del>\n<p><em>foo</em></p>\n</del>\n"
+
+  - I: "<del>*foo*</del>\n"
+    O: "<p><del><em>foo</em></del></p>\n"
+
+  - I: "<pre language=\"haskell\"><code>\nimport Text.HTML.TagSoup\n\nmain :: IO ()\nmain = print $ parseTags tags\n</code></pre>\nokay\n"
+    O: "<pre language=\"haskell\"><code>\nimport Text.HTML.TagSoup\n\nmain :: IO ()\nmain = print $ parseTags tags\n</code></pre>\n<p>okay</p>\n"
+
+  - I: "<script type=\"text/javascript\">\n// JavaScript example\n\ndocument.getElementById(\"demo\").innerHTML = \"Hello JavaScript!\";\n</script>\nokay\n"
+    O: "<script type=\"text/javascript\">\n// JavaScript example\n\ndocument.getElementById(\"demo\").innerHTML = \"Hello JavaScript!\";\n</script>\n<p>okay</p>\n"
+
+  - I: "<style\n  type=\"text/css\">\nh1 {color:red;}\n\np {color:blue;}\n</style>\nokay\n"
+    O: "<style\n  type=\"text/css\">\nh1 {color:red;}\n\np {color:blue;}\n</style>\n<p>okay</p>\n"
+
+  - I: "<style\n  type=\"text/css\">\n\nfoo\n"
+    O: "<style\n  type=\"text/css\">\n\nfoo\n"
+
+  - I: "> <div>\n> foo\n\nbar\n"
+    O: "<blockquote>\n<div>\nfoo\n</blockquote>\n<p>bar</p>\n"
+
+  - I: "- <div>\n- foo\n"
+    O: "<ul>\n<li>\n<div>\n</li>\n<li>foo</li>\n</ul>\n"
+
+  - I: "<style>p{color:red;}</style>\n*foo*\n"
+    O: "<style>p{color:red;}</style>\n<p><em>foo</em></p>\n"
+
+  - I: "<!-- foo -->*bar*\n*baz*\n"
+    O: "<!-- foo -->*bar*\n<p><em>baz</em></p>\n"
+
+  - I: "<script>\nfoo\n</script>1. *bar*\n"
+    O: "<script>\nfoo\n</script>1. *bar*\n"
+
+  - I: "<!-- Foo\n\nbar\n   baz -->\nokay\n"
+    O: "<!-- Foo\n\nbar\n   baz -->\n<p>okay</p>\n"
+
+  - I: "<?php\n\n  echo '>';\n\n?>\nokay\n"
+    O: "<?php\n\n  echo '>';\n\n?>\n<p>okay</p>\n"
+
+  - I: "<!DOCTYPE html>\n"
+    O: "<!DOCTYPE html>\n"
+
+  - I: "<![CDATA[\nfunction matchwo(a,b)\n{\n  if (a < b && a < 0) then {\n    return 1;\n\n  } else {\n\n    return 0;\n  }\n}\n]]>\nokay\n"
+    O: "<![CDATA[\nfunction matchwo(a,b)\n{\n  if (a < b && a < 0) then {\n    return 1;\n\n  } else {\n\n    return 0;\n  }\n}\n]]>\n<p>okay</p>\n"
+
+  - I: "  <!-- foo -->\n\n    <!-- foo -->\n"
+    O: "  <!-- foo -->\n<pre><code>&lt;!-- foo --&gt;\n</code></pre>\n"
+
+  - I: "  <div>\n\n    <div>\n"
+    O: "  <div>\n<pre><code>&lt;div&gt;\n</code></pre>\n"
+
+  - I: "Foo\n<div>\nbar\n</div>\n"
+    O: "<p>Foo</p>\n<div>\nbar\n</div>\n"
+
+  - I: "<div>\nbar\n</div>\n*foo*\n"
+    O: "<div>\nbar\n</div>\n*foo*\n"
+
+  - I: "Foo\n<a href=\"bar\">\nbaz\n"
+    O: "<p>Foo\n<a href=\"bar\">\nbaz</p>\n"
+
+  - I: "<div>\n\n*Emphasized* text.\n\n</div>\n"
+    O: "<div>\n<p><em>Emphasized</em> text.</p>\n</div>\n"
+
+  - I: "<div>\n*Emphasized* text.\n</div>\n"
+    O: "<div>\n*Emphasized* text.\n</div>\n"
+
+  - I: "<table>\n\n<tr>\n\n<td>\nHi\n</td>\n\n</tr>\n\n</table>\n"
+    O: "<table>\n<tr>\n<td>\nHi\n</td>\n</tr>\n</table>\n"
+
+  - I: "<table>\n\n  <tr>\n\n    <td>\n      Hi\n    </td>\n\n  </tr>\n\n</table>\n"
+    O: "<table>\n  <tr>\n<pre><code>&lt;td&gt;\n  Hi\n&lt;/td&gt;\n</code></pre>\n  </tr>\n</table>\n"
+
+- Name: Link reference definitions
+  Tests:
+
+  - I: "[foo]: /url \"title\"\n\n[foo]\n"
+    O: "<p><a href=\"/url\" title=\"title\">foo</a></p>\n"
+
+  - I: "   [foo]: \n      /url  \n           'the title'  \n\n[foo]\n"
+    O: "<p><a href=\"/url\" title=\"the title\">foo</a></p>\n"
+
+  - I: "[Foo*bar\\]]:my_(url) 'title (with parens)'\n\n[Foo*bar\\]]\n"
+    O: "<p><a href=\"my_(url)\" title=\"title (with parens)\">Foo*bar]</a></p>\n"
+
+  - I: "[Foo bar]:\n<my url>\n'title'\n\n[Foo bar]\n"
+    O: "<p><a href=\"my%20url\" title=\"title\">Foo bar</a></p>\n"
+
+  - I: "[foo]: /url '\ntitle\nline1\nline2\n'\n\n[foo]\n"
+    O: "<p><a href=\"/url\" title=\"\ntitle\nline1\nline2\n\">foo</a></p>\n"
+
+  - I: "[foo]: /url 'title\n\nwith blank line'\n\n[foo]\n"
+    O: "<p>[foo]: /url 'title</p>\n<p>with blank line'</p>\n<p>[foo]</p>\n"
+
+  - I: "[foo]:\n/url\n\n[foo]\n"
+    O: "<p><a href=\"/url\">foo</a></p>\n"
+
+  - I: "[foo]:\n\n[foo]\n"
+    O: "<p>[foo]:</p>\n<p>[foo]</p>\n"
+
+  - I: "[foo]: <>\n\n[foo]\n"
+    O: "<p><a href=\"\">foo</a></p>\n"
+
+  - I: "[foo]: <bar>(baz)\n\n[foo]\n"
+    O: "<p>[foo]: <bar>(baz)</p>\n<p>[foo]</p>\n"
+
+  - I: "[foo]: /url\\bar\\*baz \"foo\\\"bar\\baz\"\n\n[foo]\n"
+    O: "<p><a href=\"/url%5Cbar*baz\" title=\"foo&quot;bar\\baz\">foo</a></p>\n"
+
+  - I: "[foo]\n\n[foo]: url\n"
+    O: "<p><a href=\"url\">foo</a></p>\n"
+
+  - I: "[foo]\n\n[foo]: first\n[foo]: second\n"
+    O: "<p><a href=\"first\">foo</a></p>\n"
+
+  - I: "[FOO]: /url\n\n[Foo]\n"
+    O: "<p><a href=\"/url\">Foo</a></p>\n"
+
+  - I: "[ΑΓΩ]: /φου\n\n[αγω]\n"
+    O: "<p><a href=\"/%CF%86%CE%BF%CF%85\">αγω</a></p>\n"
+
+  - I: "[foo]: /url\n"
+    O: ""
+
+  - I: "[\nfoo\n]: /url\nbar\n"
+    O: "<p>bar</p>\n"
+
+  - I: "[foo]: /url \"title\" ok\n"
+    O: "<p>[foo]: /url &quot;title&quot; ok</p>\n"
+
+  - I: "[foo]: /url\n\"title\" ok\n"
+    O: "<p>&quot;title&quot; ok</p>\n"
+
+  - I: "    [foo]: /url \"title\"\n\n[foo]\n"
+    O: "<pre><code>[foo]: /url &quot;title&quot;\n</code></pre>\n<p>[foo]</p>\n"
+
+  - I: "```\n[foo]: /url\n```\n\n[foo]\n"
+    O: "<pre><code>[foo]: /url\n</code></pre>\n<p>[foo]</p>\n"
+
+  - I: "Foo\n[bar]: /baz\n\n[bar]\n"
+    O: "<p>Foo\n[bar]: /baz</p>\n<p>[bar]</p>\n"
+
+  - I: "# [Foo]\n[foo]: /url\n> bar\n"
+    O: "<h1><a href=\"/url\">Foo</a></h1>\n<blockquote>\n<p>bar</p>\n</blockquote>\n"
+
+  - I: "[foo]: /url\nbar\n===\n[foo]\n"
+    O: "<h1>bar</h1>\n<p><a href=\"/url\">foo</a></p>\n"
+
+  - I: "[foo]: /url\n===\n[foo]\n"
+    O: "<p>===\n<a href=\"/url\">foo</a></p>\n"
+
+  - I: "[foo]: /foo-url \"foo\"\n[bar]: /bar-url\n  \"bar\"\n[baz]: /baz-url\n\n[foo],\n[bar],\n[baz]\n"
+    O: "<p><a href=\"/foo-url\" title=\"foo\">foo</a>,\n<a href=\"/bar-url\" title=\"bar\">bar</a>,\n<a href=\"/baz-url\">baz</a></p>\n"
+
+  - I: "[foo]\n\n> [foo]: /url\n"
+    O: "<p><a href=\"/url\">foo</a></p>\n<blockquote>\n</blockquote>\n"
+
+  - I: "[foo]: /url\n"
+    O: ""
+
+- Name: Paragraphs
+  Tests:
+
+  - I: "aaa\n\nbbb\n"
+    O: "<p>aaa</p>\n<p>bbb</p>\n"
+
+  - I: "aaa\nbbb\n\nccc\nddd\n"
+    O: "<p>aaa\nbbb</p>\n<p>ccc\nddd</p>\n"
+
+  - I: "aaa\n\n\nbbb\n"
+    O: "<p>aaa</p>\n<p>bbb</p>\n"
+
+  - I: "  aaa\n bbb\n"
+    O: "<p>aaa\nbbb</p>\n"
+
+  - I: "aaa\n             bbb\n                                       ccc\n"
+    O: "<p>aaa\nbbb\nccc</p>\n"
+
+  - I: "   aaa\nbbb\n"
+    O: "<p>aaa\nbbb</p>\n"
+
+  - I: "    aaa\nbbb\n"
+    O: "<pre><code>aaa\n</code></pre>\n<p>bbb</p>\n"
+
+  - I: "aaa     \nbbb     \n"
+    O: "<p>aaa<br />\nbbb</p>\n"
+
+- Name: Blank lines
+  Tests:
+
+  - I: "  \n\naaa\n  \n\n# aaa\n\n  \n"
+    O: "<p>aaa</p>\n<h1>aaa</h1>\n"
+
+- Name: Block quotes
+  Tests:
+
+  - I: "> # Foo\n> bar\n> baz\n"
+    O: "<blockquote>\n<h1>Foo</h1>\n<p>bar\nbaz</p>\n</blockquote>\n"
+
+  - I: "># Foo\n>bar\n> baz\n"
+    O: "<blockquote>\n<h1>Foo</h1>\n<p>bar\nbaz</p>\n</blockquote>\n"
+
+  - I: "   > # Foo\n   > bar\n > baz\n"
+    O: "<blockquote>\n<h1>Foo</h1>\n<p>bar\nbaz</p>\n</blockquote>\n"
+
+  - I: "    > # Foo\n    > bar\n    > baz\n"
+    O: "<pre><code>&gt; # Foo\n&gt; bar\n&gt; baz\n</code></pre>\n"
+
+  - I: "> # Foo\n> bar\nbaz\n"
+    O: "<blockquote>\n<h1>Foo</h1>\n<p>bar\nbaz</p>\n</blockquote>\n"
+
+  - I: "> bar\nbaz\n> foo\n"
+    O: "<blockquote>\n<p>bar\nbaz\nfoo</p>\n</blockquote>\n"
+
+  - I: "> foo\n---\n"
+    O: "<blockquote>\n<p>foo</p>\n</blockquote>\n<hr />\n"
+
+  - I: "> - foo\n- bar\n"
+    O: "<blockquote>\n<ul>\n<li>foo</li>\n</ul>\n</blockquote>\n<ul>\n<li>bar</li>\n</ul>\n"
+
+  - I: ">     foo\n    bar\n"
+    O: "<blockquote>\n<pre><code>foo\n</code></pre>\n</blockquote>\n<pre><code>bar\n</code></pre>\n"
+
+  - I: "> ```\nfoo\n```\n"
+    O: "<blockquote>\n<pre><code></code></pre>\n</blockquote>\n<p>foo</p>\n<pre><code></code></pre>\n"
+
+  - I: "> foo\n    - bar\n"
+    O: "<blockquote>\n<p>foo\n- bar</p>\n</blockquote>\n"
+
+  - I: ">\n"
+    O: "<blockquote>\n</blockquote>\n"
+
+  - I: ">\n>  \n> \n"
+    O: "<blockquote>\n</blockquote>\n"
+
+  - I: ">\n> foo\n>  \n"
+    O: "<blockquote>\n<p>foo</p>\n</blockquote>\n"
+
+  - I: "> foo\n\n> bar\n"
+    O: "<blockquote>\n<p>foo</p>\n</blockquote>\n<blockquote>\n<p>bar</p>\n</blockquote>\n"
+
+  - I: "> foo\n> bar\n"
+    O: "<blockquote>\n<p>foo\nbar</p>\n</blockquote>\n"
+
+  - I: "> foo\n>\n> bar\n"
+    O: "<blockquote>\n<p>foo</p>\n<p>bar</p>\n</blockquote>\n"
+
+  - I: "foo\n> bar\n"
+    O: "<p>foo</p>\n<blockquote>\n<p>bar</p>\n</blockquote>\n"
+
+  - I: "> aaa\n***\n> bbb\n"
+    O: "<blockquote>\n<p>aaa</p>\n</blockquote>\n<hr />\n<blockquote>\n<p>bbb</p>\n</blockquote>\n"
+
+  - I: "> bar\nbaz\n"
+    O: "<blockquote>\n<p>bar\nbaz</p>\n</blockquote>\n"
+
+  - I: "> bar\n\nbaz\n"
+    O: "<blockquote>\n<p>bar</p>\n</blockquote>\n<p>baz</p>\n"
+
+  - I: "> bar\n>\nbaz\n"
+    O: "<blockquote>\n<p>bar</p>\n</blockquote>\n<p>baz</p>\n"
+
+  - I: "> > > foo\nbar\n"
+    O: "<blockquote>\n<blockquote>\n<blockquote>\n<p>foo\nbar</p>\n</blockquote>\n</blockquote>\n</blockquote>\n"
+
+  - I: ">>> foo\n> bar\n>>baz\n"
+    O: "<blockquote>\n<blockquote>\n<blockquote>\n<p>foo\nbar\nbaz</p>\n</blockquote>\n</blockquote>\n</blockquote>\n"
+
+  - I: ">     code\n\n>    not code\n"
+    O: "<blockquote>\n<pre><code>code\n</code></pre>\n</blockquote>\n<blockquote>\n<p>not code</p>\n</blockquote>\n"
+
+- Name: List items
+  Tests:
+
+  - I: "A paragraph\nwith two lines.\n\n    indented code\n\n> A block quote.\n"
+    O: "<p>A paragraph\nwith two lines.</p>\n<pre><code>indented code\n</code></pre>\n<blockquote>\n<p>A block quote.</p>\n</blockquote>\n"
+
+  - I: "1.  A paragraph\n    with two lines.\n\n        indented code\n\n    > A block quote.\n"
+    O: "<ol>\n<li>\n<p>A paragraph\nwith two lines.</p>\n<pre><code>indented code\n</code></pre>\n<blockquote>\n<p>A block quote.</p>\n</blockquote>\n</li>\n</ol>\n"
+
+  - I: "- one\n\n two\n"
+    O: "<ul>\n<li>one</li>\n</ul>\n<p>two</p>\n"
+
+  - I: "- one\n\n  two\n"
+    O: "<ul>\n<li>\n<p>one</p>\n<p>two</p>\n</li>\n</ul>\n"
+
+  - I: " -    one\n\n     two\n"
+    O: "<ul>\n<li>one</li>\n</ul>\n<pre><code> two\n</code></pre>\n"
+
+  - I: " -    one\n\n      two\n"
+    O: "<ul>\n<li>\n<p>one</p>\n<p>two</p>\n</li>\n</ul>\n"
+
+  - I: "   > > 1.  one\n>>\n>>     two\n"
+    O: "<blockquote>\n<blockquote>\n<ol>\n<li>\n<p>one</p>\n<p>two</p>\n</li>\n</ol>\n</blockquote>\n</blockquote>\n"
+
+  - I: ">>- one\n>>\n  >  > two\n"
+    O: "<blockquote>\n<blockquote>\n<ul>\n<li>one</li>\n</ul>\n<p>two</p>\n</blockquote>\n</blockquote>\n"
+
+  - I: "-one\n\n2.two\n"
+    O: "<p>-one</p>\n<p>2.two</p>\n"
+
+  - I: "- foo\n\n\n  bar\n"
+    O: "<ul>\n<li>\n<p>foo</p>\n<p>bar</p>\n</li>\n</ul>\n"
+
+  - I: "1.  foo\n\n    ```\n    bar\n    ```\n\n    baz\n\n    > bam\n"
+    O: "<ol>\n<li>\n<p>foo</p>\n<pre><code>bar\n</code></pre>\n<p>baz</p>\n<blockquote>\n<p>bam</p>\n</blockquote>\n</li>\n</ol>\n"
+
+  - I: "- Foo\n\n      bar\n\n\n      baz\n"
+    O: "<ul>\n<li>\n<p>Foo</p>\n<pre><code>bar\n\n\nbaz\n</code></pre>\n</li>\n</ul>\n"
+
+  - I: "123456789. ok\n"
+    O: "<ol start=\"123456789\">\n<li>ok</li>\n</ol>\n"
+
+  - I: "1234567890. not ok\n"
+    O: "<p>1234567890. not ok</p>\n"
+
+  - I: "0. ok\n"
+    O: "<ol start=\"0\">\n<li>ok</li>\n</ol>\n"
+
+  - I: "003. ok\n"
+    O: "<ol start=\"3\">\n<li>ok</li>\n</ol>\n"
+
+  - I: "-1. not ok\n"
+    O: "<p>-1. not ok</p>\n"
+
+  - I: "- foo\n\n      bar\n"
+    O: "<ul>\n<li>\n<p>foo</p>\n<pre><code>bar\n</code></pre>\n</li>\n</ul>\n"
+
+  - I: "  10.  foo\n\n           bar\n"
+    O: "<ol start=\"10\">\n<li>\n<p>foo</p>\n<pre><code>bar\n</code></pre>\n</li>\n</ol>\n"
+
+  - I: "    indented code\n\nparagraph\n\n    more code\n"
+    O: "<pre><code>indented code\n</code></pre>\n<p>paragraph</p>\n<pre><code>more code\n</code></pre>\n"
+
+  - I: "1.     indented code\n\n   paragraph\n\n       more code\n"
+    O: "<ol>\n<li>\n<pre><code>indented code\n</code></pre>\n<p>paragraph</p>\n<pre><code>more code\n</code></pre>\n</li>\n</ol>\n"
+
+  - I: "1.      indented code\n\n   paragraph\n\n       more code\n"
+    O: "<ol>\n<li>\n<pre><code> indented code\n</code></pre>\n<p>paragraph</p>\n<pre><code>more code\n</code></pre>\n</li>\n</ol>\n"
+
+  - I: "   foo\n\nbar\n"
+    O: "<p>foo</p>\n<p>bar</p>\n"
+
+  - I: "-    foo\n\n  bar\n"
+    O: "<ul>\n<li>foo</li>\n</ul>\n<p>bar</p>\n"
+
+  - I: "-  foo\n\n   bar\n"
+    O: "<ul>\n<li>\n<p>foo</p>\n<p>bar</p>\n</li>\n</ul>\n"
+
+  - I: "-\n  foo\n-\n  ```\n  bar\n  ```\n-\n      baz\n"
+    O: "<ul>\n<li>foo</li>\n<li>\n<pre><code>bar\n</code></pre>\n</li>\n<li>\n<pre><code>baz\n</code></pre>\n</li>\n</ul>\n"
+
+  - I: "-   \n  foo\n"
+    O: "<ul>\n<li>foo</li>\n</ul>\n"
+
+  - I: "-\n\n  foo\n"
+    O: "<ul>\n<li></li>\n</ul>\n<p>foo</p>\n"
+
+  - I: "- foo\n-\n- bar\n"
+    O: "<ul>\n<li>foo</li>\n<li></li>\n<li>bar</li>\n</ul>\n"
+
+  - I: "- foo\n-   \n- bar\n"
+    O: "<ul>\n<li>foo</li>\n<li></li>\n<li>bar</li>\n</ul>\n"
+
+  - I: "1. foo\n2.\n3. bar\n"
+    O: "<ol>\n<li>foo</li>\n<li></li>\n<li>bar</li>\n</ol>\n"
+
+  - I: "*\n"
+    O: "<ul>\n<li></li>\n</ul>\n"
+
+  - I: "foo\n*\n\nfoo\n1.\n"
+    O: "<p>foo\n*</p>\n<p>foo\n1.</p>\n"
+
+  - I: " 1.  A paragraph\n     with two lines.\n\n         indented code\n\n     > A block quote.\n"
+    O: "<ol>\n<li>\n<p>A paragraph\nwith two lines.</p>\n<pre><code>indented code\n</code></pre>\n<blockquote>\n<p>A block quote.</p>\n</blockquote>\n</li>\n</ol>\n"
+
+  - I: "  1.  A paragraph\n      with two lines.\n\n          indented code\n\n      > A block quote.\n"
+    O: "<ol>\n<li>\n<p>A paragraph\nwith two lines.</p>\n<pre><code>indented code\n</code></pre>\n<blockquote>\n<p>A block quote.</p>\n</blockquote>\n</li>\n</ol>\n"
+
+  - I: "   1.  A paragraph\n       with two lines.\n\n           indented code\n\n       > A block quote.\n"
+    O: "<ol>\n<li>\n<p>A paragraph\nwith two lines.</p>\n<pre><code>indented code\n</code></pre>\n<blockquote>\n<p>A block quote.</p>\n</blockquote>\n</li>\n</ol>\n"
+
+  - I: "    1.  A paragraph\n        with two lines.\n\n            indented code\n\n        > A block quote.\n"
+    O: "<pre><code>1.  A paragraph\n    with two lines.\n\n        indented code\n\n    &gt; A block quote.\n</code></pre>\n"
+
+  - I: "  1.  A paragraph\nwith two lines.\n\n          indented code\n\n      > A block quote.\n"
+    O: "<ol>\n<li>\n<p>A paragraph\nwith two lines.</p>\n<pre><code>indented code\n</code></pre>\n<blockquote>\n<p>A block quote.</p>\n</blockquote>\n</li>\n</ol>\n"
+
+  - I: "  1.  A paragraph\n    with two lines.\n"
+    O: "<ol>\n<li>A paragraph\nwith two lines.</li>\n</ol>\n"
+
+  - I: "> 1. > Blockquote\ncontinued here.\n"
+    O: "<blockquote>\n<ol>\n<li>\n<blockquote>\n<p>Blockquote\ncontinued here.</p>\n</blockquote>\n</li>\n</ol>\n</blockquote>\n"
+
+  - I: "> 1. > Blockquote\n> continued here.\n"
+    O: "<blockquote>\n<ol>\n<li>\n<blockquote>\n<p>Blockquote\ncontinued here.</p>\n</blockquote>\n</li>\n</ol>\n</blockquote>\n"
+
+  - I: "- foo\n  - bar\n    - baz\n      - boo\n"
+    O: "<ul>\n<li>foo\n<ul>\n<li>bar\n<ul>\n<li>baz\n<ul>\n<li>boo</li>\n</ul>\n</li>\n</ul>\n</li>\n</ul>\n</li>\n</ul>\n"
+
+  - I: "- foo\n - bar\n  - baz\n   - boo\n"
+    O: "<ul>\n<li>foo</li>\n<li>bar</li>\n<li>baz</li>\n<li>boo</li>\n</ul>\n"
+
+  - I: "10) foo\n    - bar\n"
+    O: "<ol start=\"10\">\n<li>foo\n<ul>\n<li>bar</li>\n</ul>\n</li>\n</ol>\n"
+
+  - I: "10) foo\n   - bar\n"
+    O: "<ol start=\"10\">\n<li>foo</li>\n</ol>\n<ul>\n<li>bar</li>\n</ul>\n"
+
+  - I: "- - foo\n"
+    O: "<ul>\n<li>\n<ul>\n<li>foo</li>\n</ul>\n</li>\n</ul>\n"
+
+  - I: "1. - 2. foo\n"
+    O: "<ol>\n<li>\n<ul>\n<li>\n<ol start=\"2\">\n<li>foo</li>\n</ol>\n</li>\n</ul>\n</li>\n</ol>\n"
+
+  - I: "- # Foo\n- Bar\n  ---\n  baz\n"
+    O: "<ul>\n<li>\n<h1>Foo</h1>\n</li>\n<li>\n<h2>Bar</h2>\nbaz</li>\n</ul>\n"
+
+- Name: Lists
+  Tests:
+
+  - I: "- foo\n- bar\n+ baz\n"
+    O: "<ul>\n<li>foo</li>\n<li>bar</li>\n</ul>\n<ul>\n<li>baz</li>\n</ul>\n"
+
+  - I: "1. foo\n2. bar\n3) baz\n"
+    O: "<ol>\n<li>foo</li>\n<li>bar</li>\n</ol>\n<ol start=\"3\">\n<li>baz</li>\n</ol>\n"
+
+  - I: "Foo\n- bar\n- baz\n"
+    O: "<p>Foo</p>\n<ul>\n<li>bar</li>\n<li>baz</li>\n</ul>\n"
+
+  - I: "The number of windows in my house is\n14.  The number of doors is 6.\n"
+    O: "<p>The number of windows in my house is\n14.  The number of doors is 6.</p>\n"
+
+  - I: "The number of windows in my house is\n1.  The number of doors is 6.\n"
+    O: "<p>The number of windows in my house is</p>\n<ol>\n<li>The number of doors is 6.</li>\n</ol>\n"
+
+  - I: "- foo\n\n- bar\n\n\n- baz\n"
+    O: "<ul>\n<li>\n<p>foo</p>\n</li>\n<li>\n<p>bar</p>\n</li>\n<li>\n<p>baz</p>\n</li>\n</ul>\n"
+
+  - I: "- foo\n  - bar\n    - baz\n\n\n      bim\n"
+    O: "<ul>\n<li>foo\n<ul>\n<li>bar\n<ul>\n<li>\n<p>baz</p>\n<p>bim</p>\n</li>\n</ul>\n</li>\n</ul>\n</li>\n</ul>\n"
+
+  - I: "- foo\n- bar\n\n<!-- -->\n\n- baz\n- bim\n"
+    O: "<ul>\n<li>foo</li>\n<li>bar</li>\n</ul>\n<!-- -->\n<ul>\n<li>baz</li>\n<li>bim</li>\n</ul>\n"
+
+  - I: "-   foo\n\n    notcode\n\n-   foo\n\n<!-- -->\n\n    code\n"
+    O: "<ul>\n<li>\n<p>foo</p>\n<p>notcode</p>\n</li>\n<li>\n<p>foo</p>\n</li>\n</ul>\n<!-- -->\n<pre><code>code\n</code></pre>\n"
+
+  - I: "- a\n - b\n  - c\n   - d\n  - e\n - f\n- g\n"
+    O: "<ul>\n<li>a</li>\n<li>b</li>\n<li>c</li>\n<li>d</li>\n<li>e</li>\n<li>f</li>\n<li>g</li>\n</ul>\n"
+
+  - I: "1. a\n\n  2. b\n\n   3. c\n"
+    O: "<ol>\n<li>\n<p>a</p>\n</li>\n<li>\n<p>b</p>\n</li>\n<li>\n<p>c</p>\n</li>\n</ol>\n"
+
+  - I: "- a\n - b\n  - c\n   - d\n    - e\n"
+    O: "<ul>\n<li>a</li>\n<li>b</li>\n<li>c</li>\n<li>d\n- e</li>\n</ul>\n"
+
+  - I: "1. a\n\n  2. b\n\n    3. c\n"
+    O: "<ol>\n<li>\n<p>a</p>\n</li>\n<li>\n<p>b</p>\n</li>\n</ol>\n<pre><code>3. c\n</code></pre>\n"
+
+  - I: "- a\n- b\n\n- c\n"
+    O: "<ul>\n<li>\n<p>a</p>\n</li>\n<li>\n<p>b</p>\n</li>\n<li>\n<p>c</p>\n</li>\n</ul>\n"
+
+  - I: "* a\n*\n\n* c\n"
+    O: "<ul>\n<li>\n<p>a</p>\n</li>\n<li></li>\n<li>\n<p>c</p>\n</li>\n</ul>\n"
+
+  - I: "- a\n- b\n\n  c\n- d\n"
+    O: "<ul>\n<li>\n<p>a</p>\n</li>\n<li>\n<p>b</p>\n<p>c</p>\n</li>\n<li>\n<p>d</p>\n</li>\n</ul>\n"
+
+  - I: "- a\n- b\n\n  [ref]: /url\n- d\n"
+    O: "<ul>\n<li>\n<p>a</p>\n</li>\n<li>\n<p>b</p>\n</li>\n<li>\n<p>d</p>\n</li>\n</ul>\n"
+
+  - I: "- a\n- ```\n  b\n\n\n  ```\n- c\n"
+    O: "<ul>\n<li>a</li>\n<li>\n<pre><code>b\n\n\n</code></pre>\n</li>\n<li>c</li>\n</ul>\n"
+
+  - I: "- a\n  - b\n\n    c\n- d\n"
+    O: "<ul>\n<li>a\n<ul>\n<li>\n<p>b</p>\n<p>c</p>\n</li>\n</ul>\n</li>\n<li>d</li>\n</ul>\n"
+
+  - I: "* a\n  > b\n  >\n* c\n"
+    O: "<ul>\n<li>a\n<blockquote>\n<p>b</p>\n</blockquote>\n</li>\n<li>c</li>\n</ul>\n"
+
+  - I: "- a\n  > b\n  ```\n  c\n  ```\n- d\n"
+    O: "<ul>\n<li>a\n<blockquote>\n<p>b</p>\n</blockquote>\n<pre><code>c\n</code></pre>\n</li>\n<li>d</li>\n</ul>\n"
+
+  - I: "- a\n"
+    O: "<ul>\n<li>a</li>\n</ul>\n"
+
+  - I: "- a\n  - b\n"
+    O: "<ul>\n<li>a\n<ul>\n<li>b</li>\n</ul>\n</li>\n</ul>\n"
+
+  - I: "1. ```\n   foo\n   ```\n\n   bar\n"
+    O: "<ol>\n<li>\n<pre><code>foo\n</code></pre>\n<p>bar</p>\n</li>\n</ol>\n"
+
+  - I: "* foo\n  * bar\n\n  baz\n"
+    O: "<ul>\n<li>\n<p>foo</p>\n<ul>\n<li>bar</li>\n</ul>\n<p>baz</p>\n</li>\n</ul>\n"
+
+  - I: "- a\n  - b\n  - c\n\n- d\n  - e\n  - f\n"
+    O: "<ul>\n<li>\n<p>a</p>\n<ul>\n<li>b</li>\n<li>c</li>\n</ul>\n</li>\n<li>\n<p>d</p>\n<ul>\n<li>e</li>\n<li>f</li>\n</ul>\n</li>\n</ul>\n"
+
+- Name: Inlines
+  Tests:
+
+  - I: "`hi`lo`\n"
+    O: "<p><code>hi</code>lo`</p>\n"
+
+- Name: Backslash escapes
+  Tests:
+
+  - I: "\\!\\\"\\#\\$\\%\\&\\'\\(\\)\\*\\+\\,\\-\\.\\/\\:\\;\\<\\=\\>\\?\\@\\[\\\\\\]\\^\\_\\`\\{\\|\\}\\~\n"
+    O: "<p>!&quot;#$%&amp;'()*+,-./:;&lt;=&gt;?@[\\]^_`{|}~</p>\n"
+
+  - I: "\\\t\\A\\a\\ \\3\\φ\\«\n"
+    O: "<p>\\\t\\A\\a\\ \\3\\φ\\«</p>\n"
+
+  - I: "\\*not emphasized*\n\\<br/> not a tag\n\\[not a link](/foo)\n\\`not code`\n1\\. not a list\n\\* not a list\n\\# not a heading\n\\[foo]: /url \"not a reference\"\n\\&ouml; not a character entity\n"
+    O: "<p>*not emphasized*\n&lt;br/&gt; not a tag\n[not a link](/foo)\n`not code`\n1. not a list\n* not a list\n# not a heading\n[foo]: /url &quot;not a reference&quot;\n&amp;ouml; not a character entity</p>\n"
+
+  - I: "\\\\*emphasis*\n"
+    O: "<p>\\<em>emphasis</em></p>\n"
+
+  - I: "foo\\\nbar\n"
+    O: "<p>foo<br />\nbar</p>\n"
+
+  - I: "`` \\[\\` ``\n"
+    O: "<p><code>\\[\\`</code></p>\n"
+
+  - I: "    \\[\\]\n"
+    O: "<pre><code>\\[\\]\n</code></pre>\n"
+
+  - I: "~~~\n\\[\\]\n~~~\n"
+    O: "<pre><code>\\[\\]\n</code></pre>\n"
+
+  - I: "<http://example.com?find=\\*>\n"
+    O: "<p><a href=\"http://example.com?find=%5C*\">http://example.com?find=\\*</a></p>\n"
+
+  - I: "<a href=\"/bar\\/)\">\n"
+    O: "<a href=\"/bar\\/)\">\n"
+
+  - I: "[foo](/bar\\* \"ti\\*tle\")\n"
+    O: "<p><a href=\"/bar*\" title=\"ti*tle\">foo</a></p>\n"
+
+  - I: "[foo]\n\n[foo]: /bar\\* \"ti\\*tle\"\n"
+    O: "<p><a href=\"/bar*\" title=\"ti*tle\">foo</a></p>\n"
+
+  - I: "``` foo\\+bar\nfoo\n```\n"
+    O: "<pre><code class=\"language-foo+bar\">foo\n</code></pre>\n"
+
+- Name: Entity and numeric character references
+  Tests:
+
+  - I: "&nbsp; &amp; &copy; &AElig; &Dcaron;\n&frac34; &HilbertSpace; &DifferentialD;\n&ClockwiseContourIntegral; &ngE;\n"
+    O: "<p>\u00a0 &amp; © Æ Ď\n¾ ℋ ⅆ\n∲ ≧̸</p>\n"
+
+  - I: "&#35; &#1234; &#992; &#0;\n"
+    O: "<p># Ӓ Ϡ �</p>\n"
+
+  - I: "&#X22; &#XD06; &#xcab;\n"
+    O: "<p>&quot; ആ ಫ</p>\n"
+
+  - I: "&nbsp &x; &#; &#x;\n&#987654321;\n&#abcdef0;\n&ThisIsNotDefined; &hi?;\n"
+    O: "<p>&amp;nbsp &amp;x; &amp;#; &amp;#x;\n&amp;#987654321;\n&amp;#abcdef0;\n&amp;ThisIsNotDefined; &amp;hi?;</p>\n"
+
+  - I: "&copy\n"
+    O: "<p>&amp;copy</p>\n"
+
+  - I: "&MadeUpEntity;\n"
+    O: "<p>&amp;MadeUpEntity;</p>\n"
+
+  - I: "<a href=\"&ouml;&ouml;.html\">\n"
+    O: "<a href=\"&ouml;&ouml;.html\">\n"
+
+  - I: "[foo](/f&ouml;&ouml; \"f&ouml;&ouml;\")\n"
+    O: "<p><a href=\"/f%C3%B6%C3%B6\" title=\"föö\">foo</a></p>\n"
+
+  - I: "[foo]\n\n[foo]: /f&ouml;&ouml; \"f&ouml;&ouml;\"\n"
+    O: "<p><a href=\"/f%C3%B6%C3%B6\" title=\"föö\">foo</a></p>\n"
+
+  - I: "``` f&ouml;&ouml;\nfoo\n```\n"
+    O: "<pre><code class=\"language-föö\">foo\n</code></pre>\n"
+
+  - I: "`f&ouml;&ouml;`\n"
+    O: "<p><code>f&amp;ouml;&amp;ouml;</code></p>\n"
+
+  - I: "    f&ouml;f&ouml;\n"
+    O: "<pre><code>f&amp;ouml;f&amp;ouml;\n</code></pre>\n"
+
+  - I: "&#42;foo&#42;\n*foo*\n"
+    O: "<p>*foo*\n<em>foo</em></p>\n"
+
+  - I: "&#42; foo\n\n* foo\n"
+    O: "<p>* foo</p>\n<ul>\n<li>foo</li>\n</ul>\n"
+
+  - I: "foo&#10;&#10;bar\n"
+    O: "<p>foo\n\nbar</p>\n"
+
+  - I: "&#9;foo\n"
+    O: "<p>\tfoo</p>\n"
+
+  - I: "[a](url &quot;tit&quot;)\n"
+    O: "<p>[a](url &quot;tit&quot;)</p>\n"
+
+- Name: Code spans
+  Tests:
+
+  - I: "`foo`\n"
+    O: "<p><code>foo</code></p>\n"
+
+  - I: "`` foo ` bar ``\n"
+    O: "<p><code>foo ` bar</code></p>\n"
+
+  - I: "` `` `\n"
+    O: "<p><code>``</code></p>\n"
+
+  - I: "`  ``  `\n"
+    O: "<p><code> `` </code></p>\n"
+
+  - I: "` a`\n"
+    O: "<p><code> a</code></p>\n"
+
+  - I: "`\u00a0b\u00a0`\n"
+    O: "<p><code>\u00a0b\u00a0</code></p>\n"
+
+  - I: "`\u00a0`\n`  `\n"
+    O: "<p><code>\u00a0</code>\n<code>  </code></p>\n"
+
+  - I: "``\nfoo\nbar  \nbaz\n``\n"
+    O: "<p><code>foo bar   baz</code></p>\n"
+
+  - I: "``\nfoo \n``\n"
+    O: "<p><code>foo </code></p>\n"
+
+  - I: "`foo   bar \nbaz`\n"
+    O: "<p><code>foo   bar  baz</code></p>\n"
+
+  - I: "`foo\\`bar`\n"
+    O: "<p><code>foo\\</code>bar`</p>\n"
+
+  - I: "``foo`bar``\n"
+    O: "<p><code>foo`bar</code></p>\n"
+
+  - I: "` foo `` bar `\n"
+    O: "<p><code>foo `` bar</code></p>\n"
+
+  - I: "*foo`*`\n"
+    O: "<p>*foo<code>*</code></p>\n"
+
+  - I: "[not a `link](/foo`)\n"
+    O: "<p>[not a <code>link](/foo</code>)</p>\n"
+
+  - I: "`<a href=\"`\">`\n"
+    O: "<p><code>&lt;a href=&quot;</code>&quot;&gt;`</p>\n"
+
+  - I: "<a href=\"`\">`\n"
+    O: "<p><a href=\"`\">`</p>\n"
+
+  - I: "`<http://foo.bar.`baz>`\n"
+    O: "<p><code>&lt;http://foo.bar.</code>baz&gt;`</p>\n"
+
+  - I: "<http://foo.bar.`baz>`\n"
+    O: "<p><a href=\"http://foo.bar.%60baz\">http://foo.bar.`baz</a>`</p>\n"
+
+  - I: "```foo``\n"
+    O: "<p>```foo``</p>\n"
+
+  - I: "`foo\n"
+    O: "<p>`foo</p>\n"
+
+  - I: "`foo``bar``\n"
+    O: "<p>`foo<code>bar</code></p>\n"
+
+- Name: Emphasis and strong emphasis
+  Tests:
+
+  - I: "*foo bar*\n"
+    O: "<p><em>foo bar</em></p>\n"
+
+  - I: "a * foo bar*\n"
+    O: "<p>a * foo bar*</p>\n"
+
+  - I: "a*\"foo\"*\n"
+    O: "<p>a*&quot;foo&quot;*</p>\n"
+
+  - I: "*\u00a0a\u00a0*\n"
+    O: "<p>*\u00a0a\u00a0*</p>\n"
+
+  - I: "foo*bar*\n"
+    O: "<p>foo<em>bar</em></p>\n"
+
+  - I: "5*6*78\n"
+    O: "<p>5<em>6</em>78</p>\n"
+
+  - I: "_foo bar_\n"
+    O: "<p><em>foo bar</em></p>\n"
+
+  - I: "_ foo bar_\n"
+    O: "<p>_ foo bar_</p>\n"
+
+  - I: "a_\"foo\"_\n"
+    O: "<p>a_&quot;foo&quot;_</p>\n"
+
+  - I: "foo_bar_\n"
+    O: "<p>foo_bar_</p>\n"
+
+  - I: "5_6_78\n"
+    O: "<p>5_6_78</p>\n"
+
+  - I: "пристаням_стремятся_\n"
+    O: "<p>пристаням_стремятся_</p>\n"
+
+  - I: "aa_\"bb\"_cc\n"
+    O: "<p>aa_&quot;bb&quot;_cc</p>\n"
+
+  - I: "foo-_(bar)_\n"
+    O: "<p>foo-<em>(bar)</em></p>\n"
+
+  - I: "_foo*\n"
+    O: "<p>_foo*</p>\n"
+
+  - I: "*foo bar *\n"
+    O: "<p>*foo bar *</p>\n"
+
+  - I: "*foo bar\n*\n"
+    O: "<p>*foo bar\n*</p>\n"
+
+  - I: "*(*foo)\n"
+    O: "<p>*(*foo)</p>\n"
+
+  - I: "*(*foo*)*\n"
+    O: "<p><em>(<em>foo</em>)</em></p>\n"
+
+  - I: "*foo*bar\n"
+    O: "<p><em>foo</em>bar</p>\n"
+
+  - I: "_foo bar _\n"
+    O: "<p>_foo bar _</p>\n"
+
+  - I: "_(_foo)\n"
+    O: "<p>_(_foo)</p>\n"
+
+  - I: "_(_foo_)_\n"
+    O: "<p><em>(<em>foo</em>)</em></p>\n"
+
+  - I: "_foo_bar\n"
+    O: "<p>_foo_bar</p>\n"
+
+  - I: "_пристаням_стремятся\n"
+    O: "<p>_пристаням_стремятся</p>\n"
+
+  - I: "_foo_bar_baz_\n"
+    O: "<p><em>foo_bar_baz</em></p>\n"
+
+  - I: "_(bar)_.\n"
+    O: "<p><em>(bar)</em>.</p>\n"
+
+  - I: "**foo bar**\n"
+    O: "<p><strong>foo bar</strong></p>\n"
+
+  - I: "** foo bar**\n"
+    O: "<p>** foo bar**</p>\n"
+
+  - I: "a**\"foo\"**\n"
+    O: "<p>a**&quot;foo&quot;**</p>\n"
+
+  - I: "foo**bar**\n"
+    O: "<p>foo<strong>bar</strong></p>\n"
+
+  - I: "__foo bar__\n"
+    O: "<p><strong>foo bar</strong></p>\n"
+
+  - I: "__ foo bar__\n"
+    O: "<p>__ foo bar__</p>\n"
+
+  - I: "__\nfoo bar__\n"
+    O: "<p>__\nfoo bar__</p>\n"
+
+  - I: "a__\"foo\"__\n"
+    O: "<p>a__&quot;foo&quot;__</p>\n"
+
+  - I: "foo__bar__\n"
+    O: "<p>foo__bar__</p>\n"
+
+  - I: "5__6__78\n"
+    O: "<p>5__6__78</p>\n"
+
+  - I: "пристаням__стремятся__\n"
+    O: "<p>пристаням__стремятся__</p>\n"
+
+  - I: "__foo, __bar__, baz__\n"
+    O: "<p><strong>foo, <strong>bar</strong>, baz</strong></p>\n"
+
+  - I: "foo-__(bar)__\n"
+    O: "<p>foo-<strong>(bar)</strong></p>\n"
+
+  - I: "**foo bar **\n"
+    O: "<p>**foo bar **</p>\n"
+
+  - I: "**(**foo)\n"
+    O: "<p>**(**foo)</p>\n"
+
+  - I: "*(**foo**)*\n"
+    O: "<p><em>(<strong>foo</strong>)</em></p>\n"
+
+  - I: "**Gomphocarpus (*Gomphocarpus physocarpus*, syn.\n*Asclepias physocarpa*)**\n"
+    O: "<p><strong>Gomphocarpus (<em>Gomphocarpus physocarpus</em>, syn.\n<em>Asclepias physocarpa</em>)</strong></p>\n"
+
+  - I: "**foo \"*bar*\" foo**\n"
+    O: "<p><strong>foo &quot;<em>bar</em>&quot; foo</strong></p>\n"
+
+  - I: "**foo**bar\n"
+    O: "<p><strong>foo</strong>bar</p>\n"
+
+  - I: "__foo bar __\n"
+    O: "<p>__foo bar __</p>\n"
+
+  - I: "__(__foo)\n"
+    O: "<p>__(__foo)</p>\n"
+
+  - I: "_(__foo__)_\n"
+    O: "<p><em>(<strong>foo</strong>)</em></p>\n"
+
+  - I: "__foo__bar\n"
+    O: "<p>__foo__bar</p>\n"
+
+  - I: "__пристаням__стремятся\n"
+    O: "<p>__пристаням__стремятся</p>\n"
+
+  - I: "__foo__bar__baz__\n"
+    O: "<p><strong>foo__bar__baz</strong></p>\n"
+
+  - I: "__(bar)__.\n"
+    O: "<p><strong>(bar)</strong>.</p>\n"
+
+  - I: "*foo [bar](/url)*\n"
+    O: "<p><em>foo <a href=\"/url\">bar</a></em></p>\n"
+
+  - I: "*foo\nbar*\n"
+    O: "<p><em>foo\nbar</em></p>\n"
+
+  - I: "_foo __bar__ baz_\n"
+    O: "<p><em>foo <strong>bar</strong> baz</em></p>\n"
+
+  - I: "_foo _bar_ baz_\n"
+    O: "<p><em>foo <em>bar</em> baz</em></p>\n"
+
+  - I: "__foo_ bar_\n"
+    O: "<p><em><em>foo</em> bar</em></p>\n"
+
+  - I: "*foo *bar**\n"
+    O: "<p><em>foo <em>bar</em></em></p>\n"
+
+  - I: "*foo **bar** baz*\n"
+    O: "<p><em>foo <strong>bar</strong> baz</em></p>\n"
+
+  - I: "*foo**bar**baz*\n"
+    O: "<p><em>foo<strong>bar</strong>baz</em></p>\n"
+
+  - I: "*foo**bar*\n"
+    O: "<p><em>foo**bar</em></p>\n"
+
+  - I: "***foo** bar*\n"
+    O: "<p><em><strong>foo</strong> bar</em></p>\n"
+
+  - I: "*foo **bar***\n"
+    O: "<p><em>foo <strong>bar</strong></em></p>\n"
+
+  - I: "*foo**bar***\n"
+    O: "<p><em>foo<strong>bar</strong></em></p>\n"
+
+  - I: "foo***bar***baz\n"
+    O: "<p>foo<em><strong>bar</strong></em>baz</p>\n"
+
+  - I: "foo******bar*********baz\n"
+    O: "<p>foo<strong><strong><strong>bar</strong></strong></strong>***baz</p>\n"
+
+  - I: "*foo **bar *baz* bim** bop*\n"
+    O: "<p><em>foo <strong>bar <em>baz</em> bim</strong> bop</em></p>\n"
+
+  - I: "*foo [*bar*](/url)*\n"
+    O: "<p><em>foo <a href=\"/url\"><em>bar</em></a></em></p>\n"
+
+  - I: "** is not an empty emphasis\n"
+    O: "<p>** is not an empty emphasis</p>\n"
+
+  - I: "**** is not an empty strong emphasis\n"
+    O: "<p>**** is not an empty strong emphasis</p>\n"
+
+  - I: "**foo [bar](/url)**\n"
+    O: "<p><strong>foo <a href=\"/url\">bar</a></strong></p>\n"
+
+  - I: "**foo\nbar**\n"
+    O: "<p><strong>foo\nbar</strong></p>\n"
+
+  - I: "__foo _bar_ baz__\n"
+    O: "<p><strong>foo <em>bar</em> baz</strong></p>\n"
+
+  - I: "__foo __bar__ baz__\n"
+    O: "<p><strong>foo <strong>bar</strong> baz</strong></p>\n"
+
+  - I: "____foo__ bar__\n"
+    O: "<p><strong><strong>foo</strong> bar</strong></p>\n"
+
+  - I: "**foo **bar****\n"
+    O: "<p><strong>foo <strong>bar</strong></strong></p>\n"
+
+  - I: "**foo *bar* baz**\n"
+    O: "<p><strong>foo <em>bar</em> baz</strong></p>\n"
+
+  - I: "**foo*bar*baz**\n"
+    O: "<p><strong>foo<em>bar</em>baz</strong></p>\n"
+
+  - I: "***foo* bar**\n"
+    O: "<p><strong><em>foo</em> bar</strong></p>\n"
+
+  - I: "**foo *bar***\n"
+    O: "<p><strong>foo <em>bar</em></strong></p>\n"
+
+  - I: "**foo *bar **baz**\nbim* bop**\n"
+    O: "<p><strong>foo <em>bar <strong>baz</strong>\nbim</em> bop</strong></p>\n"
+
+  - I: "**foo [*bar*](/url)**\n"
+    O: "<p><strong>foo <a href=\"/url\"><em>bar</em></a></strong></p>\n"
+
+  - I: "__ is not an empty emphasis\n"
+    O: "<p>__ is not an empty emphasis</p>\n"
+
+  - I: "____ is not an empty strong emphasis\n"
+    O: "<p>____ is not an empty strong emphasis</p>\n"
+
+  - I: "foo ***\n"
+    O: "<p>foo ***</p>\n"
+
+  - I: "foo *\\**\n"
+    O: "<p>foo <em>*</em></p>\n"
+
+  - I: "foo *_*\n"
+    O: "<p>foo <em>_</em></p>\n"
+
+  - I: "foo *****\n"
+    O: "<p>foo *****</p>\n"
+
+  - I: "foo **\\***\n"
+    O: "<p>foo <strong>*</strong></p>\n"
+
+  - I: "foo **_**\n"
+    O: "<p>foo <strong>_</strong></p>\n"
+
+  - I: "**foo*\n"
+    O: "<p>*<em>foo</em></p>\n"
+
+  - I: "*foo**\n"
+    O: "<p><em>foo</em>*</p>\n"
+
+  - I: "***foo**\n"
+    O: "<p>*<strong>foo</strong></p>\n"
+
+  - I: "****foo*\n"
+    O: "<p>***<em>foo</em></p>\n"
+
+  - I: "**foo***\n"
+    O: "<p><strong>foo</strong>*</p>\n"
+
+  - I: "*foo****\n"
+    O: "<p><em>foo</em>***</p>\n"
+
+  - I: "foo ___\n"
+    O: "<p>foo ___</p>\n"
+
+  - I: "foo _\\__\n"
+    O: "<p>foo <em>_</em></p>\n"
+
+  - I: "foo _*_\n"
+    O: "<p>foo <em>*</em></p>\n"
+
+  - I: "foo _____\n"
+    O: "<p>foo _____</p>\n"
+
+  - I: "foo __\\___\n"
+    O: "<p>foo <strong>_</strong></p>\n"
+
+  - I: "foo __*__\n"
+    O: "<p>foo <strong>*</strong></p>\n"
+
+  - I: "__foo_\n"
+    O: "<p>_<em>foo</em></p>\n"
+
+  - I: "_foo__\n"
+    O: "<p><em>foo</em>_</p>\n"
+
+  - I: "___foo__\n"
+    O: "<p>_<strong>foo</strong></p>\n"
+
+  - I: "____foo_\n"
+    O: "<p>___<em>foo</em></p>\n"
+
+  - I: "__foo___\n"
+    O: "<p><strong>foo</strong>_</p>\n"
+
+  - I: "_foo____\n"
+    O: "<p><em>foo</em>___</p>\n"
+
+  - I: "**foo**\n"
+    O: "<p><strong>foo</strong></p>\n"
+
+  - I: "*_foo_*\n"
+    O: "<p><em><em>foo</em></em></p>\n"
+
+  - I: "__foo__\n"
+    O: "<p><strong>foo</strong></p>\n"
+
+  - I: "_*foo*_\n"
+    O: "<p><em><em>foo</em></em></p>\n"
+
+  - I: "****foo****\n"
+    O: "<p><strong><strong>foo</strong></strong></p>\n"
+
+  - I: "____foo____\n"
+    O: "<p><strong><strong>foo</strong></strong></p>\n"
+
+  - I: "******foo******\n"
+    O: "<p><strong><strong><strong>foo</strong></strong></strong></p>\n"
+
+  - I: "***foo***\n"
+    O: "<p><em><strong>foo</strong></em></p>\n"
+
+  - I: "_____foo_____\n"
+    O: "<p><em><strong><strong>foo</strong></strong></em></p>\n"
+
+  - I: "*foo _bar* baz_\n"
+    O: "<p><em>foo _bar</em> baz_</p>\n"
+
+  - I: "*foo __bar *baz bim__ bam*\n"
+    O: "<p><em>foo <strong>bar *baz bim</strong> bam</em></p>\n"
+
+  - I: "**foo **bar baz**\n"
+    O: "<p>**foo <strong>bar baz</strong></p>\n"
+
+  - I: "*foo *bar baz*\n"
+    O: "<p>*foo <em>bar baz</em></p>\n"
+
+  - I: "*[bar*](/url)\n"
+    O: "<p>*<a href=\"/url\">bar*</a></p>\n"
+
+  - I: "_foo [bar_](/url)\n"
+    O: "<p>_foo <a href=\"/url\">bar_</a></p>\n"
+
+  - I: "*<img src=\"foo\" title=\"*\"/>\n"
+    O: "<p>*<img src=\"foo\" title=\"*\"/></p>\n"
+
+  - I: "**<a href=\"**\">\n"
+    O: "<p>**<a href=\"**\"></p>\n"
+
+  - I: "__<a href=\"__\">\n"
+    O: "<p>__<a href=\"__\"></p>\n"
+
+  - I: "*a `*`*\n"
+    O: "<p><em>a <code>*</code></em></p>\n"
+
+  - I: "_a `_`_\n"
+    O: "<p><em>a <code>_</code></em></p>\n"
+
+  - I: "**a<http://foo.bar/?q=**>\n"
+    O: "<p>**a<a href=\"http://foo.bar/?q=**\">http://foo.bar/?q=**</a></p>\n"
+
+  - I: "__a<http://foo.bar/?q=__>\n"
+    O: "<p>__a<a href=\"http://foo.bar/?q=__\">http://foo.bar/?q=__</a></p>\n"
+
+- Name: Links
+  Tests:
+
+  - I: "[link](/uri \"title\")\n"
+    O: "<p><a href=\"/uri\" title=\"title\">link</a></p>\n"
+
+  - I: "[link](/uri)\n"
+    O: "<p><a href=\"/uri\">link</a></p>\n"
+
+  - I: "[link]()\n"
+    O: "<p><a href=\"\">link</a></p>\n"
+
+  - I: "[link](<>)\n"
+    O: "<p><a href=\"\">link</a></p>\n"
+
+  - I: "[link](/my uri)\n"
+    O: "<p>[link](/my uri)</p>\n"
+
+  - I: "[link](</my uri>)\n"
+    O: "<p><a href=\"/my%20uri\">link</a></p>\n"
+
+  - I: "[link](foo\nbar)\n"
+    O: "<p>[link](foo\nbar)</p>\n"
+
+  - I: "[link](<foo\nbar>)\n"
+    O: "<p>[link](<foo\nbar>)</p>\n"
+
+  - I: "[a](<b)c>)\n"
+    O: "<p><a href=\"b)c\">a</a></p>\n"
+
+  - I: "[link](<foo\\>)\n"
+    O: "<p>[link](&lt;foo&gt;)</p>\n"
+
+  - I: "[a](<b)c\n[a](<b)c>\n[a](<b>c)\n"
+    O: "<p>[a](&lt;b)c\n[a](&lt;b)c&gt;\n[a](<b>c)</p>\n"
+
+  - I: "[link](\\(foo\\))\n"
+    O: "<p><a href=\"(foo)\">link</a></p>\n"
+
+  - I: "[link](foo(and(bar)))\n"
+    O: "<p><a href=\"foo(and(bar))\">link</a></p>\n"
+
+  - I: "[link](foo\\(and\\(bar\\))\n"
+    O: "<p><a href=\"foo(and(bar)\">link</a></p>\n"
+
+  - I: "[link](<foo(and(bar)>)\n"
+    O: "<p><a href=\"foo(and(bar)\">link</a></p>\n"
+
+  - I: "[link](foo\\)\\:)\n"
+    O: "<p><a href=\"foo):\">link</a></p>\n"
+
+  - I: "[link](#fragment)\n\n[link](http://example.com#fragment)\n\n[link](http://example.com?foo=3#frag)\n"
+    O: "<p><a href=\"#fragment\">link</a></p>\n<p><a href=\"http://example.com#fragment\">link</a></p>\n<p><a href=\"http://example.com?foo=3#frag\">link</a></p>\n"
+
+  - I: "[link](foo\\bar)\n"
+    O: "<p><a href=\"foo%5Cbar\">link</a></p>\n"
+
+  - I: "[link](foo%20b&auml;)\n"
+    O: "<p><a href=\"foo%20b%C3%A4\">link</a></p>\n"
+
+  - I: "[link](\"title\")\n"
+    O: "<p><a href=\"%22title%22\">link</a></p>\n"
+
+  - I: "[link](/url \"title\")\n[link](/url 'title')\n[link](/url (title))\n"
+    O: "<p><a href=\"/url\" title=\"title\">link</a>\n<a href=\"/url\" title=\"title\">link</a>\n<a href=\"/url\" title=\"title\">link</a></p>\n"
+
+  - I: "[link](/url \"title \\\"&quot;\")\n"
+    O: "<p><a href=\"/url\" title=\"title &quot;&quot;\">link</a></p>\n"
+
+  - I: "[link](/url\u00a0\"title\")\n"
+    O: "<p><a href=\"/url%C2%A0%22title%22\">link</a></p>\n"
+
+  - I: "[link](/url \"title \"and\" title\")\n"
+    O: "<p>[link](/url &quot;title &quot;and&quot; title&quot;)</p>\n"
+
+  - I: "[link](/url 'title \"and\" title')\n"
+    O: "<p><a href=\"/url\" title=\"title &quot;and&quot; title\">link</a></p>\n"
+
+  - I: "[link](   /uri\n  \"title\"  )\n"
+    O: "<p><a href=\"/uri\" title=\"title\">link</a></p>\n"
+
+  - I: "[link] (/uri)\n"
+    O: "<p>[link] (/uri)</p>\n"
+
+  - I: "[link [foo [bar]]](/uri)\n"
+    O: "<p><a href=\"/uri\">link [foo [bar]]</a></p>\n"
+
+  - I: "[link] bar](/uri)\n"
+    O: "<p>[link] bar](/uri)</p>\n"
+
+  - I: "[link [bar](/uri)\n"
+    O: "<p>[link <a href=\"/uri\">bar</a></p>\n"
+
+  - I: "[link \\[bar](/uri)\n"
+    O: "<p><a href=\"/uri\">link [bar</a></p>\n"
+
+  - I: "[link *foo **bar** `#`*](/uri)\n"
+    O: "<p><a href=\"/uri\">link <em>foo <strong>bar</strong> <code>#</code></em></a></p>\n"
+
+  - I: "[![moon](moon.jpg)](/uri)\n"
+    O: "<p><a href=\"/uri\"><img src=\"moon.jpg\" alt=\"moon\" /></a></p>\n"
+
+  - I: "[foo [bar](/uri)](/uri)\n"
+    O: "<p>[foo <a href=\"/uri\">bar</a>](/uri)</p>\n"
+
+  - I: "[foo *[bar [baz](/uri)](/uri)*](/uri)\n"
+    O: "<p>[foo <em>[bar <a href=\"/uri\">baz</a>](/uri)</em>](/uri)</p>\n"
+
+  - I: "![[[foo](uri1)](uri2)](uri3)\n"
+    O: "<p><img src=\"uri3\" alt=\"[foo](uri2)\" /></p>\n"
+
+  - I: "*[foo*](/uri)\n"
+    O: "<p>*<a href=\"/uri\">foo*</a></p>\n"
+
+  - I: "[foo *bar](baz*)\n"
+    O: "<p><a href=\"baz*\">foo *bar</a></p>\n"
+
+  - I: "*foo [bar* baz]\n"
+    O: "<p><em>foo [bar</em> baz]</p>\n"
+
+  - I: "[foo <bar attr=\"](baz)\">\n"
+    O: "<p>[foo <bar attr=\"](baz)\"></p>\n"
+
+  - I: "[foo`](/uri)`\n"
+    O: "<p>[foo<code>](/uri)</code></p>\n"
+
+  - I: "[foo<http://example.com/?search=](uri)>\n"
+    O: "<p>[foo<a href=\"http://example.com/?search=%5D(uri)\">http://example.com/?search=](uri)</a></p>\n"
+
+  - I: "[foo][bar]\n\n[bar]: /url \"title\"\n"
+    O: "<p><a href=\"/url\" title=\"title\">foo</a></p>\n"
+
+  - I: "[link [foo [bar]]][ref]\n\n[ref]: /uri\n"
+    O: "<p><a href=\"/uri\">link [foo [bar]]</a></p>\n"
+
+  - I: "[link \\[bar][ref]\n\n[ref]: /uri\n"
+    O: "<p><a href=\"/uri\">link [bar</a></p>\n"
+
+  - I: "[link *foo **bar** `#`*][ref]\n\n[ref]: /uri\n"
+    O: "<p><a href=\"/uri\">link <em>foo <strong>bar</strong> <code>#</code></em></a></p>\n"
+
+  - I: "[![moon](moon.jpg)][ref]\n\n[ref]: /uri\n"
+    O: "<p><a href=\"/uri\"><img src=\"moon.jpg\" alt=\"moon\" /></a></p>\n"
+
+  - I: "[foo [bar](/uri)][ref]\n\n[ref]: /uri\n"
+    O: "<p>[foo <a href=\"/uri\">bar</a>]<a href=\"/uri\">ref</a></p>\n"
+
+  - I: "[foo *bar [baz][ref]*][ref]\n\n[ref]: /uri\n"
+    O: "<p>[foo <em>bar <a href=\"/uri\">baz</a></em>]<a href=\"/uri\">ref</a></p>\n"
+
+  - I: "*[foo*][ref]\n\n[ref]: /uri\n"
+    O: "<p>*<a href=\"/uri\">foo*</a></p>\n"
+
+  - I: "[foo *bar][ref]\n\n[ref]: /uri\n"
+    O: "<p><a href=\"/uri\">foo *bar</a></p>\n"
+
+  - I: "[foo <bar attr=\"][ref]\">\n\n[ref]: /uri\n"
+    O: "<p>[foo <bar attr=\"][ref]\"></p>\n"
+
+  - I: "[foo`][ref]`\n\n[ref]: /uri\n"
+    O: "<p>[foo<code>][ref]</code></p>\n"
+
+  - I: "[foo<http://example.com/?search=][ref]>\n\n[ref]: /uri\n"
+    O: "<p>[foo<a href=\"http://example.com/?search=%5D%5Bref%5D\">http://example.com/?search=][ref]</a></p>\n"
+
+  - I: "[foo][BaR]\n\n[bar]: /url \"title\"\n"
+    O: "<p><a href=\"/url\" title=\"title\">foo</a></p>\n"
+
+  - I: "[Толпой][Толпой] is a Russian word.\n\n[ТОЛПОЙ]: /url\n"
+    O: "<p><a href=\"/url\">Толпой</a> is a Russian word.</p>\n"
+
+  - I: "[Foo\n  bar]: /url\n\n[Baz][Foo bar]\n"
+    O: "<p><a href=\"/url\">Baz</a></p>\n"
+
+  - I: "[foo] [bar]\n\n[bar]: /url \"title\"\n"
+    O: "<p>[foo] <a href=\"/url\" title=\"title\">bar</a></p>\n"
+
+  - I: "[foo]\n[bar]\n\n[bar]: /url \"title\"\n"
+    O: "<p>[foo]\n<a href=\"/url\" title=\"title\">bar</a></p>\n"
+
+  - I: "[foo]: /url1\n\n[foo]: /url2\n\n[bar][foo]\n"
+    O: "<p><a href=\"/url1\">bar</a></p>\n"
+
+  - I: "[bar][foo\\!]\n\n[foo!]: /url\n"
+    O: "<p>[bar][foo!]</p>\n"
+
+  - I: "[foo][ref[]\n\n[ref[]: /uri\n"
+    O: "<p>[foo][ref[]</p>\n<p>[ref[]: /uri</p>\n"
+
+  - I: "[foo][ref[bar]]\n\n[ref[bar]]: /uri\n"
+    O: "<p>[foo][ref[bar]]</p>\n<p>[ref[bar]]: /uri</p>\n"
+
+  - I: "[[[foo]]]\n\n[[[foo]]]: /url\n"
+    O: "<p>[[[foo]]]</p>\n<p>[[[foo]]]: /url</p>\n"
+
+  - I: "[foo][ref\\[]\n\n[ref\\[]: /uri\n"
+    O: "<p><a href=\"/uri\">foo</a></p>\n"
+
+  - I: "[bar\\\\]: /uri\n\n[bar\\\\]\n"
+    O: "<p><a href=\"/uri\">bar\\</a></p>\n"
+
+  - I: "[]\n\n[]: /uri\n"
+    O: "<p>[]</p>\n<p>[]: /uri</p>\n"
+
+  - I: "[\n ]\n\n[\n ]: /uri\n"
+    O: "<p>[\n]</p>\n<p>[\n]: /uri</p>\n"
+
+  - I: "[foo][]\n\n[foo]: /url \"title\"\n"
+    O: "<p><a href=\"/url\" title=\"title\">foo</a></p>\n"
+
+  - I: "[*foo* bar][]\n\n[*foo* bar]: /url \"title\"\n"
+    O: "<p><a href=\"/url\" title=\"title\"><em>foo</em> bar</a></p>\n"
+
+  - I: "[Foo][]\n\n[foo]: /url \"title\"\n"
+    O: "<p><a href=\"/url\" title=\"title\">Foo</a></p>\n"
+
+  - I: "[foo] \n[]\n\n[foo]: /url \"title\"\n"
+    O: "<p><a href=\"/url\" title=\"title\">foo</a>\n[]</p>\n"
+
+  - I: "[foo]\n\n[foo]: /url \"title\"\n"
+    O: "<p><a href=\"/url\" title=\"title\">foo</a></p>\n"
+
+  - I: "[*foo* bar]\n\n[*foo* bar]: /url \"title\"\n"
+    O: "<p><a href=\"/url\" title=\"title\"><em>foo</em> bar</a></p>\n"
+
+  - I: "[[*foo* bar]]\n\n[*foo* bar]: /url \"title\"\n"
+    O: "<p>[<a href=\"/url\" title=\"title\"><em>foo</em> bar</a>]</p>\n"
+
+  - I: "[[bar [foo]\n\n[foo]: /url\n"
+    O: "<p>[[bar <a href=\"/url\">foo</a></p>\n"
+
+  - I: "[Foo]\n\n[foo]: /url \"title\"\n"
+    O: "<p><a href=\"/url\" title=\"title\">Foo</a></p>\n"
+
+  - I: "[foo] bar\n\n[foo]: /url\n"
+    O: "<p><a href=\"/url\">foo</a> bar</p>\n"
+
+  - I: "\\[foo]\n\n[foo]: /url \"title\"\n"
+    O: "<p>[foo]</p>\n"
+
+  - I: "[foo*]: /url\n\n*[foo*]\n"
+    O: "<p>*<a href=\"/url\">foo*</a></p>\n"
+
+  - I: "[foo][bar]\n\n[foo]: /url1\n[bar]: /url2\n"
+    O: "<p><a href=\"/url2\">foo</a></p>\n"
+
+  - I: "[foo][]\n\n[foo]: /url1\n"
+    O: "<p><a href=\"/url1\">foo</a></p>\n"
+
+  - I: "[foo]()\n\n[foo]: /url1\n"
+    O: "<p><a href=\"\">foo</a></p>\n"
+
+  - I: "[foo](not a link)\n\n[foo]: /url1\n"
+    O: "<p><a href=\"/url1\">foo</a>(not a link)</p>\n"
+
+  - I: "[foo][bar][baz]\n\n[baz]: /url\n"
+    O: "<p>[foo]<a href=\"/url\">bar</a></p>\n"
+
+  - I: "[foo][bar][baz]\n\n[baz]: /url1\n[bar]: /url2\n"
+    O: "<p><a href=\"/url2\">foo</a><a href=\"/url1\">baz</a></p>\n"
+
+  - I: "[foo][bar][baz]\n\n[baz]: /url1\n[foo]: /url2\n"
+    O: "<p>[foo]<a href=\"/url1\">bar</a></p>\n"
+
+- Name: Images
+  Tests:
+
+  - I: "![foo](/url \"title\")\n"
+    O: "<p><img src=\"/url\" alt=\"foo\" title=\"title\" /></p>\n"
+
+  - I: "![foo *bar*]\n\n[foo *bar*]: train.jpg \"train & tracks\"\n"
+    O: "<p><img src=\"train.jpg\" alt=\"foo bar\" title=\"train &amp; tracks\" /></p>\n"
+
+  - I: "![foo ![bar](/url)](/url2)\n"
+    O: "<p><img src=\"/url2\" alt=\"foo bar\" /></p>\n"
+
+  - I: "![foo [bar](/url)](/url2)\n"
+    O: "<p><img src=\"/url2\" alt=\"foo bar\" /></p>\n"
+
+  - I: "![foo *bar*][]\n\n[foo *bar*]: train.jpg \"train & tracks\"\n"
+    O: "<p><img src=\"train.jpg\" alt=\"foo bar\" title=\"train &amp; tracks\" /></p>\n"
+
+  - I: "![foo *bar*][foobar]\n\n[FOOBAR]: train.jpg \"train & tracks\"\n"
+    O: "<p><img src=\"train.jpg\" alt=\"foo bar\" title=\"train &amp; tracks\" /></p>\n"
+
+  - I: "![foo](train.jpg)\n"
+    O: "<p><img src=\"train.jpg\" alt=\"foo\" /></p>\n"
+
+  - I: "My ![foo bar](/path/to/train.jpg  \"title\"   )\n"
+    O: "<p>My <img src=\"/path/to/train.jpg\" alt=\"foo bar\" title=\"title\" /></p>\n"
+
+  - I: "![foo](<url>)\n"
+    O: "<p><img src=\"url\" alt=\"foo\" /></p>\n"
+
+  - I: "![](/url)\n"
+    O: "<p><img src=\"/url\" alt=\"\" /></p>\n"
+
+  - I: "![foo][bar]\n\n[bar]: /url\n"
+    O: "<p><img src=\"/url\" alt=\"foo\" /></p>\n"
+
+  - I: "![foo][bar]\n\n[BAR]: /url\n"
+    O: "<p><img src=\"/url\" alt=\"foo\" /></p>\n"
+
+  - I: "![foo][]\n\n[foo]: /url \"title\"\n"
+    O: "<p><img src=\"/url\" alt=\"foo\" title=\"title\" /></p>\n"
+
+  - I: "![*foo* bar][]\n\n[*foo* bar]: /url \"title\"\n"
+    O: "<p><img src=\"/url\" alt=\"foo bar\" title=\"title\" /></p>\n"
+
+  - I: "![Foo][]\n\n[foo]: /url \"title\"\n"
+    O: "<p><img src=\"/url\" alt=\"Foo\" title=\"title\" /></p>\n"
+
+  - I: "![foo] \n[]\n\n[foo]: /url \"title\"\n"
+    O: "<p><img src=\"/url\" alt=\"foo\" title=\"title\" />\n[]</p>\n"
+
+  - I: "![foo]\n\n[foo]: /url \"title\"\n"
+    O: "<p><img src=\"/url\" alt=\"foo\" title=\"title\" /></p>\n"
+
+  - I: "![*foo* bar]\n\n[*foo* bar]: /url \"title\"\n"
+    O: "<p><img src=\"/url\" alt=\"foo bar\" title=\"title\" /></p>\n"
+
+  - I: "![[foo]]\n\n[[foo]]: /url \"title\"\n"
+    O: "<p>![[foo]]</p>\n<p>[[foo]]: /url &quot;title&quot;</p>\n"
+
+  - I: "![Foo]\n\n[foo]: /url \"title\"\n"
+    O: "<p><img src=\"/url\" alt=\"Foo\" title=\"title\" /></p>\n"
+
+  - I: "!\\[foo]\n\n[foo]: /url \"title\"\n"
+    O: "<p>![foo]</p>\n"
+
+  - I: "\\![foo]\n\n[foo]: /url \"title\"\n"
+    O: "<p>!<a href=\"/url\" title=\"title\">foo</a></p>\n"
+
+- Name: Autolinks
+  Tests:
+
+  - I: "<http://foo.bar.baz>\n"
+    O: "<p><a href=\"http://foo.bar.baz\">http://foo.bar.baz</a></p>\n"
+
+  - I: "<http://foo.bar.baz/test?q=hello&id=22&boolean>\n"
+    O: "<p><a href=\"http://foo.bar.baz/test?q=hello&amp;id=22&amp;boolean\">http://foo.bar.baz/test?q=hello&amp;id=22&amp;boolean</a></p>\n"
+
+  - I: "<irc://foo.bar:2233/baz>\n"
+    O: "<p><a href=\"irc://foo.bar:2233/baz\">irc://foo.bar:2233/baz</a></p>\n"
+
+  - I: "<MAILTO:FOO@BAR.BAZ>\n"
+    O: "<p><a href=\"MAILTO:FOO@BAR.BAZ\">MAILTO:FOO@BAR.BAZ</a></p>\n"
+
+  - I: "<a+b+c:d>\n"
+    O: "<p><a href=\"a+b+c:d\">a+b+c:d</a></p>\n"
+
+  - I: "<made-up-scheme://foo,bar>\n"
+    O: "<p><a href=\"made-up-scheme://foo,bar\">made-up-scheme://foo,bar</a></p>\n"
+
+  - I: "<http://../>\n"
+    O: "<p><a href=\"http://../\">http://../</a></p>\n"
+
+  - I: "<localhost:5001/foo>\n"
+    O: "<p><a href=\"localhost:5001/foo\">localhost:5001/foo</a></p>\n"
+
+  - I: "<http://foo.bar/baz bim>\n"
+    O: "<p>&lt;http://foo.bar/baz bim&gt;</p>\n"
+
+  - I: "<http://example.com/\\[\\>\n"
+    O: "<p><a href=\"http://example.com/%5C%5B%5C\">http://example.com/\\[\\</a></p>\n"
+
+  - I: "<foo@bar.example.com>\n"
+    O: "<p><a href=\"mailto:foo@bar.example.com\">foo@bar.example.com</a></p>\n"
+
+  - I: "<foo+special@Bar.baz-bar0.com>\n"
+    O: "<p><a href=\"mailto:foo+special@Bar.baz-bar0.com\">foo+special@Bar.baz-bar0.com</a></p>\n"
+
+  - I: "<foo\\+@bar.example.com>\n"
+    O: "<p>&lt;foo+@bar.example.com&gt;</p>\n"
+
+  - I: "<>\n"
+    O: "<p>&lt;&gt;</p>\n"
+
+  - I: "< http://foo.bar >\n"
+    O: "<p>&lt; http://foo.bar &gt;</p>\n"
+
+  - I: "<m:abc>\n"
+    O: "<p>&lt;m:abc&gt;</p>\n"
+
+  - I: "<foo.bar.baz>\n"
+    O: "<p>&lt;foo.bar.baz&gt;</p>\n"
+
+  - I: "http://example.com\n"
+    O: "<p>http://example.com</p>\n"
+
+  - I: "foo@bar.example.com\n"
+    O: "<p>foo@bar.example.com</p>\n"
+
+- Name: Raw HTML
+  Tests:
+
+  - I: "<a><bab><c2c>\n"
+    O: "<p><a><bab><c2c></p>\n"
+
+  - I: "<a/><b2/>\n"
+    O: "<p><a/><b2/></p>\n"
+
+  - I: "<a  /><b2\ndata=\"foo\" >\n"
+    O: "<p><a  /><b2\ndata=\"foo\" ></p>\n"
+
+  - I: "<a foo=\"bar\" bam = 'baz <em>\"</em>'\n_boolean zoop:33=zoop:33 />\n"
+    O: "<p><a foo=\"bar\" bam = 'baz <em>\"</em>'\n_boolean zoop:33=zoop:33 /></p>\n"
+
+  - I: "Foo <responsive-image src=\"foo.jpg\" />\n"
+    O: "<p>Foo <responsive-image src=\"foo.jpg\" /></p>\n"
+
+  - I: "<33> <__>\n"
+    O: "<p>&lt;33&gt; &lt;__&gt;</p>\n"
+
+  - I: "<a h*#ref=\"hi\">\n"
+    O: "<p>&lt;a h*#ref=&quot;hi&quot;&gt;</p>\n"
+
+  - I: "<a href=\"hi'> <a href=hi'>\n"
+    O: "<p>&lt;a href=&quot;hi'&gt; &lt;a href=hi'&gt;</p>\n"
+
+  - I: "< a><\nfoo><bar/ >\n<foo bar=baz\nbim!bop />\n"
+    O: "<p>&lt; a&gt;&lt;\nfoo&gt;&lt;bar/ &gt;\n&lt;foo bar=baz\nbim!bop /&gt;</p>\n"
+
+  - I: "<a href='bar'title=title>\n"
+    O: "<p>&lt;a href='bar'title=title&gt;</p>\n"
+
+  - I: "</a></foo >\n"
+    O: "<p></a></foo ></p>\n"
+
+  - I: "</a href=\"foo\">\n"
+    O: "<p>&lt;/a href=&quot;foo&quot;&gt;</p>\n"
+
+  - I: "foo <!-- this is a\ncomment - with hyphen -->\n"
+    O: "<p>foo <!-- this is a\ncomment - with hyphen --></p>\n"
+
+  - I: "foo <!-- not a comment -- two hyphens -->\n"
+    O: "<p>foo &lt;!-- not a comment -- two hyphens --&gt;</p>\n"
+
+  - I: "foo <!--> foo -->\n\nfoo <!-- foo--->\n"
+    O: "<p>foo &lt;!--&gt; foo --&gt;</p>\n<p>foo &lt;!-- foo---&gt;</p>\n"
+
+  - I: "foo <?php echo $a; ?>\n"
+    O: "<p>foo <?php echo $a; ?></p>\n"
+
+  - I: "foo <!ELEMENT br EMPTY>\n"
+    O: "<p>foo <!ELEMENT br EMPTY></p>\n"
+
+  - I: "foo <![CDATA[>&<]]>\n"
+    O: "<p>foo <![CDATA[>&<]]></p>\n"
+
+  - I: "foo <a href=\"&ouml;\">\n"
+    O: "<p>foo <a href=\"&ouml;\"></p>\n"
+
+  - I: "foo <a href=\"\\*\">\n"
+    O: "<p>foo <a href=\"\\*\"></p>\n"
+
+  - I: "<a href=\"\\\"\">\n"
+    O: "<p>&lt;a href=&quot;&quot;&quot;&gt;</p>\n"
+
+- Name: Hard line breaks
+  Tests:
+
+  - I: "foo  \nbaz\n"
+    O: "<p>foo<br />\nbaz</p>\n"
+
+  - I: "foo\\\nbaz\n"
+    O: "<p>foo<br />\nbaz</p>\n"
+
+  - I: "foo       \nbaz\n"
+    O: "<p>foo<br />\nbaz</p>\n"
+
+  - I: "foo  \n     bar\n"
+    O: "<p>foo<br />\nbar</p>\n"
+
+  - I: "foo\\\n     bar\n"
+    O: "<p>foo<br />\nbar</p>\n"
+
+  - I: "*foo  \nbar*\n"
+    O: "<p><em>foo<br />\nbar</em></p>\n"
+
+  - I: "*foo\\\nbar*\n"
+    O: "<p><em>foo<br />\nbar</em></p>\n"
+
+  - I: "`code \nspan`\n"
+    O: "<p><code>code  span</code></p>\n"
+
+  - I: "`code\\\nspan`\n"
+    O: "<p><code>code\\ span</code></p>\n"
+
+  - I: "<a href=\"foo  \nbar\">\n"
+    O: "<p><a href=\"foo  \nbar\"></p>\n"
+
+  - I: "<a href=\"foo\\\nbar\">\n"
+    O: "<p><a href=\"foo\\\nbar\"></p>\n"
+
+  - I: "foo\\\n"
+    O: "<p>foo\\</p>\n"
+
+  - I: "foo  \n"
+    O: "<p>foo</p>\n"
+
+  - I: "### foo\\\n"
+    O: "<h3>foo\\</h3>\n"
+
+  - I: "### foo  \n"
+    O: "<h3>foo</h3>\n"
+
+- Name: Soft line breaks
+  Tests:
+
+  - I: "foo\nbaz\n"
+    O: "<p>foo\nbaz</p>\n"
+
+  - I: "foo \n baz\n"
+    O: "<p>foo\nbaz</p>\n"
+
+- Name: Textual content
+  Tests:
+
+  - I: "hello $.;'there\n"
+    O: "<p>hello $.;'there</p>\n"
+
+  - I: "Foo χρῆν\n"
+    O: "<p>Foo χρῆν</p>\n"
+
+  - I: "Multiple     spaces\n"
+    O: "<p>Multiple     spaces</p>\n"
+

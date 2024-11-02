@@ -1,0 +1,4 @@
+github.com/rogpeppe/go-internal v1.13.1 h1:KvO1DLK/DRN07sQ1LQKScxyZJuNnedQ5/wKSR38lUII=
+github.com/rogpeppe/go-internal v1.13.1/go.mod h1:uMEvuHeurkdAXX61udpOXGD/AzZDWNMNyH2VO9fmH0o=
+github.com/rwxrob/bonzai/uniq v0.0.1-beta.2 h1:ZJr7BzFnmeXrBQjUfkWu/2hRpk4Oo+CsvQ90ybHTHLo=
+github.com/rwxrob/bonzai/uniq v0.0.1-beta.2/go.mod h1:RsSPso5Dhs1tYEjhuVA4b8DM5l0pQPhGebm8Lx5XHc8=
