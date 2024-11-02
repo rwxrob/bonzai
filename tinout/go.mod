@@ -1,4 +1,4 @@
-module github.com/rwxrob/tinout
+module github.com/rwxrob/bonzai/tinout
 
 go 1.23.0
 
