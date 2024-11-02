@@ -1,0 +1,32 @@
+#!/usr/bin/env bash
+
+# This entrypoint script determines one of the following container contexts for the
+# same single example/test image. (This simplifies testing by maintaining
+# everything in a single container image rather than dealing with
+# multiple images and Dockerfiles.)
+#
+#     server - run as an openssh-server service only (always 22)
+#     client - run as an ssh/runonany client
+#
+
+server() {
+	service ssh start
+	tail -f /dev/null
+}
+
+watch() {
+	while true; do
+		clear
+		runonany hostname <<<"some stdin"
+		sleep 2
+	done
+}
+
+
+#printf "ARGS:%s\n" "$@"
+
+case "$1" in
+	server) server;;
+	watch) shift; watch "$@";;
+	check) shift; ssh "user@$1" -p "222$2" -o StrictHostKeyChecking=no -i /home/user/.ssh/user hostname;;
+esac
