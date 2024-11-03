@@ -17,12 +17,6 @@ func init() {
 	Vars = m
 }
 
-const (
-	FAILED   = -1
-	NOTFOUND = 0
-	SUCCESS  = 1
-)
-
 // Completer specifies a struct with a [Completer.Complete] function
 // that will complete the first argument (usually a command of some kind)
 // based on the remaining arguments. The [Complete] method must never
