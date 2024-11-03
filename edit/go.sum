@@ -8,8 +8,6 @@ github.com/rwxrob/bonzai/futil v0.1.0 h1:+NcdqV+F15q6YHCvRIU8WogvrfXCp0EI8TwMwNX
 github.com/rwxrob/bonzai/futil v0.1.0/go.mod h1:KPQjnEXMs/YD3ZEzHeiNc/AS9iU2dWIb6weTWktXUT8=
 github.com/rwxrob/bonzai/mark v0.1.0 h1:l7P+YX98plXI+jMtO7FOXndsSpVBu0HEZfG/xewxxKU=
 github.com/rwxrob/bonzai/mark v0.1.0/go.mod h1:Ovll49Z3KDGC4QE0LK9m++5nUhJgLQFWK4Jr+3/xmRQ=
-github.com/rwxrob/bonzai/run v0.1.0 h1:BKMcGRhqz7+hNZHzJMTsQLIOUVzYCzoG2VnuqBAMklU=
-github.com/rwxrob/bonzai/run v0.1.0/go.mod h1:RHCFxeqxOOS+LEwKc7i1RXB6kYCP5WosjtKBGWs4+M0=
 github.com/rwxrob/bonzai/run v0.1.1 h1:TO3nox8iO36wy5eq9A/IILxTfIe6q2lSce8CHXkC7RI=
 github.com/rwxrob/bonzai/run v0.1.1/go.mod h1:Z9AqCLAtTGq0FdjnxmB0XhGS9PH9krCL02LxHi2Hz7k=
 github.com/rwxrob/bonzai/scanner v0.1.0 h1:xPf5817Mt0lkm2GvygJIGBqq0sS7thvh5ceK3RjWhkQ=
@@ -18,8 +16,6 @@ github.com/rwxrob/bonzai/term v0.1.0 h1:Ax1I4X6onhDSJB2tVRF6ybzE8xj5w4e87vLBSKlK
 github.com/rwxrob/bonzai/term v0.1.0/go.mod h1:wjge/SBlsoVVMmMklnDb2uyeMFGxz7ouLwiJmEsv4Xw=
 github.com/rwxrob/bonzai/to v0.1.0 h1:iZmGAvecuxtJpq/AMFQl1p/tG0+0FM/k0J9Sa2/Zdx0=
 github.com/rwxrob/bonzai/to v0.1.0/go.mod h1:dU0IeP9LyqPdkQnbd2Qm4P0/ZYdS9ErXo8npNn/rH00=
-github.com/rwxrob/bonzai/uniq v0.0.1-beta.2 h1:ZJr7BzFnmeXrBQjUfkWu/2hRpk4Oo+CsvQ90ybHTHLo=
-github.com/rwxrob/bonzai/uniq v0.0.1-beta.2/go.mod h1:RsSPso5Dhs1tYEjhuVA4b8DM5l0pQPhGebm8Lx5XHc8=
 github.com/rwxrob/bonzai/uniq v0.1.0 h1:xOlTWnaotslv1I0Nc+3+qXHxecoxNSROo871S2m3cq4=
 github.com/rwxrob/bonzai/uniq v0.1.0/go.mod h1:RsSPso5Dhs1tYEjhuVA4b8DM5l0pQPhGebm8Lx5XHc8=
 golang.org/x/crypto v0.28.0 h1:GBDwsMXVQi34v5CCYUm2jkJvu4cbtru2U4TN2PSyQnw=
