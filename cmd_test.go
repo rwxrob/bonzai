@@ -3,7 +3,7 @@ package bonzai_test
 import (
 	"fmt"
 
-	bonzai "github.com/rwxrob/bonzai/pkg"
+	"github.com/rwxrob/bonzai"
 )
 
 func ExampleCmd_AliasSlice() {
