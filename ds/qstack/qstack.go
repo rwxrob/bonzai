@@ -200,10 +200,10 @@ func (s QS[T]) MarshalJSON() ([]byte, error) {
 	return json.Marshal(s.Items())
 }
 
-// JSON implements rwxrob/bonzai/pkg/json.AsJSON.
+// JSON implements rwxrob/bonzai/json.AsJSON.
 func (s *QS[T]) JSON() ([]byte, error) { return s.MarshalJSON() }
 
-// String implements rwxrob/bonzai/pkg/json.Stringer and fmt.Stringer.
+// String implements rwxrob/bonzai/json.Stringer and fmt.Stringer.
 func (s QS[T]) String() string {
 	byt, err := s.JSON()
 	if err != nil {
@@ -212,18 +212,18 @@ func (s QS[T]) String() string {
 	return string(byt)
 }
 
-// String implements rwxrob/bonzai/pkg/json.Printer.
+// String implements rwxrob/bonzai/json.Printer.
 func (s *QS[T]) Print() { fmt.Println(s.String()) }
 
-// Log implements rwxrob/bonzai/pkg/json.Logger.
+// Log implements rwxrob/bonzai/json.Logger.
 func (s QS[T]) Log() { log.Print(s.String()) }
 
 // ---------------------------- marshaling ----------------------------
 
-// JSON implements rwxrob/bonzai/pkg/json.AsJSON.
+// JSON implements rwxrob/bonzai/json.AsJSON.
 func (s *item[T]) JSON() ([]byte, error) { return json.Marshal(s) }
 
-// String implements rwxrob/bonzai/pkg/json.Stringer and fmt.Stringer.
+// String implements rwxrob/bonzai/json.Stringer and fmt.Stringer.
 func (s item[T]) String() string {
 	byt, err := s.JSON()
 	if err != nil {
@@ -232,8 +232,8 @@ func (s item[T]) String() string {
 	return string(byt)
 }
 
-// String implements rwxrob/bonzai/pkg/json.Printer.
+// String implements rwxrob/bonzai/json.Printer.
 func (s *item[T]) Print() { fmt.Println(s.String()) }
 
-// Log implements rwxrob/bonzai/pkg/json.Logger.
+// Log implements rwxrob/bonzai/json.Logger.
 func (s item[T]) Log() { log.Print(s.String()) }

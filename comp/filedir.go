@@ -8,7 +8,7 @@ import (
 	"path/filepath"
 	"strings"
 
-	bonzai "github.com/rwxrob/bonzai/pkg"
+	"github.com/rwxrob/bonzai"
 	"github.com/rwxrob/bonzai/fn/filt"
 	"github.com/rwxrob/bonzai/futil"
 )

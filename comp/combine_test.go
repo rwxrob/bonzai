@@ -6,7 +6,7 @@ package comp_test
 import (
 	"fmt"
 
-	bonzai "github.com/rwxrob/bonzai/pkg"
+	"github.com/rwxrob/bonzai"
 	"github.com/rwxrob/bonzai/comp"
 )
 

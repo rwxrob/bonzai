@@ -4,8 +4,8 @@ import (
 	"strconv"
 	"time"
 
+	"github.com/rwxrob/bonzai"
 	"github.com/rwxrob/bonzai/comp"
-	bonzai "github.com/rwxrob/bonzai/pkg"
 )
 
 var Cmd = &bonzai.Cmd{

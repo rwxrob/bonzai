@@ -3,7 +3,7 @@ package comp
 import (
 	"log"
 
-	bonzai "github.com/rwxrob/bonzai/pkg"
+	"github.com/rwxrob/bonzai"
 	"github.com/rwxrob/bonzai/fn/filt"
 )
 

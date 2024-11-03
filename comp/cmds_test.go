@@ -4,7 +4,7 @@
 package comp_test
 
 import (
-	bonzai "github.com/rwxrob/bonzai/pkg"
+	"github.com/rwxrob/bonzai"
 )
 
 func ExampleCmds_Complete() {
