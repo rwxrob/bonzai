@@ -11,7 +11,7 @@ Card](https://goreportcard.com/badge/github.com/rwxrob/bonzai)](https://goreport
 
 > "I used Bonzai for a pentest ... was able to inject ebpf.io kernel modules that were part of bin lol! Bonzai is Genius!"
 
-![logo](logo.png)
+![logo](assets/logo.png)
 
 Bonzai was born from a very real need to replace messy collections of shell scripts, wasteful completion sourcing, and OS-specific documentation with a single, stateful, binary composed of commands organized as rooted node trees with a clean, modular, portable, statically-compiled, and dynamically self-documenting design.
 
