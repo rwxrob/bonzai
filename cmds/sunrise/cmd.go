@@ -10,6 +10,7 @@ import (
 
 var Cmd = &bonzai.Cmd{
 	Name:  `sunrise`,
+	Vers:  `v0.1.0`,
 	Short: `showcase all colors of terminal`,
 	Comp:  comp.Cmds,
 
