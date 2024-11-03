@@ -1,17 +1,11 @@
 github.com/rogpeppe/go-internal v1.13.1 h1:KvO1DLK/DRN07sQ1LQKScxyZJuNnedQ5/wKSR38lUII=
 github.com/rogpeppe/go-internal v1.13.1/go.mod h1:uMEvuHeurkdAXX61udpOXGD/AzZDWNMNyH2VO9fmH0o=
-github.com/rwxrob/bonzai v0.21.0 h1:X13Ccs79x4uhUreR9YOiipxqvzNc6oE3j4xGX2wA74U=
-github.com/rwxrob/bonzai v0.21.0/go.mod h1:BdkdgC7FDNGe09CsyFSSrMB1U8SmF0VqPon6lZ9u7FY=
-github.com/rwxrob/bonzai/comp v0.1.0 h1:SsqEc6jCV/jj14VIp3mN1/T5xvp789IOgbur0cV85Kc=
-github.com/rwxrob/bonzai/comp v0.1.0/go.mod h1:XIdLsVHsWFIr/UtQzL8BXYYGCV76+Ljb/dhwv3QMJ6U=
 github.com/rwxrob/bonzai/ds v0.1.0 h1:KIEnKJYnt8QBeEewvUb5AqrjWMkbk/mERbneohEVaec=
 github.com/rwxrob/bonzai/ds v0.1.0/go.mod h1:TXt50HVz1dDHhAwXe1K8p3bNX8tTbaDIvE0nC3tr0L0=
 github.com/rwxrob/bonzai/fn v0.1.0 h1:RVuiED3s9dlxThWDduSw0nR4dkpAQNHM+dUj/kYNseU=
 github.com/rwxrob/bonzai/fn v0.1.0/go.mod h1:7Il/56Y+M/vGs9W5GsUrnOR7amnFKwDD2kIdY5S0aA8=
 github.com/rwxrob/bonzai/futil v0.1.0 h1:+NcdqV+F15q6YHCvRIU8WogvrfXCp0EI8TwMwNXjGqs=
 github.com/rwxrob/bonzai/futil v0.1.0/go.mod h1:KPQjnEXMs/YD3ZEzHeiNc/AS9iU2dWIb6weTWktXUT8=
-github.com/rwxrob/bonzai/is v0.1.0 h1:bKrRLKELNU0e77W9uiyhyBoiC4MDAHs+EYM/0q28kRI=
-github.com/rwxrob/bonzai/is v0.1.0/go.mod h1:nxuqAGGBVYyq3bwXI0cFEl0xoAFVUrSJE7QVw81A3u8=
 github.com/rwxrob/bonzai/mark v0.1.0 h1:l7P+YX98plXI+jMtO7FOXndsSpVBu0HEZfG/xewxxKU=
 github.com/rwxrob/bonzai/mark v0.1.0/go.mod h1:Ovll49Z3KDGC4QE0LK9m++5nUhJgLQFWK4Jr+3/xmRQ=
 github.com/rwxrob/bonzai/run v0.1.0 h1:BKMcGRhqz7+hNZHzJMTsQLIOUVzYCzoG2VnuqBAMklU=
@@ -24,8 +18,6 @@ github.com/rwxrob/bonzai/to v0.1.0 h1:iZmGAvecuxtJpq/AMFQl1p/tG0+0FM/k0J9Sa2/Zdx
 github.com/rwxrob/bonzai/to v0.1.0/go.mod h1:dU0IeP9LyqPdkQnbd2Qm4P0/ZYdS9ErXo8npNn/rH00=
 github.com/rwxrob/bonzai/uniq v0.1.0 h1:xOlTWnaotslv1I0Nc+3+qXHxecoxNSROo871S2m3cq4=
 github.com/rwxrob/bonzai/uniq v0.1.0/go.mod h1:RsSPso5Dhs1tYEjhuVA4b8DM5l0pQPhGebm8Lx5XHc8=
-github.com/rwxrob/bonzai/vars v0.1.0 h1:oKbqvieunvXqnaCvaipE/rHziLhRXsRV7V4F+qrg6EQ=
-github.com/rwxrob/bonzai/vars v0.1.0/go.mod h1:eifeYgKOxSzZ2wWT1i9Z2M0tnvdvBEVRuBVFBfBInio=
 golang.org/x/crypto v0.28.0 h1:GBDwsMXVQi34v5CCYUm2jkJvu4cbtru2U4TN2PSyQnw=
 golang.org/x/crypto v0.28.0/go.mod h1:rmgy+3RHxRZMyY0jjAJShp2zgEdOqj2AO7U0pYmeQ7U=
 golang.org/x/sys v0.26.0 h1:KHjCJyddX0LoSTb3J+vWpupP9p0oznkqVk/IfjymZbo=

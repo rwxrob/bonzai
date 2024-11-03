@@ -1,0 +1,4 @@
+foo:
+    # here is a comment
+    bar: one
+    other: true

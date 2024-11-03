@@ -1,0 +1,6 @@
+github.com/rwxrob/bonzai/ds v0.1.0 h1:KIEnKJYnt8QBeEewvUb5AqrjWMkbk/mERbneohEVaec=
+github.com/rwxrob/bonzai/ds v0.1.0/go.mod h1:TXt50HVz1dDHhAwXe1K8p3bNX8tTbaDIvE0nC3tr0L0=
+github.com/rwxrob/bonzai/scanner v0.1.0 h1:xPf5817Mt0lkm2GvygJIGBqq0sS7thvh5ceK3RjWhkQ=
+github.com/rwxrob/bonzai/scanner v0.1.0/go.mod h1:JsWu2C9ytyKNzjYzDto89orF7iXk9qFXnOSh8ghAJQM=
+github.com/rwxrob/bonzai/to v0.1.0 h1:iZmGAvecuxtJpq/AMFQl1p/tG0+0FM/k0J9Sa2/Zdx0=
+github.com/rwxrob/bonzai/to v0.1.0/go.mod h1:dU0IeP9LyqPdkQnbd2Qm4P0/ZYdS9ErXo8npNn/rH00=
