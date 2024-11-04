@@ -9,6 +9,7 @@ import (
 	"log"
 	"os"
 	"os/exec"
+	"os/signal"
 	"path/filepath"
 	"strings"
 	"syscall"
@@ -305,3 +306,22 @@ func ExitOff() { DoNotExit = true }
 
 // ExitOn sets DoNotExit to true.
 func ExitOn() { DoNotExit = false }
+
+var DefaultInterruptFinalizer = func() { fmt.Print("\b\b") }
+
+// UntilInterrupted calls [UntilInterruptedThen] with
+// [DefaultInterruptFinalizer].
+func UntilInterrupted() { UntilInterruptedThen(DefaultInterruptFinalizer) }
+
+// UntilInterruptedThen sets up a signal handler for [SIGINT] and [SIGTERM]
+// that calls the [finalize] function when an interrupt is received,
+// then exits the program.
+func UntilInterruptedThen(finalize func()) {
+	signalChannel := make(chan os.Signal, 1)
+	signal.Notify(signalChannel, syscall.SIGINT, syscall.SIGTERM)
+	go func() {
+		<-signalChannel
+		finalize()
+		Exit()
+	}()
+}
