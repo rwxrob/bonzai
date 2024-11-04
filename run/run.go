@@ -332,8 +332,8 @@ func HandleInterrupt(handler func()) {
 func SimpleAnimationScreen() error {
 	HandleInterrupt(func() {
 		fmt.Print(esc.Clear)     // Clear terminal
-		fmt.Print(esc.CursorOn)  // Show cursor
 		fmt.Print(esc.AltBufOff) // Show cursor
+		fmt.Print(esc.CursorOn)  // Show cursor
 		Exit()
 	})
 	fmt.Print(esc.CursorOff)
