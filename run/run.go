@@ -10,7 +10,9 @@ import (
 	"os"
 	"os/exec"
 	"os/signal"
+	"os/user"
 	"path/filepath"
+	"runtime"
 	"strings"
 	"syscall"
 
@@ -193,10 +195,19 @@ func Out(args ...string) string {
 	return string(out)
 }
 
-// IsRoot checks whether this program is run as a privileged user.
+// IsAdmin checks whether this program is run as a privileged user.
 // In windows this will always return false.
-func IsRoot() bool {
-	return os.Geteuid() == 0
+func IsAdmin() bool {
+	currentUser, err := user.Current()
+	if err != nil {
+		return false
+	}
+	switch runtime.GOOS {
+	case "windows":
+		return currentUser.Username == "SYSTEM"
+	default:
+		return os.Geteuid() == 0 || currentUser.Username == "root"
+	}
 }
 
 func ShellIsBash() bool {
