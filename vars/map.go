@@ -17,6 +17,7 @@ import (
 	"sync"
 	"time"
 
+	"github.com/rwxrob/bonzai/edit"
 	"github.com/rwxrob/bonzai/fn/maps"
 	"github.com/rwxrob/bonzai/futil"
 	"github.com/rwxrob/bonzai/run"
@@ -208,7 +209,7 @@ func (m *Map) Init() error {
 }
 
 // Edit opens the default editor to edit the file specified in m.File.
-func (m *Map) Edit() error { return run.Edit(m.File) }
+func (m *Map) Edit() error { return edit.Files(m.File) }
 
 // Clear removes all elements from the map [m.M] while ensuring thread safety
 // by locking before the operation and unlocking afterward.
