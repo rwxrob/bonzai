@@ -50,13 +50,13 @@ const (
 	EraseScreenE = "\033[J"
 	EraseScreenS = "\033[1J"
 	EraseScreen  = "\033[2J"
-	Clear        = EraseScreen + TopLeft
+	Clear        = EraseScreen + TopLeft + Reset
 
 	// unsupported on most modern terminals
-	PrintScreen   = "\033[i"
-	PrintLine     = "\033[1i"
-	StopPrintLog  = "\033[4i"
-	StartPrintLog = "\033[5i"
+	PrintScreen = "\033[i"
+	PrintLine   = "\033[1i"
+	PrintLogOn  = "\033[4i"
+	PrintLogOff = "\033[5i"
 
 	// SetKey = "\033[{key};"string"p"
 
@@ -71,7 +71,7 @@ const (
 	Blink      = "\033[5m"
 	BlinkF     = "\033[6m" // usually not supported
 	Reverse    = "\033[7m"
-	Hide     = "\033[8m"
+	Hide       = "\033[8m"
 	Strike     = "\033[9m" // modern support
 	BoldItalic = Bold + Italic
 
@@ -111,6 +111,9 @@ const (
 	BHCyan    = "\033[106m"
 	BHWhite   = "\033[107m"
 
-	HideCursor = "\033[?25l"
-	ShowCursor = "\033[?25h"
+	CursorOn  = "\033[?25l"
+	CursorOff = "\033[?25h"
+
+	AltBufOn  = "\033[?1049h"
+	AltBufOff = "\033[?1049l"
 )
