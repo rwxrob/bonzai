@@ -16,6 +16,7 @@ import (
 
 	"github.com/rwxrob/bonzai/futil"
 	"github.com/rwxrob/bonzai/mark"
+	"github.com/rwxrob/bonzai/term/esc"
 )
 
 var ExePath = os.Executable
@@ -307,21 +308,35 @@ func ExitOff() { DoNotExit = true }
 // ExitOn sets DoNotExit to true.
 func ExitOn() { DoNotExit = false }
 
-var DefaultInterruptFinalizer = func() { fmt.Print("\b\b") }
+var DefaultInterruptHandler = func() { fmt.Print("\b\b"); Exit() }
 
-// UntilInterrupted calls [UntilInterruptedThen] with
-// [DefaultInterruptFinalizer].
-func UntilInterrupted() { UntilInterruptedThen(DefaultInterruptFinalizer) }
-
-// UntilInterruptedThen sets up a signal handler for [SIGINT] and [SIGTERM]
-// that calls the [finalize] function when an interrupt is received,
-// then exits the program.
-func UntilInterruptedThen(finalize func()) {
+// HandleInterrupt sets up a signal handler for [SIGINT] and [SIGTERM]
+// that calls the handler.
+func HandleInterrupt(handler func()) {
+	if handler == nil {
+		handler = DefaultInterruptHandler
+	}
 	signalChannel := make(chan os.Signal, 1)
 	signal.Notify(signalChannel, syscall.SIGINT, syscall.SIGTERM)
 	go func() {
 		<-signalChannel
-		finalize()
-		Exit()
+		handler()
 	}()
+}
+
+// SimpleAnimationScreen conveniently sets up an alternate screen buffer
+// clears it, turns off the cursor and traps any interrupts so that the
+// screen and cursor are restored and the program exits. This is useful
+// when making simple ASCII animations without needing a full terminal
+// animation package.
+func SimpleAnimationScreen() error {
+	HandleInterrupt(func() {
+		fmt.Print(esc.Clear)     // Clear terminal
+		fmt.Print(esc.CursorOn)  // Show cursor
+		fmt.Print(esc.AltBufOff) // Show cursor
+		Exit()
+	})
+	fmt.Print(esc.CursorOff)
+	fmt.Print(esc.AltBufOn)
+	return nil
 }
