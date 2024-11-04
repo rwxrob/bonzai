@@ -31,7 +31,7 @@ var (
 	Blink      string
 	BlinkF     string
 	Reverse    string
-	Hide     string
+	Hide       string
 	Strike     string
 	BoldItalic string
 	Black      string
