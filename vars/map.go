@@ -201,6 +201,7 @@ func (m *Map) Init() error {
 		if err != nil {
 			return err
 		}
+		m.File = file
 	}
 	if futil.Exists(file) {
 		return nil
