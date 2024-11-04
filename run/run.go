@@ -286,7 +286,6 @@ func ExitError(err ...interface{}) {
 	if !DoNotExit {
 		os.Exit(1)
 	}
-
 }
 
 // Exit calls os.Exit(0) unless DoNotExit has been set to true. Cmds
@@ -310,14 +309,13 @@ func ExitOn() { DoNotExit = false }
 
 var DefaultInterruptHandler = func() { fmt.Print("\b\b"); Exit() }
 
-// HandleInterrupt sets up a signal handler for [SIGINT] and [SIGTERM]
-// that calls the handler.
-func HandleInterrupt(handler func()) {
+// Trap sets up a signal handler for signals that calls the handler.
+func Trap(handler func(), signals ...os.Signal) {
 	if handler == nil {
 		handler = DefaultInterruptHandler
 	}
 	signalChannel := make(chan os.Signal, 1)
-	signal.Notify(signalChannel, syscall.SIGINT, syscall.SIGTERM)
+	signal.Notify(signalChannel, signals...)
 	go func() {
 		<-signalChannel
 		handler()
@@ -330,12 +328,12 @@ func HandleInterrupt(handler func()) {
 // when making simple ASCII animations without needing a full terminal
 // animation package.
 func SimpleAnimationScreen() error {
-	HandleInterrupt(func() {
+	Trap(func() {
 		fmt.Print(esc.Clear)     // Clear terminal
 		fmt.Print(esc.AltBufOff) // Show cursor
 		fmt.Print(esc.CursorOn)  // Show cursor
 		Exit()
-	})
+	}, syscall.SIGINT, syscall.SIGTERM)
 	fmt.Print(esc.CursorOff)
 	fmt.Print(esc.AltBufOn)
 	return nil
