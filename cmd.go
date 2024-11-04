@@ -377,21 +377,10 @@ func (x *Cmd) exitUnlessValidName() {
 	}
 }
 
+// called as multicall binary
 func (x *Cmd) recurseIfMulti(args []string) {
-	// called as multicall binary
-	name, _ := run.RealExeName()
+	name, _ := run.ExeName()
 	if name != x.Name {
-		// dashed/long (ex: z-bon-multi-symlink)
-		if strings.Contains(name, `-`) {
-			args = strings.Split(name, `-`)
-			first := args[0]
-			if first != name {
-				run.ExitError(InvalidMultiName{name, name})
-			}
-			x.Run(args[1:]...)
-			return
-		}
-		// simple (ex: bon)
 		if c := x.Can(name); c != nil {
 			c.Run()
 			return
