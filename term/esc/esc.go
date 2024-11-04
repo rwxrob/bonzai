@@ -111,8 +111,8 @@ const (
 	BHCyan    = "\033[106m"
 	BHWhite   = "\033[107m"
 
-	CursorOn  = "\033[?25l"
-	CursorOff = "\033[?25h"
+	CursorOn  = "\033[?25h"
+	CursorOff = "\033[?25l"
 
 	AltBufOn  = "\033[?1049h"
 	AltBufOff = "\033[?1049l"
