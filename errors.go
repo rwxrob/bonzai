@@ -75,7 +75,7 @@ type Uncallable struct {
 }
 
 func (e Uncallable) Error() string {
-	return fmt.Sprintf(`requires Call, Cmds, or Def: %v`, e.Cmd.Name)
+	return fmt.Sprintf(`Cmd requires Call or Def: %v`, e.Cmd.Name)
 }
 
 type CallOrDef struct {
