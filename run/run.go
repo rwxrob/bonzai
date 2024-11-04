@@ -193,20 +193,6 @@ func Out(args ...string) string {
 	return string(out)
 }
 
-// IsInPath checks if a provided filepath or command is present in
-// PATH.
-func IsInPath(name string) bool {
-	_, err := exec.LookPath(name)
-	return err == nil
-}
-
-// InPath searches for name in PATH and returns the absolute path if one
-// is found
-func InPath(name string) (string, error) {
-	path, err := exec.LookPath(name)
-	return path, err
-}
-
 // IsRoot checks whether this program is run as a privileged user.
 // In windows this will always return false.
 func IsRoot() bool {
