@@ -409,7 +409,7 @@ func (x *Cmd) detectCompletion(args []string) {
 		}
 
 		// own completer, delegate
-		each.Println(cmd.Comp.Complete(cmd, args...))
+		each.Println(cmd.Comp.Complete(*cmd, args...))
 		run.Exit()
 		return
 	}

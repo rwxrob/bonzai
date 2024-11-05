@@ -7,11 +7,12 @@ import (
 	"fmt"
 
 	"github.com/rwxrob/bonzai"
+
 	"github.com/rwxrob/bonzai/comp"
 )
 
 func ExampleOpts_Complete() {
-	foo := new(bonzai.Cmd)
+	foo := bonzai.Cmd{}
 	foo.Opts = `box`
 	foo.Comp = comp.Opts
 	foo.Add(`bar`)
@@ -23,8 +24,7 @@ func ExampleOpts_Complete() {
 	// everything that begins with bl (just blah)
 	fmt.Println(comp.Opts.Complete(foo, `bl`))
 
-	//Output:
+	// Output:
 	// [box]
 	// []
-
 }
