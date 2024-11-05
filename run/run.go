@@ -16,7 +16,6 @@ import (
 
 	"github.com/rwxrob/bonzai/futil"
 	"github.com/rwxrob/bonzai/mark"
-	"github.com/rwxrob/bonzai/term/esc"
 )
 
 var ExePath = os.Executable
@@ -301,7 +300,6 @@ func ExitError(err ...interface{}) {
 	if !DoNotExit {
 		os.Exit(1)
 	}
-
 }
 
 // Exit calls os.Exit(0) unless DoNotExit has been set to true. Cmds
@@ -325,33 +323,15 @@ func ExitOn() { DoNotExit = false }
 
 var DefaultInterruptHandler = func() { fmt.Print("\b\b"); Exit() }
 
-// HandleInterrupt sets up a signal handler for [SIGINT] and [SIGTERM]
-// that calls the handler.
-func HandleInterrupt(handler func()) {
+// Trap sets up a signal handler for signals that calls the handler.
+func Trap(handler func(), signals ...os.Signal) {
 	if handler == nil {
 		handler = DefaultInterruptHandler
 	}
 	signalChannel := make(chan os.Signal, 1)
-	signal.Notify(signalChannel, syscall.SIGINT, syscall.SIGTERM)
+	signal.Notify(signalChannel, signals...)
 	go func() {
 		<-signalChannel
 		handler()
 	}()
-}
-
-// SimpleAnimationScreen conveniently sets up an alternate screen buffer
-// clears it, turns off the cursor and traps any interrupts so that the
-// screen and cursor are restored and the program exits. This is useful
-// when making simple ASCII animations without needing a full terminal
-// animation package.
-func SimpleAnimationScreen() error {
-	HandleInterrupt(func() {
-		fmt.Print(esc.Clear)     // Clear terminal
-		fmt.Print(esc.AltBufOff) // Show cursor
-		fmt.Print(esc.CursorOn)  // Show cursor
-		Exit()
-	})
-	fmt.Print(esc.CursorOff)
-	fmt.Print(esc.AltBufOn)
-	return nil
 }
