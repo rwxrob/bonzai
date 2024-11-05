@@ -22,10 +22,35 @@ func ExampleAllLatinASCIILower() {
 	// "123" false
 	// "abc123" false
 	// "abcdEF" false
-	// "" true
+	// "" false
 	// "abc-def" false
 	// "latinlower" true
 	// "ábc" false
+}
+
+func ExampleAllLatinASCIILowerWithDashes() {
+
+	tests := []string{"hello", "world", "Hello", "123", "abc123", "abcdEF", "", "abc-def", "latinlower", "ábc", "-fail", "its-all-fine", "even-this-"}
+
+	for _, test := range tests {
+		result := is.AllLatinASCIILowerWithDashes(test)
+		fmt.Printf("%q %v\n", test, result)
+	}
+
+	// Output:
+	// "hello" true
+	// "world" true
+	// "Hello" false
+	// "123" false
+	// "abc123" false
+	// "abcdEF" false
+	// "" false
+	// "abc-def" true
+	// "latinlower" true
+	// "ábc" false
+	// "-fail" false
+	// "its-all-fine" true
+	// "even-this-" false
 }
 
 func ExampleAllLatinASCIIUpper() {
@@ -44,7 +69,7 @@ func ExampleAllLatinASCIIUpper() {
 	// "123" false
 	// "abc123" false
 	// "abcdEF" false
-	// "" true
+	// "" false
 	// "ABC-DEF" false
 	// "LATINLOWER" true
 	// "ÁBC" false
