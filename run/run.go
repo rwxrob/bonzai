@@ -149,7 +149,7 @@ func SysExec(args ...string) error {
 		return err
 	}
 	// exits the program unless there is an error
-	return syscall.Exec(path, args, os.Environ())
+	return syscall.Exec(path, args[1:], os.Environ())
 }
 
 // Exec checks for existence of first argument as an executable on the
@@ -243,7 +243,7 @@ func ArgsOrIn(args []string) (string, error) {
 // FileOrIn takes a string containing a path to a file. If the file does
 // not exist (or file is empty string) then read from [os.Stdin].
 func FileOrIn(file string) (string, error) {
-	var in = os.Stdin
+	in := os.Stdin
 	var err error
 	if len(file) > 0 {
 		in, err = os.Open(file)
