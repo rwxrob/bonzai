@@ -1,8 +1,6 @@
 package kimono
 
 import (
-	"fmt"
-
 	"github.com/rwxrob/bonzai"
 	"github.com/rwxrob/bonzai/comp"
 )
@@ -22,17 +20,16 @@ var sanitizeCmd = &bonzai.Cmd{
 }
 
 var workCmd = &bonzai.Cmd{
-	Name: `work`,
-	Comp: comp.CmdsOpts,
-	Opts: `on|off`,
+	Name:      `work`,
+	Comp:      comp.CmdsOpts,
+	Opts:      `on|off`,
+	MinArgs:   1,
+	MaxArgs:   1,
+	MatchArgs: `on|off`,
 	Call: func(x *bonzai.Cmd, args ...string) error {
-		if len(args) == 0 {
-			return fmt.Errorf("missing on|off")
-		}
 		if args[0] == "on" {
 			return WorkOn()
 		}
 		return WorkOff()
 	},
 }
-
