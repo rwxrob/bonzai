@@ -17,7 +17,6 @@ import (
 	"syscall"
 
 	"github.com/rwxrob/bonzai/futil"
-	"github.com/rwxrob/bonzai/mark"
 )
 
 var ExePath = os.Executable
@@ -289,30 +288,22 @@ var TrapPanic = func() {
 // ExitError prints err and exits with 1 return value unless DoNotExit
 // has been set to true. Commands should usually never call ExitError
 // themselves returning an error from their Method instead.
-func ExitError(err ...interface{}) {
-	prev := os.Stdout
-	os.Stdout = os.Stderr
-	previ := mark.IndentBy
-	mark.IndentBy = 0
-
+func ExitError(err ...any) {
 	switch e := err[0].(type) {
 
 	case string:
 		if len(e) > 1 {
-			mark.Printf(e+"\n", err[1:]...)
+			fmt.Fprintf(os.Stderr, e+"\n", err[1:]...)
 		} else {
-			mark.Print(e)
+			fmt.Fprint(os.Stderr, e)
 		}
 
 	case error:
 		out := fmt.Sprintf("%v", e)
 		if len(out) > 0 {
-			fmt.Println(strings.TrimSpace(mark.Sprint(out)))
+			fmt.Println(strings.TrimSpace(fmt.Sprint(out)))
 		}
 	}
-
-	mark.IndentBy = previ
-	os.Stdout = prev
 
 	if !DoNotExit {
 		os.Exit(1)
