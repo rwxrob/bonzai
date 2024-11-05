@@ -1,5 +1,15 @@
 package kimono
 
+import (
+	"os"
+	"path/filepath"
+	"strings"
+
+	"github.com/rwxrob/bonzai/fn/each"
+	"github.com/rwxrob/bonzai/futil"
+	"github.com/rwxrob/bonzai/run"
+)
+
 type VerPart int
 
 const (
@@ -15,7 +25,34 @@ func TagBump(part VerPart) error {
 }
 
 // TagList returns the list of tags for the current module.
-func TagList() ([]string, error) {
-	// out := run.Out(`git`, `tag`, `-l`)
-	return nil, nil
+func TagList() []string {
+	prefix := modulePrefix()
+	tags := run.Out(`git`, `tag`, `-l`, `--no-column`)
+	out := make([]string, 0)
+	each.Do(strings.Split(tags, "\n"), func(tag string) {
+		if strings.HasPrefix(tag, prefix) ||
+			!strings.Contains(tag, "/") {
+			out = append(
+				out,
+				strings.TrimPrefix(tag, prefix),
+			)
+		}
+	})
+	return out
+}
+
+func modulePrefix() string {
+	root, err := futil.HereOrAbove(".git")
+	if err != nil {
+		return ""
+	}
+	pwd, err := os.Getwd()
+	if err != nil {
+		return ""
+	}
+	outprefix, err := filepath.Rel(filepath.Dir(root), pwd)
+	if err != nil {
+		return ""
+	}
+	return outprefix + "/"
 }
