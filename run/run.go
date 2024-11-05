@@ -226,19 +226,34 @@ func ArgsFrom(line string) []string {
 	return args
 }
 
-// ArgsOrIn takes an slice or nil as argument and if the slice has any
+// ArgsOrIn takes a slice or nil as argument and if the slice has any
 // length greater than 0 returns all the argument joined together with
-// a single space between them. Otherwise, will read standard input
-// until end of file reached (Cntl-D). Returns empty string if error.
-func ArgsOrIn(args []string) string {
+// a single space between them. Otherwise, it reads standard input
+// until end of file reached (Cntl-D).
+func ArgsOrIn(args []string) (string, error) {
 	if len(args) == 0 {
 		buf, err := io.ReadAll(os.Stdin)
 		if err != nil {
-			return ""
+			return "", err
 		}
-		return string(buf)
+		return string(buf), nil
 	}
-	return strings.Join(args, " ")
+	return strings.Join(args, " "), nil
+}
+
+// FileOrIn takes a string containing a path to a file. If the file does
+// not exist (or file is empty string) then read from [os.Stdin].
+func FileOrIn(file string) (string, error) {
+	var in = os.Stdin
+	var err error
+	if len(file) > 0 {
+		in, err = os.Open(file)
+		if err != nil {
+			return "", err
+		}
+	}
+	buf, err := io.ReadAll(in)
+	return string(buf), err
 }
 
 // AllowPanic disables TrapPanic stopping it from cleaning panic errors.
