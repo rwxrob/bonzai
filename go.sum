@@ -12,6 +12,8 @@ github.com/rwxrob/bonzai/futil v0.1.0 h1:+NcdqV+F15q6YHCvRIU8WogvrfXCp0EI8TwMwNX
 github.com/rwxrob/bonzai/futil v0.1.0/go.mod h1:KPQjnEXMs/YD3ZEzHeiNc/AS9iU2dWIb6weTWktXUT8=
 github.com/rwxrob/bonzai/is v0.1.0 h1:bKrRLKELNU0e77W9uiyhyBoiC4MDAHs+EYM/0q28kRI=
 github.com/rwxrob/bonzai/is v0.1.0/go.mod h1:nxuqAGGBVYyq3bwXI0cFEl0xoAFVUrSJE7QVw81A3u8=
+github.com/rwxrob/bonzai/is v0.2.0 h1:mw1pPE4GVNH34z9Cp4n0TcZFobtLANtVrTGSILyORJA=
+github.com/rwxrob/bonzai/is v0.2.0/go.mod h1:nxuqAGGBVYyq3bwXI0cFEl0xoAFVUrSJE7QVw81A3u8=
 github.com/rwxrob/bonzai/mark v0.1.0 h1:l7P+YX98plXI+jMtO7FOXndsSpVBu0HEZfG/xewxxKU=
 github.com/rwxrob/bonzai/mark v0.1.0/go.mod h1:Ovll49Z3KDGC4QE0LK9m++5nUhJgLQFWK4Jr+3/xmRQ=
 github.com/rwxrob/bonzai/run v0.1.0 h1:BKMcGRhqz7+hNZHzJMTsQLIOUVzYCzoG2VnuqBAMklU=

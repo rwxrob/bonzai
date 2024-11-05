@@ -103,7 +103,7 @@ func (x *Cmd) Names() []string {
 // for the given name. See [is.AllLatinASCIILower] for an example. Note
 // that if this is changed certain characters may break the
 // creation of multicall binary links and bash completion.
-var IsValidName = is.AllLatinASCIILower
+var IsValidName = is.AllLatinASCIILowerWithDashes
 
 // CacheCmdAlias splits the [Cmd.Alias] for each [Cmd] in
 // [Cmds] with its respective [Cmd.AliasSlice] and assigns them
