@@ -19,6 +19,15 @@ func ExampleHasPrefix() {
 	// [two three]
 }
 
+func ExampleHasPrefixSorted() {
+	set := []string{
+		"five", "four", "one", "seven", "six", "three", "two",
+	}
+	fmt.Println(filt.HasPrefix(set, "f"))
+	// Output:
+	// [five four]
+}
+
 func ExampleBaseHasPrefix() {
 	paths := []string{
 		"some/foo",

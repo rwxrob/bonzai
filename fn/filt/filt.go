@@ -24,6 +24,20 @@ func HasPrefix[T Text](set []T, pre string) []T {
 	return s
 }
 
+// HasPrefixSorted filters the Text input set and returns only those elements
+// that have the give prefix assuming that the input is already sorted
+// so that early return on the first miss can be trusted.
+func HasPrefixSorted[T Text](set []T, pre string) []T {
+	var s []T
+	for _, i := range set {
+		if !strings.HasPrefix(string(i), pre) {
+			return s
+		}
+		s = append(s, i)
+	}
+	return s
+}
+
 // BaseHasPrefix filters the input of file paths and returns only those
 // elements where the base name has the given prefix.
 func BaseHasPrefix[T Text](paths []T, pre string) []T {
