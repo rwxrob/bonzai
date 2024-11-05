@@ -46,12 +46,18 @@ func modulePrefix() string {
 	if err != nil {
 		return ""
 	}
-	pwd, err := os.Getwd()
+	module, err := futil.HereOrAbove("go.mod")
 	if err != nil {
 		return ""
 	}
-	outprefix, err := filepath.Rel(filepath.Dir(root), pwd)
+	outprefix, err := filepath.Rel(
+		filepath.Dir(root),
+		filepath.Dir(module),
+	)
 	if err != nil {
+		return ""
+	}
+	if outprefix == "." {
 		return ""
 	}
 	return outprefix + "/"
