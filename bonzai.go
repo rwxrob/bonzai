@@ -24,5 +24,5 @@ func init() {
 // convention Completers that do not make use of or other arguments
 // should use an underscore identifier since they are ignored.
 type Completer interface {
-	Complete(x any, args ...string) []string
+	Complete(x Cmd, args ...string) []string
 }

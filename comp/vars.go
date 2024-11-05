@@ -9,7 +9,7 @@ type _Vars struct{}
 var Vars = new(_Vars)
 
 // Complete takes a [*bonzai.Cmd] and then calls
-func (_Vars) Complete(_ any, args ...string) (list []string) {
+func (_Vars) Complete(_ bonzai.Cmd, args ...string) (list []string) {
 	if bonzai.Vars == nil || len(args) == 0 {
 		return
 	}

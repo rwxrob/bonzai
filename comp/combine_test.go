@@ -7,13 +7,13 @@ import (
 	"fmt"
 
 	"github.com/rwxrob/bonzai"
+
 	"github.com/rwxrob/bonzai/comp"
 )
 
 func ExampleCmdsOpts_Complete() {
-
 	// dynamic/runtime Cmd creation (normally a niche use case)
-	foo := new(bonzai.Cmd)
+	foo := bonzai.Cmd{}
 	foo.Opts = `box`
 	foo.Comp = comp.CmdsOpts
 	foo.Add(`bar`)
@@ -32,10 +32,9 @@ func ExampleCmdsOpts_Complete() {
 	// everything that begins with bl (just blah)
 	fmt.Println(comp.CmdsOpts.Complete(foo, `bl`))
 
-	//Output:
+	// Output:
 	// [bar blah box]
 	// []
 	// [bar blah box]
 	// [blah]
-
 }

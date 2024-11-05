@@ -1,8 +1,6 @@
 package comp
 
 import (
-	"log"
-
 	"github.com/rwxrob/bonzai"
 	"github.com/rwxrob/bonzai/fn/filt"
 )
@@ -13,14 +11,7 @@ var Cmds = new(_Cmds)
 
 // Complete returns all visible [Cmd.Cmds] that match [futil.HasPrefix]
 // for arg[0] . See [bonzai.Completer].
-func (_Cmds) Complete(an any, args ...string) []string {
-
-	x, is := an.(*bonzai.Cmd)
-	if !is {
-		log.Printf(`%v is a %T not *bonzai.Cmd`, an, an)
-		return []string{}
-	}
-
+func (_Cmds) Complete(x bonzai.Cmd, args ...string) []string {
 	list := []string{}
 	for _, c := range x.Cmds {
 		if c.IsHidden() {

@@ -5,12 +5,13 @@ package comp_test
 
 import (
 	"github.com/rwxrob/bonzai"
-	"github.com/rwxrob/bonzai/comp"
 	"github.com/rwxrob/bonzai/json"
+
+	"github.com/rwxrob/bonzai/comp"
 )
 
 func ExampleVars_Complete() {
-	foo := new(bonzai.Cmd)
+	foo := bonzai.Cmd{}
 	foo.Comp = comp.Vars
 
 	defer bonzai.Vars.Delete(`some`)
@@ -21,8 +22,7 @@ func ExampleVars_Complete() {
 	json.This{comp.Vars.Complete(foo, `s`)}.Print()
 	json.This{comp.Vars.Complete(foo, `some`)}.Print()
 
-	//Output:
+	// Output:
 	// ["some","someother"]
 	// ["some","someother"]
-
 }

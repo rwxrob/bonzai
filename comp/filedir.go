@@ -4,7 +4,6 @@
 package comp
 
 import (
-	"log"
 	"path/filepath"
 	"strings"
 
@@ -25,27 +24,13 @@ var FileDir = _FileDir{}
 // consistent across all runtimes. Note that unlike bash completion no
 // indication of the type of file is provided (i.e. dircolors support).
 // The first argument, if passed, must be a [*bonzai.Cmd].
-func (_FileDir) Complete(an any, args ...string) []string {
-
+func (_FileDir) Complete(_ bonzai.Cmd, args ...string) []string {
 	if len(args) > 1 {
 		return []string{}
 	}
 
 	if args == nil || (len(args) > 0 && args[0] == "") {
 		return futil.DirEntriesAddSlashPath(".")
-	}
-
-	// catch edge cases
-	if len(args) == 0 {
-		if an != nil {
-			x, is := an.(*bonzai.Cmd)
-			if !is {
-				log.Printf(`%v is a %T not *bonzai.Cmd`, an, an)
-				return []string{}
-			}
-			return []string{x.Name} // will add tailing space
-		}
-		return futil.DirEntriesAddSlashPath("")
 	}
 
 	first := strings.TrimRight(args[0], string(filepath.Separator))
@@ -70,6 +55,4 @@ func (_FileDir) Complete(an any, args ...string) []string {
 		}
 		return futil.DirEntriesAddSlash(list)
 	}
-
-	return []string{}
 }
