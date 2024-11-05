@@ -310,10 +310,8 @@ func (x *Cmd) call(args []string) {
 		return
 	}
 	if x.Def != nil {
-		if err := x.Def.Call(x.Def, args...); err != nil {
-			run.ExitError(err)
-			return
-		}
+		x.Def.call(args)
+		return
 	}
 	run.Exit()
 	return
