@@ -86,6 +86,11 @@ type Cmd struct {
 // "x". If either is unused an underscore should be used instead.
 type Method func(x *Cmd, args ...string) error
 
+func (x Cmd) WithName(name string) *Cmd {
+	x.Name = name
+	return &x
+}
+
 // Names returns slice of all [Alias] and the [Name] as the last item.
 func (x *Cmd) Names() []string {
 	var names []string
@@ -290,7 +295,6 @@ func (x *Cmd) IsHidden() bool {
 func (x *Cmd) has(c *Cmd) bool {
 	for _, this := range x.Cmds {
 		if this.Name == c.Name {
-
 			return true
 		}
 	}
@@ -385,7 +389,6 @@ func (x *Cmd) recurseIfMulti(args []string) {
 
 // complete -C foo foo (man bash, Programmable Completion)
 func (x *Cmd) detectCompletion(args []string) {
-
 	if line := os.Getenv("COMP_LINE"); len(line) > 0 {
 
 		// find the leaf command
@@ -410,7 +413,6 @@ func (x *Cmd) detectCompletion(args []string) {
 		run.Exit()
 		return
 	}
-
 }
 
 // String fulfills the [fmt.Stringer] interface for debugging.
@@ -461,7 +463,6 @@ func (x *Cmd) Add(name string, aliases ...string) *Cmd {
 // Resolve looks up a given [Cmd] by name or alias from [Alias]
 // (caching a lookup map of aliases in the process).
 func (x *Cmd) Resolve(name string) *Cmd {
-
 	if x.Cmds == nil {
 		return nil
 	}
