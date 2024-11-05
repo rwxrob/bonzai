@@ -183,6 +183,24 @@ func ExampleMap_Data() {
 
 }
 
+func ExampleMap_Data() {
+
+	m, err := vars.NewMapFrom(`testdata/vars.properties`)
+	if err != nil {
+		fmt.Println(err)
+	}
+	fmt.Println(m.Data())
+
+	// Output:
+	// .pomo.warn=1m
+	// .pomo.prefix=🍅
+	// .pomo.prefixwarn=💢
+	// .pomo.duration=52m
+	// .pomo.interval=20s
+	//  <nil>
+
+}
+
 func ExampleMap_Print() {
 	m, err := vars.NewMapFrom(`testdata/vars.properties`)
 	if err != nil {
