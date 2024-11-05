@@ -288,7 +288,7 @@ var TrapPanic = func() {
 // ExitError prints err and exits with 1 return value unless DoNotExit
 // has been set to true. Commands should usually never call ExitError
 // themselves returning an error from their Method instead.
-func ExitError(err ...interface{}) {
+func ExitError(err ...any) {
 	switch e := err[0].(type) {
 
 	case string:
