@@ -23,7 +23,7 @@ func ExampleFile_nil() {
 	// [bar/ blah/ come/ foo.go]
 }
 
-func ExampleFile_pre_File() {
+func ExampleFile_preFile() {
 	os.Chdir("testdata/file")
 	defer os.Chdir("../..")
 	noopCmd := bonzai.Cmd{}
@@ -32,7 +32,7 @@ func ExampleFile_pre_File() {
 	// [foo.go]
 }
 
-func ExampleFile_pre_Dir_Only() {
+func ExampleFile_preDirOnly() {
 	os.Chdir("testdata/file")
 	defer os.Chdir("../..")
 	noopCmd := bonzai.Cmd{}
@@ -43,7 +43,7 @@ func ExampleFile_pre_Dir_Only() {
 	// [bar/foo.go bar/other]
 }
 
-func ExampleFile_pre_Dir_or_Files() {
+func ExampleFile_preDirorFiles() {
 	os.Chdir("testdata/file")
 	defer os.Chdir("../..")
 	noopCmd := bonzai.Cmd{}
@@ -52,7 +52,7 @@ func ExampleFile_pre_Dir_or_Files() {
 	// [bar/ blah/]
 }
 
-func ExampleFile_pre_Dir_Specific() {
+func ExampleFile_preDirSpecific() {
 	os.Chdir("testdata/file")
 	defer os.Chdir("../..")
 	noopCmd := bonzai.Cmd{}
@@ -61,7 +61,7 @@ func ExampleFile_pre_Dir_Specific() {
 	// [blah/file1 blah/file2]
 }
 
-func ExampleFile_pre_Dir_Recurse() {
+func ExampleFile_preDirRecurse() {
 	os.Chdir("testdata/file")
 	defer os.Chdir("../..")
 	noopCmd := bonzai.Cmd{}
@@ -72,7 +72,7 @@ func ExampleFile_pre_Dir_Recurse() {
 	// [come/one]
 }
 
-func ExampleFile_dir_File() {
+func ExampleFile_dirFile() {
 	os.Chdir("testdata/file")
 	defer os.Chdir("../..")
 	noopCmd := bonzai.Cmd{}
