@@ -9,7 +9,7 @@ require (
 	github.com/rwxrob/bonzai/fn v0.2.0
 	github.com/rwxrob/bonzai/futil v0.1.0
 	github.com/rwxrob/bonzai/run v0.5.0
-	golang.org/x/mod v0.18.0
+	golang.org/x/mod v0.21.0
 )
 
 require (
