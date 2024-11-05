@@ -24,19 +24,24 @@ const (
 
 func TagBump(part VerPart, mustPush bool) error {
 	versions := TagList()
-	latest := versions[len(versions)-1]
+	latest := ``
+	if len(versions) == 0 {
+		latest = `0.0.0`
+	} else {
+		latest = versions[len(versions)-1]
+	}
 	prefix := modulePrefix()
 	newVersion := fmt.Sprintf(
-		"%s%s",
+		`%s%s`,
 		prefix,
 		versionBump(latest, part),
 	)
 	fmt.Println(newVersion)
-	if err := run.Exec("git", "tag", newVersion); err != nil {
+	if err := run.Exec(`git`, `tag`, newVersion); err != nil {
 		return err
 	}
 	if mustPush {
-		if err := run.Exec("git", "push", "origin", newVersion); err != nil {
+		if err := run.Exec(`git`, `push`, `origin`, newVersion); err != nil {
 			return err
 		}
 	}
@@ -45,34 +50,34 @@ func TagBump(part VerPart, mustPush bool) error {
 
 // versionBump increases the given part of the version.
 func versionBump(version string, part VerPart) string {
-	leading := ""
+	leading := ``
 	versionN := version
-	if leading == "v" {
-		leading = "v"
+	if leading == `v` {
+		leading = `v`
 		versionN = version[1:]
 	}
-	versionParts := strings.Split(versionN, ".")
+	versionParts := strings.Split(versionN, `.`)
 
 	// Bump the specified version part
 	switch part {
 	case Major:
 		versionParts[0] = fmt.Sprintf(
-			"%d",
+			`%d`,
 			1+parseInt(versionParts[0]),
 		)
 	case Minor:
 		versionParts[1] = fmt.Sprintf(
-			"%d",
+			`%d`,
 			1+parseInt(versionParts[1]),
 		)
 	case Patch:
 		versionParts[2] = fmt.Sprintf(
-			"%d",
+			`%d`,
 			1+parseInt(versionParts[2]),
 		)
 	}
 
-	return fmt.Sprint(leading, strings.Join(versionParts, "."))
+	return fmt.Sprint(leading, strings.Join(versionParts, `.`))
 }
 
 func parseInt(s string) int {
@@ -106,23 +111,23 @@ func isValidTag(tag, prefix string) bool {
 }
 
 func modulePrefix() string {
-	root, err := futil.HereOrAbove(".git")
+	root, err := futil.HereOrAbove(`.git`)
 	if err != nil {
-		return ""
+		return ``
 	}
-	module, err := futil.HereOrAbove("go.mod")
+	module, err := futil.HereOrAbove(`go.mod`)
 	if err != nil {
-		return ""
+		return ``
 	}
 	outprefix, err := filepath.Rel(
 		filepath.Dir(root),
 		filepath.Dir(module),
 	)
 	if err != nil {
-		return ""
+		return ``
 	}
-	if outprefix == "." {
-		return ""
+	if outprefix == `.` {
+		return ``
 	}
-	return outprefix + "/"
+	return outprefix + `/`
 }

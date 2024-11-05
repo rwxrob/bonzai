@@ -4,6 +4,7 @@ import (
 	"os"
 
 	"github.com/rwxrob/bonzai"
+	"github.com/rwxrob/bonzai/cmds/vars"
 	"github.com/rwxrob/bonzai/comp"
 	"github.com/rwxrob/bonzai/fn/each"
 )
@@ -39,6 +40,8 @@ var workCmd = &bonzai.Cmd{
 	},
 }
 
+const TagPushEnv = `KIMONO_TAG_PUSH`
+
 var tagCmd = &bonzai.Cmd{
 	Name:  `tag`,
 	Alias: `t`,
@@ -51,27 +54,41 @@ var tagBumpCmd = &bonzai.Cmd{
 	Name:    `bump`,
 	Alias:   `b|up|i|inc`,
 	Comp:    comp.CmdsOpts,
-	Cmds:    []*bonzai.Cmd{tagListCmd},
+	Cmds:    []*bonzai.Cmd{vars.Cmd},
 	Opts:    `major|minor|patch|m|M|p`,
 	MaxArgs: 1,
 	Call: func(x *bonzai.Cmd, args ...string) error {
-		mustPush := len(os.Getenv(`KIMONO_TAG_PUSH`)) > 0
+		mustPush := false
+		if val, ok := os.LookupEnv(TagPushEnv); ok {
+			mustPush = len(val) > 0
+		} else {
+			val, _ := bonzai.Vars.Get(`push-tags`)
+			mustPush = val == `true`
+		}
 		var part VerPart
 		if len(args) == 0 {
-			part = Minor
-		} else {
-			switch args[0] {
-			case `major`, `M`:
-				part = Major
-			case `minor`, `m`:
-				part = Minor
-			case `patch`, `p`:
-				part = Patch
+			val, err := bonzai.Vars.Get(`default-ver-part`)
+			if err != nil {
+				return err
 			}
+			part = optsToVerPart(val)
+		} else {
+			part = optsToVerPart(args[0])
 		}
-		TagBump(part, mustPush)
-		return nil
+		return TagBump(part, mustPush)
 	},
+}
+
+func optsToVerPart(x string) (VerPart) {
+	switch x {
+	case `major`, `M`:
+		return Major
+	case `minor`, `m`:
+		return Minor
+	case `patch`, `p`:
+		return Patch
+	}
+	return Minor
 }
 
 var tagListCmd = &bonzai.Cmd{
