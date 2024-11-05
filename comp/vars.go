@@ -1,10 +1,7 @@
 package comp
 
 import (
-	"log"
-
 	"github.com/rwxrob/bonzai"
-	"github.com/rwxrob/bonzai/fn/maps"
 )
 
 type _Vars struct{}
@@ -12,16 +9,10 @@ type _Vars struct{}
 var Vars = new(_Vars)
 
 // Complete takes a [*bonzai.Cmd] and then calls
-func (_Vars) Complete(an any, args ...string) (list []string) {
-	x, is := an.(*bonzai.Cmd)
-	if !is {
-		log.Printf(`%v is a %T not *bonzai.Cmd`, an, an)
+func (_Vars) Complete(_ any, args ...string) (list []string) {
+	if bonzai.Vars == nil || len(args) == 0 {
 		return
 	}
-	if x.Vars == nil {
-		return
-	}
-	list = maps.KeysWithPrefix(x.Vars, args[0])
-	// TODO if we have a full match for a key, complete the value as well
+	list, _ = bonzai.Vars.KeysWithPrefix(args[0])
 	return
 }

@@ -4,28 +4,28 @@ import "fmt"
 
 // ----------------------------- NotFound -----------------------------
 
-type NotFound struct {
+type ErrNotFound struct {
 	Key string
 }
 
-func (e NotFound) Error() string {
+func (e ErrNotFound) Error() string {
 	return fmt.Sprintf(`could not find key: %v`, e.Key)
 }
 
 // ---------------------------- MissingArg ----------------------------
 
-type MissingArg struct {
+type ErrMissingArg struct {
 	Name string
 }
 
-func (e MissingArg) Error() string {
+func (e ErrMissingArg) Error() string {
 	return fmt.Sprintf(`missing argument: %v`, e.Name)
 }
 
 // ---------------------------- EmptyKey ----------------------------
 
-type EmptyKey struct{}
+type ErrEmptyKey struct{}
 
-func (e EmptyKey) Error() string {
+func (e ErrEmptyKey) Error() string {
 	return fmt.Sprintf(`key name is empty`)
 }

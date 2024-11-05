@@ -110,7 +110,6 @@ type Req struct {
 // automatically. It Req.C is nil a context.WithTimeout will
 // be used and with the value of web.TimeOut.
 func (req *Req) Submit() error {
-
 	if req.M == "" {
 		req.M = `GET`
 	}
@@ -134,7 +133,8 @@ func (req *Req) Submit() error {
 		req.H["Content-Type"] = "application/x-www-form-urlencoded"
 	case []byte:
 		log.Println("planned, but unimplemented, would uuencode")
-		//req.H["Content-Length"] = strconv.Itoa(len(uuencoded))
+		// req.H["Content-Length"] = strconv.Itoa(len(uuencoded))
+		// req.H["Content-Type"] = "application/octet-stream"
 	case string:
 		buf = v
 	case json.Marshaler:
@@ -143,6 +143,7 @@ func (req *Req) Submit() error {
 			return err
 		}
 		buf = string(byt)
+		req.H["Content-Type"] = "application/json"
 	case encoding.TextMarshaler:
 		byt, err := v.MarshalText()
 		if err != nil {
@@ -178,12 +179,13 @@ func (req *Req) Submit() error {
 
 	res, err := Client.Do(httpreq)
 	req.R = res
+	defer res.Body.Close()
 
 	if err != nil {
 		return err
 	}
 
-	if !(200 <= res.StatusCode && res.StatusCode < 300) {
+	if 200 > res.StatusCode || res.StatusCode >= 300 {
 		return HTTPError{res}
 	}
 
@@ -205,7 +207,9 @@ func (req *Req) Submit() error {
 		log.Println("planned, but unimplemented, would uuencode")
 		// v = uudecode(resbytes)
 	case io.Writer:
-		return nil
+		if _, err := v.Write(resbytes); err != nil {
+			return err
+		}
 	case rwxjson.This:
 		log.Println("rwxjson, planned, but unimplemented")
 	default:
@@ -213,5 +217,4 @@ func (req *Req) Submit() error {
 	}
 
 	return nil
-
 }

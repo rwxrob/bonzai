@@ -126,14 +126,14 @@ func ExampleMap_Clear() {
 	// 0
 }
 
-func ExampleMap_Match() {
+func ExampleMap_GrepK() {
 	m := vars.NewMap()
 	m.M = map[string]string{
 		"key1": "value1",
 		"key2": "value2",
 	}
 
-	val, err := m.Match(`y2`)
+	val, err := m.GrepK(`y2`)
 	if err != nil {
 		fmt.Println(err)
 	}
@@ -142,26 +142,26 @@ func ExampleMap_Match() {
 	fmt.Println(val)
 
 	// Output:
-	// value2
+	// key2=value2
 }
 
-func ExampleMap_Match_nokey() {
+func ExampleMap_GrepK_nokey() {
 	m := vars.NewMap()
 	m.M = map[string]string{
 		"key1": "value1",
 		"key2": "value2",
 	}
 
-	val, err := m.Match(`foo`)
+	val, err := m.GrepK(`foo`)
 	if err != nil {
 		fmt.Println(err)
 	}
 
 	// The map should be empty after clearing
-	fmt.Println(val)
+	fmt.Printf("%q\n", val)
 
 	// Output:
-	// could not find key: foo
+	// ""
 
 }
 

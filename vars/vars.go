@@ -1,19 +1,24 @@
 package vars
 
 // Driver specifies anything that implements a persistence layer for
-// high-speed caching of key/value combinations. Implementations may use
-// whatever technology for storing the cache but must represent the data
-// in traditional key=value pairs with carriage return (\r) and line
-// feed (\n) being escaped in the value portion of each line. Equals
-// signs may be included in the value without escaping. Blank lines and
-// comments are not allowed and must always produce an error.
+// high-speed storage and retrieval of key/value combinations.
+// Implementations may use whatever technology for persisting the data but
+// must represent the data in traditional key=value pairs with carriage
+// return (\r) and line feed (\n) being escaped in the value portion of
+// each line. Equals signs may be included in the value without
+// escaping. Blank lines and comments are not allowed and must always
+// produce an error. All data is expected to be in UTF-8. Keys may be
+// any valid UTF-8 character except the equals sign (but most
+// implementations will limit to keys that will work well with tab
+// competion libraries (see [bonzai/comp]).
 //
 // # Init
 //
-// Initialize a new cache if one does not yet exist. Must never clear or
-// delete a previously initialized cache. Usually this is called within
-// an init() function after the other specific configurations of the
-// driver have been set (much like database or other driver).
+// Initialize a new persistence store if one does not yet exist. Must
+// never clear or delete one that has been previously initialized.
+// Usually this is called within an init() function after the other
+// specific configurations of the driver have been set (much like
+// database or other drivers).
 //
 // # Clear
 //
@@ -37,16 +42,44 @@ package vars
 // [NotFound] is never returned. Implements should return an error if
 // unable to persist the new value.
 //
-// # Match
+// # GrepK
 //
-// Match is the same as [Set] except key is matched against a regular
-// expression instead of the exact key.
+// GrepK is the same as [Set] but uses a regular expression (PCRE) to
+// return all the k=v pairs that have keys that match.
+//
+// # GrepV
+//
+// GrepV is the same as [GrepK] but uses a regular expression (PCRE) to
+// return all the k=v pairs that have values that match.
 //
 // # Load
 //
+// Load takes a UTF-8 string, parses it, and sets all the key value
+// pairs as if individually assigned with [Set].
+//
 // # Delete
 //
-// # Fetch
+// Delete must delete a key from the persistent storage.
+//
+// # Data
+//
+// Must output all the data in k=v pairs, one per line.
+//
+// # Print
+//
+// Must print the [Data] to [os.Stdout].
+//
+// # Edit
+//
+// Must open a file containing [Data] for safely editing that will be
+// saved when the editor is closed by effectively passing it to [Load].
+//
+// # KeysWithPrefix
+//
+// KeysWithPrefix returns a slice of keys from the map that start with the
+// specified prefix (pre), refreshing the map first. If an error occurs during
+// refresh, it returns an empty slice and the error. This is mandatory
+// for any kind of completion implementation.
 //
 // # Best practices
 //
@@ -66,12 +99,14 @@ type Driver interface {
 	Has(key string) bool               // exists?
 	Get(key string) (string, error)    // accessor, "" if non-existent
 	Set(key, val string) error         // mutator
-	Match(regx string) (string, error) // query
+	GrepK(regx string) (string, error) // returns k=v combos of matches
+	GrepV(regx string) (string, error) // returns k=v combos of matches
 	Load(keyvals string) error         // multiple pairs
 	Delete(key string) error           // destroyer
-	Data() (string, error)             // k=v with \r and \n escaped in v
+	Data() (string, error)             // k=v with \r and \n escaped
 	Print() error                      // prints Data to os.Stdout
 	Edit() error                       // open default editor, then load
+	KeysWithPrefix(pre string) ([]string, error)
 }
 
 // Set saves a key/value pair to the specified file. Returning and error

@@ -5,7 +5,7 @@ import (
 	"math"
 	"time"
 
-	"github.com/rwxrob/bonzai/run"
+	"github.com/rwxrob/bonzai/anim"
 )
 
 var (
@@ -16,7 +16,7 @@ var (
 // Sunrise prints a wall of all colors in the terminal. The speed of the
 // animation can be adjusted with the speed parameter.
 func Sunrise(speed time.Duration) {
-	run.SimpleAnimationScreen()
+	anim.SimpleAnimationScreen()
 	for {
 		i += 0.04
 		r := int(128 + 127*math.Sin(i))

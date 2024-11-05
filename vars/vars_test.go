@@ -27,7 +27,7 @@ func ExampleSet() {
 
 	futil.Cat(file)
 
-	// Output:
+	// Unordered output:
 	// somekey=someval
 	// otherkey=
 	// <nil>

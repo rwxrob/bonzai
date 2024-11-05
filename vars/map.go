@@ -72,7 +72,7 @@ func NewMap() *Map {
 func NewMapFrom(file string) (*Map, error) {
 	m := NewMap()
 	if len(file) == 0 {
-		return nil, MissingArg{`file`}
+		return nil, ErrMissingArg{`file`}
 	}
 	m.File = file
 	err := m.loadFile(m.File)
@@ -85,7 +85,7 @@ func NewMapFrom(file string) (*Map, error) {
 func NewMapFromInit(file string) (*Map, error) {
 	var m *Map
 	if len(file) == 0 {
-		return nil, MissingArg{`file`}
+		return nil, ErrMissingArg{`file`}
 	}
 	if futil.Exists(file) {
 		var err error
@@ -136,7 +136,12 @@ func (c *Map) loadFile(file string) (err error) {
 // where pairs are separated by newlines and each pair is in the format
 // "k=v". Implements [Driver].
 func (m *Map) Load(keyvals string) error {
-	return m.UnmarshalText([]byte(keyvals))
+	m.refresh()
+	err := m.UnmarshalText([]byte(keyvals))
+	if err != nil {
+		return err
+	}
+	return m.save()
 }
 
 // UnmarshalText fulfills [encoding.TextUnmarshaler] interface and locks
@@ -216,8 +221,11 @@ func (m *Map) Edit() error { return edit.Files(m.File) }
 // by locking before the operation and unlocking afterward.
 func (m *Map) Clear() error {
 	m.Lock()
-	defer m.Unlock()
 	maps.Clear(m.M)
+	m.Unlock()
+	if len(m.File) > 0 {
+		return m.save()
+	}
 	return nil
 }
 
@@ -229,7 +237,7 @@ func (m *Map) Get(key string) (string, error) {
 	if val, exists := m.M[key]; exists {
 		return val, nil
 	}
-	return "", NotFound{key}
+	return "", ErrNotFound{key}
 }
 
 // Has checks if the map [m.M] contains the specified [key]
@@ -241,18 +249,47 @@ func (m *Map) Has(key string) bool {
 	return has
 }
 
-// Match retrieves the value associated with a key that matches the
-// given regular expression, returning [NotFound] if the key does not
-// exist. Fulfills the [Driver] interface.
-func (m *Map) Match(regx string) (string, error) {
-	m.refresh()
+// GrepK returns all key-value pairs associated with a key that matches
+// the given regular expression. An empty string is a valid (non-error)
+// result indicating nothing matched. Fulfills the [Driver] interface.
+func (m *Map) GrepK(regx string) (string, error) {
+	var buf strings.Builder
+	if len(m.File) > 0 {
+		if err := m.refresh(); err != nil {
+			return "", err
+		}
+	}
 	x := regexp.MustCompile(regx)
 	for k, v := range m.M {
 		if x.MatchString(k) {
-			return v, nil
+			buf.WriteString(k)
+			buf.WriteString(`=`)
+			buf.WriteString(v)
+			buf.WriteString("\n")
 		}
 	}
-	return "", NotFound{regx}
+	return buf.String(), nil
+}
+
+// GrepV returns all key-value pairs associated with a value that matches
+// the given regular expression. Fulfills the [Driver] interface.
+func (m *Map) GrepV(regx string) (string, error) {
+	var buf strings.Builder
+	if len(m.File) > 0 {
+		if err := m.refresh(); err != nil {
+			return "", err
+		}
+	}
+	x := regexp.MustCompile(regx)
+	for k, v := range m.M {
+		if x.MatchString(v) {
+			buf.WriteString(k)
+			buf.WriteString(`=`)
+			buf.WriteString(v)
+			buf.WriteString("\n")
+		}
+	}
+	return buf.String(), nil
 }
 
 // Set adds or updates the value associated with a key.
@@ -293,4 +330,15 @@ func (m *Map) Delete(key string) error {
 	}
 	delete(m.M, key)
 	return m.save()
+}
+
+// KeysWithPrefix returns a slice of keys from the map [m.M] that start with the
+// specified prefix (pre), refreshing the map first. If an error occurs during
+// refresh, it returns an empty slice and the error.
+func (m *Map) KeysWithPrefix(pre string) ([]string, error) {
+	if err := m.refresh(); err != nil {
+		return []string{}, err
+	}
+	list := maps.KeysWithPrefix(m.M, pre)
+	return list, nil
 }

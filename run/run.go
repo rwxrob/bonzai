@@ -10,12 +10,13 @@ import (
 	"os"
 	"os/exec"
 	"os/signal"
+	"os/user"
 	"path/filepath"
+	"runtime"
 	"strings"
 	"syscall"
 
 	"github.com/rwxrob/bonzai/futil"
-	"github.com/rwxrob/bonzai/term/esc"
 )
 
 var ExePath = os.Executable
@@ -149,7 +150,7 @@ func SysExec(args ...string) error {
 		return err
 	}
 	// exits the program unless there is an error
-	return syscall.Exec(path, args, os.Environ())
+	return syscall.Exec(path, args[1:], os.Environ())
 }
 
 // Exec checks for existence of first argument as an executable on the
@@ -192,6 +193,21 @@ func Out(args ...string) string {
 	return string(out)
 }
 
+// IsAdmin checks whether this program is run as a privileged user.
+// In windows this will always return false.
+func IsAdmin() bool {
+	currentUser, err := user.Current()
+	if err != nil {
+		return false
+	}
+	switch runtime.GOOS {
+	case "windows":
+		return currentUser.Username == "SYSTEM"
+	default:
+		return os.Geteuid() == 0 || currentUser.Username == "root"
+	}
+}
+
 func ShellIsBash() bool {
 	return strings.Contains(os.Getenv("SHELL"), `bash`)
 }
@@ -225,19 +241,34 @@ func ArgsFrom(line string) []string {
 	return args
 }
 
-// ArgsOrIn takes an slice or nil as argument and if the slice has any
+// ArgsOrIn takes a slice or nil as argument and if the slice has any
 // length greater than 0 returns all the argument joined together with
-// a single space between them. Otherwise, will read standard input
-// until end of file reached (Cntl-D). Returns empty string if error.
-func ArgsOrIn(args []string) string {
+// a single space between them. Otherwise, it reads standard input
+// until end of file reached (Cntl-D).
+func ArgsOrIn(args []string) (string, error) {
 	if len(args) == 0 {
 		buf, err := io.ReadAll(os.Stdin)
 		if err != nil {
-			return ""
+			return "", err
 		}
-		return string(buf)
+		return string(buf), nil
 	}
-	return strings.Join(args, " ")
+	return strings.Join(args, " "), nil
+}
+
+// FileOrIn takes a string containing a path to a file. If the file does
+// not exist (or file is empty string) then read from [os.Stdin].
+func FileOrIn(file string) (string, error) {
+	in := os.Stdin
+	var err error
+	if len(file) > 0 {
+		in, err = os.Open(file)
+		if err != nil {
+			return "", err
+		}
+	}
+	buf, err := io.ReadAll(in)
+	return string(buf), err
 }
 
 // AllowPanic disables TrapPanic stopping it from cleaning panic errors.
@@ -300,33 +331,15 @@ func ExitOn() { DoNotExit = false }
 
 var DefaultInterruptHandler = func() { fmt.Print("\b\b"); Exit() }
 
-// HandleInterrupt sets up a signal handler for [SIGINT] and [SIGTERM]
-// that calls the handler.
-func HandleInterrupt(handler func()) {
+// Trap sets up a signal handler for signals that calls the handler.
+func Trap(handler func(), signals ...os.Signal) {
 	if handler == nil {
 		handler = DefaultInterruptHandler
 	}
 	signalChannel := make(chan os.Signal, 1)
-	signal.Notify(signalChannel, syscall.SIGINT, syscall.SIGTERM)
+	signal.Notify(signalChannel, signals...)
 	go func() {
 		<-signalChannel
 		handler()
 	}()
-}
-
-// SimpleAnimationScreen conveniently sets up an alternate screen buffer
-// clears it, turns off the cursor and traps any interrupts so that the
-// screen and cursor are restored and the program exits. This is useful
-// when making simple ASCII animations without needing a full terminal
-// animation package.
-func SimpleAnimationScreen() error {
-	HandleInterrupt(func() {
-		fmt.Print(esc.Clear)     // Clear terminal
-		fmt.Print(esc.AltBufOff) // Show cursor
-		fmt.Print(esc.CursorOn)  // Show cursor
-		Exit()
-	})
-	fmt.Print(esc.CursorOff)
-	fmt.Print(esc.AltBufOn)
-	return nil
 }
