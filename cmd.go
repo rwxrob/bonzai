@@ -259,10 +259,7 @@ func (x *Cmd) HideSlice() []string {
 // If any argument is detected, delegation through recursive Run calls
 // to subcommands is attempted. If more than one argument, each
 // argument is assumed to be a [Name] or alias from [Alias] and so on
-// (see [Can] for details). As a convenience, if only one argument is
-// passed and that argument contains a dash, it is assumed to be
-// a [PathWithDashes] and is split and expanded into a new args list as
-// if every field where passed as separate strings instead.
+// (see [Can] for details).
 func (x *Cmd) Run(args ...string) {
 	defer run.TrapPanic()
 	x.recurseIfArgs(args)
@@ -592,7 +589,7 @@ func (x *Cmd) Seek(args []string) (*Cmd, []string) {
 // PathCmds returns the path of commands used to arrive at this
 // command. The path is determined by walking backward from current
 // Caller up rather than depending on anything from the command line
-// used to invoke the composing binary. Also see [Path], [PathNames].
+// used to invoke the composing binary. Also see [PathNames].
 func (x *Cmd) PathCmds() []*Cmd {
 	path := qstack.New[*Cmd]()
 	path.Unshift(x)
@@ -620,60 +617,4 @@ func (x *Cmd) PathNames() []string {
 	}
 	path.Shift()
 	return path.Items()
-}
-
-// Path returns a dotted notation of the [PathNames] including an initial
-// dot (for root). This is useful for associating configuration and other
-// data specifically with this command. If any arguments are passed then
-// will be added with dots between them.
-func (x *Cmd) Path(more ...string) string {
-	if len(more) > 0 {
-		list := x.PathNames()
-		list = append(list, more...)
-		return "." + strings.Join(list, ".")
-	}
-	return "." + strings.Join(x.PathNames(), ".")
-}
-
-// PathWithDashes is the same as [Path] but with dashes/hyphens instead and
-// without the leading dot.
-func (x *Cmd) PathWithDashes(more ...string) string {
-	path := x.Path(more...)
-	return path[1:]
-}
-
-// Get is a shorter version of Vars.Get(x.Path()+"."+key) which fetches
-// and returns persisted cache values (see [Vars] and [VarsDriver]).
-// If a value has not yet been assigned returns the value from [Vars]
-// and sets it with [Set]. All var keys must be declared and assigned
-// initial values with [Vars] or they cannot be used and throw
-// an [UnsupportedVar] [run.ExitError].
-func (x *Cmd) Get(key string) (string, error) {
-	defval, declared := x.Vars[key]
-	if !declared {
-		err := UnsupportedVar{key} // like a panic
-		run.ExitError(err)
-		return "", err
-	}
-	path := x.Path()
-	if path != "." {
-		path += "."
-	}
-	ptr := path + key
-	if Vars.Has(ptr) {
-		return Vars.Get(ptr)
-	}
-	if err := x.Set(key, defval); err != nil {
-		return "", err
-	}
-	return defval, nil
-}
-
-// Set is shorter version of Vars.Set(x.Path()+"."+key.val).
-func (x *Cmd) Set(key, val string) error {
-	path := x.Path()
-	if path != "." {
-		path += "."
-	}
-	return Vars.Set(path+key, val)
 }
