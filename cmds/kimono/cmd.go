@@ -1,6 +1,8 @@
 package kimono
 
 import (
+	"os"
+
 	"github.com/rwxrob/bonzai"
 	"github.com/rwxrob/bonzai/comp"
 	"github.com/rwxrob/bonzai/fn/each"
@@ -38,7 +40,34 @@ var workCmd = &bonzai.Cmd{
 var tagCmd = &bonzai.Cmd{
 	Name: `tag`,
 	Comp: comp.Cmds,
-	Cmds: []*bonzai.Cmd{tagListCmd},
+	Cmds: []*bonzai.Cmd{tagListCmd, tagBumpCmd},
+	Def:  tagListCmd,
+}
+
+var tagBumpCmd = &bonzai.Cmd{
+	Name:    `bump`,
+	Comp:    comp.CmdsOpts,
+	Cmds:    []*bonzai.Cmd{tagListCmd},
+	Opts:    `major|minor|patch|m|M|p`,
+	MaxArgs: 1,
+	Call: func(x *bonzai.Cmd, args ...string) error {
+		mustPush := len(os.Getenv("KIMONO_TAG_PUSH")) > 0
+		var part VerPart
+		if len(args) == 0 {
+			part = Minor
+		} else {
+			switch args[0] {
+			case "major", "M":
+				part = Major
+			case "minor", "m":
+				part = Minor
+			case "patch", "p":
+				part = Patch
+			}
+		}
+		TagBump(part, mustPush)
+		return nil
+	},
 }
 
 var tagListCmd = &bonzai.Cmd{

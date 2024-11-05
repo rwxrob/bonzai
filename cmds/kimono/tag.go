@@ -1,9 +1,13 @@
 package kimono
 
 import (
-	"os"
+	"fmt"
+	"log"
 	"path/filepath"
+	"strconv"
 	"strings"
+
+	"golang.org/x/mod/semver"
 
 	"github.com/rwxrob/bonzai/fn/each"
 	"github.com/rwxrob/bonzai/futil"
@@ -18,10 +22,65 @@ const (
 	Patch VerPart = 2
 )
 
-// TagBump identifies the current module path, identifies the latest
-// version tag and tags the repo with the bumped version.
-func TagBump(part VerPart) error {
+func TagBump(part VerPart, mustPush bool) error {
+	versions := TagList()
+	latest := versions[len(versions)-1]
+	prefix := modulePrefix()
+	newVersion := fmt.Sprintf(
+		"%s%s",
+		prefix,
+		versionBump(latest, part),
+	)
+	fmt.Println(newVersion)
+	if err := run.Exec("git", "tag", newVersion); err != nil {
+		return err
+	}
+	if mustPush {
+		if err := run.Exec("git", "push", "origin", newVersion); err != nil {
+			return err
+		}
+	}
 	return nil
+}
+
+// versionBump increases the given part of the version.
+func versionBump(version string, part VerPart) string {
+	leading := ""
+	versionN := version
+	if leading == "v" {
+		leading = "v"
+		versionN = version[1:]
+	}
+	versionParts := strings.Split(versionN, ".")
+
+	// Bump the specified version part
+	switch part {
+	case Major:
+		versionParts[0] = fmt.Sprintf(
+			"%d",
+			1+parseInt(versionParts[0]),
+		)
+	case Minor:
+		versionParts[1] = fmt.Sprintf(
+			"%d",
+			1+parseInt(versionParts[1]),
+		)
+	case Patch:
+		versionParts[2] = fmt.Sprintf(
+			"%d",
+			1+parseInt(versionParts[2]),
+		)
+	}
+
+	return fmt.Sprint(leading, strings.Join(versionParts, "."))
+}
+
+func parseInt(s string) int {
+	i, err := strconv.Atoi(s)
+	if err != nil {
+		log.Fatal(err)
+	}
+	return i
 }
 
 // TagList returns the list of tags for the current module.
@@ -30,15 +89,20 @@ func TagList() []string {
 	tags := run.Out(`git`, `tag`, `-l`, `--no-column`)
 	out := make([]string, 0)
 	each.Do(strings.Split(tags, "\n"), func(tag string) {
-		if strings.HasPrefix(tag, prefix) ||
-			!strings.Contains(tag, "/") {
+		if isValidTag(tag, prefix) {
 			out = append(
 				out,
 				strings.TrimPrefix(tag, prefix),
 			)
 		}
 	})
+	semver.Sort(out)
 	return out
+}
+
+func isValidTag(tag, prefix string) bool {
+	return (len(prefix) > 0 && strings.HasPrefix(tag, prefix)) ||
+		(len(prefix) == 0 && semver.IsValid(tag))
 }
 
 func modulePrefix() string {
