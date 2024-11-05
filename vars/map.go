@@ -6,6 +6,7 @@
 package vars
 
 import (
+	"bytes"
 	"errors"
 	"fmt"
 	"io"
@@ -13,6 +14,7 @@ import (
 	"os"
 	"path/filepath"
 	"regexp"
+	"slices"
 	"strings"
 	"sync"
 	"time"
@@ -315,11 +317,17 @@ func (m *Map) save() error {
 func (c Map) MarshalText() ([]byte, error) {
 	c.Lock()
 	defer c.Unlock()
-	var out string
+	lines := make([]string, 0, len(c.M))
 	for k, v := range c.M {
-		out += k + "=" + to.EscReturns(v) + "\n"
+		lines = append(lines, k+"="+to.EscReturns(v))
 	}
-	return []byte(out), nil
+	slices.Sort(lines)
+	buf := new(bytes.Buffer)
+	for _, line := range lines {
+		buf.WriteString(line)
+		buf.WriteString("\n")
+	}
+	return buf.Bytes(), nil
 }
 
 // Delete deletes an entry from the persistent cache. Fulfills the
@@ -334,7 +342,9 @@ func (m *Map) Delete(key string) error {
 
 // KeysWithPrefix returns a slice of keys from the map [m.M] that start with the
 // specified prefix (pre), refreshing the map first. If an error occurs during
-// refresh, it returns an empty slice and the error.
+// refresh, it returns an empty slice and the error. Note that this
+// linearly passes through every map rather than attempt to sort the map
+// keys first.
 func (m *Map) KeysWithPrefix(pre string) ([]string, error) {
 	if err := m.refresh(); err != nil {
 		return []string{}, err
