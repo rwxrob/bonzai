@@ -8,7 +8,7 @@ require (
 	github.com/rwxrob/bonzai/futil v0.1.0
 	github.com/rwxrob/bonzai/is v0.1.0
 	github.com/rwxrob/bonzai/mark v0.1.0
-	github.com/rwxrob/bonzai/run v0.4.0
+	github.com/rwxrob/bonzai/run v0.5.0
 	github.com/rwxrob/bonzai/term v0.2.1
 	github.com/rwxrob/bonzai/to v0.1.0
 	github.com/rwxrob/bonzai/vars v0.2.1
