@@ -5,7 +5,6 @@ package bonzai
 
 import (
 	"bytes"
-	"embed"
 	"fmt"
 	"log"
 	"os"
@@ -48,21 +47,6 @@ type Cmd struct {
 
 	// Self-completion support: complete -C foo foo
 	Comp Completer
-
-	// Def vars declaration and initial values. Does not overwrite
-	// existing vars. All vars used with [Cmd.Get] and [Cmd.Set] must be declared
-	// even if empty. See [Vars], [VarsDriver], and package [is].
-	Vars map[string]string
-
-	// Optional embedded documentation in any format used by help and
-	// documentation commands such as [doc.Cmd] from the core/cmds
-	// package. Embedded content is usually lazy loaded only when the doc
-	// command is called. Structure and format of the files can be anything
-	// supported by any [Cmd] but Bonzai [mark] is recommended for
-	// greatest compatibility. Use of an embedded file system instead of
-	// a string allows, for example, support for multiple languages to be
-	// embedded into a single binary.
-	Docs embed.FS
 
 	// Template commands/functions to be added (or overwrite) the internal
 	// [FuncMap] collection of template commands used by the [Cmd.Fill]
