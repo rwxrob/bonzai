@@ -5,7 +5,6 @@ package bonzai
 
 import (
 	"bytes"
-	"embed"
 	"fmt"
 	"log"
 	"os"
@@ -48,21 +47,6 @@ type Cmd struct {
 
 	// Self-completion support: complete -C foo foo
 	Comp Completer
-
-	// Def vars declaration and initial values. Does not overwrite
-	// existing vars. All vars used with [Cmd.Get] and [Cmd.Set] must be declared
-	// even if empty. See [Vars], [VarsDriver], and package [is].
-	Vars map[string]string
-
-	// Optional embedded documentation in any format used by help and
-	// documentation commands such as [doc.Cmd] from the core/cmds
-	// package. Embedded content is usually lazy loaded only when the doc
-	// command is called. Structure and format of the files can be anything
-	// supported by any [Cmd] but Bonzai [mark] is recommended for
-	// greatest compatibility. Use of an embedded file system instead of
-	// a string allows, for example, support for multiple languages to be
-	// embedded into a single binary.
-	Docs embed.FS
 
 	// Template commands/functions to be added (or overwrite) the internal
 	// [FuncMap] collection of template commands used by the [Cmd.Fill]
@@ -378,7 +362,7 @@ func (x *Cmd) exitUnlessValidName() {
 
 // called as multicall binary
 func (x *Cmd) recurseIfMulti(args []string) {
-	name, _ := run.ExeName()
+	name := run.ExeName()
 	if name != x.Name {
 		if c := x.Can(name); c != nil {
 			c.Run()
@@ -409,7 +393,7 @@ func (x *Cmd) detectCompletion(args []string) {
 		}
 
 		// own completer, delegate
-		each.Println(cmd.Comp.Complete(cmd, args...))
+		each.Println(cmd.Comp.Complete(*cmd, args...))
 		run.Exit()
 		return
 	}
@@ -429,6 +413,11 @@ func (x *Cmd) Root() *Cmd {
 	}
 	return x.Caller
 }
+
+// IsRoot determines if the command [x] is the root command by checking
+// if its [Caller] is the same as itself. It returns true if [x] is
+// the root command; otherwise, it returns false.
+func (x *Cmd) IsRoot() bool { return x.Caller == x }
 
 // PrependCmd safely prepends the passed [*Cmd] to the [Cmds] slice.
 func (x *Cmd) PrependCmd(cmd *Cmd) {
@@ -566,7 +555,7 @@ func (x *Cmd) Opt(p string) string {
 
 // Seek checks the args for command names returning the deepest along
 // with the remaining arguments. Typically the args passed are directly
-// from the command line. Seek also sets the Caller on each Cmd found
+// from the command line. Seek also sets the [Caller] on each [Cmd] found
 // during resolution.
 func (x *Cmd) Seek(args []string) (*Cmd, []string) {
 	if (len(args) == 1 && args[0] == "") || x.Cmds == nil {

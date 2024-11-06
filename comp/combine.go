@@ -9,10 +9,10 @@ type Combine []bonzai.Completer
 
 // Complete calls Complete on all items in its list returning the
 // resulting combined list (without removing duplicates).
-func (completers Combine) Complete(an any, args ...string) []string {
+func (completers Combine) Complete(x bonzai.Cmd, args ...string) []string {
 	var list []string
 	for _, comp := range completers {
-		list = append(list, comp.Complete(an, args...)...)
+		list = append(list, comp.Complete(x, args...)...)
 	}
 	return redu.Unique(list)
 }

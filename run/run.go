@@ -19,8 +19,6 @@ import (
 	"github.com/rwxrob/bonzai/futil"
 )
 
-var ExePath = os.Executable
-
 // RealExePath returns the absolute path of the executable, resolving
 // any symbolic links. It first retrieves the executable path using
 // [os.Executable] and, if successful, evaluates any symbolic links
@@ -33,21 +31,14 @@ func RealExePath() (string, error) {
 	return filepath.EvalSymlinks(path)
 }
 
-// ExeName returns just the base name of the executable from
-// [os.Executable] without the path or any suffix (ex: .exe). Note that
-// the name may actually be a symbolic link. Use [RealExeName] if the
-// resolved version is wanted.
-func ExeName() (string, error) {
-	path, err := os.Executable()
-	if err != nil {
-		return path, err
-	}
-	name := strings.TrimSuffix(filepath.Base(path), filepath.Ext(path))
-	return name, nil
-}
+// ExeName returns just the base name of the executable by parsing
+// it from [os.Args] at index 0 (same as $0 in shell). No attempt to
+// resolve any symbolic links or remove any suffix is made.
+func ExeName() string { return filepath.Base(os.Args[0]) }
 
-// RealExeName returns same as [ExeName] but with all symbolic links
-// resolved.
+// RealExeName retrieves the name of the current executable, resolving any
+// symbolic links to return the base name. It returns an error if unable
+// to retrieve or evaluate the executable path.
 func RealExeName() (string, error) {
 	path, err := os.Executable()
 	if err != nil {
@@ -57,16 +48,12 @@ func RealExeName() (string, error) {
 	if err != nil {
 		return path, err
 	}
-	name := strings.TrimSuffix(filepath.Base(path), filepath.Ext(path))
-	return name, nil
+	return filepath.Base(path), nil
 }
 
-func addExeName(base string) (string, error) {
-	name, err := ExeName()
-	if err != nil {
-		return "", err
-	}
-	return filepath.Join(base, name), nil
+func addExeName(base string) string {
+	name := ExeName()
+	return filepath.Join(base, name)
 }
 
 func addRealExeName(base string) (string, error) {
@@ -82,7 +69,7 @@ func ExeCacheDir() (string, error) {
 	if err != nil {
 		return "", err
 	}
-	return addExeName(dir)
+	return addExeName(dir), nil
 }
 
 func RealExeCacheDir() (string, error) {
@@ -98,7 +85,7 @@ func ExeConfigDir() (string, error) {
 	if err != nil {
 		return "", err
 	}
-	return addExeName(dir)
+	return addExeName(dir), nil
 }
 
 func RealExeStateDir() (string, error) {
@@ -106,7 +93,7 @@ func RealExeStateDir() (string, error) {
 	if err != nil {
 		return "", err
 	}
-	return addExeName(dir)
+	return addExeName(dir), nil
 }
 
 func ExeStateDir() (string, error) {
@@ -114,7 +101,7 @@ func ExeStateDir() (string, error) {
 	if err != nil {
 		return "", err
 	}
-	return addExeName(dir)
+	return addExeName(dir), nil
 }
 
 func ExeIsSymLink() (bool, error) {
