@@ -1,5 +1,21 @@
 package vars
 
+import (
+	"log"
+)
+
+// Initialized with a new [Map] for sharing across packages.
+var Data Driver
+
+func init() {
+	m := NewMap()
+	if err := m.Init(); err != nil {
+		log.Print(err)
+		return
+	}
+	Data = m
+}
+
 // Driver specifies anything that implements a persistence layer for
 // high-speed storage and retrieval of key/value combinations.
 // Implementations may use whatever technology for persisting the data but
@@ -61,7 +77,7 @@ package vars
 //
 // Delete must delete a key from the persistent storage.
 //
-// # Data
+// # All
 //
 // Must output all the data in k=v pairs, one per line.
 //
@@ -103,7 +119,7 @@ type Driver interface {
 	GrepV(regx string) (string, error) // returns k=v combos of matches
 	Load(keyvals string) error         // multiple pairs
 	Delete(key string) error           // destroyer
-	Data() (string, error)             // k=v with \r and \n escaped
+	All() (string, error)              // k=v with \r and \n escaped
 	Print() error                      // prints Data to os.Stdout
 	Edit() error                       // open default editor, then load
 	KeysWithPrefix(pre string) ([]string, error)
