@@ -414,6 +414,11 @@ func (x *Cmd) Root() *Cmd {
 	return x.Caller
 }
 
+// IsRoot determines if the command [x] is the root command by checking
+// if its [Caller] is the same as itself. It returns true if [x] is
+// the root command; otherwise, it returns false.
+func (x *Cmd) IsRoot() bool { return x.Caller == x }
+
 // PrependCmd safely prepends the passed [*Cmd] to the [Cmds] slice.
 func (x *Cmd) PrependCmd(cmd *Cmd) {
 	old := x.Cmds
@@ -550,7 +555,7 @@ func (x *Cmd) Opt(p string) string {
 
 // Seek checks the args for command names returning the deepest along
 // with the remaining arguments. Typically the args passed are directly
-// from the command line. Seek also sets the Caller on each Cmd found
+// from the command line. Seek also sets the [Caller] on each [Cmd] found
 // during resolution.
 func (x *Cmd) Seek(args []string) (*Cmd, []string) {
 	if (len(args) == 1 && args[0] == "") || x.Cmds == nil {
