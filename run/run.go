@@ -19,11 +19,11 @@ import (
 	"github.com/rwxrob/bonzai/futil"
 )
 
-// RealExePath returns the absolute path of the executable, resolving
+// Executable returns the absolute path of the executable, resolving
 // any symbolic links. It first retrieves the executable path using
 // [os.Executable] and, if successful, evaluates any symbolic links
 // in the path using [filepath.EvalSymlinks].
-func RealExePath() (string, error) {
+func Executable() (string, error) {
 	path, err := os.Executable()
 	if err != nil {
 		return path, err
