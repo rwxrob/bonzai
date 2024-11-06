@@ -50,6 +50,44 @@ func BaseHasPrefix[T Text](paths []T, pre string) []T {
 	return s
 }
 
+// HasSuffix filters the Text input set and returns only those elements
+// that have the give suffix.
+func HasSuffix[T Text](set []T, suf string) []T {
+	var s []T
+	for _, i := range set {
+		if strings.HasSuffix(string(i), suf) {
+			s = append(s, i)
+		}
+	}
+	return s
+}
+
+// HasSuffixSorted filters the Text input set and returns only those elements
+// that have the give suffix assuming that the input is already sorted
+// so that early return on the first miss can be trusted.
+func HasSuffixSorted[T Text](set []T, pre string) []T {
+	var s []T
+	for _, i := range set {
+		if !strings.HasPrefix(string(i), pre) {
+			return s
+		}
+		s = append(s, i)
+	}
+	return s
+}
+
+// BaseHasSuffix filters the input of file paths and returns only those
+// elements where the base name has the given suffix.
+func BaseHasSuffix[T Text](paths []T, pre string) []T {
+	var s []T
+	for _, i := range paths {
+		if strings.HasSuffix(filepath.Base(string(i)), pre) {
+			s = append(s, i)
+		}
+	}
+	return s
+}
+
 // NotEmpty filters only strings that are not empty.
 func NotEmpty[T Text](set []T) []T {
 	var s []T
