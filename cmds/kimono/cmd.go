@@ -7,9 +7,10 @@ import (
 	"strings"
 
 	"github.com/rwxrob/bonzai"
-	"github.com/rwxrob/bonzai/cmds/vars"
+	varc "github.com/rwxrob/bonzai/cmds/vars"
 	"github.com/rwxrob/bonzai/comp"
 	"github.com/rwxrob/bonzai/fn/each"
+	"github.com/rwxrob/bonzai/vars"
 )
 
 var Cmd = &bonzai.Cmd{
@@ -61,7 +62,7 @@ var tagBumpCmd = &bonzai.Cmd{
 	Name:    `bump`,
 	Alias:   `b|up|i|inc`,
 	Comp:    comp.CmdsOpts,
-	Cmds:    []*bonzai.Cmd{vars.Cmd},
+	Cmds:    []*bonzai.Cmd{varc.Cmd},
 	Opts:    `major|minor|patch|m|M|p`,
 	MaxArgs: 1,
 	Call: func(x *bonzai.Cmd, args ...string) error {
@@ -71,7 +72,7 @@ var tagBumpCmd = &bonzai.Cmd{
 			stateVar(`version-part`, TagVersionPartEnv, `patch`),
 		)
 		if len(args) == 0 {
-			val, err := bonzai.Vars.Get(`default-ver-part`)
+			val, err := vars.Data.Get(`default-ver-part`)
 			if err != nil {
 				return err
 			}
@@ -113,7 +114,7 @@ func stateVar[T any](key, envVar string, fallback T) T {
 	if val, exists := os.LookupEnv(envVar); exists {
 		return convertValue(val, fallback)
 	}
-	if val, err := bonzai.Vars.Get(key); err == nil {
+	if val, err := vars.Data.Get(key); err == nil {
 		return convertValue(val, fallback)
 	}
 	return fallback
