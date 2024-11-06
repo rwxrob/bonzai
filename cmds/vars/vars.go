@@ -7,6 +7,7 @@ import (
 	"github.com/rwxrob/bonzai"
 	"github.com/rwxrob/bonzai/comp"
 	"github.com/rwxrob/bonzai/run"
+	"github.com/rwxrob/bonzai/vars"
 	"github.com/rwxrob/term"
 )
 
@@ -27,7 +28,7 @@ var GetCmd = &bonzai.Cmd{
 	Comp:    comp.Vars,
 	NumArgs: 1,
 	Call: func(_ *bonzai.Cmd, args ...string) error {
-		value, err := bonzai.Vars.Get(args[0])
+		value, err := vars.Data.Get(args[0])
 		if err != nil {
 			return err
 		}
@@ -42,7 +43,7 @@ var SetCmd = &bonzai.Cmd{
 	Comp:    comp.Vars,
 	MinArgs: 2,
 	Call: func(_ *bonzai.Cmd, args ...string) error {
-		return bonzai.Vars.Set(args[0], strings.Join(args[1:], " "))
+		return vars.Data.Set(args[0], strings.Join(args[1:], " "))
 	},
 }
 
@@ -59,7 +60,7 @@ var loadCmd = &bonzai.Cmd{
 		if err != nil {
 			return err
 		}
-		return bonzai.Vars.Load(data)
+		return vars.Data.Load(data)
 	},
 }
 
@@ -76,7 +77,7 @@ var grepkCmd = &bonzai.Cmd{
 	Alias:   `k`,
 	NumArgs: 1,
 	Call: func(_ *bonzai.Cmd, args ...string) error {
-		value, err := bonzai.Vars.GrepK(args[0])
+		value, err := vars.Data.GrepK(args[0])
 		if err != nil {
 			return err
 		}
@@ -90,7 +91,7 @@ var grepvCmd = &bonzai.Cmd{
 	Alias:   `v|val|vals`,
 	NumArgs: 1,
 	Call: func(_ *bonzai.Cmd, args ...string) error {
-		value, err := bonzai.Vars.GrepV(args[0])
+		value, err := vars.Data.GrepV(args[0])
 		if err != nil {
 			return err
 		}
@@ -104,7 +105,7 @@ var initCmd = &bonzai.Cmd{
 	Alias:   `i`,
 	NumArgs: 0,
 	Call: func(_ *bonzai.Cmd, _ ...string) error {
-		return bonzai.Vars.Init()
+		return vars.Data.Init()
 	},
 }
 
@@ -113,7 +114,7 @@ var clearCmd = &bonzai.Cmd{
 	Alias:   `cl`,
 	NumArgs: 0,
 	Call: func(_ *bonzai.Cmd, _ ...string) error {
-		return bonzai.Vars.Clear()
+		return vars.Data.Clear()
 	},
 }
 
@@ -121,7 +122,7 @@ var editCmd = &bonzai.Cmd{
 	Name:  `edit`,
 	Alias: `e|ed`,
 	Call: func(x *bonzai.Cmd, args ...string) error {
-		return bonzai.Vars.Edit()
+		return vars.Data.Edit()
 	},
 }
 
@@ -130,7 +131,7 @@ var deleteCmd = &bonzai.Cmd{
 	Alias:   `d|del`,
 	NumArgs: 1,
 	Call: func(_ *bonzai.Cmd, args ...string) error {
-		return bonzai.Vars.Delete(args[0])
+		return vars.Data.Delete(args[0])
 	},
 }
 
@@ -138,6 +139,6 @@ var dataCmd = &bonzai.Cmd{
 	Name:    `data`,
 	NumArgs: 0,
 	Call: func(_ *bonzai.Cmd, _ ...string) error {
-		return bonzai.Vars.Print()
+		return vars.Data.Print()
 	},
 }
