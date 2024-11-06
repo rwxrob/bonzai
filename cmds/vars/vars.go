@@ -14,6 +14,7 @@ import (
 var Cmd = &bonzai.Cmd{
 	Name:  `var`,
 	Alias: `vars`,
+	Vers:  `v0.1.0`,
 	Cmds: []*bonzai.Cmd{
 		GetCmd, SetCmd, editCmd, initCmd, clearCmd,
 		grepCmd, loadCmd, deleteCmd, dataCmd,
