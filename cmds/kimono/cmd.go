@@ -40,7 +40,11 @@ var workCmd = &bonzai.Cmd{
 	},
 }
 
-const TagPushEnv = `KIMONO_TAG_PUSH`
+const (
+	TagPushEnv        = `KIMONO_PUSH_TAG`
+	TagShortenEnv     = `KIMONO_SHORTEN_TAG`
+	TagVersionPartEnv = `KIMONO_VERSION_PART`
+)
 
 var tagCmd = &bonzai.Cmd{
 	Name:  `tag`,
@@ -58,14 +62,17 @@ var tagBumpCmd = &bonzai.Cmd{
 	Opts:    `major|minor|patch|m|M|p`,
 	MaxArgs: 1,
 	Call: func(x *bonzai.Cmd, args ...string) error {
-		mustPush := false
-		if val, ok := os.LookupEnv(TagPushEnv); ok {
-			mustPush = len(val) > 0
-		} else {
-			val, _ := bonzai.Vars.Get(`push-tags`)
-			mustPush = val == `true`
-		}
+		mustPush := getValueFor(
+			`push-tags`, TagPushEnv, `false`,
+		) == `true`
 		var part VerPart
+		part = optsToVerPart(
+			getValueFor(
+				`version-part`,
+				TagVersionPartEnv,
+				`patch`,
+			),
+		)
 		if len(args) == 0 {
 			val, err := bonzai.Vars.Get(`default-ver-part`)
 			if err != nil {
@@ -79,7 +86,7 @@ var tagBumpCmd = &bonzai.Cmd{
 	},
 }
 
-func optsToVerPart(x string) (VerPart) {
+func optsToVerPart(x string) VerPart {
 	switch x {
 	case `major`, `M`:
 		return Major
@@ -96,7 +103,22 @@ var tagListCmd = &bonzai.Cmd{
 	Alias: `l`,
 	Comp:  comp.Cmds,
 	Call: func(x *bonzai.Cmd, args ...string) error {
-		each.Println(TagList())
+		shorten := getValueFor(
+			`shorten-tags`,
+			TagShortenEnv,
+			`false`,
+		) == `true`
+		each.Println(TagList(shorten))
 		return nil
 	},
+}
+
+func getValueFor(key, envVar string, defaultValue string) string {
+	if val, exists := os.LookupEnv(envVar); exists {
+		return val
+	}
+	if val, err := bonzai.Vars.Get(key); err != nil {
+		return val
+	}
+	return defaultValue
 }
