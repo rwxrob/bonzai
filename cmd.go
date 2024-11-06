@@ -362,7 +362,7 @@ func (x *Cmd) exitUnlessValidName() {
 
 // called as multicall binary
 func (x *Cmd) recurseIfMulti(args []string) {
-	name, _ := run.ExeName()
+	name := run.ExeName()
 	if name != x.Name {
 		if c := x.Can(name); c != nil {
 			c.Run()
