@@ -39,11 +39,11 @@ type Map struct {
 // Map implements [Driver]
 var _ Driver = new(Map)
 
-// Data returns the state data file as text marshaled in the format: k=v,
+// All returns the state data file as text marshaled in the format: k=v,
 // no equal sign in key, carriage return and line returns escaped,
 // terminated by line return on each line. Logs an error if source of
 // data is unavailable. Fulfills the [Driver] interface.
-func (m *Map) Data() (string, error) {
+func (m *Map) All() (string, error) {
 	byt, err := os.ReadFile(m.File)
 	if err != nil {
 		return "", err
@@ -52,10 +52,10 @@ func (m *Map) Data() (string, error) {
 }
 
 // Print retrieves and displays the data from the file [m.File]
-// by calling the [Data] method. Returns any error encountered during
+// by calling the [All] method. Returns any error encountered during
 // the data retrieval.
 func (m *Map) Print() error {
-	out, err := m.Data()
+	out, err := m.All()
 	fmt.Print(out)
 	return err
 }

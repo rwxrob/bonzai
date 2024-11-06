@@ -165,33 +165,15 @@ func ExampleMap_GrepK_nokey() {
 
 }
 
-func ExampleMap_Data() {
+func ExampleMap_All() {
 
 	m, err := vars.NewMapFrom(`testdata/vars.properties`)
 	if err != nil {
 		fmt.Println(err)
 	}
-	fmt.Println(m.Data())
+	fmt.Println(m.All())
 
 	// Unordered output:
-	// .pomo.warn=1m
-	// .pomo.prefix=🍅
-	// .pomo.prefixwarn=💢
-	// .pomo.duration=52m
-	// .pomo.interval=20s
-	//  <nil>
-
-}
-
-func ExampleMap_Data() {
-
-	m, err := vars.NewMapFrom(`testdata/vars.properties`)
-	if err != nil {
-		fmt.Println(err)
-	}
-	fmt.Println(m.Data())
-
-	// Output:
 	// .pomo.warn=1m
 	// .pomo.prefix=🍅
 	// .pomo.prefixwarn=💢
