@@ -16,12 +16,16 @@ import (
 var Cmd = &bonzai.Cmd{
 	Name:  `kimono`,
 	Alias: `kmono|km`,
+	Short: `kimono is a tool for managing golang monorepos`,
+	Vers:  `0.0.1`,
 	Comp:  comp.Cmds,
 	Cmds:  []*bonzai.Cmd{sanitizeCmd, workCmd, tagCmd},
 }
 
 var sanitizeCmd = &bonzai.Cmd{
 	Name: `sanitize`,
+	Short: `sanitize will run ` + "`go get -u` and `go mod tidy`\n" +
+		`on all go modules in the current git repo`,
 	Comp: comp.Cmds,
 	Call: func(x *bonzai.Cmd, args ...string) error {
 		return Sanitize()
@@ -31,6 +35,7 @@ var sanitizeCmd = &bonzai.Cmd{
 var workCmd = &bonzai.Cmd{
 	Name:      `work`,
 	Alias:     `w`,
+	Short:     `work allows you to toggle go work files on or off`,
 	Comp:      comp.CmdsOpts,
 	Opts:      `on|off`,
 	MinArgs:   1,
@@ -53,6 +58,7 @@ const (
 var tagCmd = &bonzai.Cmd{
 	Name:  `tag`,
 	Alias: `t`,
+	Short: `tag allows to bump version tags and list the tags for the go module`,
 	Comp:  comp.Cmds,
 	Cmds:  []*bonzai.Cmd{tagListCmd, tagBumpCmd},
 	Def:   tagListCmd,
@@ -61,6 +67,7 @@ var tagCmd = &bonzai.Cmd{
 var tagBumpCmd = &bonzai.Cmd{
 	Name:    `bump`,
 	Alias:   `b|up|i|inc`,
+	Short:   `bump bumps version tags subject to the given version part.`,
 	Comp:    comp.CmdsOpts,
 	Cmds:    []*bonzai.Cmd{varc.Cmd},
 	Opts:    `major|minor|patch|m|M|p`,
@@ -99,6 +106,7 @@ func optsToVerPart(x string) VerPart {
 var tagListCmd = &bonzai.Cmd{
 	Name:  `list`,
 	Alias: `l`,
+	Short: `list the tags for the go module`,
 	Comp:  comp.Cmds,
 	Call: func(x *bonzai.Cmd, args ...string) error {
 		shorten := stateVar(`shorten-tags`, TagShortenEnv, false)
