@@ -23,7 +23,7 @@ const (
 )
 
 func TagBump(part VerPart, mustPush bool) error {
-	versions := TagList()
+	versions := TagList(true)
 	latest := ``
 	if len(versions) == 0 {
 		latest = `0.0.0`

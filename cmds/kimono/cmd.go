@@ -2,6 +2,9 @@ package kimono
 
 import (
 	"os"
+	"slices"
+	"strconv"
+	"strings"
 
 	"github.com/rwxrob/bonzai"
 	"github.com/rwxrob/bonzai/cmds/vars"
@@ -62,16 +65,10 @@ var tagBumpCmd = &bonzai.Cmd{
 	Opts:    `major|minor|patch|m|M|p`,
 	MaxArgs: 1,
 	Call: func(x *bonzai.Cmd, args ...string) error {
-		mustPush := getValueFor(
-			`push-tags`, TagPushEnv, `false`,
-		) == `true`
+		mustPush := stateVar(`push-tags`, TagPushEnv, false)
 		var part VerPart
 		part = optsToVerPart(
-			getValueFor(
-				`version-part`,
-				TagVersionPartEnv,
-				`patch`,
-			),
+			stateVar(`version-part`, TagVersionPartEnv, `patch`),
 		)
 		if len(args) == 0 {
 			val, err := bonzai.Vars.Get(`default-ver-part`)
@@ -103,22 +100,54 @@ var tagListCmd = &bonzai.Cmd{
 	Alias: `l`,
 	Comp:  comp.Cmds,
 	Call: func(x *bonzai.Cmd, args ...string) error {
-		shorten := getValueFor(
-			`shorten-tags`,
-			TagShortenEnv,
-			`false`,
-		) == `true`
+		shorten := stateVar(`shorten-tags`, TagShortenEnv, false)
 		each.Println(TagList(shorten))
 		return nil
 	},
 }
 
-func getValueFor(key, envVar string, defaultValue string) string {
+// stateVar retrieves a value by first checking an environment variable.
+// If the environment variable does not exist, it checks bonzai.Vars. If
+// neither contain a value, it returns the provided fallback.
+func stateVar[T any](key, envVar string, fallback T) T {
 	if val, exists := os.LookupEnv(envVar); exists {
-		return val
+		return convertValue(val, fallback)
 	}
-	if val, err := bonzai.Vars.Get(key); err != nil {
-		return val
+	if val, err := bonzai.Vars.Get(key); err == nil {
+		return convertValue(val, fallback)
 	}
-	return defaultValue
+	return fallback
+}
+
+// convertValue attempts to convert a string to the same type as fallback.
+func convertValue[T any](val string, fallback T) T {
+	var result any = fallback
+
+	switch any(fallback).(type) {
+	case string:
+		result = val
+	case bool:
+		result = isTruthy(val)
+	case int:
+		result, _ = strconv.Atoi(val)
+	}
+
+	return result.(T)
+}
+
+// isTruthy determines if a string represents a "truthy" value,
+// interpreting "t", "true", and positive numbers as true; "f", "false",
+// and zero or negative numbers as false.
+func isTruthy(val string) bool {
+	val = strings.ToLower(strings.TrimSpace(val))
+	if slices.Contains([]string{"t", "true"}, val) {
+		return true
+	}
+	if slices.Contains([]string{"f", "false"}, val) {
+		return false
+	}
+	if num, err := strconv.Atoi(val); err == nil {
+		return num > 0
+	}
+	return false
 }
