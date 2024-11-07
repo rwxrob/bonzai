@@ -1,20 +1,14 @@
 package bonzai
 
 import (
-	"bytes"
 	"fmt"
-	"log"
 	"os"
-	"path/filepath"
 	"strings"
-	"text/template"
 
 	"github.com/rwxrob/bonzai/ds/qstack"
 	"github.com/rwxrob/bonzai/fn/each"
-	"github.com/rwxrob/bonzai/futil"
 	"github.com/rwxrob/bonzai/is"
 	"github.com/rwxrob/bonzai/run"
-	"github.com/rwxrob/bonzai/to"
 )
 
 // Completer specifies a struct with a [Completer.Complete] function
@@ -42,10 +36,10 @@ type Cmd struct {
 	Hide string // disable completion: ex: old|defunct
 
 	// Minimal when [Cmd.Docs] is overkill
-	Usage string
-	Vers  string
-	Short string
-	Long  string
+	Usage string // text
+	Vers  string // text (<50 runes)
+	Short string // text (<50 runes)
+	Long  string // text/markup
 
 	// Faster than lots of "if" conditions in [Cmd.Call]. Consider
 	// [Cmd.Init] when more complex argument validation is needed.
@@ -56,13 +50,6 @@ type Cmd struct {
 
 	// Self-completion support: complete -C foo foo
 	Comp Completer
-
-	// Template commands/functions to be added (or overwrite) the internal
-	// [FuncMap] collection of template commands used by the [Cmd.Fill]
-	// command. These apply to this [Cmd] only and will not be available
-	// to subcommands. To share between commands (including subcommands)
-	// assign the same FuncMap to all of them.
-	FuncMap template.FuncMap
 
 	// Following are never assigned in declarations but are instead
 	// set at [Run] time for use in [Call] methods:
@@ -79,6 +66,8 @@ type Cmd struct {
 // "x". If either is unused an underscore should be used instead.
 type Method func(x *Cmd, args ...string) error
 
+// WithName sets the [Name] of the command [x] to the specified [name]
+// and returns a pointer to a copy of the updated command.
 func (x Cmd) WithName(name string) *Cmd {
 	x.Name = name
 	return &x
@@ -161,7 +150,7 @@ func (x *Cmd) CacheAlias() {
 		x.aliases = strings.Split(x.Alias, `|`)
 		for _, alias := range x.aliases {
 			if !IsValidName(alias) {
-				run.ExitError(InvalidName{alias})
+				run.ExitError(ErrInvalidName{alias})
 				return
 			}
 		}
@@ -249,8 +238,8 @@ func (x *Cmd) HideSlice() []string {
 //
 // # Valid name check
 //
-// Throws [InvalidName] error and exist if [Name] does not pass
-// [InvalidName] check.
+// Throws [ErrInvalidName] error and exist if [Name] does not pass
+// [ErrInvalidName] check.
 //
 // # Subcommand optional arguments
 //
@@ -261,6 +250,7 @@ func (x *Cmd) HideSlice() []string {
 func (x *Cmd) Run(args ...string) {
 	defer run.TrapPanic()
 	x.exitUnlessValidName()
+	x.exitUnlessValidShort()
 	x.recurseIfMulti(args)
 	x.detectCompletion(args)
 	if len(args) == 0 {
@@ -268,7 +258,7 @@ func (x *Cmd) Run(args ...string) {
 	}
 	c, args := x.Seek(args)
 	if c == nil {
-		run.ExitError(IncorrectUsage{c})
+		run.ExitError(ErrIncorrectUsage{c})
 		return
 	}
 	c.init(args)
@@ -320,10 +310,10 @@ func (x *Cmd) call(args []string) {
 func (x *Cmd) exitUnlessCallable() {
 	switch {
 	case x.Call == nil && x.Def == nil:
-		run.ExitError(Uncallable{x})
+		run.ExitError(ErrUncallable{x})
 		return
 	case x.Call != nil && x.Def != nil:
-		run.ExitError(CallOrDef{x})
+		run.ExitError(ErrCallOrDef{x})
 		return
 	}
 }
@@ -340,20 +330,27 @@ func (x *Cmd) init(args []string) {
 func (x *Cmd) exitIfBadArgs(args []string) {
 	switch {
 	case len(args) < x.MinArgs:
-		run.ExitError(NotEnoughArgs{len(args), x.MinArgs})
+		run.ExitError(ErrNotEnoughArgs{len(args), x.MinArgs})
 		return
 	case x.MaxArgs > 0 && len(args) > x.MaxArgs:
-		run.ExitError(TooManyArgs{len(args), x.MaxArgs})
+		run.ExitError(ErrTooManyArgs{len(args), x.MaxArgs})
 		return
 	case x.NumArgs > 0 && len(args) != x.NumArgs:
-		run.ExitError(WrongNumArgs{len(args), x.NumArgs})
+		run.ExitError(ErrWrongNumArgs{len(args), x.NumArgs})
 		return
 	}
 }
 
 func (x *Cmd) exitUnlessValidName() {
 	if !IsValidName(x.Name) {
-		run.ExitError(InvalidName{x.Name})
+		run.ExitError(ErrInvalidName{x.Name})
+		return
+	}
+}
+
+func (x *Cmd) exitUnlessValidShort() {
+	if len(x.Short) > 50 {
+		run.ExitError(ErrInvalidShort{x})
 		return
 	}
 }
@@ -411,7 +408,8 @@ func (x *Cmd) detectCompletion(args []string) {
 	}
 }
 
-// String fulfills the [fmt.Stringer] interface for debugging.
+// String fulfills the [fmt.Stringer] interface for debugging by simply
+// printing the Name of the [Cmd].
 func (x Cmd) String() string { return x.Name }
 
 // Root returns the root [Cmd] from the current [Path]. This must always
@@ -527,31 +525,6 @@ func (x *Cmd) CmdNames() []string {
 	return list
 }
 
-// Fill fills out the [text/template] string using the [Cmd] data fields
-// and [Cmd.FuncMap] values combined with [bonzai.FuncMap].
-func (x *Cmd) Fill(tmpl string) string {
-	funcs := to.MergedMaps(FuncMap, x.FuncMap)
-	t, err := template.New("t").Funcs(funcs).Parse(tmpl)
-	if err != nil {
-		log.Println(err)
-	}
-	var buf bytes.Buffer
-	if err := t.Execute(&buf, x); err != nil {
-		log.Println(err)
-	}
-	return buf.String()
-}
-
-// Print calls [Fill] on string and prints it with [fmt.Print]. This is
-// a rather expensive operation by comparison. Consider the simpler
-// alternative or [term.Print].
-func (x *Cmd) Print(tmpl string) { fmt.Print(x.Fill(tmpl)) }
-
-// Println calls [Fill] on string and prints it with [fmt.Println]. This is
-// a rather expensive operation by comparison. Consider the simpler
-// alternative or [term.Print].
-func (x *Cmd) Println(tmpl string) { fmt.Println(x.Fill(tmpl)) }
-
 // Opt returns the [Opts] entry matching name if found, empty string if not.
 func (x *Cmd) Opt(p string) string {
 	if x.opts == nil {
@@ -619,140 +592,95 @@ func (x *Cmd) PathNames() []string {
 	return path.Items()
 }
 
-// ------------------------------ errors ------------------------------
+// -------------------------- ErrInvalidName --------------------------
 
-type VarsInitFailed struct {
-	Err error
-}
-
-func (e VarsInitFailed) Error() string {
-	return fmt.Sprintf(`var initialization failed: %v`, e.Err)
-}
-
-type UnsupportedVar struct {
+type ErrInvalidName struct {
 	Name string
 }
 
-func (e UnsupportedVar) Error() string {
-	return fmt.Sprintf(
-		`unsupported var: %v`, e.Name)
-}
-
-type InvalidMultiName struct {
-	Got  string
-	Want string
-}
-
-func (e InvalidMultiName) Error() string {
-	return fmt.Sprintf(`%q must begin with %q: %q`,
-		e.Want, e.Got, e.Got+"-"+e.Want)
-}
-
-type InvalidName struct {
-	Name string
-}
-
-func (e InvalidName) Error() string {
+func (e ErrInvalidName) Error() string {
 	return fmt.Sprintf(`invalid name: %v`, e.Name)
 }
 
-type NotEnoughArgs struct {
+// -------------------------- ErrIncorrectUsage --------------------------
+
+type ErrIncorrectUsage struct {
+	Cmd *Cmd
+}
+
+func (e ErrIncorrectUsage) Error() string {
+	if len(e.Cmd.Usage) == 0 {
+		return fmt.Sprintf(`incorrect usage for "%v" command`, e.Cmd.Name)
+	}
+	return fmt.Sprintf(`usage: %v %v`,
+		e.Cmd.Name,
+		e.Cmd.Usage,
+	)
+}
+
+// ---------------------------- ErrUncallable ----------------------------
+
+type ErrUncallable struct {
+	Cmd *Cmd
+}
+
+func (e ErrUncallable) Error() string {
+	return fmt.Sprintf(`Cmd requires Call or Def: %v`, e.Cmd.Name)
+}
+
+// ----------------------------- ErrCallOrDef ----------------------------
+
+type ErrCallOrDef struct {
+	Cmd *Cmd
+}
+
+func (e ErrCallOrDef) Error() string {
+	return fmt.Sprintf(`Call or Def (not both): %v`, e.Cmd.Name)
+}
+
+// --------------------------- ErrNotEnoughArgs --------------------------
+
+type ErrNotEnoughArgs struct {
 	Count int
 	Min   int
 }
 
-func (e NotEnoughArgs) Error() string {
+func (e ErrNotEnoughArgs) Error() string {
 	return fmt.Sprintf(`%v is not enough arguments, %v required`,
 		e.Count, e.Min)
 }
 
-type TooManyArgs struct {
+// ---------------------------- ErrTooManyArgs ---------------------------
+
+type ErrTooManyArgs struct {
 	Count int
 	Max   int
 }
 
-func (e TooManyArgs) Error() string {
+func (e ErrTooManyArgs) Error() string {
 	return fmt.Sprintf(`%v is too many arguments, %v maximum`,
 		e.Count, e.Max)
 }
 
-type WrongNumArgs struct {
+// --------------------------- ErrWrongNumArgs ---------------------------
+
+type ErrWrongNumArgs struct {
 	Count int
 	Num   int
 }
 
-func (e WrongNumArgs) Error() string {
+func (e ErrWrongNumArgs) Error() string {
 	return fmt.Sprintf(
 		`%v arguments, %v required`,
 		e.Count, e.Num)
 }
 
-type Uncallable struct {
+// -------------------------- ErrInvalidShort -------------------------
+
+type ErrInvalidShort struct {
 	Cmd *Cmd
 }
 
-func (e Uncallable) Error() string {
-	return fmt.Sprintf(`Cmd requires Call or Def: %v`, e.Cmd.Name)
-}
-
-type CallOrDef struct {
-	Cmd *Cmd
-}
-
-func (e CallOrDef) Error() string {
-	return fmt.Sprintf(`Call or Def (not both): %v`, e.Cmd.Name)
-}
-
-type NoCallNoDef struct {
-	Cmd *Cmd
-}
-
-func (e NoCallNoDef) Error() string {
-	return fmt.Sprintf(`either Call or Def required if no Cmds: %v`, e.Cmd.Name)
-}
-
-type IncorrectUsage struct {
-	Cmd *Cmd
-}
-
-func (e IncorrectUsage) Error() string {
-	return fmt.Sprintf(`usage: %v %v`,
-		e.Cmd.Name,
-		e.Cmd.Fill(e.Cmd.Usage),
-	)
-}
-
-type MissingVar struct {
-	Path string
-}
-
-func (e MissingVar) Error() string {
-	return fmt.Sprintf(`missing var for %v`, e.Path)
-}
-
-// ------------------------------ funcmap -----------------------------
-
-// FuncMap contains the package global default template domain specific
-// language implemented as a collection of functions in
-// a [template.FuncMap] which can be supplemented or overridden. Note
-// this is in addition to any specific syntax added specifically to
-// a Cmd with [Cmd.FuncMap] (which takes higher priority). Note that
-// there is no protection against any [Cmd.Call] function changing one
-// or all of these entries for every other Cmd within the same
-// executable. This flexibility is by design but must be taken into
-// careful consideration when deciding to alter this package-scoped
-// variable. It is almost always preferable to use the [Cmd.FuncMap]
-// instead.
-var FuncMap = template.FuncMap{
-	"exepath":      run.Executable,
-	"exename":      run.ExeName,
-	"execachedir":  run.ExeCacheDir,
-	"exestatedir":  run.ExeStateDir,
-	"execonfigdir": run.ExeConfigDir,
-	"cachedir":     futil.UserCacheDir,
-	"confdir":      futil.UserConfigDir,
-	"homedir":      futil.UserHomeDir,
-	"statedir":     futil.UserStateDir,
-	"pathsep":      func() string { return string(os.PathSeparator) },
-	"pathjoin":     filepath.Join,
+func (e ErrInvalidShort) Error() string {
+	return fmt.Sprintf(`short length >50 %v: %v`, e.Cmd, e.Cmd.Short)
 }
