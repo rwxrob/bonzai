@@ -150,3 +150,25 @@ func Pipe(filter ...any) string {
 // PipePrint prints the output (and a newline) of a Pipe logging any
 // errors encountered.
 func PipePrint(filter ...any) { fmt.Println(Pipe(filter...)) }
+
+// Or returns the first non-zero value of the two provided. If this is
+// the zero value for type [T], it returns that; otherwise, it returns
+// this.
+func Or[T comparable](this, that T) T {
+	if this == *new(T) {
+		return that
+	}
+	return this
+}
+
+// Fall iterates over a list of values, returning the first non-zero
+// value. If [vals] contains only one element, it returns that value. It
+// recursively calls [Or] to compare each element with the subsequent
+// elements until it finds a non-zero value or reaches the end of the
+// list.
+func Fall[T comparable](vals ...T) T {
+	if len(vals) == 1 {
+		return vals[0]
+	}
+	return Or(vals[0], Fall(vals[1:]...))
+}
