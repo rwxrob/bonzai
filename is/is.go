@@ -1,5 +1,11 @@
 package is
 
+import (
+	"slices"
+	"strconv"
+	"strings"
+)
+
 // AllLatinASCIILowerWithDashes checks if the input string [in] contains only
 // lowercase Latin ASCII letters and dashes. It returns false if the string
 // is empty, starts with a dash, or ends with a dash, or if it contains any
@@ -47,4 +53,18 @@ func AllLatinASCIIUpper(in string) bool {
 		return false
 	}
 	return true
+}
+
+func Truthy(val string) bool {
+	val = strings.ToLower(strings.TrimSpace(val))
+	if slices.Contains([]string{`t`, `true`, `on`}, val) {
+		return true
+	}
+	if slices.Contains([]string{`f`, `false`, `off`}, val) {
+		return false
+	}
+	if num, err := strconv.Atoi(val); err == nil {
+		return num > 0
+	}
+	return false
 }
