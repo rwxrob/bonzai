@@ -23,10 +23,10 @@ const (
 )
 
 func TagBump(part VerPart, mustPush bool) error {
-	versions := TagList()
+	versions := TagList(true)
 	latest := ``
 	if len(versions) == 0 {
-		latest = `0.0.0`
+		latest = `v0.0.0`
 	} else {
 		latest = versions[len(versions)-1]
 	}
@@ -89,16 +89,16 @@ func parseInt(s string) int {
 }
 
 // TagList returns the list of tags for the current module.
-func TagList() []string {
+func TagList(shorten bool) []string {
 	prefix := modulePrefix()
 	tags := run.Out(`git`, `tag`, `-l`, `--no-column`)
 	out := make([]string, 0)
 	each.Do(strings.Split(tags, "\n"), func(tag string) {
 		if isValidTag(tag, prefix) {
-			out = append(
-				out,
-				strings.TrimPrefix(tag, prefix),
-			)
+			if shorten {
+				tag = strings.TrimPrefix(tag, prefix)
+			}
+			out = append(out, tag)
 		}
 	})
 	semver.Sort(out)

@@ -32,7 +32,7 @@ func workOnWalkDirFn(path string, d fs.DirEntry, err error) error {
 	if err := os.Chdir(path); err != nil {
 		return err
 	}
-	_ = os.Rename("go.work", "go.work.off")
+	_ = os.Rename("go.work.off", "go.work")
 	return nil
 }
 
@@ -54,12 +54,12 @@ func workOffWalkDirFn(path string, d fs.DirEntry, err error) error {
 	if d.Name() == ".git" || d.Name() == "vendor" {
 		return filepath.SkipDir
 	}
-	if !futil.Exists(filepath.Join(path, "go.mod")) {
-		return filepath.SkipDir
+	if !futil.Exists(filepath.Join(path, "go.work")) {
+		return nil
 	}
 	if err := os.Chdir(path); err != nil {
 		return err
 	}
-	_ = os.Rename("go.work.off", "go.work.on")
+	_ = os.Rename("go.work", "go.work.off")
 	return nil
 }
