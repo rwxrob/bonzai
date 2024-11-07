@@ -2,13 +2,24 @@ package vars
 
 import (
 	"fmt"
+	"path/filepath"
 	"strings"
 
 	"github.com/rwxrob/bonzai"
 	"github.com/rwxrob/bonzai/comp"
+	"github.com/rwxrob/bonzai/futil"
 	"github.com/rwxrob/bonzai/run"
 	"github.com/rwxrob/bonzai/term"
 )
+
+func cmdDefMap(x *bonzai.Cmd) (*Map, error) {
+	file, err := futil.UserStateDir()
+	if err != nil {
+		return nil, err
+	}
+	file = filepath.Join(file, x.Root().Name, DefaultFileName)
+	return NewMapFromInit(file)
+}
 
 var Cmd = &bonzai.Cmd{
 	Name:  `var`,
@@ -27,8 +38,12 @@ var GetCmd = &bonzai.Cmd{
 	Name:    `get`,
 	Comp:    Comp,
 	NumArgs: 1,
-	Call: func(_ *bonzai.Cmd, args ...string) error {
-		value, err := Data.Get(args[0])
+	Call: func(x *bonzai.Cmd, args ...string) error {
+		m, err := cmdDefMap(x)
+		if err != nil {
+			return err
+		}
+		value, err := m.Get(args[0])
 		if err != nil {
 			return err
 		}
@@ -42,8 +57,12 @@ var SetCmd = &bonzai.Cmd{
 	Name:    `set`,
 	Comp:    Comp,
 	MinArgs: 2,
-	Call: func(_ *bonzai.Cmd, args ...string) error {
-		return Data.Set(args[0], strings.Join(args[1:], " "))
+	Call: func(x *bonzai.Cmd, args ...string) error {
+		m, err := cmdDefMap(x)
+		if err != nil {
+			return err
+		}
+		return m.Set(args[0], strings.Join(args[1:], " "))
 	},
 }
 
@@ -51,7 +70,11 @@ var loadCmd = &bonzai.Cmd{
 	Name:    `load`,
 	Comp:    comp.FileDir,
 	MaxArgs: 1,
-	Call: func(_ *bonzai.Cmd, args ...string) error {
+	Call: func(x *bonzai.Cmd, args ...string) error {
+		m, err := cmdDefMap(x)
+		if err != nil {
+			return err
+		}
 		file := ""
 		if len(args) > 0 {
 			file = args[0]
@@ -60,7 +83,7 @@ var loadCmd = &bonzai.Cmd{
 		if err != nil {
 			return err
 		}
-		return Data.Load(data)
+		return m.Load(data)
 	},
 }
 
@@ -76,8 +99,12 @@ var grepkCmd = &bonzai.Cmd{
 	Name:    `keys`,
 	Alias:   `k`,
 	NumArgs: 1,
-	Call: func(_ *bonzai.Cmd, args ...string) error {
-		value, err := Data.GrepK(args[0])
+	Call: func(x *bonzai.Cmd, args ...string) error {
+		m, err := cmdDefMap(x)
+		if err != nil {
+			return err
+		}
+		value, err := m.GrepK(args[0])
 		if err != nil {
 			return err
 		}
@@ -90,8 +117,12 @@ var grepvCmd = &bonzai.Cmd{
 	Name:    `values`,
 	Alias:   `v|val|vals`,
 	NumArgs: 1,
-	Call: func(_ *bonzai.Cmd, args ...string) error {
-		value, err := Data.GrepV(args[0])
+	Call: func(x *bonzai.Cmd, args ...string) error {
+		m, err := cmdDefMap(x)
+		if err != nil {
+			return err
+		}
+		value, err := m.GrepV(args[0])
 		if err != nil {
 			return err
 		}
@@ -104,8 +135,12 @@ var initCmd = &bonzai.Cmd{
 	Name:    `init`,
 	Alias:   `i`,
 	NumArgs: 0,
-	Call: func(_ *bonzai.Cmd, _ ...string) error {
-		return Data.Init()
+	Call: func(x *bonzai.Cmd, _ ...string) error {
+		m, err := cmdDefMap(x)
+		if err != nil {
+			return err
+		}
+		return m.Init()
 	},
 }
 
@@ -113,8 +148,12 @@ var clearCmd = &bonzai.Cmd{
 	Name:    `clear`,
 	Alias:   `cl`,
 	NumArgs: 0,
-	Call: func(_ *bonzai.Cmd, _ ...string) error {
-		return Data.Clear()
+	Call: func(x *bonzai.Cmd, _ ...string) error {
+		m, err := cmdDefMap(x)
+		if err != nil {
+			return err
+		}
+		return m.Clear()
 	},
 }
 
@@ -122,7 +161,11 @@ var editCmd = &bonzai.Cmd{
 	Name:  `edit`,
 	Alias: `e|ed`,
 	Call: func(x *bonzai.Cmd, args ...string) error {
-		return Data.Edit()
+		m, err := cmdDefMap(x)
+		if err != nil {
+			return err
+		}
+		return m.Edit()
 	},
 }
 
@@ -130,15 +173,23 @@ var deleteCmd = &bonzai.Cmd{
 	Name:    `delete`,
 	Alias:   `d|del`,
 	NumArgs: 1,
-	Call: func(_ *bonzai.Cmd, args ...string) error {
-		return Data.Delete(args[0])
+	Call: func(x *bonzai.Cmd, args ...string) error {
+		m, err := cmdDefMap(x)
+		if err != nil {
+			return err
+		}
+		return m.Delete(args[0])
 	},
 }
 
 var dataCmd = &bonzai.Cmd{
 	Name:    `data`,
 	NumArgs: 0,
-	Call: func(_ *bonzai.Cmd, _ ...string) error {
-		return Data.Print()
+	Call: func(x *bonzai.Cmd, _ ...string) error {
+		m, err := cmdDefMap(x)
+		if err != nil {
+			return err
+		}
+		return m.Print()
 	},
 }
