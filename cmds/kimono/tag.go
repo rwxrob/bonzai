@@ -2,7 +2,6 @@ package kimono
 
 import (
 	"fmt"
-	"log"
 	"path/filepath"
 	"strconv"
 	"strings"
@@ -31,61 +30,26 @@ func TagBump(part VerPart, mustPush bool) error {
 		latest = versions[len(versions)-1]
 	}
 	prefix := modulePrefix()
-	newVersion := fmt.Sprintf(
+
+	newVer, err := versionBump(latest, part)
+	if err != nil {
+		return fmt.Errorf(`failed to bump version: %w`, err)
+	}
+	newVerStr := fmt.Sprintf(
 		`%s%s`,
 		prefix,
-		versionBump(latest, part),
+		newVer,
 	)
-	fmt.Println(newVersion)
-	if err := run.Exec(`git`, `tag`, newVersion); err != nil {
+	fmt.Println(newVerStr)
+	if err := run.Exec(`git`, `tag`, newVerStr); err != nil {
 		return err
 	}
 	if mustPush {
-		if err := run.Exec(`git`, `push`, `origin`, newVersion); err != nil {
+		if err := run.Exec(`git`, `push`, `origin`, newVerStr); err != nil {
 			return err
 		}
 	}
 	return nil
-}
-
-// versionBump increases the given part of the version.
-func versionBump(version string, part VerPart) string {
-	leading := ``
-	versionN := version
-	if leading == `v` {
-		leading = `v`
-		versionN = version[1:]
-	}
-	versionParts := strings.Split(versionN, `.`)
-
-	// Bump the specified version part
-	switch part {
-	case Major:
-		versionParts[0] = fmt.Sprintf(
-			`%d`,
-			1+parseInt(versionParts[0]),
-		)
-	case Minor:
-		versionParts[1] = fmt.Sprintf(
-			`%d`,
-			1+parseInt(versionParts[1]),
-		)
-	case Patch:
-		versionParts[2] = fmt.Sprintf(
-			`%d`,
-			1+parseInt(versionParts[2]),
-		)
-	}
-
-	return fmt.Sprint(leading, strings.Join(versionParts, `.`))
-}
-
-func parseInt(s string) int {
-	i, err := strconv.Atoi(s)
-	if err != nil {
-		log.Fatal(err)
-	}
-	return i
 }
 
 // TagList returns the list of tags for the current module.
@@ -103,6 +67,43 @@ func TagList(shorten bool) []string {
 	})
 	semver.Sort(out)
 	return out
+}
+
+
+// versionBump increases the given part of the version.
+func versionBump(version string, part VerPart) (string, error) {
+	leading := ``
+	versionN := version
+	if leading == `v` {
+		leading = `v`
+		versionN = version[1:]
+	}
+	versionParts := strings.Split(versionN, `.`)
+	switch part {
+	case Major:
+		major, err := strconv.Atoi(versionParts[0])
+		if err != nil {
+			return ``, err
+		}
+		versionParts[0] = string(major + 1)
+		versionParts[1] = `0`
+		versionParts[2] = `0`
+	case Minor:
+		minor, err := strconv.Atoi(versionParts[1])
+		if err != nil {
+			return ``, err
+		}
+		versionParts[1] = string(minor + 1)
+		versionParts[2] = `0`
+	case Patch:
+		patch, err := strconv.Atoi(versionParts[2])
+		if err != nil {
+			return ``, err
+		}
+		versionParts[2] = string(patch + 1)
+	}
+
+	return fmt.Sprint(leading, strings.Join(versionParts, `.`)), nil
 }
 
 func isValidTag(tag, prefix string) bool {
