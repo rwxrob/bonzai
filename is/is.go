@@ -57,10 +57,10 @@ func AllLatinASCIIUpper(in string) bool {
 
 func Truthy(val string) bool {
 	val = strings.ToLower(strings.TrimSpace(val))
-	if slices.Contains([]string{"t", "true"}, val) {
+	if slices.Contains([]string{`t`, `true`, `on`}, val) {
 		return true
 	}
-	if slices.Contains([]string{"f", "false"}, val) {
+	if slices.Contains([]string{`f`, `false`, `off`}, val) {
 		return false
 	}
 	if num, err := strconv.Atoi(val); err == nil {
