@@ -6,14 +6,11 @@ require (
 	github.com/rwxrob/bonzai v0.26.4
 	github.com/rwxrob/bonzai/fn v0.3.0
 	github.com/rwxrob/bonzai/futil v0.1.0
-	github.com/rwxrob/bonzai/json v0.1.0
-	github.com/rwxrob/bonzai/vars v0.3.2
 )
 
 require (
 	github.com/rogpeppe/go-internal v1.13.1 // indirect
 	github.com/rwxrob/bonzai/ds v0.1.1 // indirect
-	github.com/rwxrob/bonzai/edit v0.1.1 // indirect
 	github.com/rwxrob/bonzai/is v0.2.0 // indirect
 	github.com/rwxrob/bonzai/mark v0.1.0 // indirect
 	github.com/rwxrob/bonzai/run v0.6.1 // indirect
