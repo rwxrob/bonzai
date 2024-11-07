@@ -27,7 +27,7 @@ var sanitizeCmd = &bonzai.Cmd{
 		`on all go modules in the current git repo`,
 	Comp: comp.Cmds,
 	Call: func(x *bonzai.Cmd, args ...string) error {
-		return Sanitize()
+		return Tidy()
 	},
 }
 
@@ -52,6 +52,7 @@ const (
 	TagPushEnv        = `KIMONO_PUSH_TAG`
 	TagShortenEnv     = `KIMONO_SHORTEN_TAG`
 	TagVersionPartEnv = `KIMONO_VERSION_PART`
+	TagDeleteRemote   = `KIMONO_DELETE_REMOTE_TAG`
 )
 
 var tagCmd = &bonzai.Cmd{
@@ -87,6 +88,20 @@ var tagBumpCmd = &bonzai.Cmd{
 			part = optsToVerPart(args[0])
 		}
 		return TagBump(part, mustPush)
+	},
+}
+
+var tagDeleteCmd = &bonzai.Cmd{
+	Name:    `delete`,
+	Alias:   `d|del|rm`,
+	Short:   `delete the given tag from the go module`,
+	Comp:    comp.Cmds,
+	MinArgs: 1,
+	Call: func(x *bonzai.Cmd, args ...string) error {
+		return TagDelete(
+			args[0],
+			stateVar(`delete-remote-tag`, TagDeleteRemote, false),
+		)
 	},
 }
 
