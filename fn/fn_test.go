@@ -100,3 +100,47 @@ func ExamplePipePrint_error() {
 	// Output:
 	// bork
 }
+
+func ExampleOr() {
+	// int
+	fmt.Println(fn.Or(0, 1))
+	fmt.Println(fn.Or(1, 0))
+	fmt.Println(fn.Or(0, 0))
+
+	// string
+	fmt.Println(fn.Or("", "one"))
+	fmt.Println(fn.Or("one", ""))
+	fmt.Println(fn.Or("", ""))
+
+	// Output:
+	// 1
+	// 1
+	// 0
+	// one
+	// one
+	//
+}
+
+func ExampleFall() {
+	// int
+	fmt.Println(fn.Fall(0, 1, 0))
+	fmt.Println(fn.Fall(2, 0, 0))
+	fmt.Println(fn.Fall(0, 0, 3))
+	fmt.Println(fn.Fall(0, 0, 0))
+
+	// string
+	fmt.Println(fn.Fall("", "one", ""))
+	fmt.Println(fn.Fall("two", "", ""))
+	fmt.Println(fn.Fall("", "", "three"))
+	fmt.Println(fn.Fall("", "", ""))
+
+	// Output:
+	// 1
+	// 2
+	// 3
+	// 0
+	// one
+	// two
+	// three
+	//
+}
