@@ -314,7 +314,7 @@ func (m *Map) save() error {
 }
 
 // MarshalText fulfills [encoding.TextMarshaler] interface.
-func (c Map) MarshalText() ([]byte, error) {
+func (c *Map) MarshalText() ([]byte, error) {
 	c.Lock()
 	defer c.Unlock()
 	lines := make([]string, 0, len(c.M))
