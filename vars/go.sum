@@ -1,11 +1,9 @@
 github.com/rogpeppe/go-internal v1.13.1 h1:KvO1DLK/DRN07sQ1LQKScxyZJuNnedQ5/wKSR38lUII=
 github.com/rogpeppe/go-internal v1.13.1/go.mod h1:uMEvuHeurkdAXX61udpOXGD/AzZDWNMNyH2VO9fmH0o=
-github.com/rwxrob/bonzai v0.26.4 h1:ion+CQoPRpgjGeCeLz9OBGSNG4fkTW/c4zLSzGmKFCI=
-github.com/rwxrob/bonzai v0.26.4/go.mod h1:eZY6Zx9jdMYt4XKEd37Ao21Cvg1RFjfofWTk8begK5E=
+github.com/rwxrob/bonzai v0.29.5 h1:oiAO8mQzBojwNJU37PIlxDPCbQ1+r2/ZfTcdpViD7GY=
+github.com/rwxrob/bonzai v0.29.5/go.mod h1:htsKMwL3Nh8B1JhPo7WzBngteC+ZHkEBxSp/lBpUhNQ=
 github.com/rwxrob/bonzai/cmds/vars v0.1.0 h1:S8ZcxYoYJH9XGAaMzK05YByC9EEjH4MEW/d38fSSqco=
 github.com/rwxrob/bonzai/cmds/vars v0.1.0/go.mod h1:2YMIWx+Ur1CLRpXJ5tX8rJZkflrWj+AyuUScqvFdEDs=
-github.com/rwxrob/bonzai/comp v0.4.0 h1:JUZk5fmav3gsZ0xhr+dtZ01M3PAMO+3WYLXv832j/8U=
-github.com/rwxrob/bonzai/comp v0.4.0/go.mod h1:JGT0Ls5haKSSVVODnvaNRiTVrN0TLmmed58inq/8E+4=
 github.com/rwxrob/bonzai/comp v0.5.0 h1:nuDC2enOoRmvsMAs4JnDRKNt4Yotw1LbHdk1h/D+UxQ=
 github.com/rwxrob/bonzai/comp v0.5.0/go.mod h1:1uRQB1tYMBuhTL1qey91X2yDWEMDTuDxXpjcvXCdBmQ=
 github.com/rwxrob/bonzai/ds v0.1.1 h1:yC+GoUH/5TPt86qJmQRsD8OHuODJoDt9UgkWQM8yPzA=
@@ -20,8 +18,6 @@ github.com/rwxrob/bonzai/is v0.2.0 h1:mw1pPE4GVNH34z9Cp4n0TcZFobtLANtVrTGSILyORJ
 github.com/rwxrob/bonzai/is v0.2.0/go.mod h1:nxuqAGGBVYyq3bwXI0cFEl0xoAFVUrSJE7QVw81A3u8=
 github.com/rwxrob/bonzai/json v0.1.0 h1:TtXGLhe6eJTLtW/NjvgA73xjrl/Dcv1qYqktzLx2Ksk=
 github.com/rwxrob/bonzai/json v0.1.0/go.mod h1:6gHFzs0Bjc8Ixv1VGRuO36YVO7Y9hSzjXj+DrMDqh7Y=
-github.com/rwxrob/bonzai/mark v0.1.0 h1:l7P+YX98plXI+jMtO7FOXndsSpVBu0HEZfG/xewxxKU=
-github.com/rwxrob/bonzai/mark v0.1.0/go.mod h1:Ovll49Z3KDGC4QE0LK9m++5nUhJgLQFWK4Jr+3/xmRQ=
 github.com/rwxrob/bonzai/run v0.6.1 h1:Ttc/FAf83h5YXRlznruGsFahLLW9VBr/FLBX3L7hbDk=
 github.com/rwxrob/bonzai/run v0.6.1/go.mod h1:KhMNAJ3t78LDAHur60xiGA564UejG69PgV51k2QjXD8=
 github.com/rwxrob/bonzai/scanner v0.1.0 h1:xPf5817Mt0lkm2GvygJIGBqq0sS7thvh5ceK3RjWhkQ=
