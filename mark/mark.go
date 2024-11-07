@@ -3,7 +3,7 @@ package mark
 import "io"
 
 type Renderer interface {
-	Render(in io.Reader) error
+	Render(in io.Reader) (io.Reader, error)
 }
 
 type Viewer interface {
