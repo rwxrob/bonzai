@@ -60,7 +60,7 @@ func Truthy(val string) bool {
 	if slices.Contains([]string{"t", "true", "on"}, val) {
 		return true
 	}
-	if slices.Contains([]string{"f", "false", "on"}, val) {
+	if slices.Contains([]string{"f", "false", "off"}, val) {
 		return false
 	}
 	if num, err := strconv.Atoi(val); err == nil {
