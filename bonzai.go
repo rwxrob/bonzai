@@ -262,11 +262,13 @@ func (x *Cmd) HideSlice() []string {
 // (see [Can] for details).
 func (x *Cmd) Run(args ...string) {
 	defer run.TrapPanic()
-	x.recurseIfArgs(args)
 	x.exitUnlessValidName()
 	x.recurseIfMulti(args)
 	x.detectCompletion(args)
-	c, args := x.Seek(os.Args[1:])
+	if len(args) == 0 {
+		args = os.Args[1:]
+	}
+	c, args := x.Seek(args)
 	if c == nil {
 		run.ExitError(IncorrectUsage{c})
 		return
@@ -337,19 +339,6 @@ func (x *Cmd) init(args []string) {
 	}
 }
 
-func (x *Cmd) recurseIfArgs(args []string) {
-	argslen := len(args)
-	if argslen > 0 {
-		if argslen == 1 && strings.Contains(args[0], `-`) {
-			args = strings.Split(args[0], `-`)
-		}
-		if c := x.Can(args...); c != nil {
-			c.Run()
-			return
-		}
-	}
-}
-
 func (x *Cmd) exitIfBadArgs(args []string) {
 	switch {
 	case len(args) < x.MinArgs:
@@ -374,9 +363,23 @@ func (x *Cmd) exitUnlessValidName() {
 // called as multicall binary
 func (x *Cmd) recurseIfMulti(args []string) {
 	name := run.ExeName()
-	if name != x.Name {
-		if c := x.Can(name); c != nil {
-			c.Run()
+	if name == x.Name {
+		return
+	}
+	if c := x.Can(name); c != nil {
+		c.Run(args...)
+		return
+	}
+	if strings.Contains(name, `-`) {
+		fields := strings.Split(name, `-`)
+		if fields[0] == x.Name {
+			fields = fields[1:]
+		}
+		if c := x.Can(fields[0]); c != nil {
+			if len(fields) > 1 {
+				args = append(fields[1:], args...)
+			}
+			c.Run(args...)
 			return
 		}
 	}
