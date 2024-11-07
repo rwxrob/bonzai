@@ -6,6 +6,8 @@ github.com/rwxrob/bonzai/cmds/vars v0.1.0 h1:S8ZcxYoYJH9XGAaMzK05YByC9EEjH4MEW/d
 github.com/rwxrob/bonzai/cmds/vars v0.1.0/go.mod h1:2YMIWx+Ur1CLRpXJ5tX8rJZkflrWj+AyuUScqvFdEDs=
 github.com/rwxrob/bonzai/comp v0.4.0 h1:JUZk5fmav3gsZ0xhr+dtZ01M3PAMO+3WYLXv832j/8U=
 github.com/rwxrob/bonzai/comp v0.4.0/go.mod h1:JGT0Ls5haKSSVVODnvaNRiTVrN0TLmmed58inq/8E+4=
+github.com/rwxrob/bonzai/comp v0.5.0 h1:nuDC2enOoRmvsMAs4JnDRKNt4Yotw1LbHdk1h/D+UxQ=
+github.com/rwxrob/bonzai/comp v0.5.0/go.mod h1:1uRQB1tYMBuhTL1qey91X2yDWEMDTuDxXpjcvXCdBmQ=
 github.com/rwxrob/bonzai/ds v0.1.1 h1:yC+GoUH/5TPt86qJmQRsD8OHuODJoDt9UgkWQM8yPzA=
 github.com/rwxrob/bonzai/ds v0.1.1/go.mod h1:lMfjt9r8FsBDSzzZ/VtFSNIKuwhPPf9sfDi9C3x6sFo=
 github.com/rwxrob/bonzai/edit v0.1.1 h1:N1bDFMEg0Ev97qIG8GSYbt6Mp2wzvDoq6ZVFb9hPsRs=
