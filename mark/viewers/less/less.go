@@ -7,12 +7,11 @@ import (
 	"github.com/rwxrob/bonzai/term"
 )
 
-type viewer struct {
-}
+type Viewer struct{}
 
-var _ mark.Viewer = new(viewer)
+var _ mark.Viewer = new(Viewer)
 
-func (v *viewer) View(in io.Reader, r mark.Renderer) error {
+func (v *Viewer) View(in io.Reader, r mark.Renderer) error {
 	// TODO detect less pager and use it or just print it.
 	out, err := io.ReadAll(in)
 	if err != nil {
