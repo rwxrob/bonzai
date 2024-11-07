@@ -13,9 +13,7 @@ import (
 	"github.com/rwxrob/bonzai/fn/each"
 	"github.com/rwxrob/bonzai/futil"
 	"github.com/rwxrob/bonzai/is"
-	"github.com/rwxrob/bonzai/mark"
 	"github.com/rwxrob/bonzai/run"
-	"github.com/rwxrob/bonzai/term"
 	"github.com/rwxrob/bonzai/to"
 )
 
@@ -746,17 +744,6 @@ func (e MissingVar) Error() string {
 // variable. It is almost always preferable to use the [Cmd.FuncMap]
 // instead.
 var FuncMap = template.FuncMap{
-
-	// semantic
-	"exe": func(a string) string { return term.Under + a + term.Reset },
-	"pkg": func(a string) string { return term.Bold + a + term.Reset },
-	"cmd": func(a string) string { return term.Bold + a + term.Reset },
-
-	// stylistic
-	"indent": indent,
-	"pre":    func(a string) string { return term.Under + a + term.Reset },
-
-	// host system information
 	"exepath":      run.Executable,
 	"exename":      run.ExeName,
 	"execachedir":  run.ExeCacheDir,
@@ -768,8 +755,4 @@ var FuncMap = template.FuncMap{
 	"statedir":     futil.UserStateDir,
 	"pathsep":      func() string { return string(os.PathSeparator) },
 	"pathjoin":     filepath.Join,
-}
-
-func indent(n int, in string) string {
-	return to.Indented(in, mark.IndentBy+n)
 }
