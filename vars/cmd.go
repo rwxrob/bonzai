@@ -4,11 +4,10 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/rwxrob/term"
-
 	"github.com/rwxrob/bonzai"
 	"github.com/rwxrob/bonzai/comp"
 	"github.com/rwxrob/bonzai/run"
+	"github.com/rwxrob/bonzai/term"
 )
 
 var Cmd = &bonzai.Cmd{
