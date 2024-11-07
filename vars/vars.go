@@ -2,6 +2,8 @@ package vars
 
 import (
 	"log"
+	"os"
+	"github.com/rwxrob/bonzai/to"
 )
 
 // Initialized with a new [Map] for sharing across packages.
@@ -26,7 +28,7 @@ func init() {
 // produce an error. All data is expected to be in UTF-8. Keys may be
 // any valid UTF-8 character except the equals sign (but most
 // implementations will limit to keys that will work well with tab
-// competion libraries (see [bonzai/comp]).
+// completion libraries (see [bonzai/comp]).
 //
 // # Init
 //
@@ -145,4 +147,17 @@ func Get(key, file string) (string, error) {
 		return "", err
 	}
 	return m.Get(key)
+}
+
+// Fetch retrieves a value by first checking an environment variable.
+// If the environment variable does not exist, it checks bonzai.Vars. If
+// neither contain a value, it returns the provided fallback.
+func Fetch[T any](key, envVar string, fallback T) T {
+	if val, exists := os.LookupEnv(envVar); exists {
+		return to.Type(val, fallback)
+	}
+	if val, err := Data.Get(key); err == nil {
+		return to.Type(val, fallback)
+	}
+	return fallback
 }
