@@ -27,7 +27,6 @@ type Cmd struct {
 	Opts  string // ex: mon|wed|fri
 
 	// Work done by this command
-	Init Method // run-time initialization/validation
 	Call Method // if nil, Def must be set
 
 	// Delegation to subcommands
@@ -261,7 +260,6 @@ func (x *Cmd) Run(args ...string) {
 		run.ExitError(ErrIncorrectUsage{c})
 		return
 	}
-	c.init(args)
 	c.exitUnlessCallable()
 	c.exitIfBadArgs(args)
 	c.call(args)
@@ -315,15 +313,6 @@ func (x *Cmd) exitUnlessCallable() {
 	case x.Call != nil && x.Def != nil:
 		run.ExitError(ErrCallOrDef{x})
 		return
-	}
-}
-
-// initialize before delegation and Call
-func (x *Cmd) init(args []string) {
-	if x.Init != nil {
-		if err := x.Init(x, args...); err != nil {
-			run.ExitError(err)
-		}
 	}
 }
 

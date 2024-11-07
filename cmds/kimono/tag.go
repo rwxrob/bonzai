@@ -3,6 +3,7 @@ package kimono
 import (
 	"fmt"
 	"path/filepath"
+	"slices"
 	"strconv"
 	"strings"
 
@@ -69,6 +70,22 @@ func TagList(shorten bool) []string {
 	return out
 }
 
+// TagDelete deletes the given tag from local git repository.
+func TagDelete(tag string, remote bool) error {
+	tags := TagList(false)
+	if !slices.Contains(tags, tag) {
+		return fmt.Errorf("tag '%s' not found", tag)
+	}
+	if err := run.Exec(`git`, `tag`, `-d`, tag); err != nil {
+		return fmt.Errorf(
+			"failed to delete local tag '%s': %w",
+			tag,
+			err,
+		)
+	}
+	fmt.Println(`Deleted local tag:`, tag)
+	return nil
+}
 
 // versionBump increases the given part of the version.
 func versionBump(version string, part VerPart) (string, error) {
