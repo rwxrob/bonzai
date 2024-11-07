@@ -11,9 +11,9 @@ import (
 	"github.com/rwxrob/bonzai/run"
 )
 
-// Sanitize runs `go get -u` and `go mod tidy` on all supported Go
+// Tidy runs `go get -u` and `go mod tidy` on all supported Go
 // modules in the current git repository.
-func Sanitize() error {
+func Tidy() error {
 	root, err := futil.HereOrAbove(".git")
 	if err != nil {
 		return err
@@ -57,4 +57,47 @@ func update() error {
 
 func tidy() error {
 	return run.Exec("go", "mod", "tidy")
+}
+
+func ListDependents() ([]string, error) {
+	modPath, err := futil.HereOrAbove("go.mod")
+	if err != nil {
+		return nil, err
+	}
+	root, err := futil.HereOrAbove(".git")
+	if err != nil {
+		return nil, err
+	}
+	err = filepath.WalkDir(
+		filepath.Dir(root),
+		findDependentsWalkDirFn(modPath),
+	)
+	return nil, nil
+}
+
+func findDependentsWalkDirFn(modPath string) fs.WalkDirFunc {
+	return func(path string, d fs.DirEntry, err error) error {
+		if err != nil {
+			return err
+		}
+		if !d.IsDir() {
+			return nil
+		}
+		if d.Name() == ".git" || d.Name() == "vendor" {
+			return filepath.SkipDir
+		}
+		if !futil.Exists(filepath.Join(path, "go.mod")) {
+			return filepath.SkipDir
+		}
+		if err := os.Chdir(path); err != nil {
+			return err
+		}
+		if !hasDependencies() {
+			return filepath.SkipDir
+		}
+		fmt.Printf("\n%s:\n", path)
+		_ = update()
+		_ = tidy()
+		return nil
+	}
 }
