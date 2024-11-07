@@ -295,9 +295,9 @@ func InWrap(in string) string {
 	return to.Indented(w, IndentBy)
 }
 
-type renderer struct{}
+type Renderer struct{}
 
-func (r *renderer) Render(in io.Reader) (io.Reader, error) {
+func (r *Renderer) Render(in io.Reader) (io.Reader, error) {
 	buf, err := io.ReadAll(in)
 	if err != nil {
 		return nil, err
@@ -306,7 +306,7 @@ func (r *renderer) Render(in io.Reader) (io.Reader, error) {
 	return out, nil
 }
 
-var _ mark.Renderer = new(renderer)
+var _ mark.Renderer = new(Renderer)
 
 // Sprint parses the input as a string of BonzaiMark, multiple blocks with
 // optional emphasis (see Blocks and Emph) and applies IndentBy and
