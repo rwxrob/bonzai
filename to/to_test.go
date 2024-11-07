@@ -7,9 +7,10 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/rwxrob/bonzai/to"
 	"github.com/rwxrob/bonzai/fn"
 	"github.com/rwxrob/bonzai/fn/each"
+
+	"github.com/rwxrob/bonzai/to"
 )
 
 type stringer struct{}
@@ -339,4 +340,37 @@ func ExampleTrimCrunchSpaceVisible() {
 	// "here is some"
 	// "here is some"
 
+}
+
+func ExampleType() {
+	fmt.Println("true, false", to.Type("true", false))
+	fmt.Println("false, false", to.Type("false", false))
+	fmt.Println("false, true", to.Type("false", true))
+	fmt.Println(`"", true`, to.Type("", true))
+	fmt.Println(`"", false`, to.Type("", false))
+
+	fmt.Println("1, 0", to.Type("1", 0))
+	fmt.Println("14, 0", to.Type("14", 0))
+	fmt.Println("-14, 0", to.Type("-14", 0))
+	fmt.Println(`"", 0`, to.Type("", 0))
+
+	fmt.Println("1, 0.0", to.Type("1", 0.0))
+	fmt.Println("14, 0.0", to.Type("14", 0.0))
+	fmt.Println("-14, 0.0", to.Type("-14", 0.0))
+	fmt.Println(`"", 0.0`, to.Type("", 0.0))
+
+	// Output:
+	// true, false true
+	// false, false false
+	// false, true false
+	// "", true false
+	// "", false false
+	// 1, 0 1
+	// 14, 0 14
+	// -14, 0 -14
+	// "", 0 0
+	// 1, 0.0 1
+	// 14, 0.0 14
+	// -14, 0.0 -14
+	// "", 0.0 0
 }
