@@ -7,7 +7,6 @@ import (
 	"strings"
 
 	"github.com/rwxrob/bonzai"
-	varc "github.com/rwxrob/bonzai/cmds/vars"
 	"github.com/rwxrob/bonzai/comp"
 	"github.com/rwxrob/bonzai/fn/each"
 	"github.com/rwxrob/bonzai/vars"
@@ -69,7 +68,7 @@ var tagBumpCmd = &bonzai.Cmd{
 	Alias:   `b|up|i|inc`,
 	Short:   `bump bumps version tags subject to the given version part.`,
 	Comp:    comp.CmdsOpts,
-	Cmds:    []*bonzai.Cmd{varc.Cmd},
+	Cmds:    []*bonzai.Cmd{vars.Cmd},
 	Opts:    `major|minor|patch|m|M|p`,
 	MaxArgs: 1,
 	Call: func(x *bonzai.Cmd, args ...string) error {
@@ -116,7 +115,7 @@ var tagListCmd = &bonzai.Cmd{
 }
 
 // stateVar retrieves a value by first checking an environment variable.
-// If the environment variable does not exist, it checks bonzai.Vars. If
+// If the environment variable does not exist, it checks vars.Data. If
 // neither contain a value, it returns the provided fallback.
 func stateVar[T any](key, envVar string, fallback T) T {
 	if val, exists := os.LookupEnv(envVar); exists {
