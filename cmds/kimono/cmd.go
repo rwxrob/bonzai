@@ -7,7 +7,6 @@ import (
 	"strings"
 
 	"github.com/rwxrob/bonzai"
-	varc "github.com/rwxrob/bonzai/cmds/vars"
 	"github.com/rwxrob/bonzai/comp"
 	"github.com/rwxrob/bonzai/fn/each"
 	"github.com/rwxrob/bonzai/vars"
@@ -28,7 +27,7 @@ var sanitizeCmd = &bonzai.Cmd{
 		`on all go modules in the current git repo`,
 	Comp: comp.Cmds,
 	Call: func(x *bonzai.Cmd, args ...string) error {
-		return Sanitize()
+		return Tidy()
 	},
 }
 
@@ -53,6 +52,7 @@ const (
 	TagPushEnv        = `KIMONO_PUSH_TAG`
 	TagShortenEnv     = `KIMONO_SHORTEN_TAG`
 	TagVersionPartEnv = `KIMONO_VERSION_PART`
+	TagDeleteRemote   = `KIMONO_DELETE_REMOTE_TAG`
 )
 
 var tagCmd = &bonzai.Cmd{
@@ -69,7 +69,7 @@ var tagBumpCmd = &bonzai.Cmd{
 	Alias:   `b|up|i|inc`,
 	Short:   `bump bumps version tags subject to the given version part.`,
 	Comp:    comp.CmdsOpts,
-	Cmds:    []*bonzai.Cmd{varc.Cmd},
+	Cmds:    []*bonzai.Cmd{vars.Cmd},
 	Opts:    `major|minor|patch|m|M|p`,
 	MaxArgs: 1,
 	Call: func(x *bonzai.Cmd, args ...string) error {
@@ -88,6 +88,20 @@ var tagBumpCmd = &bonzai.Cmd{
 			part = optsToVerPart(args[0])
 		}
 		return TagBump(part, mustPush)
+	},
+}
+
+var tagDeleteCmd = &bonzai.Cmd{
+	Name:    `delete`,
+	Alias:   `d|del|rm`,
+	Short:   `delete the given tag from the go module`,
+	Comp:    comp.Cmds,
+	MinArgs: 1,
+	Call: func(x *bonzai.Cmd, args ...string) error {
+		return TagDelete(
+			args[0],
+			stateVar(`delete-remote-tag`, TagDeleteRemote, false),
+		)
 	},
 }
 
@@ -116,7 +130,7 @@ var tagListCmd = &bonzai.Cmd{
 }
 
 // stateVar retrieves a value by first checking an environment variable.
-// If the environment variable does not exist, it checks bonzai.Vars. If
+// If the environment variable does not exist, it checks vars.Data. If
 // neither contain a value, it returns the provided fallback.
 func stateVar[T any](key, envVar string, fallback T) T {
 	if val, exists := os.LookupEnv(envVar); exists {
