@@ -3,6 +3,7 @@ package vars
 import (
 	"log"
 	"os"
+
 	"github.com/rwxrob/bonzai/to"
 )
 
@@ -149,10 +150,14 @@ func Get(key, file string) (string, error) {
 	return m.Get(key)
 }
 
-// Fetch retrieves a value by first checking an environment variable.
-// If the environment variable does not exist, it checks bonzai.Vars. If
-// neither contain a value, it returns the provided fallback.
-func Fetch[T any](key, envVar string, fallback T) T {
+// Fetch retrieves a value of type [T] based on a prioritized lookup
+// sequence. It first checks if an environment variable [envVar] is set,
+// and if so, attempts to convert the value to type [T] using [fallback]
+// as a reference type. If the environment variable is not set, it then
+// checks [Data] for a value corresponding to [key]. If found, the value
+// is converted to type [T] and returned. If neither lookup succeeds,
+// [fallback] is returned as a default.
+func Fetch[T any](envVar, key string, fallback T) T {
 	if val, exists := os.LookupEnv(envVar); exists {
 		return to.Type(val, fallback)
 	}
