@@ -12,7 +12,7 @@ import (
 // FuncMap contains the package the BonzaiMark standard template tag
 // functions. Any [Renderer] must support them all (even if some may
 // output an empty string).
-var FuncMap = template.FuncMap{
+var FuncMap = &template.FuncMap{
 	"exepath":      run.Executable,
 	"exename":      run.ExeName,
 	"execachedir":  run.ExeCacheDir,
