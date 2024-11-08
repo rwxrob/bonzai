@@ -17,5 +17,5 @@ import (
 //   - [pkg/github.com/rwxrob/bonzai/mark/renderers]
 //   - [pkg/github.com/rwxrob/bonzai/cmds/help]
 type Renderer interface {
-	Render(this any, zmark io.Reader, tags *template.FuncMap) (io.Reader, error)
+	Render(this any, zmark io.Reader, m *template.FuncMap) (io.Reader, error)
 }
