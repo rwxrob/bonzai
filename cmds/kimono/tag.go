@@ -23,25 +23,13 @@ const (
 )
 
 func TagBump(part VerPart, mustPush bool) error {
-	versions := TagList(true)
-	latest := ``
-	if len(versions) == 0 {
-		latest = `v0.0.0`
-	} else {
-		latest = versions[len(versions)-1]
-	}
+	latest := latestTag()
 	prefix := modulePrefix()
-
 	newVer, err := versionBump(latest, part)
 	if err != nil {
 		return fmt.Errorf(`failed to bump version: %w`, err)
 	}
-	newVerStr := fmt.Sprintf(
-		`%s%s`,
-		prefix,
-		newVer,
-	)
-	fmt.Println(newVerStr)
+	newVerStr := fmt.Sprintf(`%s%s`, prefix, newVer)
 	if err := run.Exec(`git`, `tag`, newVerStr); err != nil {
 		return err
 	}
@@ -87,13 +75,24 @@ func TagDelete(tag string, remote bool) error {
 	return nil
 }
 
+func latestTag() string {
+	versions := TagList(true)
+	latest := ``
+	if len(versions) == 0 {
+		latest = `v0.0.0`
+	} else {
+		latest = versions[len(versions)-1]
+	}
+	return latest
+}
+
 // versionBump increases the given part of the version.
 func versionBump(version string, part VerPart) (string, error) {
-	leading := ``
-	versionN := version
-	if leading == `v` {
+	leading := version[:1]
+	versionN := version[1:]
+	if leading != `v` {
 		leading = `v`
-		versionN = version[1:]
+		versionN = version
 	}
 	versionParts := strings.Split(versionN, `.`)
 	switch part {
@@ -102,7 +101,7 @@ func versionBump(version string, part VerPart) (string, error) {
 		if err != nil {
 			return ``, err
 		}
-		versionParts[0] = string(major + 1)
+		versionParts[0] = strconv.Itoa(major + 1)
 		versionParts[1] = `0`
 		versionParts[2] = `0`
 	case Minor:
@@ -110,14 +109,14 @@ func versionBump(version string, part VerPart) (string, error) {
 		if err != nil {
 			return ``, err
 		}
-		versionParts[1] = string(minor + 1)
+		versionParts[1] = strconv.Itoa(minor + 1)
 		versionParts[2] = `0`
 	case Patch:
 		patch, err := strconv.Atoi(versionParts[2])
 		if err != nil {
 			return ``, err
 		}
-		versionParts[2] = string(patch + 1)
+		versionParts[2] = strconv.Itoa(patch + 1)
 	}
 
 	return fmt.Sprint(leading, strings.Join(versionParts, `.`)), nil

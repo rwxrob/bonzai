@@ -1,14 +1,10 @@
 package kimono
 
 import (
-	"os"
-	"slices"
-	"strconv"
-	"strings"
-
 	"github.com/rwxrob/bonzai"
 	"github.com/rwxrob/bonzai/comp"
 	"github.com/rwxrob/bonzai/fn/each"
+	"github.com/rwxrob/bonzai/futil"
 	"github.com/rwxrob/bonzai/vars"
 )
 
@@ -18,7 +14,7 @@ var Cmd = &bonzai.Cmd{
 	Short: `kimono is a tool for managing golang monorepos`,
 	Vers:  `0.0.1`,
 	Comp:  comp.Cmds,
-	Cmds:  []*bonzai.Cmd{sanitizeCmd, workCmd, tagCmd},
+	Cmds:  []*bonzai.Cmd{sanitizeCmd, workCmd, tagCmd, listCmd},
 }
 
 var sanitizeCmd = &bonzai.Cmd{
@@ -27,7 +23,11 @@ var sanitizeCmd = &bonzai.Cmd{
 		`on all go modules in the current git repo`,
 	Comp: comp.Cmds,
 	Call: func(x *bonzai.Cmd, args ...string) error {
-		return Tidy()
+		root, err := futil.HereOrAbove(".git")
+		if err != nil {
+			return err
+		}
+		return Tidy(root)
 	},
 }
 
@@ -73,20 +73,14 @@ var tagBumpCmd = &bonzai.Cmd{
 	Opts:    `major|minor|patch|m|M|p`,
 	MaxArgs: 1,
 	Call: func(x *bonzai.Cmd, args ...string) error {
-		mustPush := stateVar(`push-tags`, TagPushEnv, false)
-		var part VerPart
-		part = optsToVerPart(
-			stateVar(`version-part`, TagVersionPartEnv, `patch`),
+		mustPush := vars.Fetch(TagPushEnv, `push-tags`, false)
+		part := optsToVerPart(
+			vars.Fetch(
+				TagVersionPartEnv,
+				`version-part`,
+				`patch`,
+			),
 		)
-		if len(args) == 0 {
-			val, err := vars.Data.Get(`default-ver-part`)
-			if err != nil {
-				return err
-			}
-			part = optsToVerPart(val)
-		} else {
-			part = optsToVerPart(args[0])
-		}
 		return TagBump(part, mustPush)
 	},
 }
@@ -100,8 +94,50 @@ var tagDeleteCmd = &bonzai.Cmd{
 	Call: func(x *bonzai.Cmd, args ...string) error {
 		return TagDelete(
 			args[0],
-			stateVar(`delete-remote-tag`, TagDeleteRemote, false),
+			vars.Fetch(
+				TagDeleteRemote,
+				`delete-remote-tag`,
+				false,
+			),
 		)
+	},
+}
+
+var listCmd = &bonzai.Cmd{
+	Name:  `list`,
+	Alias: `l`,
+	Comp:  comp.Cmds,
+	Cmds:  []*bonzai.Cmd{tagListCmd, depListCmd, depDependentsCmd},
+	Def:   depListCmd,
+}
+
+var depListCmd = &bonzai.Cmd{
+	Name:  `dependencies`,
+	Alias: `deps|dps`,
+	Short: `list the dependencies of the go module`,
+	Comp:  comp.Cmds,
+	Call: func(x *bonzai.Cmd, args ...string) error {
+		deps, err := ListDependencies()
+		if err != nil {
+			return err
+		}
+		each.Println(deps)
+		return nil
+	},
+}
+
+var depDependentsCmd = &bonzai.Cmd{
+	Name:  `dependents`,
+	Alias: `depts|dpt`,
+	Short: `list the dependents of the go module`,
+	Comp:  comp.Cmds,
+	Call: func(x *bonzai.Cmd, args ...string) error {
+		deps, err := ListDependents()
+		if err != nil {
+			return err
+		}
+		each.Println(deps)
+		return nil
 	},
 }
 
@@ -123,54 +159,12 @@ var tagListCmd = &bonzai.Cmd{
 	Short: `list the tags for the go module`,
 	Comp:  comp.Cmds,
 	Call: func(x *bonzai.Cmd, args ...string) error {
-		shorten := stateVar(`shorten-tags`, TagShortenEnv, false)
+		shorten := vars.Fetch(
+			TagShortenEnv,
+			`shorten-tags`,
+			false,
+		)
 		each.Println(TagList(shorten))
 		return nil
 	},
-}
-
-// stateVar retrieves a value by first checking an environment variable.
-// If the environment variable does not exist, it checks vars.Data. If
-// neither contain a value, it returns the provided fallback.
-func stateVar[T any](key, envVar string, fallback T) T {
-	if val, exists := os.LookupEnv(envVar); exists {
-		return convertValue(val, fallback)
-	}
-	if val, err := vars.Data.Get(key); err == nil {
-		return convertValue(val, fallback)
-	}
-	return fallback
-}
-
-// convertValue attempts to convert a string to the same type as fallback.
-func convertValue[T any](val string, fallback T) T {
-	var result any = fallback
-
-	switch any(fallback).(type) {
-	case string:
-		result = val
-	case bool:
-		result = isTruthy(val)
-	case int:
-		result, _ = strconv.Atoi(val)
-	}
-
-	return result.(T)
-}
-
-// isTruthy determines if a string represents a "truthy" value,
-// interpreting "t", "true", and positive numbers as true; "f", "false",
-// and zero or negative numbers as false.
-func isTruthy(val string) bool {
-	val = strings.ToLower(strings.TrimSpace(val))
-	if slices.Contains([]string{"t", "true"}, val) {
-		return true
-	}
-	if slices.Contains([]string{"f", "false"}, val) {
-		return false
-	}
-	if num, err := strconv.Atoi(val); err == nil {
-		return num > 0
-	}
-	return false
 }
