@@ -23,20 +23,13 @@ const (
 )
 
 func TagBump(part VerPart, mustPush bool) error {
-	versions := TagList(true)
-	latest := ``
-	if len(versions) == 0 {
-		latest = `v0.0.0`
-	} else {
-		latest = versions[len(versions)-1]
-	}
+	latest := latestTag()
 	prefix := modulePrefix()
 	newVer, err := versionBump(latest, part)
 	if err != nil {
 		return fmt.Errorf(`failed to bump version: %w`, err)
 	}
 	newVerStr := fmt.Sprintf(`%s%s`, prefix, newVer)
-	fmt.Println(newVerStr)
 	if err := run.Exec(`git`, `tag`, newVerStr); err != nil {
 		return err
 	}
@@ -80,6 +73,17 @@ func TagDelete(tag string, remote bool) error {
 	}
 	fmt.Println(`Deleted local tag:`, tag)
 	return nil
+}
+
+func latestTag() string {
+	versions := TagList(true)
+	latest := ``
+	if len(versions) == 0 {
+		latest = `v0.0.0`
+	} else {
+		latest = versions[len(versions)-1]
+	}
+	return latest
 }
 
 // versionBump increases the given part of the version.

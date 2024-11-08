@@ -9,6 +9,7 @@ import (
 
 	"github.com/rwxrob/bonzai/futil"
 	"github.com/rwxrob/bonzai/run"
+	"github.com/rwxrob/bonzai/to"
 )
 
 type node struct {
@@ -46,6 +47,25 @@ func (g *graph) getDependents(name string) []*node {
 	return g.nodes[name].dependents
 }
 
+func getDependents(g *graph, name string) []*node {
+	// Strip version information and search for dependents
+	strippedName := stripVersion(name)
+	var dependents []*node
+	for _, node := range g.nodes {
+		if stripVersion(node.name) == strippedName {
+			dependents = append(
+				dependents,
+				node.dependents...)
+		}
+	}
+	return dependents
+}
+
+func stripVersion(name string) string {
+	parts := strings.Split(name, "@")
+	return parts[0]
+}
+
 func (g *graph) hasDependencies(name string) bool {
 	return len(g.nodes[name].dependencies) > 0
 }
@@ -58,7 +78,8 @@ func ListDependents() ([]string, error) {
 	if err != nil {
 		return nil, err
 	}
-	depNodes := graph.getDependents(modName)
+	name := fmt.Sprintf("%s@%s", modName, latestTag())
+	depNodes := getDependents(graph, name)
 	dependents := make([]string, 0)
 	for _, dep := range depNodes {
 		if dep.name == modName {
@@ -77,7 +98,8 @@ func ListDependencies() ([]string, error) {
 	if err != nil {
 		return nil, err
 	}
-	depNodes := graph.getDependencies(modName)
+	name := fmt.Sprintf("%s@%s", modName, latestTag())
+	depNodes := graph.getDependencies(name)
 	dependencies := make([]string, 0)
 	for _, dep := range depNodes {
 		dependencies = append(dependencies, dep.name)
@@ -88,6 +110,10 @@ func ListDependencies() ([]string, error) {
 func dependencyGraph() (*graph, error) {
 	graph := newGraph()
 	root, err := futil.HereOrAbove(".git")
+	if err != nil {
+		return nil, err
+	}
+	ppwd, err := os.Getwd()
 	if err != nil {
 		return nil, err
 	}
@@ -103,58 +129,38 @@ func dependencyGraph() (*graph, error) {
 			if d.Name() == ".git" || d.Name() == "vendor" {
 				return filepath.SkipDir
 			}
-			if !futil.Exists(filepath.Join(path, "go.mod")) {
+			if !futil.Exists(
+				filepath.Join(path, "go.mod"),
+			) {
 				return nil
 			}
 			if err := os.Chdir(path); err != nil {
 				return err
 			}
-			modName := strings.TrimSpace(run.Out("go", "list", "-m"))
+			err = os.Chdir(path)
+			if err != nil {
+				return nil
+			}
+			modName := strings.TrimSpace(
+				run.Out("go", "list", "-m"),
+			)
+			modName = fmt.Sprint(modName, "@", latestTag())
 			graph.addNode(modName)
-			dependencies := run.Out("go", "list", "-m", "all")
-			for _, dep := range strings.Split(dependencies, "\n") {
+			dependencies := to.Lines(run.Out("go", "list", "-m", "all"))[1:]
+			for _, dep := range dependencies {
 				dep = strings.TrimSpace(dep)
+				name := strings.Split(dep, " ")[0]
+				ver := strings.Split(dep, " ")[1]
+				dep = fmt.Sprint(name, "@", ver)
 				graph.addNode(dep)
 				graph.addDependency(modName, dep)
 			}
 			return nil
 		},
 	)
-	return graph, nil
-}
-
-func main() {
-	graph, err := dependencyGraph()
+	err = os.Chdir(ppwd)
 	if err != nil {
-		fmt.Println(err)
-		return
+		return nil, err
 	}
-	fmt.Println("Hello", graph)
-	for modName, node := range graph.nodes {
-		fmt.Printf("Module: %s\n", modName)
-
-		// Print dependencies
-		fmt.Print("  Dependencies: ")
-		if len(node.dependencies) == 0 {
-			fmt.Println("None")
-		} else {
-			for _, dep := range node.dependencies {
-				fmt.Printf("%s ", dep.name)
-			}
-			fmt.Println()
-		}
-
-		// Print dependents
-		fmt.Print("  Dependents: ")
-		if len(node.dependents) == 0 {
-			fmt.Println("None")
-		} else {
-			for _, dep := range node.dependents {
-				fmt.Printf("%s ", dep.name)
-			}
-			fmt.Println()
-		}
-
-		fmt.Println()
-	}
+	return graph, nil
 }

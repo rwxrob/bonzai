@@ -4,6 +4,7 @@ import (
 	"github.com/rwxrob/bonzai"
 	"github.com/rwxrob/bonzai/comp"
 	"github.com/rwxrob/bonzai/fn/each"
+	"github.com/rwxrob/bonzai/futil"
 	"github.com/rwxrob/bonzai/vars"
 )
 
@@ -22,7 +23,11 @@ var sanitizeCmd = &bonzai.Cmd{
 		`on all go modules in the current git repo`,
 	Comp: comp.Cmds,
 	Call: func(x *bonzai.Cmd, args ...string) error {
-		return Tidy()
+		root, err := futil.HereOrAbove(".git")
+		if err != nil {
+			return err
+		}
+		return Tidy(root)
 	},
 }
 

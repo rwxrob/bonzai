@@ -13,11 +13,7 @@ import (
 
 // Tidy runs `go get -u` and `go mod tidy` on all supported Go
 // modules in the current git repository.
-func Tidy() error {
-	root, err := futil.HereOrAbove(".git")
-	if err != nil {
-		return err
-	}
+func Tidy(root string) error {
 	return filepath.WalkDir(filepath.Dir(root), sanitizeWalkDirFn)
 }
 
@@ -58,4 +54,3 @@ func update() error {
 func tidy() error {
 	return run.Exec("go", "mod", "tidy")
 }
-
