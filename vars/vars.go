@@ -2,6 +2,9 @@ package vars
 
 import (
 	"log"
+	"os"
+
+	"github.com/rwxrob/bonzai/to"
 )
 
 // Initialized with a new [Map] for sharing across packages.
@@ -26,7 +29,7 @@ func init() {
 // produce an error. All data is expected to be in UTF-8. Keys may be
 // any valid UTF-8 character except the equals sign (but most
 // implementations will limit to keys that will work well with tab
-// competion libraries (see [bonzai/comp]).
+// completion libraries (see [bonzai/comp]).
 //
 // # Init
 //
@@ -145,4 +148,21 @@ func Get(key, file string) (string, error) {
 		return "", err
 	}
 	return m.Get(key)
+}
+
+// Fetch retrieves a value of type [T] based on a prioritized lookup
+// sequence. It first checks if an environment variable [envVar] is set,
+// and if so, attempts to convert the value to type [T] using [fallback]
+// as a reference type. If the environment variable is not set, it then
+// checks [Data] for a value corresponding to [key]. If found, the value
+// is converted to type [T] and returned. If neither lookup succeeds,
+// [fallback] is returned as a default.
+func Fetch[T any](envVar, key string, fallback T) T {
+	if val, exists := os.LookupEnv(envVar); exists {
+		return to.Type(val, fallback)
+	}
+	if val, err := Data.Get(key); err == nil {
+		return to.Type(val, fallback)
+	}
+	return fallback
 }

@@ -15,12 +15,14 @@ import (
 	"reflect"
 	"regexp"
 	"runtime"
+	"strconv"
 	"strings"
 	"time"
 	"unicode"
 
 	"github.com/rwxrob/bonzai/ds/qstack"
 	"github.com/rwxrob/bonzai/fn/maps"
+	"github.com/rwxrob/bonzai/is"
 	"github.com/rwxrob/bonzai/scanner"
 )
 
@@ -460,6 +462,27 @@ func Visible(in string) string {
 		}
 	}
 	return string(runes)
+}
+
+// Type attempts to convert a string [from] into the type of the
+// provided [this] fallback value. It uses the type of [this] to
+// determine the conversion logic and returns the converted value if
+// successful. If conversion fails, it returns [this] as a fallback.
+func Type[T any](from string, this T) T {
+	var result any = this
+	var err error
+	switch any(this).(type) {
+	case bool:
+		result = is.Truthy(from)
+	case int:
+		result, err = strconv.Atoi(from)
+	case float64:
+		result, err = strconv.ParseFloat(from, 64)
+		if err != nil {
+			return this
+		}
+	}
+	return result.(T)
 }
 
 // TrimVisible removes anything but unicode.IsPrint and then trims. It
