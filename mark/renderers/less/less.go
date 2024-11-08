@@ -3,6 +3,7 @@ package less
 import (
 	"bytes"
 	"fmt"
+	"html/template"
 	"io"
 	"regexp"
 	"strconv"
@@ -297,7 +298,7 @@ func InWrap(in string) string {
 
 type renderer struct{}
 
-func (r *renderer) Render(in io.Reader) (io.Reader, error) {
+func (r *renderer) Render(x any, m *template.FuncMap, in io.Reader) (io.Reader, error) {
 	buf, err := io.ReadAll(in)
 	if err != nil {
 		return nil, err
