@@ -74,19 +74,9 @@ var tagBumpCmd = &bonzai.Cmd{
 	MaxArgs: 1,
 	Call: func(x *bonzai.Cmd, args ...string) error {
 		mustPush := stateVar(`push-tags`, TagPushEnv, false)
-		var part VerPart
-		part = optsToVerPart(
+		part := optsToVerPart(
 			stateVar(`version-part`, TagVersionPartEnv, `patch`),
 		)
-		if len(args) == 0 {
-			val, err := vars.Data.Get(`default-ver-part`)
-			if err != nil {
-				return err
-			}
-			part = optsToVerPart(val)
-		} else {
-			part = optsToVerPart(args[0])
-		}
 		return TagBump(part, mustPush)
 	},
 }
