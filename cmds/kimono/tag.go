@@ -31,16 +31,11 @@ func TagBump(part VerPart, mustPush bool) error {
 		latest = versions[len(versions)-1]
 	}
 	prefix := modulePrefix()
-
 	newVer, err := versionBump(latest, part)
 	if err != nil {
 		return fmt.Errorf(`failed to bump version: %w`, err)
 	}
-	newVerStr := fmt.Sprintf(
-		`%s%s`,
-		prefix,
-		newVer,
-	)
+	newVerStr := fmt.Sprintf(`%s%s`, prefix, newVer)
 	fmt.Println(newVerStr)
 	if err := run.Exec(`git`, `tag`, newVerStr); err != nil {
 		return err

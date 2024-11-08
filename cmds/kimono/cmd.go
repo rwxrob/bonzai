@@ -18,7 +18,7 @@ var Cmd = &bonzai.Cmd{
 	Short: `kimono is a tool for managing golang monorepos`,
 	Vers:  `0.0.1`,
 	Comp:  comp.Cmds,
-	Cmds:  []*bonzai.Cmd{sanitizeCmd, workCmd, tagCmd},
+	Cmds:  []*bonzai.Cmd{sanitizeCmd, workCmd, tagCmd, depCmd},
 }
 
 var sanitizeCmd = &bonzai.Cmd{
@@ -102,6 +102,45 @@ var tagDeleteCmd = &bonzai.Cmd{
 			args[0],
 			stateVar(`delete-remote-tag`, TagDeleteRemote, false),
 		)
+	},
+}
+
+var depCmd = &bonzai.Cmd{
+	Name:  `dep`,
+	Alias: `d`,
+	Short: `dep allows you to list the dependencies and dependents of the go module`,
+	Comp:  comp.Cmds,
+	Cmds:  []*bonzai.Cmd{depListCmd, depDependentsCmd},
+	Def:   depListCmd,
+}
+
+var depListCmd = &bonzai.Cmd{
+	Name:  `list`,
+	Alias: `l`,
+	Short: `list the dependencies of the go module`,
+	Comp:  comp.Cmds,
+	Call: func(x *bonzai.Cmd, args ...string) error {
+		deps, err := ListDependencies()
+		if err != nil {
+			return err
+		}
+		each.Println(deps)
+		return nil
+	},
+}
+
+var depDependentsCmd = &bonzai.Cmd{
+	Name:  `dependents`,
+	Alias: `d`,
+	Short: `list the dependents of the go module`,
+	Comp:  comp.Cmds,
+	Call: func(x *bonzai.Cmd, args ...string) error {
+		deps, err := ListDependents()
+		if err != nil {
+			return err
+		}
+		each.Println(deps)
+		return nil
 	},
 }
 
