@@ -3,11 +3,9 @@ package bonzai
 import (
 	"fmt"
 	"os"
+	"slices"
 	"strings"
 
-	"github.com/rwxrob/bonzai/ds/qstack"
-	"github.com/rwxrob/bonzai/fn/each"
-	"github.com/rwxrob/bonzai/is"
 	"github.com/rwxrob/bonzai/run"
 )
 
@@ -85,11 +83,24 @@ func (x *Cmd) Names() []string {
 	return names
 }
 
-// IsValidName is assigned a function that returns a boolean
-// for the given name. See [is.AllLatinASCIILower] for an example. Note
-// that if this is changed certain characters may break the
-// creation of multicall binary links and bash completion.
-var IsValidName = is.AllLatinASCIILowerWithDashes
+// IsValidName is assigned a function that returns a boolean for the
+// given name. Note that if this is changed certain characters may break
+// the creation of multicall binary links and bash completion. See the
+// [pkg/github.com/rwxrob/bonzai/is] package for alternatives.
+var IsValidName = allLatinASCIILowerWithDashes
+
+func allLatinASCIILowerWithDashes(in string) bool {
+	if len(in) == 0 || in[0] == '-' || in[len(in)-1] == '-' {
+		return false
+	}
+	for _, r := range in {
+		if ('a' <= r && r <= 'z') || r == '-' {
+			continue
+		}
+		return false
+	}
+	return true
+}
 
 // CacheCmdAlias splits the [Cmd.Alias] for each [Cmd] in
 // [Cmds] with its respective [Cmd.AliasSlice] and assigns them
@@ -391,7 +402,9 @@ func (x *Cmd) detectCompletion(args []string) {
 		}
 
 		// own completer, delegate
-		each.Println(cmd.Comp.Complete(*cmd, args...))
+		for _, completion := range cmd.Comp.Complete(*cmd, args...) {
+			fmt.Println(completion)
+		}
 		run.Exit()
 		return
 	}
@@ -553,13 +566,12 @@ func (x *Cmd) Seek(args []string) (*Cmd, []string) {
 // Caller up rather than depending on anything from the command line
 // used to invoke the composing binary. Also see [PathNames].
 func (x *Cmd) PathCmds() []*Cmd {
-	path := qstack.New[*Cmd]()
-	path.Unshift(x)
+	path := []*Cmd{x}
 	for p := x.Caller; p != nil; p = p.Caller {
-		path.Unshift(p)
+		path = append(path, p)
 	}
-	path.Shift()
-	return path.Items()
+	slices.Reverse(path)
+	return path[1:]
 }
 
 // PathNames returns the path of command names used to arrive at this
@@ -567,18 +579,25 @@ func (x *Cmd) PathCmds() []*Cmd {
 // Caller up rather than depending on anything from the command line
 // used to invoke the composing binary. Also see Path.
 func (x *Cmd) PathNames() []string {
-	path := qstack.New[string]()
-	path.Unshift(x.Name)
+	names := []string{x.Name}
 	p := x.Caller
 	for p != nil {
-		path.Unshift(p.Name)
+		names = append(names, p.Name)
 		if p == p.Caller {
 			break
 		}
 		p = p.Caller
 	}
-	path.Shift()
-	return path.Items()
+	slices.Reverse(names)
+	return names[1:]
+}
+
+// Read fulfills [io.Reader] interface by returning itself as Bonzai
+// [mark] so that it may be passed directly to
+// a [rwxrob/bonzai/mark].[Renderer]
+func (m *Cmd) Read(p []byte) (n int, err error) {
+	// TODO
+	return 0, nil
 }
 
 // -------------------------- ErrInvalidName --------------------------
