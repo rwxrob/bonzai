@@ -33,6 +33,7 @@ func TagBump(part VerPart, mustPush bool) error {
 	if err := run.Exec(`git`, `tag`, newVerStr); err != nil {
 		return err
 	}
+	fmt.Println(newVerStr)
 	if mustPush {
 		if err := run.Exec(`git`, `push`, `origin`, newVerStr); err != nil {
 			return err
@@ -71,7 +72,6 @@ func TagDelete(tag string, remote bool) error {
 			err,
 		)
 	}
-	fmt.Println(`Deleted local tag:`, tag)
 	return nil
 }
 

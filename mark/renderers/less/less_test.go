@@ -1,9 +1,9 @@
-package man_test
+package less_test
 
 import (
 	"fmt"
 
-	"github.com/rwxrob/bonzai/mark/renderers/man"
+	"github.com/rwxrob/bonzai/mark/renderers/less"
 	"github.com/rwxrob/bonzai/term"
 	"github.com/rwxrob/bonzai/to"
 )
@@ -37,7 +37,7 @@ func ExampleBlocks_bulleted() {
 
 			`
 
-	blocks := man.Blocks(in)
+	blocks := less.Blocks(in)
 	//fmt.Println(blocks)
 	fmt.Printf("%q\n", blocks[0])
 	fmt.Printf("%q\n", blocks[1])
@@ -59,7 +59,7 @@ func ExampleBlocks_numbered() {
 
 			`
 
-	blocks := man.Blocks(in)
+	blocks := less.Blocks(in)
 	fmt.Printf("%q\n", blocks[0])
 	fmt.Printf("%q\n", blocks[1])
 
@@ -81,7 +81,7 @@ func ExampleBlocks_paragraph() {
 
 			`
 
-	blocks := man.Blocks(in)
+	blocks := less.Blocks(in)
 	//fmt.Println(len(blocks))
 	//fmt.Printf("%v", blocks)
 	fmt.Printf("%q\n", blocks[0])
@@ -114,7 +114,7 @@ func ExampleBlocks_verbatim() {
 
 			`
 
-	blocks := man.Blocks(in)
+	blocks := less.Blocks(in)
 	//fmt.Println(len(blocks))
 	//fmt.Println(blocks)
 	fmt.Printf("%q\n", blocks[0])
@@ -133,8 +133,8 @@ func ExampleBlocks_verbatim() {
 func ExampleEmph_under() {
 	term.Under = `<under>`
 	term.Reset = `<reset>`
-	fmt.Println(man.Emph("<UNDER>"))
-	fmt.Println(man.Emph("< UNDER >"))
+	fmt.Println(less.Emph("<UNDER>"))
+	fmt.Println(less.Emph("< UNDER >"))
 	// Output:
 	// <<under>UNDER<reset>>
 	// < UNDER >
@@ -143,7 +143,7 @@ func ExampleEmph_under() {
 func ExampleEmph_boldItalic() {
 	term.BoldItalic = `<bolditalic>`
 	term.Reset = `<reset>`
-	fmt.Println(man.Emph("***BoldItalic***"))
+	fmt.Println(less.Emph("***BoldItalic***"))
 	// Output:
 	// <bolditalic>BoldItalic<reset>
 }
@@ -151,8 +151,8 @@ func ExampleEmph_boldItalic() {
 func ExampleEmph_bold() {
 	term.Bold = `<bold>`
 	term.Reset = `<reset>`
-	fmt.Println(man.Emph("**Bold**"))
-	fmt.Println(man.Emph("** Bold **"))
+	fmt.Println(less.Emph("**Bold**"))
+	fmt.Println(less.Emph("** Bold **"))
 	// Output:
 	// <bold>Bold<reset>
 	// ** Bold **
@@ -161,8 +161,8 @@ func ExampleEmph_bold() {
 func ExampleEmph_italic() {
 	term.Italic = `<italic>`
 	term.Reset = `<reset>`
-	fmt.Println(man.Emph("*Italic*"))
-	fmt.Println(man.Emph("* Italic *"))
+	fmt.Println(less.Emph("*Italic*"))
+	fmt.Println(less.Emph("* Italic *"))
 	// Output:
 	// <italic>Italic<reset>
 	// * Italic *
@@ -171,9 +171,9 @@ func ExampleEmph_italic() {
 func ExampleEmph_code() {
 	term.Under = `<code>`
 	term.Reset = `<reset>`
-	fmt.Println(man.Emph("`Code`"))
-	fmt.Println(man.Emph("` Code `"))
-	fmt.Println(man.Emph("`.git`"))
+	fmt.Println(less.Emph("`Code`"))
+	fmt.Println(less.Emph("` Code `"))
+	fmt.Println(less.Emph("`.git`"))
 	// Output:
 	// <code>Code<reset>
 	// ` Code `
@@ -190,10 +190,10 @@ func ExampleEmph_basics() {
 	term.Under = `<under>`
 	term.Reset = `<reset>`
 
-	fmt.Println(man.Emph("*ITALIC*"))
-	fmt.Println(man.Emph("**BOLD**"))
-	fmt.Println(man.Emph("***BOLDITALIC***"))
-	fmt.Println(man.Emph("<UNDER>")) // keeps brackets
+	fmt.Println(less.Emph("*ITALIC*"))
+	fmt.Println(less.Emph("**BOLD**"))
+	fmt.Println(less.Emph("***BOLDITALIC***"))
+	fmt.Println(less.Emph("<UNDER>")) // keeps brackets
 
 	// Output:
 	// <italic>ITALIC<reset>
@@ -204,10 +204,10 @@ func ExampleEmph_basics() {
 }
 
 func ExampleWrap() {
-	col := man.Columns
-	man.Columns = 10
-	fmt.Println(man.Wrap(`some thing here that is more than 10 characters`))
-	man.Columns = col
+	col := less.Columns
+	less.Columns = 10
+	fmt.Println(less.Wrap(`some thing here that is more than 10 characters`))
+	less.Columns = col
 	// Output:
 	// some thing
 	// here that
@@ -217,34 +217,34 @@ func ExampleWrap() {
 }
 
 func ExampleIndent() {
-	indent := man.IndentBy
-	col := man.Columns
-	man.Columns = 10
-	man.Columns = 10
-	man.IndentBy = 4
-	fmt.Printf("%q", man.Indent("some\nthat is \n  indented"))
-	man.IndentBy = indent
-	man.Columns = col
+	indent := less.IndentBy
+	col := less.Columns
+	less.Columns = 10
+	less.Columns = 10
+	less.IndentBy = 4
+	fmt.Printf("%q", less.Indent("some\nthat is \n  indented"))
+	less.IndentBy = indent
+	less.Columns = col
 	// Output:
 	// "    some\n    that is \n      indented\n"
 }
 
 func ExampleInWrap() {
-	defer func() { man.IndentBy = man.IndentBy }()
-	indent := man.IndentBy
-	col := man.Columns
-	man.Columns = 10
-	man.IndentBy = 4
-	fmt.Printf("%q", man.InWrap("some\nthat is \n  indented"))
-	man.IndentBy = indent
-	man.Columns = col
+	defer func() { less.IndentBy = less.IndentBy }()
+	indent := less.IndentBy
+	col := less.Columns
+	less.Columns = 10
+	less.IndentBy = 4
+	fmt.Printf("%q", less.InWrap("some\nthat is \n  indented"))
+	less.IndentBy = indent
+	less.Columns = col
 	// Output:
 	// "    some\n    that\n    is\n    indented\n"
 }
 
 func ExampleSprint_simple() {
 
-	fmt.Print(man.Sprint(`**foo**`))
+	fmt.Print(less.Sprint(`**foo**`))
 
 	//Output:
 	// <bold>foo<reset>
@@ -277,7 +277,7 @@ func ExampleSprint() {
 			`
 
 	fmt.Println("----------------------")
-	fmt.Print(man.Sprint(in))
+	fmt.Print(less.Sprint(in))
 	fmt.Println("----------------------")
 
 	//Output:
@@ -309,16 +309,16 @@ func ExampleSprint() {
 // ------------------------ Sprintf variations ------------------------
 
 func ExampleEmphf() {
-	fmt.Println(man.Emphf(`some *%v* thing`, "italic"))
+	fmt.Println(less.Emphf(`some *%v* thing`, "italic"))
 	// Output:
 	// some <italic>italic<reset> thing
 }
 
 func ExampleWrapf() {
-	col := man.Columns
-	man.Columns = 3
-	fmt.Println(man.Wrapf(`some %v here`, 10))
-	man.Columns = col
+	col := less.Columns
+	less.Columns = 3
+	fmt.Println(less.Wrapf(`some %v here`, 10))
+	less.Columns = col
 	// Output:
 	// some
 	// 10
@@ -326,26 +326,26 @@ func ExampleWrapf() {
 }
 
 func ExampleIndentf() {
-	in := man.IndentBy
-	man.IndentBy = 3
-	fmt.Println(man.Indentf("-----\nindented by %v here", man.IndentBy))
-	man.IndentBy = in
+	in := less.IndentBy
+	less.IndentBy = 3
+	fmt.Println(less.Indentf("-----\nindented by %v here", less.IndentBy))
+	less.IndentBy = in
 	// Output:
 	// -----
 	//    indented by 3 here
 }
 
 func ExampleInWrapf() {
-	in := man.IndentBy
-	col := man.Columns
-	man.IndentBy = 3
-	man.Columns = 10
+	in := less.IndentBy
+	col := less.Columns
+	less.IndentBy = 3
+	less.Columns = 10
 	fmt.Println(
-		man.InWrapf("-----\nindented by %v here and wrapped at %v",
-			man.IndentBy, man.Columns,
+		less.InWrapf("-----\nindented by %v here and wrapped at %v",
+			less.IndentBy, less.Columns,
 		))
-	man.IndentBy = in
-	man.Columns = col
+	less.IndentBy = in
+	less.Columns = col
 	// -----
 	//    indented
 	//    by 3
@@ -381,7 +381,7 @@ func ExampleMarkf() {
 			`
 
 	fmt.Println("----------------------")
-	fmt.Print(man.Sprintf(in, "another", "paragraph"))
+	fmt.Print(less.Sprintf(in, "another", "paragraph"))
 	fmt.Println("----------------------")
 
 	//Output:
@@ -423,10 +423,10 @@ func ExamplePrintEmph_basics() {
 	term.Under = `<under>`
 	term.Reset = `<reset>`
 
-	man.PrintEmph("*ITALIC*\n")
-	man.PrintEmph("**BOLD**\n")
-	man.PrintEmph("***BOLDITALIC***\n")
-	man.PrintEmph("<UNDER>\n") // keeps brackets
+	less.PrintEmph("*ITALIC*\n")
+	less.PrintEmph("**BOLD**\n")
+	less.PrintEmph("***BOLDITALIC***\n")
+	less.PrintEmph("<UNDER>\n") // keeps brackets
 
 	// Output:
 	// <italic>ITALIC<reset>
@@ -437,10 +437,10 @@ func ExamplePrintEmph_basics() {
 }
 
 func ExamplePrintWrap() {
-	col := man.Columns
-	man.Columns = 10
-	man.PrintWrap(`some thing here that is more than 10 characters`)
-	man.Columns = col
+	col := less.Columns
+	less.Columns = 10
+	less.PrintWrap(`some thing here that is more than 10 characters`)
+	less.Columns = col
 	// Output:
 	// some thing
 	// here that
@@ -450,15 +450,15 @@ func ExamplePrintWrap() {
 }
 
 func ExamplePrintInWrap() {
-	defer func() { man.IndentBy = man.IndentBy }()
-	indent := man.IndentBy
-	col := man.Columns
-	man.Columns = 10
-	man.IndentBy = 4
+	defer func() { less.IndentBy = less.IndentBy }()
+	indent := less.IndentBy
+	col := less.Columns
+	less.Columns = 10
+	less.IndentBy = 4
 	fmt.Println("-----")
-	man.PrintInWrap("some\nthat is \n  indented")
-	man.IndentBy = indent
-	man.Columns = col
+	less.PrintInWrap("some\nthat is \n  indented")
+	less.IndentBy = indent
+	less.Columns = col
 	// Output:
 	// -----
 	//     some
@@ -493,7 +493,7 @@ func ExamplePrintMark() {
 			`
 
 	fmt.Println("----------------------")
-	man.Print(in)
+	less.Print(in)
 	fmt.Println("----------------------")
 
 	//Output:
@@ -525,16 +525,16 @@ func ExamplePrintMark() {
 // --------------------- Print(Sprintf) variations --------------------
 
 func ExamplePrintEmphf() {
-	man.PrintEmphf(`some *%v* thing`, "italic")
+	less.PrintEmphf(`some *%v* thing`, "italic")
 	// Output:
 	// some <italic>italic<reset> thing
 }
 
 func ExamplePrintfWrapf() {
-	col := man.Columns
-	man.Columns = 3
-	man.PrintWrapf(`some %v here`, 10)
-	man.Columns = col
+	col := less.Columns
+	less.Columns = 3
+	less.PrintWrapf(`some %v here`, 10)
+	less.Columns = col
 	// Output:
 	// some
 	// 10
@@ -542,25 +542,25 @@ func ExamplePrintfWrapf() {
 }
 
 func ExamplePrintIndentf() {
-	in := man.IndentBy
-	man.IndentBy = 3
-	man.PrintIndentf("-----\nindented by %v here", man.IndentBy)
-	man.IndentBy = in
+	in := less.IndentBy
+	less.IndentBy = 3
+	less.PrintIndentf("-----\nindented by %v here", less.IndentBy)
+	less.IndentBy = in
 	// Output:
 	// -----
 	//    indented by 3 here
 }
 
 func ExamplePrintInWrapf() {
-	in := man.IndentBy
-	col := man.Columns
-	man.IndentBy = 3
-	man.Columns = 10
-	man.PrintInWrapf("-----\nindented by %v here and wrapped at %v",
-		man.IndentBy, man.Columns,
+	in := less.IndentBy
+	col := less.Columns
+	less.IndentBy = 3
+	less.Columns = 10
+	less.PrintInWrapf("-----\nindented by %v here and wrapped at %v",
+		less.IndentBy, less.Columns,
 	)
-	man.IndentBy = in
-	man.Columns = col
+	less.IndentBy = in
+	less.Columns = col
 	// -----
 	//    indented
 	//    by 3
@@ -596,7 +596,7 @@ func ExamplePrintMarkf() {
 			`
 
 	fmt.Println("----------------------")
-	man.Printf(in, "another", "paragraph")
+	less.Printf(in, "another", "paragraph")
 	fmt.Println("----------------------")
 
 	//Output:
@@ -641,10 +641,10 @@ func ExampleWrap_again() {
 	term.BoldItalic = esc.BoldItalic
 	term.Under = esc.Under
 	term.Reset = esc.Reset
-	man.IndentBy = 0
-	man.Columns = 40
+	less.IndentBy = 0
+	less.Columns = 40
 
-	cmd := &man.Cmd{
+	cmd := &less.Cmd{
 		Name: `some`,
 		MarkMap: template.FuncMap{
 			"builddir":  func() string { return "a/build/dir" },
@@ -664,8 +664,8 @@ func ExampleWrap_again() {
 	}
 
 	fmt.Println("Output")
-	//	fmt.Println(man.Mark(cmd.Fill(cmd.Description)))
-	fmt.Println(to.Wrapped(cmd.Fill(cmd.Description), man.Columns))
+	//	fmt.Println(less.Mark(cmd.Fill(cmd.Description)))
+	fmt.Println(to.Wrapped(cmd.Fill(cmd.Description), less.Columns))
 
 	// Output:
 	// some

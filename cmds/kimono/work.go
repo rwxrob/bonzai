@@ -20,19 +20,18 @@ func workOnWalkDirFn(path string, d fs.DirEntry, err error) error {
 	if err != nil {
 		return err
 	}
-	if !d.IsDir() {
-		return nil
-	}
 	if d.Name() == ".git" || d.Name() == "vendor" {
 		return filepath.SkipDir
 	}
-	if !futil.Exists(filepath.Join(path, "go.work")) {
+	if d.IsDir() {
 		return nil
 	}
-	if err := os.Chdir(path); err != nil {
-		return err
+	if d.Name() == "go.work.off" {
+		_ = os.Rename(
+			path,
+			filepath.Join(filepath.Dir(path), "go.work"),
+		)
 	}
-	_ = os.Rename("go.work.off", "go.work")
 	return nil
 }
 

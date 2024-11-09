@@ -1,8 +1,9 @@
-package man
+package less
 
 import (
 	"bytes"
 	"fmt"
+	"html/template"
 	"io"
 	"regexp"
 	"strconv"
@@ -17,7 +18,7 @@ import (
 // IndentBy is the number of spaces to indent in Indent. Default is 7.
 // Bonzai command tree creator can change this for every composite
 // command imported their application in this one place.
-var IndentBy = 7
+var IndentBy = 0
 
 // Columns is the number of bytes (not runes) at which Wrap will wrap.
 // By default detects the terminal width (if possible) otherwise keeps
@@ -297,7 +298,7 @@ func InWrap(in string) string {
 
 type renderer struct{}
 
-func (r *renderer) Render(in io.Reader) (io.Reader, error) {
+func (r *renderer) Render(x any, m *template.FuncMap, in io.Reader) (io.Reader, error) {
 	buf, err := io.ReadAll(in)
 	if err != nil {
 		return nil, err

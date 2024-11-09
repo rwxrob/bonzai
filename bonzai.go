@@ -2,12 +2,14 @@ package bonzai
 
 import (
 	"fmt"
+	"io"
 	"os"
+	"regexp"
+	"slices"
 	"strings"
+	"text/template"
+	"unicode"
 
-	"github.com/rwxrob/bonzai/ds/qstack"
-	"github.com/rwxrob/bonzai/fn/each"
-	"github.com/rwxrob/bonzai/is"
 	"github.com/rwxrob/bonzai/run"
 )
 
@@ -34,11 +36,11 @@ type Cmd struct {
 	Cmds []*Cmd // compiled/composed commands in no particular order
 	Hide string // disable completion: ex: old|defunct
 
-	// Minimal when [Cmd.Docs] is overkill
-	Usage string // text
+	// Documentation
 	Vers  string // text (<50 runes)
 	Short string // text (<50 runes)
 	Long  string // text/markup
+	Funcs template.FuncMap
 
 	// Faster than lots of "if" conditions in [Cmd.Call]. Consider
 	// [Cmd.Init] when more complex argument validation is needed.
@@ -85,11 +87,24 @@ func (x *Cmd) Names() []string {
 	return names
 }
 
-// IsValidName is assigned a function that returns a boolean
-// for the given name. See [is.AllLatinASCIILower] for an example. Note
-// that if this is changed certain characters may break the
-// creation of multicall binary links and bash completion.
-var IsValidName = is.AllLatinASCIILowerWithDashes
+// IsValidName is assigned a function that returns a boolean for the
+// given name. Note that if this is changed certain characters may break
+// the creation of multicall binary links and bash completion. See the
+// [pkg/github.com/rwxrob/bonzai/is] package for alternatives.
+var IsValidName = allLatinASCIILowerWithDashes
+
+func allLatinASCIILowerWithDashes(in string) bool {
+	if len(in) == 0 || in[0] == '-' || in[len(in)-1] == '-' {
+		return false
+	}
+	for _, r := range in {
+		if ('a' <= r && r <= 'z') || r == '-' {
+			continue
+		}
+		return false
+	}
+	return true
+}
 
 // CacheCmdAlias splits the [Cmd.Alias] for each [Cmd] in
 // [Cmds] with its respective [Cmd.AliasSlice] and assigns them
@@ -391,7 +406,9 @@ func (x *Cmd) detectCompletion(args []string) {
 		}
 
 		// own completer, delegate
-		each.Println(cmd.Comp.Complete(*cmd, args...))
+		for _, completion := range cmd.Comp.Complete(*cmd, args...) {
+			fmt.Println(completion)
+		}
 		run.Exit()
 		return
 	}
@@ -553,13 +570,12 @@ func (x *Cmd) Seek(args []string) (*Cmd, []string) {
 // Caller up rather than depending on anything from the command line
 // used to invoke the composing binary. Also see [PathNames].
 func (x *Cmd) PathCmds() []*Cmd {
-	path := qstack.New[*Cmd]()
-	path.Unshift(x)
+	path := []*Cmd{x}
 	for p := x.Caller; p != nil; p = p.Caller {
-		path.Unshift(p)
+		path = append(path, p)
 	}
-	path.Shift()
-	return path.Items()
+	slices.Reverse(path)
+	return path[1:]
 }
 
 // PathNames returns the path of command names used to arrive at this
@@ -567,18 +583,127 @@ func (x *Cmd) PathCmds() []*Cmd {
 // Caller up rather than depending on anything from the command line
 // used to invoke the composing binary. Also see Path.
 func (x *Cmd) PathNames() []string {
-	path := qstack.New[string]()
-	path.Unshift(x.Name)
+	names := []string{x.Name}
 	p := x.Caller
 	for p != nil {
-		path.Unshift(p.Name)
+		names = append(names, p.Name)
 		if p == p.Caller {
 			break
 		}
 		p = p.Caller
 	}
-	path.Shift()
-	return path.Items()
+	slices.Reverse(names)
+	return names[1:]
+}
+
+// Mark outputs a Markdown view of the [Cmd] filling the [Cmd.Long] by
+// rendering it as a [text/template] using itself as the object and
+// [Cmd.Funcs] passed to the [text.template.Funcs]. The output of Mark
+// is then the expected format for any implementation of
+// [pkg/github.com/rwxrob/bonzai/mark.Renderer] but can also simply be
+// piped directly to tools like Glamour glow.
+func (x *Cmd) Mark() io.Reader {
+	out := new(strings.Builder)
+	out.WriteString("# Usage\n\n")
+	out.WriteString("{{.CmdTree}}\n")
+	if len(x.Long) > 0 {
+		out.WriteString(dedent(x.Long))
+	}
+	str := x.render(out.String())
+	return strings.NewReader(str)
+}
+
+func (x *Cmd) render(in string) string {
+	tmpl, err := template.New("t").Funcs(x.Funcs).Parse(in)
+	if err != nil {
+		panic(err) // bad templates should always panic
+	}
+	out := new(strings.Builder)
+	if err := tmpl.Execute(out, x); err != nil {
+		panic(err) // bad values should always panic
+	}
+	return out.String()
+}
+
+var isblank = regexp.MustCompile(`^\s*$`)
+
+func indentation(in string) int {
+	var n int
+	var v rune
+	for n, v = range []rune(in) {
+		if !unicode.IsSpace(v) {
+			break
+		}
+	}
+	return n
+}
+
+func dedent(in string) string {
+	lines := strings.Split(in, "\n")
+	for len(lines) == 1 && isblank.MatchString(lines[0]) {
+		return ""
+	}
+	var n int
+	for len(lines[n]) == 0 || isblank.MatchString(lines[n]) {
+		n++
+	}
+	starts := n
+	indent := indentation(lines[n])
+	for ; n < len(lines); n++ {
+		if len(lines[n]) >= indent {
+			lines[n] = lines[n][indent:]
+		}
+	}
+	return strings.Join(lines[starts:], "\n")
+}
+
+func (x Cmd) cmdTree(depth int) string {
+	out := new(strings.Builder)
+	for range depth {
+		out.WriteString("  ")
+	}
+	if len(x.Name) == 0 {
+		x.Name = `noname`
+	}
+	out.WriteString(x.Name)
+	if len(x.Short) > 0 {
+		out.WriteString(" ← " + x.Short)
+	}
+	out.WriteString("\n")
+	depth++
+	for _, c := range x.Cmds {
+		out.WriteString(c.cmdTree(depth))
+	}
+	return out.String()
+}
+
+// CmdTree generates and returns a formatted string representation of
+// the command tree for the [Cmd] instance. It aligns dashes in the
+// output for better readability, adjusting spaces based on the position
+// of the dashes.
+func (x *Cmd) CmdTree() string {
+	lines := strings.Split(x.cmdTree(2), "\n")
+	dashindex := make([]int, len(lines))
+	var dashcol int
+	for i, line := range lines {
+		n := strings.Index(line, "←")
+		dashindex[i] = n
+		if n > dashcol {
+			dashcol = n
+		}
+	}
+	for i, line := range lines {
+		n := dashindex[i]
+		numspace := dashcol - n
+		spaces := new(strings.Builder)
+		for range numspace {
+			spaces.WriteString(` `)
+		}
+		if n > 0 {
+			lines[i] = line[:n] + spaces.String() + line[n:]
+		}
+	}
+	return strings.Join(lines, "\n")
 }
 
 // -------------------------- ErrInvalidName --------------------------
@@ -598,13 +723,7 @@ type ErrIncorrectUsage struct {
 }
 
 func (e ErrIncorrectUsage) Error() string {
-	if len(e.Cmd.Usage) == 0 {
-		return fmt.Sprintf(`incorrect usage for "%v" command`, e.Cmd.Name)
-	}
-	return fmt.Sprintf(`usage: %v %v`,
-		e.Cmd.Name,
-		e.Cmd.Usage,
-	)
+	return fmt.Sprintf(`incorrect usage for "%v" command`, e.Cmd.Name)
 }
 
 // ---------------------------- ErrUncallable ----------------------------
