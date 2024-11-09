@@ -301,7 +301,6 @@ func (x *Cmd) call(args []string) {
 		return
 	}
 	run.Exit()
-	return
 }
 
 // default to first Cmds if no Call defined
@@ -370,14 +369,13 @@ func (x *Cmd) recurseIfMulti(args []string) {
 }
 
 // complete -C foo foo (man bash, Programmable Completion)
-func (x *Cmd) detectCompletion(args []string) {
+func (x *Cmd) detectCompletion(_ []string) {
 	if line := os.Getenv("COMP_LINE"); len(line) > 0 {
 
 		// find the leaf command
 		lineargs := run.ArgsFrom(line)
 		cmd, args := x.Seek(lineargs[1:])
 
-		// default completer or package aliases, always exits
 		if cmd.Comp == nil {
 			run.Exit()
 			return
