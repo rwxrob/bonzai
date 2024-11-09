@@ -2,9 +2,12 @@ package bonzai
 
 import (
 	"fmt"
+	"io"
 	"os"
+	"regexp"
 	"slices"
 	"strings"
+	"unicode"
 
 	"github.com/rwxrob/bonzai/run"
 )
@@ -592,12 +595,109 @@ func (x *Cmd) PathNames() []string {
 	return names[1:]
 }
 
-// Read fulfills [io.Reader] interface by returning itself as Bonzai
-// [mark] so that it may be passed directly to
-// a [rwxrob/bonzai/mark].[Renderer]
-func (m *Cmd) Read(p []byte) (n int, err error) {
-	// TODO
-	return 0, nil
+// Title generates a formatted string representing the command title,
+// including its Name, Alias, and Short description.
+// If Name is empty, it defaults to "NONAME".
+func (m Cmd) Title() string {
+	out := new(strings.Builder)
+	if len(m.Name) == 0 {
+		m.Name = `NONAME`
+	}
+	out.WriteString(m.Name)
+	if len(m.Alias) > 0 {
+		out.WriteString(" (" + m.Alias + ")")
+	}
+	if len(m.Short) > 0 {
+		out.WriteString(" - " + m.Short)
+	}
+	return out.String()
+}
+
+// Mark outputs raw, unfilled, BonzaiMark for rendering with
+// a [pkg/github.com/rwxrob/bonzai/mark.Renderer] as the third argument.
+func (m *Cmd) Mark() io.Reader {
+	out := new(strings.Builder)
+	out.WriteString("# Name\n\n")
+	out.WriteString(m.Title() + "\n\n")
+	out.WriteString("# Synopsis\n\n")
+	out.WriteString(m.CmdTree() + "\n")
+	out.WriteString("# Description\n\n")
+	out.WriteString(dedent(m.Long))
+	return strings.NewReader(out.String())
+}
+
+var isblank = regexp.MustCompile(`^\s*$`)
+
+func indentation(in string) int {
+	var n int
+	var v rune
+	for n, v = range []rune(in) {
+		if !unicode.IsSpace(v) {
+			break
+		}
+	}
+	return n
+}
+
+func dedent(in string) string {
+	lines := strings.Split(in, "\n")
+	for len(lines) == 1 && isblank.MatchString(lines[0]) {
+		return ""
+	}
+	var n int
+	for len(lines[n]) == 0 || isblank.MatchString(lines[n]) {
+		n++
+	}
+	starts := n
+	indent := indentation(lines[n])
+	for ; n < len(lines); n++ {
+		if len(lines[n]) >= indent {
+			lines[n] = lines[n][indent:]
+		}
+	}
+	return strings.Join(lines[starts:], "\n")
+}
+
+func (m *Cmd) cmdTree(depth int) string {
+	out := new(strings.Builder)
+	for range depth {
+		out.WriteString("  ")
+	}
+	out.WriteString(m.Title() + "\n")
+	depth++
+	for _, c := range m.Cmds {
+		out.WriteString(c.cmdTree(depth))
+	}
+	return out.String()
+}
+
+// CmdTree generates and returns a formatted string representation of
+// the command tree for the [Cmd] instance. It aligns dashes in the
+// output for better readability, adjusting spaces based on the position
+// of the dashes.
+func (m *Cmd) CmdTree() string {
+	lines := strings.Split(m.cmdTree(1), "\n")
+	dashindex := make([]int, len(lines))
+	var dashcol int
+	for i, line := range lines {
+		n := strings.Index(line, `-`)
+		dashindex[i] = n
+		if n > dashcol {
+			dashcol = n
+		}
+	}
+	for i, line := range lines {
+		n := dashindex[i]
+		numspace := dashcol - n
+		spaces := new(strings.Builder)
+		for range numspace {
+			spaces.WriteString(` `)
+		}
+		if n > 0 {
+			lines[i] = line[:n] + spaces.String() + line[n:]
+		}
+	}
+	return strings.Join(lines[1:], "\n")
 }
 
 // -------------------------- ErrInvalidName --------------------------
