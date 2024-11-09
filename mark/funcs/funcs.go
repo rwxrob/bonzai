@@ -3,13 +3,13 @@ package funcs
 import (
 	"os"
 	"path/filepath"
-	"text/template"
 
 	"github.com/rwxrob/bonzai/futil"
+	"github.com/rwxrob/bonzai/mark"
 	"github.com/rwxrob/bonzai/run"
 )
 
-var Map = &template.FuncMap{
+var Map = &mark.Funcs{
 	"exepath":      run.Executable,
 	"exename":      run.ExeName,
 	"execachedir":  run.ExeCacheDir,
