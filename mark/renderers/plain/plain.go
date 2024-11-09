@@ -5,7 +5,7 @@ package plain
 
 import (
 	"io"
-	"text/template"
+	"strings"
 
 	"github.com/rwxrob/bonzai/mark"
 )
@@ -14,11 +14,11 @@ var Renderer mark.Renderer = new(renderer)
 
 type renderer struct{}
 
-func (r *renderer) Render(this any, m *mark.Map, zmark io.Reader) (io.Reader, error) {
-	tmpl, err := template.New("greeting").Parse(templateStr)
+func (r *renderer) Render(this any, m *mark.Funcs, zmark io.Reader) (io.Reader, error) {
+	buf, err := io.ReadAll(zmark)
 	if err != nil {
-		panic(err)
+		return nil, err
 	}
-
-	return mark.Render(this, m, zmark)
+	out, err := mark.Render(this, m, buf)
+	return strings.NewReader(out), err
 }
