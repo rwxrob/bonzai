@@ -38,7 +38,7 @@ var sanitizeCmd = &bonzai.Cmd{
 		if argIsOr(
 			args,
 			`all`,
-			vars.Fetch(SanitizeAllEnv, `sanitize-all`, true),
+			vars.Fetch(SanitizeAllEnv, `sanitize-all`, false),
 		) {
 			root, err := futil.HereOrAbove(".git")
 			if err != nil {
