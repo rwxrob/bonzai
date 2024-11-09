@@ -13,7 +13,7 @@ import (
 )
 
 func ExampleCompTags_Complete() {
-	setupGitRepo()
+	setupTags()
 	defer teardownGitRepo()
 	cmd := bonzai.Cmd{}
 	fmt.Println(git.CompTags.Complete(cmd))
@@ -31,12 +31,8 @@ func ExampleCompTags_Complete() {
 	// [tag-bar]
 }
 
-func setupGitRepo() {
-	safely(os.Mkdir(`./test_repo`, 0o755))
-	safely(os.Chdir(`./test_repo`))
-	run.Out(`git`, `init`)
-	run.Out(`git`, `config`, `--local`, `user.email`, `test@test.com`)
-	run.Out(`git`, `config`, `--local`, `user.name`, `test`)
+func setupTags() {
+	setupGitRepo()
 	safely(futil.Touch(`./foo`))
 	run.Out(`git`, `add`, `.`)
 	run.Out(`git`, `commit`, `-m`, `commit foo`)
@@ -49,6 +45,14 @@ func setupGitRepo() {
 	run.Out(`git`, `add`, `.`)
 	run.Out(`git`, `commit`, `-m`, `commit blah`)
 	run.Out(`git`, `tag`, `tag-blah`)
+}
+
+func setupGitRepo() {
+	safely(os.Mkdir(`./test_repo`, 0o755))
+	safely(os.Chdir(`./test_repo`))
+	run.Out(`git`, `init`)
+	run.Out(`git`, `config`, `--local`, `user.email`, `test@test.com`)
+	run.Out(`git`, `config`, `--local`, `user.name`, `test`)
 }
 
 func teardownGitRepo() {
