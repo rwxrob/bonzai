@@ -9,8 +9,8 @@ type _Opts struct{}
 
 var Opts = new(_Opts)
 
-// Complete returns all [Cmd.Opts] that match [futil.HasPrefix] passed the
-// first argument. See [bonzai.Completer].
+// Complete returns all [Cmd.Opts] that match [filt.HasPrefix] passed
+// the first argument. See [bonzai.Completer].
 func (_Opts) Complete(x bonzai.Cmd, args ...string) []string {
 	list := x.OptsSlice()
 
