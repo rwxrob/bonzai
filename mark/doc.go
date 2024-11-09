@@ -1,6 +1,4 @@
 /*
-Package mark is a thing.
-
 # Specification
 
 The following is in PEGN:

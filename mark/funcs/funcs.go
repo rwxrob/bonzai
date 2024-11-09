@@ -1,4 +1,4 @@
-package mark
+package funcs
 
 import (
 	"os"
@@ -9,10 +9,7 @@ import (
 	"github.com/rwxrob/bonzai/run"
 )
 
-// FuncMap contains the package the BonzaiMark standard template tag
-// functions. Any [Renderer] must support them all (even if some may
-// output an empty string).
-var FuncMap = &template.FuncMap{
+var Map = &template.FuncMap{
 	"exepath":      run.Executable,
 	"exename":      run.ExeName,
 	"execachedir":  run.ExeCacheDir,
@@ -24,5 +21,4 @@ var FuncMap = &template.FuncMap{
 	"statedir":     futil.UserStateDir,
 	"pathsep":      func() string { return string(os.PathSeparator) },
 	"pathjoin":     filepath.Join,
-	// TODO add dummy formatting tags
 }
