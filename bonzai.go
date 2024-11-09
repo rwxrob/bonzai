@@ -596,12 +596,24 @@ func (x *Cmd) PathNames() []string {
 	return names[1:]
 }
 
+// MarkString reads input from the [Cmd.Mark] [io.Reader] function
+// associated with the command and returns it as a string. It uses
+// a [strings.Builder] to efficiently build the output string and
+// ignores any errors.
+func (x *Cmd) MarkString() string {
+	var buf strings.Builder
+	io.Copy(&buf, x.Mark())
+	return buf.String()
+}
+
 // Mark outputs a Markdown view of the [Cmd] filling the [Cmd.Long] by
-// rendering it as a [text/template] using itself as the object and
-// [Cmd.Funcs] passed to the [text.template.Funcs]. The output of Mark
-// is then the expected format for any implementation of
+// rendering it as a [pkg/text/template] using itself as the object and
+// Funcs field passed to the [pkg/text/template.Funcs] method. The
+// output of Mark is then the expected format for any implementation of
 // [pkg/github.com/rwxrob/bonzai/mark.Renderer] but can also simply be
-// piped directly to tools like Glamour glow.
+// piped directly to tools like [Glamour Glow].
+//
+// [Glamour Glow]: https://github.com/charmbracelet/glamour
 func (x *Cmd) Mark() io.Reader {
 	out := new(strings.Builder)
 	out.WriteString("# Usage\n\n")
