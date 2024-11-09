@@ -26,7 +26,13 @@ var Cmd = &bonzai.Cmd{
 	Short: `A tool for managing golang monorepos`,
 	Vers:  `0.0.1`,
 	Comp:  comp.Cmds,
-	Cmds:  []*bonzai.Cmd{sanitizeCmd, workCmd, tagCmd, depsCmd},
+	Cmds: []*bonzai.Cmd{
+		sanitizeCmd,
+		workCmd,
+		tagCmd,
+		depsCmd,
+		vars.Cmd,
+	},
 }
 
 var sanitizeCmd = &bonzai.Cmd{
@@ -39,7 +45,11 @@ var sanitizeCmd = &bonzai.Cmd{
 		if argIsOr(
 			args,
 			`all`,
-			vars.Fetch(SanitizeAllEnv, `sanitize-all`, false),
+			vars.Fetch(
+				SanitizeAllEnv,
+				`sanitize-all`,
+				false,
+			),
 		) {
 			root, err := futil.HereOrAbove(".git")
 			if err != nil {
@@ -72,7 +82,10 @@ var workCmd = &bonzai.Cmd{
 		case `off`:
 			return WorkOff()
 		default:
-			return fmt.Errorf("invalid argument: %s", args[0])
+			return fmt.Errorf(
+				"invalid argument: %s",
+				args[0],
+			)
 		}
 	},
 }
