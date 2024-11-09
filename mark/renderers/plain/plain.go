@@ -1,5 +1,5 @@
 /*
-Package plain implements [pkg/github.com/rwxrob/bonzai/mark.Renderer]
+Package plain implements [pkg/github.com/rwxrob/bonzai/mark.Renderer] by just calling [pkt/github.com/rwxrob/bonzai/mark.Render] on the zmark input as a string. Only template replacement is attempted. No additional formatting is applied.
 */
 package plain
 
