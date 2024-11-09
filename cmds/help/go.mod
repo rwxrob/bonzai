@@ -3,7 +3,7 @@ module github.com/rwxrob/bonzai/cmds/help
 go 1.23.0
 
 require (
-	github.com/rwxrob/bonzai v0.32.0
+	github.com/rwxrob/bonzai v0.34.0
 	github.com/rwxrob/bonzai/comp v0.5.0
 	github.com/rwxrob/bonzai/mark v0.6.0
 	github.com/rwxrob/bonzai/term v0.2.1

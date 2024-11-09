@@ -13,6 +13,7 @@ var Renderer mark.Renderer
 var Cmd = &bonzai.Cmd{
 	Name:  `help`,
 	Short: `display command help`,
+	Alias: `-h|--help|--h|/?`,
 	Long: ` 
 		The {{.Name}} command displays the help information for the
 		immediate previous command unless it is passed arguments, in which
