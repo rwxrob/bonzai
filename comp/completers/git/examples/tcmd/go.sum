@@ -1,0 +1,5 @@
+github.com/rogpeppe/go-internal v1.13.1 h1:KvO1DLK/DRN07sQ1LQKScxyZJuNnedQ5/wKSR38lUII=
+github.com/rwxrob/bonzai v0.30.7 h1:vP1tEEIyAkb0/c/zzoSJomW+0JucY+gdd4f99dxXNkA=
+github.com/rwxrob/bonzai/futil v0.1.0 h1:+NcdqV+F15q6YHCvRIU8WogvrfXCp0EI8TwMwNXjGqs=
+github.com/rwxrob/bonzai/run v0.6.1 h1:Ttc/FAf83h5YXRlznruGsFahLLW9VBr/FLBX3L7hbDk=
+github.com/rwxrob/bonzai/uniq v0.1.0 h1:xOlTWnaotslv1I0Nc+3+qXHxecoxNSROo871S2m3cq4=
