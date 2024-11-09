@@ -167,12 +167,6 @@ func (x *Cmd) OptsSlice() []string {
 func (x *Cmd) CacheAlias() {
 	if len(x.Alias) > 0 {
 		x.aliases = strings.Split(x.Alias, `|`)
-		for _, alias := range x.aliases {
-			if !IsValidName(alias) {
-				run.ExitError(ErrInvalidName{alias})
-				return
-			}
-		}
 		return
 	}
 	x.aliases = []string{}

@@ -11,31 +11,14 @@ import (
 var Renderer mark.Renderer
 
 var Cmd = &bonzai.Cmd{
-	Name: `help`,
-
+	Name:  `help`,
+	Short: `display command help`,
 	Long: ` 
-		The {{pre .Name}} command displays the help information for the
-		immediate command before it unless *one*, or ***more***,
-		***arguments*** is passed and matches a potential command path for
-
-		# Already a Go thing
-
-		~~~go
-		fmt.Println("something")
-		~~~
-
-		1. adsfasdf
-		2. jkaldsfkj
-
-		- one
-		- two
-
-		* ten
-		* twenty
-
-		the previous command. In this way this command can be used at the
-		top level so users can quickly add it to get essential help
-		information about any command or just the previous command. `,
+		The {{.Name}} command displays the help information for the
+		immediate previous command unless it is passed arguments, in which
+		case it resolves the arguments is if they were passed to the
+		previous command itself and the leaf command help is displayed
+		instead. Output is always Markdown.`,
 
 	Call: func(x *bonzai.Cmd, args ...string) error {
 
