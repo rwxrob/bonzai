@@ -1,6 +1,9 @@
 package kimono
 
 import (
+	"fmt"
+	"os"
+
 	"github.com/rwxrob/bonzai"
 	"github.com/rwxrob/bonzai/comp"
 	"github.com/rwxrob/bonzai/fn/each"
@@ -8,79 +11,100 @@ import (
 	"github.com/rwxrob/bonzai/vars"
 )
 
-var Cmd = &bonzai.Cmd{
-	Name:  `kimono`,
-	Alias: `kmono|km`,
-	Short: `kimono is a tool for managing golang monorepos`,
-	Vers:  `0.0.1`,
-	Comp:  comp.Cmds,
-	Cmds:  []*bonzai.Cmd{sanitizeCmd, workCmd, tagCmd, listCmd},
-}
-
-var sanitizeCmd = &bonzai.Cmd{
-	Name: `sanitize`,
-	Short: `sanitize will run ` + "`go get -u` and `go mod tidy`\n" +
-		`on all go modules in the current git repo`,
-	Comp: comp.Cmds,
-	Call: func(x *bonzai.Cmd, args ...string) error {
-		root, err := futil.HereOrAbove(".git")
-		if err != nil {
-			return err
-		}
-		return Tidy(root)
-	},
-}
-
-var workCmd = &bonzai.Cmd{
-	Name:      `work`,
-	Alias:     `w`,
-	Short:     `work allows you to toggle go work files on or off`,
-	Comp:      comp.CmdsOpts,
-	Opts:      `on|off`,
-	MinArgs:   1,
-	MaxArgs:   1,
-	MatchArgs: `on|off`,
-	Call: func(x *bonzai.Cmd, args ...string) error {
-		if args[0] == `on` {
-			return WorkOn()
-		}
-		return WorkOff()
-	},
-}
-
 const (
+	SanitizeAllEnv    = `KIMONO_SANITIZE_ALL`
 	TagPushEnv        = `KIMONO_PUSH_TAG`
 	TagShortenEnv     = `KIMONO_SHORTEN_TAG`
 	TagVersionPartEnv = `KIMONO_VERSION_PART`
 	TagDeleteRemote   = `KIMONO_DELETE_REMOTE_TAG`
 )
 
+var Cmd = &bonzai.Cmd{
+	Name:  `kimono`,
+	Alias: `kmono|km`,
+	Short: `A tool for managing golang monorepos`,
+	Vers:  `0.0.1`,
+	Comp:  comp.Cmds,
+	Cmds:  []*bonzai.Cmd{sanitizeCmd, workCmd, tagCmd, depsCmd},
+}
+
+var sanitizeCmd = &bonzai.Cmd{
+	Name:    `sanitize`,
+	Alias:   `tidy|update`,
+	Short:   "run `go get -u` and `go mod tidy` on all go modules in repo",
+	Comp:    comp.Cmds,
+	MaxArgs: 1,
+	Call: func(x *bonzai.Cmd, args ...string) error {
+		if argIsOr(
+			args,
+			`all`,
+			vars.Fetch(SanitizeAllEnv, `sanitize-all`, true),
+		) {
+			root, err := futil.HereOrAbove(".git")
+			if err != nil {
+				return err
+			}
+			return Tidy(root)
+		}
+		pwd, err := os.Getwd()
+		if err != nil {
+			return err
+		}
+		return Tidy(pwd)
+	},
+}
+
+var workCmd = &bonzai.Cmd{
+	Name:      `work`,
+	Alias:     `w`,
+	Short:     `toggle go work files on or off`,
+	Comp:      comp.CmdsOpts,
+	Opts:      `on|off`,
+	MinArgs:   1,
+	MaxArgs:   1,
+	MatchArgs: `on|off`,
+	Call: func(x *bonzai.Cmd, args ...string) error {
+		switch args[0] {
+		case `on`:
+			return WorkOn()
+		case `off`:
+			return WorkOff()
+		default:
+			return fmt.Errorf("invalid argument: %s", args[0])
+		}
+	},
+}
+
 var tagCmd = &bonzai.Cmd{
 	Name:  `tag`,
 	Alias: `t`,
-	Short: `tag allows to bump version tags and list the tags for the go module`,
+	Short: `manage or list tags for the go module`,
 	Comp:  comp.Cmds,
-	Cmds:  []*bonzai.Cmd{tagListCmd, tagBumpCmd},
+	Cmds:  []*bonzai.Cmd{tagBumpCmd, tagListCmd, tagDeleteCmd},
 	Def:   tagListCmd,
 }
 
 var tagBumpCmd = &bonzai.Cmd{
 	Name:    `bump`,
 	Alias:   `b|up|i|inc`,
-	Short:   `bump bumps version tags subject to the given version part.`,
+	Short:   `bumps semver tags. based on given version part.`,
 	Comp:    comp.CmdsOpts,
 	Cmds:    []*bonzai.Cmd{vars.Cmd},
-	Opts:    `major|minor|patch|m|M|p`,
+	Opts:    `major|minor|patch|M|m|p`,
 	MaxArgs: 1,
 	Call: func(x *bonzai.Cmd, args ...string) error {
 		mustPush := vars.Fetch(TagPushEnv, `push-tags`, false)
-		part := optsToVerPart(
-			vars.Fetch(
-				TagVersionPartEnv,
-				`version-part`,
-				`patch`,
-			),
-		)
+		if len(args) == 0 {
+			part := optsToVerPart(
+				vars.Fetch(
+					TagVersionPartEnv,
+					`version-part`,
+					`patch`,
+				),
+			)
+			return TagBump(part, mustPush)
+		}
+		part := optsToVerPart(args[0])
 		return TagBump(part, mustPush)
 	},
 }
@@ -88,9 +112,10 @@ var tagBumpCmd = &bonzai.Cmd{
 var tagDeleteCmd = &bonzai.Cmd{
 	Name:    `delete`,
 	Alias:   `d|del|rm`,
-	Short:   `delete the given tag from the go module`,
+	Short:   `delete the given semver tag for the go module`,
 	Comp:    comp.Cmds,
 	MinArgs: 1,
+	MaxArgs: 1,
 	Call: func(x *bonzai.Cmd, args ...string) error {
 		return TagDelete(
 			args[0],
@@ -103,18 +128,34 @@ var tagDeleteCmd = &bonzai.Cmd{
 	},
 }
 
-var listCmd = &bonzai.Cmd{
+var tagListCmd = &bonzai.Cmd{
 	Name:  `list`,
 	Alias: `l`,
+	Short: `list the tags for the go module`,
 	Comp:  comp.Cmds,
-	Cmds:  []*bonzai.Cmd{tagListCmd, depListCmd, depDependentsCmd},
-	Def:   depListCmd,
+	Call: func(x *bonzai.Cmd, args ...string) error {
+		shorten := vars.Fetch(
+			TagShortenEnv,
+			`shorten-tags`,
+			false,
+		)
+		each.Println(TagList(shorten))
+		return nil
+	},
 }
 
-var depListCmd = &bonzai.Cmd{
+var depsCmd = &bonzai.Cmd{
 	Name:  `dependencies`,
-	Alias: `deps|dps`,
-	Short: `list the dependencies of the go module`,
+	Alias: `deps|dep`,
+	Comp:  comp.Cmds,
+	Cmds:  []*bonzai.Cmd{dependsOnCmd, usedByCmd},
+	Def:   dependsOnCmd,
+}
+
+var dependsOnCmd = &bonzai.Cmd{
+	Name:  `depends-on`,
+	Alias: `on|uses`,
+	Short: `list the dependencies for the go module`,
 	Comp:  comp.Cmds,
 	Call: func(x *bonzai.Cmd, args ...string) error {
 		deps, err := ListDependencies()
@@ -126,15 +167,19 @@ var depListCmd = &bonzai.Cmd{
 	},
 }
 
-var depDependentsCmd = &bonzai.Cmd{
-	Name:  `dependents`,
-	Alias: `depts|dpt`,
+var usedByCmd = &bonzai.Cmd{
+	Name:  `depends-on-me`,
+	Alias: `onme|usedby|me`,
 	Short: `list the dependents of the go module`,
 	Comp:  comp.Cmds,
 	Call: func(x *bonzai.Cmd, args ...string) error {
 		deps, err := ListDependents()
 		if err != nil {
 			return err
+		}
+		if len(deps) == 0 {
+			fmt.Println(`None`)
+			return nil
 		}
 		each.Println(deps)
 		return nil
@@ -153,18 +198,9 @@ func optsToVerPart(x string) VerPart {
 	return Minor
 }
 
-var tagListCmd = &bonzai.Cmd{
-	Name:  `list`,
-	Alias: `l`,
-	Short: `list the tags for the go module`,
-	Comp:  comp.Cmds,
-	Call: func(x *bonzai.Cmd, args ...string) error {
-		shorten := vars.Fetch(
-			TagShortenEnv,
-			`shorten-tags`,
-			false,
-		)
-		each.Println(TagList(shorten))
-		return nil
-	},
+func argIsOr(args []string, is string, fallback bool) bool {
+	if len(args) == 0 {
+		return fallback
+	}
+	return args[0] == is
 }
