@@ -21,22 +21,16 @@ import (
 //   - [pkg/github.com/rwxrob/bonzai/mark/renderers]
 //   - [pkg/github.com/rwxrob/bonzai/cmds/help]
 type Renderer interface {
-	Render(this any, m *Funcs, zmark io.Reader) (io.Reader, error)
+	Render(this any, f template.FuncMap, zmark io.Reader) (io.Reader, error)
 }
 
-type Funcs template.FuncMap
-
 // Render simplifies rendering a [text/template] by processes the input
-// (in) and using the provided [Funcs] [template.FuncMap] and the data
+// (in) and using the provided [template.FuncMap] and the data
 // context (this). It returns the rendered output as a string or an
 // error if any step fails. The input is not required to be in
 // BonzaiMark format (unlike implementations of [Renderer]).
-func Render(this any, m *Funcs, in string) (string, error) {
-	var fm template.FuncMap
-	if m != nil {
-		fm = template.FuncMap(*m)
-	}
-	tmpl, err := template.New("t").Funcs(fm).Parse(in)
+func Render(this any, f template.FuncMap, in string) (string, error) {
+	tmpl, err := template.New("t").Funcs(f).Parse(in)
 	if err != nil {
 		return "", err
 	}
@@ -48,8 +42,8 @@ func Render(this any, m *Funcs, in string) (string, error) {
 }
 
 // MustRender calls [Render] but panics if an error occurs.
-func MustRender(this any, m *Funcs, in string) string {
-	out, err := Render(this, m, in)
+func MustRender(this any, f template.FuncMap, in string) string {
+	out, err := Render(this, f, in)
 	if err != nil {
 		panic(err)
 	}

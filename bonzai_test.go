@@ -71,57 +71,6 @@ func ExampleCmd_WithName() {
 	// i am bar
 }
 
-func ExampleCmd_Title() {
-
-	x := &bonzai.Cmd{
-		Name:  `mycmd`,
-		Alias: `my|cmd`,
-		Short: `my command short summary`,
-	}
-
-	fmt.Println(x.Title())
-
-	// Output:
-	// mycmd (my|cmd) - my command short summary
-}
-
-func ExampleCmd_Title_noShort() {
-
-	x := &bonzai.Cmd{
-		Name:  `mycmd`,
-		Alias: `my|cmd`,
-	}
-
-	fmt.Println(x.Title())
-
-	// Output:
-	// mycmd (my|cmd)
-}
-
-func ExampleCmd_Title_noShortNoAlias() {
-
-	x := &bonzai.Cmd{
-		Name: `mycmd`,
-	}
-
-	fmt.Println(x.Title())
-
-	// Output:
-	// mycmd
-}
-
-func ExampleCmd_Title_noName() {
-
-	x := &bonzai.Cmd{
-		Alias: `my|cmd`,
-	}
-
-	fmt.Println(x.Title())
-
-	// Output:
-	// NONAME (my|cmd)
-}
-
 func ExampleCmd_Tree() {
 
 	var subFooCmd = &bonzai.Cmd{
@@ -150,14 +99,16 @@ func ExampleCmd_Tree() {
 		Cmds:  []*bonzai.Cmd{fooCmd, barCmd},
 	}
 
-	fmt.Println("# Synopsis")
+	fmt.Print("# Synopsis\n\n")
 	fmt.Println(Cmd.CmdTree())
 
 	// Output:
 	// # Synopsis
-	//     foo (f)       - foo this command
-	//       subfoo (sf) - under the foo command
-	//     bar (b)       - bar this command
+	//
+	//     mycmd      ← my command short summary
+	//       foo      ← foo this command
+	//         subfoo ← under the foo command
+	//       bar      ← bar this command
 
 }
 
@@ -188,20 +139,22 @@ func ExampleCmd_Mark_noInteractiveTerminal() {
 		Short: `my command short summary`,
 		Cmds:  []*bonzai.Cmd{fooCmd, barCmd},
 		Long: `
-			Here is a long description.	
-			On multiple lines.
-		`,
+			Here is a long description.
+			On multiple lines.`,
 	}
 
-	//_, err := io.Copy(os.Stdout, Cmd.Mark())
-
-	out, err := io.ReadAll(Cmd.Mark())
-	if err != nil {
-		fmt.Println(err)
-	}
-	fmt.Printf("%q\n", out)
+	out, _ := io.ReadAll(Cmd.Mark())
+	fmt.Println(string(out))
 
 	// Output:
-	// "# Name\n\nmycmd (my|cmd) - my command short summary\n\n# Synopsis\n\n    foo (f)       - foo this command\n      subfoo (sf) - under the foo command\n    bar (b)       - bar this command\n\n# Description\n\nHere is a long description.\t\nOn multiple lines.\n\t\t"
+	// # Usage
+	//
+	//     mycmd      ← my command short summary
+	//       foo      ← foo this command
+	//         subfoo ← under the foo command
+	//       bar      ← bar this command
+	//
+	// Here is a long description.
+	// On multiple lines.
 
 }

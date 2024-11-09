@@ -2,6 +2,7 @@ package mark_test
 
 import (
 	"fmt"
+	"text/template"
 
 	"github.com/rwxrob/bonzai/mark"
 )
@@ -33,10 +34,10 @@ func ExampleRenderString() {
 	thing := Thing{`Thing`, 20}
 	zmark := `
 	{{hello}}, my name is {{.Name}} with {{.Count}}. Summary: {{.Summary}}`
-	funcs := mark.Funcs{}
+	funcs := template.FuncMap{}
 	funcs[`hello`] = func() string { return `Hello` }
 
-	out, err := mark.Render(thing, &funcs, zmark)
+	out, err := mark.Render(thing, funcs, zmark)
 	if err != nil {
 		fmt.Println(err)
 		return

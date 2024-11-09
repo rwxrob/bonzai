@@ -7,6 +7,7 @@ import (
 	"regexp"
 	"slices"
 	"strings"
+	"text/template"
 	"unicode"
 
 	"github.com/rwxrob/bonzai/run"
@@ -35,11 +36,11 @@ type Cmd struct {
 	Cmds []*Cmd // compiled/composed commands in no particular order
 	Hide string // disable completion: ex: old|defunct
 
-	// Minimal when [Cmd.Docs] is overkill
-	Usage string // text
+	// Documentation
 	Vers  string // text (<50 runes)
 	Short string // text (<50 runes)
 	Long  string // text/markup
+	Funcs template.FuncMap
 
 	// Faster than lots of "if" conditions in [Cmd.Call]. Consider
 	// [Cmd.Init] when more complex argument validation is needed.
@@ -595,36 +596,33 @@ func (x *Cmd) PathNames() []string {
 	return names[1:]
 }
 
-// Title generates a formatted string representing the command title,
-// including its Name, Alias, and Short description.
-// If Name is empty, it defaults to "NONAME".
-func (m Cmd) Title() string {
+// Mark outputs a Markdown view of the [Cmd] filling the [Cmd.Long] by
+// rendering it as a [text/template] using itself as the object and
+// [Cmd.Funcs] passed to the [text.template.Funcs]. The output of Mark
+// is then the expected format for any implementation of
+// [pkg/github.com/rwxrob/bonzai/mark.Renderer] but can also simply be
+// piped directly to tools like Glamour glow.
+func (x *Cmd) Mark() io.Reader {
 	out := new(strings.Builder)
-	if len(m.Name) == 0 {
-		m.Name = `NONAME`
+	out.WriteString("# Usage\n\n")
+	out.WriteString("{{.CmdTree}}\n")
+	if len(x.Long) > 0 {
+		out.WriteString(dedent(x.Long))
 	}
-	out.WriteString(m.Name)
-	if len(m.Alias) > 0 {
-		out.WriteString(" (" + m.Alias + ")")
-	}
-	if len(m.Short) > 0 {
-		out.WriteString(" - " + m.Short)
-	}
-	return out.String()
+	str := x.render(out.String())
+	return strings.NewReader(str)
 }
 
-// Mark outputs raw, unfilled, BonzaiMark for rendering with
-// a [pkg/github.com/rwxrob/bonzai/mark.Renderer] as the third argument.
-func (m *Cmd) Mark() io.Reader {
-	out := new(strings.Builder)
-	out.WriteString("# Name\n\n")
-	out.WriteString(m.Title() + "\n\n")
-	out.WriteString("# Synopsis\n\n")
-	out.WriteString(m.CmdTree() + "\n")
-	if len(m.Long) > 0 {
-		out.WriteString(dedent(m.Long))
+func (x *Cmd) render(in string) string {
+	tmpl, err := template.New("t").Funcs(x.Funcs).Parse(in)
+	if err != nil {
+		panic(err) // bad templates should always panic
 	}
-	return strings.NewReader(out.String())
+	out := new(strings.Builder)
+	if err := tmpl.Execute(out, x); err != nil {
+		panic(err) // bad values should always panic
+	}
+	return out.String()
 }
 
 var isblank = regexp.MustCompile(`^\s*$`)
@@ -659,14 +657,21 @@ func dedent(in string) string {
 	return strings.Join(lines[starts:], "\n")
 }
 
-func (m *Cmd) cmdTree(depth int) string {
+func (x Cmd) cmdTree(depth int) string {
 	out := new(strings.Builder)
 	for range depth {
 		out.WriteString("  ")
 	}
-	out.WriteString(m.Title() + "\n")
+	if len(x.Name) == 0 {
+		x.Name = `noname`
+	}
+	out.WriteString(x.Name)
+	if len(x.Short) > 0 {
+		out.WriteString(" ← " + x.Short)
+	}
+	out.WriteString("\n")
 	depth++
-	for _, c := range m.Cmds {
+	for _, c := range x.Cmds {
 		out.WriteString(c.cmdTree(depth))
 	}
 	return out.String()
@@ -676,12 +681,12 @@ func (m *Cmd) cmdTree(depth int) string {
 // the command tree for the [Cmd] instance. It aligns dashes in the
 // output for better readability, adjusting spaces based on the position
 // of the dashes.
-func (m *Cmd) CmdTree() string {
-	lines := strings.Split(m.cmdTree(1), "\n")
+func (x *Cmd) CmdTree() string {
+	lines := strings.Split(x.cmdTree(2), "\n")
 	dashindex := make([]int, len(lines))
 	var dashcol int
 	for i, line := range lines {
-		n := strings.Index(line, `-`)
+		n := strings.Index(line, "←")
 		dashindex[i] = n
 		if n > dashcol {
 			dashcol = n
@@ -698,7 +703,7 @@ func (m *Cmd) CmdTree() string {
 			lines[i] = line[:n] + spaces.String() + line[n:]
 		}
 	}
-	return strings.Join(lines[1:], "\n")
+	return strings.Join(lines, "\n")
 }
 
 // -------------------------- ErrInvalidName --------------------------
@@ -718,13 +723,7 @@ type ErrIncorrectUsage struct {
 }
 
 func (e ErrIncorrectUsage) Error() string {
-	if len(e.Cmd.Usage) == 0 {
-		return fmt.Sprintf(`incorrect usage for "%v" command`, e.Cmd.Name)
-	}
-	return fmt.Sprintf(`usage: %v %v`,
-		e.Cmd.Name,
-		e.Cmd.Usage,
-	)
+	return fmt.Sprintf(`incorrect usage for "%v" command`, e.Cmd.Name)
 }
 
 // ---------------------------- ErrUncallable ----------------------------
