@@ -18,7 +18,7 @@ import (
 // IndentBy is the number of spaces to indent in Indent. Default is 7.
 // Bonzai command tree creator can change this for every composite
 // command imported their application in this one place.
-var IndentBy = 7
+var IndentBy = 0
 
 // Columns is the number of bytes (not runes) at which Wrap will wrap.
 // By default detects the terminal width (if possible) otherwise keeps
