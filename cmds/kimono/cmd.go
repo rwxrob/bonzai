@@ -3,6 +3,7 @@ package kimono
 import (
 	"fmt"
 	"os"
+	"path/filepath"
 
 	"github.com/rwxrob/bonzai"
 	"github.com/rwxrob/bonzai/comp"
@@ -44,7 +45,7 @@ var sanitizeCmd = &bonzai.Cmd{
 			if err != nil {
 				return err
 			}
-			return Tidy(root)
+			return Tidy(filepath.Dir(root))
 		}
 		pwd, err := os.Getwd()
 		if err != nil {

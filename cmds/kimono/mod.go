@@ -14,7 +14,7 @@ import (
 // Tidy runs `go get -u` and `go mod tidy` on all supported Go
 // modules in the current git repository.
 func Tidy(root string) error {
-	return filepath.WalkDir(filepath.Dir(root), sanitizeWalkDirFn)
+	return filepath.WalkDir(root, sanitizeWalkDirFn)
 }
 
 func sanitizeWalkDirFn(path string, d fs.DirEntry, err error) error {
