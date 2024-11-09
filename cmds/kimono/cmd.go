@@ -64,6 +64,7 @@ var workCmd = &bonzai.Cmd{
 	MinArgs:   1,
 	MaxArgs:   1,
 	MatchArgs: `on|off`,
+	Cmds:      []*bonzai.Cmd{workInitCmd},
 	Call: func(x *bonzai.Cmd, args ...string) error {
 		switch args[0] {
 		case `on`:
@@ -73,6 +74,19 @@ var workCmd = &bonzai.Cmd{
 		default:
 			return fmt.Errorf("invalid argument: %s", args[0])
 		}
+	},
+}
+
+var workInitCmd = &bonzai.Cmd{
+	Name:    `init`,
+	Alias:   `i`,
+	Short:   `new go.work in module for dependencies in monorepo`,
+	MinArgs: 1,
+	Call: func(x *bonzai.Cmd, args ...string) error {
+		if args[0] == `all` {
+			return WorkGenerate()
+		}
+		return WorkInit(args...)
 	},
 }
 

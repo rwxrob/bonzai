@@ -1,7 +1,7 @@
 github.com/rogpeppe/go-internal v1.13.1 h1:KvO1DLK/DRN07sQ1LQKScxyZJuNnedQ5/wKSR38lUII=
 github.com/rogpeppe/go-internal v1.13.1/go.mod h1:uMEvuHeurkdAXX61udpOXGD/AzZDWNMNyH2VO9fmH0o=
-github.com/rwxrob/bonzai v0.30.6 h1:BTvQCj0c1wHYR9gEeBW6o9q8iSuGiiZwtshdtWN/cfM=
-github.com/rwxrob/bonzai v0.30.6/go.mod h1:CV9Q7tzn/C8Pk6oFW5odT8CinP07curtZ/rqLlMLduo=
+github.com/rwxrob/bonzai v0.32.0 h1:qUIVRqjYPaAAUwQ1HZkoSAwdiqdMF5WT06bL7n8EJrw=
+github.com/rwxrob/bonzai v0.32.0/go.mod h1:nieeh8h+NEY+nUkGuz5trOr0lMdZnEMTUFfgYJzuMr4=
 github.com/rwxrob/bonzai/comp v0.5.0 h1:nuDC2enOoRmvsMAs4JnDRKNt4Yotw1LbHdk1h/D+UxQ=
 github.com/rwxrob/bonzai/comp v0.5.0/go.mod h1:1uRQB1tYMBuhTL1qey91X2yDWEMDTuDxXpjcvXCdBmQ=
 github.com/rwxrob/bonzai/ds v0.1.1 h1:yC+GoUH/5TPt86qJmQRsD8OHuODJoDt9UgkWQM8yPzA=
