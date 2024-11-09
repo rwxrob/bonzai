@@ -4,12 +4,11 @@ import (
 	"io"
 
 	"github.com/rwxrob/bonzai"
-	"github.com/rwxrob/bonzai/mark/funcs"
-	"github.com/rwxrob/bonzai/mark/renderers/plain"
+	"github.com/rwxrob/bonzai/mark"
 	"github.com/rwxrob/bonzai/term"
 )
 
-var Renderer = plain.Renderer
+var Renderer mark.Renderer
 
 var Cmd = &bonzai.Cmd{
 	Name: `help`,
@@ -39,20 +38,28 @@ var Cmd = &bonzai.Cmd{
 		information about any command or just the previous command. `,
 
 	Call: func(x *bonzai.Cmd, args ...string) error {
+
 		if len(args) > 0 {
 			x, args = x.Caller.Seek(args)
 		} else {
 			x = x.Caller
 		}
-		r, err := Renderer.Render(x, funcs.Map, x.Mark())
-		if err != nil {
-			return err
+
+		if Renderer != nil {
+			r, err := Renderer.Render(x, x.Funcs, x.Mark())
+			if err != nil {
+				return err
+			}
+			out, err := io.ReadAll(r)
+			if err != nil {
+				return err
+			}
+			term.Print(string(out))
+			return nil
 		}
-		out, err := io.ReadAll(r)
-		if err != nil {
-			return err
-		}
-		term.Print(string(out))
+
+		term.Print(x.MarkString())
+
 		return nil
 	},
 }
