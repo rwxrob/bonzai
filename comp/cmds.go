@@ -7,12 +7,10 @@ import (
 
 type _Cmds struct{}
 
-// Cmds is a [bonzai.Completer] that returns all non-hidden
-// [bonzai.Cmd.Cmds]
+// Cmds is a [bonzai.Completer] for all available [bonzai.Cmd.Cmds]. It
+// excludes hidden commands.
 var Cmds = new(_Cmds)
 
-// Complete returns all visible [Cmd.Cmds] that match [futil.HasPrefix]
-// for arg[0] . See [bonzai.Completer].
 func (_Cmds) Complete(x bonzai.Cmd, args ...string) []string {
 	list := []string{}
 	if len(args) == 0 {

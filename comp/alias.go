@@ -7,12 +7,10 @@ import (
 
 type _Aliases struct{}
 
-// Aliases is a [bonzai.Completer] that returns all [bonzai.Cmd.Alias]
-// including the [bonzai.Cmd.Name].
+// Aliases is a [bonzai.Completer] for all available [bonzai.Cmd.Alias]
+// including [bonzai.Cmd.Name].
 var Aliases = new(_Aliases)
 
-// Complete returns all [bonzai.Cmd.Alias] and [bonzai.Cmd.Name] that
-// match [filt.HasPrefix] for first argument. See [bonzai.Completer].
 func (_Aliases) Complete(x bonzai.Cmd, args ...string) []string {
 	list := []string{}
 	if len(args) == 0 {

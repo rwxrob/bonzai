@@ -5,10 +5,10 @@ import (
 	"github.com/rwxrob/bonzai/fn/redu"
 )
 
+// Combine is a [bonzai.Completer] that combines completions from
+// multiple [bonzai.Completer]s. It does not handle duplicates.
 type Combine []bonzai.Completer
 
-// Complete calls Complete on all items in its list returning the
-// resulting combined list (without removing duplicates).
 func (completers Combine) Complete(
 	x bonzai.Cmd,
 	args ...string,

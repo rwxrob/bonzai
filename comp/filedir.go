@@ -14,16 +14,14 @@ import (
 
 type _FileDir struct{}
 
-var FileDir = _FileDir{}
-
-// Complete returns all file names for the directory and file prefix passed.
-// If nothing is passed assumes the current working directory.  This
+// FileDir is a [bonzai.Completer] that completes for file names. This
 // [Completer] is roughly based on the behavior of the bash shell with
 // forward slashes as separators and escaped spaces. By using this
 // completer (instead of the shell) the command line interface remains
 // consistent across all runtimes. Note that unlike bash completion no
 // indication of the type of file is provided (i.e. dircolors support).
-// The first argument, if passed, must be a [*bonzai.Cmd].
+var FileDir = _FileDir{}
+
 func (_FileDir) Complete(_ bonzai.Cmd, args ...string) []string {
 	if len(args) > 1 {
 		return []string{}
