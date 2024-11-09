@@ -1,7 +1,7 @@
 github.com/rogpeppe/go-internal v1.13.1 h1:KvO1DLK/DRN07sQ1LQKScxyZJuNnedQ5/wKSR38lUII=
 github.com/rogpeppe/go-internal v1.13.1/go.mod h1:uMEvuHeurkdAXX61udpOXGD/AzZDWNMNyH2VO9fmH0o=
-github.com/rwxrob/bonzai v0.32.0 h1:qUIVRqjYPaAAUwQ1HZkoSAwdiqdMF5WT06bL7n8EJrw=
-github.com/rwxrob/bonzai v0.32.0/go.mod h1:nieeh8h+NEY+nUkGuz5trOr0lMdZnEMTUFfgYJzuMr4=
+github.com/rwxrob/bonzai v0.34.0 h1:SdE5vXIcR1PTc4mWc6KemgTx+95Qai4dPxVRRB/VEX4=
+github.com/rwxrob/bonzai v0.34.0/go.mod h1:nieeh8h+NEY+nUkGuz5trOr0lMdZnEMTUFfgYJzuMr4=
 github.com/rwxrob/bonzai/comp v0.5.0 h1:nuDC2enOoRmvsMAs4JnDRKNt4Yotw1LbHdk1h/D+UxQ=
 github.com/rwxrob/bonzai/comp v0.5.0/go.mod h1:1uRQB1tYMBuhTL1qey91X2yDWEMDTuDxXpjcvXCdBmQ=
 github.com/rwxrob/bonzai/ds v0.1.1 h1:yC+GoUH/5TPt86qJmQRsD8OHuODJoDt9UgkWQM8yPzA=
@@ -26,8 +26,8 @@ github.com/rwxrob/bonzai/to v0.2.0 h1:YvCOglLFmAJQuRxCtx3W4aPPel9taXm2ZLVuSad1Gg
 github.com/rwxrob/bonzai/to v0.2.0/go.mod h1:Mi7H8ezLImb6NO4KG4oTMT9v526F2GK3W5epdB9QhuE=
 github.com/rwxrob/bonzai/uniq v0.1.0 h1:xOlTWnaotslv1I0Nc+3+qXHxecoxNSROo871S2m3cq4=
 github.com/rwxrob/bonzai/uniq v0.1.0/go.mod h1:RsSPso5Dhs1tYEjhuVA4b8DM5l0pQPhGebm8Lx5XHc8=
-github.com/rwxrob/bonzai/vars v0.7.0 h1:KgpDMlfzGY8lEuGqd3FNpdXpE4GL6bwmKRCSDVhN130=
-github.com/rwxrob/bonzai/vars v0.7.0/go.mod h1:RzQZpUqoyqsysMkR2lmFh2f2B/b3d3or/PbpkJmzZwY=
+github.com/rwxrob/bonzai/vars v0.8.1 h1:V6ikAPhUimL1JdXrD8PH314FFXd+ozc47ZPMiuf9XVo=
+github.com/rwxrob/bonzai/vars v0.8.1/go.mod h1:ABWjaVS7OBsSFZxYmQodWRbSp3OHp/dSwuvJJ51G8bM=
 golang.org/x/crypto v0.29.0 h1:L5SG1JTTXupVV3n6sUqMTeWbjAyfPwoda2DLX8J8FrQ=
 golang.org/x/crypto v0.29.0/go.mod h1:+F4F4N5hv6v38hfeYwTdx20oUvLLc+QfrE9Ax9HtgRg=
 golang.org/x/mod v0.22.0 h1:D4nJWe9zXqHOmWqj4VMOJhvzj7bEZg4wEYa759z1pH4=
