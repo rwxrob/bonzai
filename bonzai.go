@@ -2,12 +2,13 @@ package bonzai
 
 import (
 	"fmt"
+	"io"
 	"os"
+	"regexp"
+	"slices"
 	"strings"
+	"unicode"
 
-	"github.com/rwxrob/bonzai/ds/qstack"
-	"github.com/rwxrob/bonzai/fn/each"
-	"github.com/rwxrob/bonzai/is"
 	"github.com/rwxrob/bonzai/run"
 )
 
@@ -85,11 +86,24 @@ func (x *Cmd) Names() []string {
 	return names
 }
 
-// IsValidName is assigned a function that returns a boolean
-// for the given name. See [is.AllLatinASCIILower] for an example. Note
-// that if this is changed certain characters may break the
-// creation of multicall binary links and bash completion.
-var IsValidName = is.AllLatinASCIILowerWithDashes
+// IsValidName is assigned a function that returns a boolean for the
+// given name. Note that if this is changed certain characters may break
+// the creation of multicall binary links and bash completion. See the
+// [pkg/github.com/rwxrob/bonzai/is] package for alternatives.
+var IsValidName = allLatinASCIILowerWithDashes
+
+func allLatinASCIILowerWithDashes(in string) bool {
+	if len(in) == 0 || in[0] == '-' || in[len(in)-1] == '-' {
+		return false
+	}
+	for _, r := range in {
+		if ('a' <= r && r <= 'z') || r == '-' {
+			continue
+		}
+		return false
+	}
+	return true
+}
 
 // CacheCmdAlias splits the [Cmd.Alias] for each [Cmd] in
 // [Cmds] with its respective [Cmd.AliasSlice] and assigns them
@@ -391,7 +405,9 @@ func (x *Cmd) detectCompletion(args []string) {
 		}
 
 		// own completer, delegate
-		each.Println(cmd.Comp.Complete(*cmd, args...))
+		for _, completion := range cmd.Comp.Complete(*cmd, args...) {
+			fmt.Println(completion)
+		}
 		run.Exit()
 		return
 	}
@@ -553,13 +569,12 @@ func (x *Cmd) Seek(args []string) (*Cmd, []string) {
 // Caller up rather than depending on anything from the command line
 // used to invoke the composing binary. Also see [PathNames].
 func (x *Cmd) PathCmds() []*Cmd {
-	path := qstack.New[*Cmd]()
-	path.Unshift(x)
+	path := []*Cmd{x}
 	for p := x.Caller; p != nil; p = p.Caller {
-		path.Unshift(p)
+		path = append(path, p)
 	}
-	path.Shift()
-	return path.Items()
+	slices.Reverse(path)
+	return path[1:]
 }
 
 // PathNames returns the path of command names used to arrive at this
@@ -567,18 +582,122 @@ func (x *Cmd) PathCmds() []*Cmd {
 // Caller up rather than depending on anything from the command line
 // used to invoke the composing binary. Also see Path.
 func (x *Cmd) PathNames() []string {
-	path := qstack.New[string]()
-	path.Unshift(x.Name)
+	names := []string{x.Name}
 	p := x.Caller
 	for p != nil {
-		path.Unshift(p.Name)
+		names = append(names, p.Name)
 		if p == p.Caller {
 			break
 		}
 		p = p.Caller
 	}
-	path.Shift()
-	return path.Items()
+	slices.Reverse(names)
+	return names[1:]
+}
+
+// Title generates a formatted string representing the command title,
+// including its Name, Alias, and Short description.
+// If Name is empty, it defaults to "NONAME".
+func (m Cmd) Title() string {
+	out := new(strings.Builder)
+	if len(m.Name) == 0 {
+		m.Name = `NONAME`
+	}
+	out.WriteString(m.Name)
+	if len(m.Alias) > 0 {
+		out.WriteString(" (" + m.Alias + ")")
+	}
+	if len(m.Short) > 0 {
+		out.WriteString(" - " + m.Short)
+	}
+	return out.String()
+}
+
+// Mark outputs raw, unfilled, BonzaiMark for rendering with
+// a [pkg/github.com/rwxrob/bonzai/mark.Renderer] as the third argument.
+func (m *Cmd) Mark() io.Reader {
+	out := new(strings.Builder)
+	out.WriteString("# Name\n\n")
+	out.WriteString(m.Title() + "\n\n")
+	out.WriteString("# Synopsis\n\n")
+	out.WriteString(m.CmdTree() + "\n")
+	out.WriteString("# Description\n\n")
+	out.WriteString(dedent(m.Long))
+	return strings.NewReader(out.String())
+}
+
+var isblank = regexp.MustCompile(`^\s*$`)
+
+func indentation(in string) int {
+	var n int
+	var v rune
+	for n, v = range []rune(in) {
+		if !unicode.IsSpace(v) {
+			break
+		}
+	}
+	return n
+}
+
+func dedent(in string) string {
+	lines := strings.Split(in, "\n")
+	for len(lines) == 1 && isblank.MatchString(lines[0]) {
+		return ""
+	}
+	var n int
+	for len(lines[n]) == 0 || isblank.MatchString(lines[n]) {
+		n++
+	}
+	starts := n
+	indent := indentation(lines[n])
+	for ; n < len(lines); n++ {
+		if len(lines[n]) >= indent {
+			lines[n] = lines[n][indent:]
+		}
+	}
+	return strings.Join(lines[starts:], "\n")
+}
+
+func (m *Cmd) cmdTree(depth int) string {
+	out := new(strings.Builder)
+	for range depth {
+		out.WriteString("  ")
+	}
+	out.WriteString(m.Title() + "\n")
+	depth++
+	for _, c := range m.Cmds {
+		out.WriteString(c.cmdTree(depth))
+	}
+	return out.String()
+}
+
+// CmdTree generates and returns a formatted string representation of
+// the command tree for the [Cmd] instance. It aligns dashes in the
+// output for better readability, adjusting spaces based on the position
+// of the dashes.
+func (m *Cmd) CmdTree() string {
+	lines := strings.Split(m.cmdTree(1), "\n")
+	dashindex := make([]int, len(lines))
+	var dashcol int
+	for i, line := range lines {
+		n := strings.Index(line, `-`)
+		dashindex[i] = n
+		if n > dashcol {
+			dashcol = n
+		}
+	}
+	for i, line := range lines {
+		n := dashindex[i]
+		numspace := dashcol - n
+		spaces := new(strings.Builder)
+		for range numspace {
+			spaces.WriteString(` `)
+		}
+		if n > 0 {
+			lines[i] = line[:n] + spaces.String() + line[n:]
+		}
+	}
+	return strings.Join(lines[1:], "\n")
 }
 
 // -------------------------- ErrInvalidName --------------------------
