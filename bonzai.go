@@ -621,8 +621,9 @@ func (m *Cmd) Mark() io.Reader {
 	out.WriteString(m.Title() + "\n\n")
 	out.WriteString("# Synopsis\n\n")
 	out.WriteString(m.CmdTree() + "\n")
-	out.WriteString("# Description\n\n")
-	out.WriteString(dedent(m.Long))
+	if len(m.Long) > 0 {
+		out.WriteString(dedent(m.Long))
+	}
 	return strings.NewReader(out.String())
 }
 
