@@ -19,6 +19,7 @@ func (r *renderer) Render(this any, m *mark.Funcs, zmark io.Reader) (io.Reader, 
 	if err != nil {
 		return nil, err
 	}
-	out, err := mark.Render(this, m, buf)
+	out, err := mark.Render(this, m, string(buf))
 	return strings.NewReader(out), err
+
 }

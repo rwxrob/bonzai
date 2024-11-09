@@ -2,7 +2,7 @@ module github.com/rwxrob/bonzai/mark/renderers/plain
 
 go 1.23.0
 
-require github.com/rwxrob/bonzai/mark v0.4.1
+require github.com/rwxrob/bonzai/mark v0.5.0
 
 require (
 	github.com/rogpeppe/go-internal v1.13.1 // indirect

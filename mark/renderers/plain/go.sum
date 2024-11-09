@@ -4,6 +4,8 @@ github.com/rwxrob/bonzai/futil v0.1.0 h1:+NcdqV+F15q6YHCvRIU8WogvrfXCp0EI8TwMwNX
 github.com/rwxrob/bonzai/futil v0.1.0/go.mod h1:KPQjnEXMs/YD3ZEzHeiNc/AS9iU2dWIb6weTWktXUT8=
 github.com/rwxrob/bonzai/mark v0.4.1 h1:1IJUdz3KhhDTpE4Rq7QeDFXr7zRyGOe1x5mAav/QsVY=
 github.com/rwxrob/bonzai/mark v0.4.1/go.mod h1:josFFovy/lQjm5dwT64MlCAtcWy58dp9ltXqRkww1nI=
+github.com/rwxrob/bonzai/mark v0.5.0 h1:VEHmpF7DdGnl0nnW2lZs7j5ebclcMsFt9I6+Kn+A/4s=
+github.com/rwxrob/bonzai/mark v0.5.0/go.mod h1:josFFovy/lQjm5dwT64MlCAtcWy58dp9ltXqRkww1nI=
 github.com/rwxrob/bonzai/run v0.6.1 h1:Ttc/FAf83h5YXRlznruGsFahLLW9VBr/FLBX3L7hbDk=
 github.com/rwxrob/bonzai/run v0.6.1/go.mod h1:KhMNAJ3t78LDAHur60xiGA564UejG69PgV51k2QjXD8=
 github.com/rwxrob/bonzai/uniq v0.1.0 h1:xOlTWnaotslv1I0Nc+3+qXHxecoxNSROo871S2m3cq4=
