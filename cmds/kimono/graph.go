@@ -149,8 +149,9 @@ func dependencyGraph() (*graph, error) {
 			dependencies := to.Lines(run.Out("go", "list", "-m", "all"))[1:]
 			for _, dep := range dependencies {
 				dep = strings.TrimSpace(dep)
-				name := strings.Split(dep, " ")[0]
-				ver := strings.Split(dep, " ")[1]
+				parts := strings.Split(dep, " ")
+				name := parts[0]
+				ver := parts[1]
 				dep = fmt.Sprint(name, "@", ver)
 				graph.addNode(dep)
 				graph.addDependency(modName, dep)
