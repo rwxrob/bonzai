@@ -306,13 +306,13 @@ func (x *Cmd) exitUnlessCallable() {
 func (x *Cmd) exitIfBadArgs(args []string) {
 	switch {
 	case len(args) < x.MinArgs:
-		run.ExitError(ErrNotEnoughArgs{len(args), x.MinArgs})
+		run.ExitError(ErrNotEnoughArgs{Count: len(args), Min: x.MinArgs})
 		return
 	case x.MaxArgs > 0 && len(args) > x.MaxArgs:
-		run.ExitError(ErrTooManyArgs{len(args), x.MaxArgs})
+		run.ExitError(ErrTooManyArgs{Count: len(args), Max: x.MaxArgs})
 		return
 	case x.NumArgs > 0 && len(args) != x.NumArgs:
-		run.ExitError(ErrWrongNumArgs{len(args), x.NumArgs})
+		run.ExitError(ErrWrongNumArgs{Count: len(args), Num: x.NumArgs})
 		return
 	}
 }
