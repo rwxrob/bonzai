@@ -5,12 +5,12 @@ import (
 	"github.com/rwxrob/bonzai/fn/filt"
 )
 
-type _Opts struct{}
+type opts struct{}
 
 // Opts is a [bonzai.Completer] for all available [bonzai.Cmd.Opts].
-var Opts = new(_Opts)
+var Opts = new(opts)
 
-func (_Opts) Complete(x bonzai.Cmd, args ...string) []string {
+func (opts) Complete(x bonzai.Cmd, args ...string) []string {
 	list := x.OptsSlice()
 
 	if len(args) == 0 {

@@ -5,13 +5,13 @@ import (
 	"github.com/rwxrob/bonzai/fn/filt"
 )
 
-type _Cmds struct{}
+type cmds struct{}
 
 // Cmds is a [bonzai.Completer] for all available [bonzai.Cmd.Cmds]. It
 // excludes hidden commands.
-var Cmds = new(_Cmds)
+var Cmds = new(cmds)
 
-func (_Cmds) Complete(x bonzai.Cmd, args ...string) []string {
+func (cmds) Complete(x bonzai.Cmd, args ...string) []string {
 	list := []string{}
 	if len(args) == 0 {
 		return list

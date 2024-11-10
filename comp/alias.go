@@ -5,13 +5,13 @@ import (
 	"github.com/rwxrob/bonzai/fn/filt"
 )
 
-type _Aliases struct{}
+type aliases struct{}
 
 // Aliases is a [bonzai.Completer] for all available [bonzai.Cmd.Alias]
 // including [bonzai.Cmd.Name].
-var Aliases = new(_Aliases)
+var Aliases = new(aliases)
 
-func (_Aliases) Complete(x bonzai.Cmd, args ...string) []string {
+func (aliases) Complete(x bonzai.Cmd, args ...string) []string {
 	list := []string{}
 	if len(args) == 0 {
 		return list
