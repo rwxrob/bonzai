@@ -6,6 +6,7 @@ import (
 	"strings"
 
 	"github.com/rwxrob/bonzai"
+	"github.com/rwxrob/bonzai/cmds/help"
 	"github.com/rwxrob/bonzai/comp"
 	"github.com/rwxrob/bonzai/futil"
 	"github.com/rwxrob/bonzai/run"
@@ -27,7 +28,7 @@ var Cmd = &bonzai.Cmd{
 	Vers:  `v0.1.0`,
 	Cmds: []*bonzai.Cmd{
 		GetCmd, SetCmd, editCmd, initCmd, clearCmd,
-		grepCmd, loadCmd, deleteCmd, dataCmd,
+		grepCmd, loadCmd, deleteCmd, dataCmd, help.Cmd,
 	},
 	Comp: comp.Cmds,
 	Def:  GetCmd,

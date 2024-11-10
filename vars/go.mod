@@ -4,6 +4,7 @@ go 1.23.0
 
 require (
 	github.com/rwxrob/bonzai v0.34.0
+	github.com/rwxrob/bonzai/cmds/help v0.3.0
 	github.com/rwxrob/bonzai/comp v0.5.0
 	github.com/rwxrob/bonzai/edit v0.1.1
 	github.com/rwxrob/bonzai/fn v0.4.0
@@ -18,6 +19,7 @@ require (
 	github.com/rogpeppe/go-internal v1.13.1 // indirect
 	github.com/rwxrob/bonzai/ds v0.1.1 // indirect
 	github.com/rwxrob/bonzai/is v0.3.0 // indirect
+	github.com/rwxrob/bonzai/mark v0.6.0 // indirect
 	github.com/rwxrob/bonzai/scanner v0.1.0 // indirect
 	github.com/rwxrob/bonzai/uniq v0.1.0 // indirect
 	golang.org/x/crypto v0.29.0 // indirect
