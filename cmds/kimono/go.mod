@@ -3,13 +3,13 @@ module github.com/rwxrob/bonzai/cmds/kimono
 go 1.23.2
 
 require (
-	github.com/rwxrob/bonzai v0.30.6
+	github.com/rwxrob/bonzai v0.34.0
 	github.com/rwxrob/bonzai/comp v0.5.0
 	github.com/rwxrob/bonzai/fn v0.4.0
 	github.com/rwxrob/bonzai/futil v0.1.0
 	github.com/rwxrob/bonzai/run v0.6.1
 	github.com/rwxrob/bonzai/to v0.2.0
-	github.com/rwxrob/bonzai/vars v0.7.0
+	github.com/rwxrob/bonzai/vars v0.8.1
 	golang.org/x/mod v0.22.0
 )
 

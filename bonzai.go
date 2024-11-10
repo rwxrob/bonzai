@@ -34,7 +34,6 @@ type Cmd struct {
 	// Delegation to subcommands
 	Def  *Cmd   // default [Cmd] if no Call and no matching Cmds
 	Cmds []*Cmd // compiled/composed commands in no particular order
-	Hide string // disable completion: ex: old|defunct
 
 	// Documentation
 	Vers  string // text (<50 runes)
@@ -58,7 +57,7 @@ type Cmd struct {
 
 	aliases  []string        // see [CacheAlias]
 	opts     []string        // see [CacheOpts]
-	hidden   []string        // see [CacheHide]
+	hidden   bool            // see [AsHidden] and [IsHidden]
 	cmdAlias map[string]*Cmd // see [CacheCmdAlias]
 }
 
@@ -71,6 +70,12 @@ type Method func(x *Cmd, args ...string) error
 // and returns a pointer to a copy of the updated command.
 func (x Cmd) WithName(name string) *Cmd {
 	x.Name = name
+	return &x
+}
+
+// AsHidden sets the internal hidden property to true.
+func (x Cmd) AsHidden() *Cmd {
+	x.hidden = true
 	return &x
 }
 
@@ -162,12 +167,6 @@ func (x *Cmd) OptsSlice() []string {
 func (x *Cmd) CacheAlias() {
 	if len(x.Alias) > 0 {
 		x.aliases = strings.Split(x.Alias, `|`)
-		for _, alias := range x.aliases {
-			if !IsValidName(alias) {
-				run.ExitError(ErrInvalidName{alias})
-				return
-			}
-		}
 		return
 	}
 	x.aliases = []string{}
@@ -180,26 +179,6 @@ func (x *Cmd) AliasSlice() []string {
 		x.CacheAlias()
 	}
 	return x.aliases
-}
-
-// CacheHide updates the [hidden] cache by splitting [Hide]
-// . Remember to call this whenever dynamically altering the value at
-// runtime.
-func (x *Cmd) CacheHide() {
-	if len(x.Hide) > 0 {
-		x.hidden = strings.Split(x.Hide, `|`)
-		return
-	}
-	x.hidden = []string{}
-}
-
-// HideSlice updates the [hidden] internal cache ([CacheHide]) and
-// returns it as a slice.
-func (x *Cmd) HideSlice() []string {
-	if x.hidden == nil {
-		x.CacheHide()
-	}
-	return x.hidden
 }
 
 // Run method resolves [Cmd.Alias] and seeks the leaf [Cmd]. It then
@@ -280,15 +259,8 @@ func (x *Cmd) Run(args ...string) {
 	c.call(args)
 }
 
-// IsHidden returns true if one of [Hide] matches the [Name].
-func (x *Cmd) IsHidden() bool {
-	for _, hidden := range x.HideSlice() {
-		if hidden == x.Name {
-			return true
-		}
-	}
-	return false
-}
+// IsHidden returns true if [AsHidden] was used to create.
+func (x *Cmd) IsHidden() bool { return x.hidden }
 
 func (x *Cmd) has(c *Cmd) bool {
 	for _, this := range x.Cmds {
@@ -333,13 +305,13 @@ func (x *Cmd) exitUnlessCallable() {
 func (x *Cmd) exitIfBadArgs(args []string) {
 	switch {
 	case len(args) < x.MinArgs:
-		run.ExitError(ErrNotEnoughArgs{len(args), x.MinArgs})
+		run.ExitError(ErrNotEnoughArgs{Count: len(args), Min: x.MinArgs})
 		return
 	case x.MaxArgs > 0 && len(args) > x.MaxArgs:
-		run.ExitError(ErrTooManyArgs{len(args), x.MaxArgs})
+		run.ExitError(ErrTooManyArgs{Count: len(args), Max: x.MaxArgs})
 		return
 	case x.NumArgs > 0 && len(args) != x.NumArgs:
-		run.ExitError(ErrWrongNumArgs{len(args), x.NumArgs})
+		run.ExitError(ErrWrongNumArgs{Count: len(args), Num: x.NumArgs})
 		return
 	}
 }
@@ -594,12 +566,24 @@ func (x *Cmd) PathNames() []string {
 	return names[1:]
 }
 
+// MarkString reads input from the [Cmd.Mark] [io.Reader] function
+// associated with the command and returns it as a string. It uses
+// a [strings.Builder] to efficiently build the output string and
+// ignores any errors.
+func (x *Cmd) MarkString() string {
+	var buf strings.Builder
+	io.Copy(&buf, x.Mark())
+	return buf.String()
+}
+
 // Mark outputs a Markdown view of the [Cmd] filling the [Cmd.Long] by
-// rendering it as a [text/template] using itself as the object and
-// [Cmd.Funcs] passed to the [text.template.Funcs]. The output of Mark
-// is then the expected format for any implementation of
+// rendering it as a [pkg/text/template] using itself as the object and
+// Funcs field passed to the [pkg/text/template.Funcs] method. The
+// output of Mark is then the expected format for any implementation of
 // [pkg/github.com/rwxrob/bonzai/mark.Renderer] but can also simply be
-// piped directly to tools like Glamour glow.
+// piped directly to tools like [Glamour Glow].
+//
+// [Glamour Glow]: https://github.com/charmbracelet/glamour
 func (x *Cmd) Mark() io.Reader {
 	out := new(strings.Builder)
 	out.WriteString("# Usage\n\n")
@@ -656,6 +640,9 @@ func dedent(in string) string {
 }
 
 func (x Cmd) cmdTree(depth int) string {
+	if x.IsHidden() {
+		return ""
+	}
 	out := new(strings.Builder)
 	for range depth {
 		out.WriteString("  ")
@@ -670,6 +657,9 @@ func (x Cmd) cmdTree(depth int) string {
 	out.WriteString("\n")
 	depth++
 	for _, c := range x.Cmds {
+		if c.IsHidden() {
+			continue
+		}
 		out.WriteString(c.cmdTree(depth))
 	}
 	return out.String()

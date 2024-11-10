@@ -26,7 +26,13 @@ var Cmd = &bonzai.Cmd{
 	Short: `A tool for managing golang monorepos`,
 	Vers:  `0.0.1`,
 	Comp:  comp.Cmds,
-	Cmds:  []*bonzai.Cmd{sanitizeCmd, workCmd, tagCmd, depsCmd},
+	Cmds: []*bonzai.Cmd{
+		sanitizeCmd,
+		workCmd,
+		tagCmd,
+		depsCmd,
+		vars.Cmd,
+	},
 }
 
 var sanitizeCmd = &bonzai.Cmd{
@@ -39,7 +45,11 @@ var sanitizeCmd = &bonzai.Cmd{
 		if argIsOr(
 			args,
 			`all`,
-			vars.Fetch(SanitizeAllEnv, `sanitize-all`, false),
+			vars.Fetch(
+				SanitizeAllEnv,
+				`sanitize-all`,
+				false,
+			),
 		) {
 			root, err := futil.HereOrAbove(".git")
 			if err != nil {
@@ -64,6 +74,7 @@ var workCmd = &bonzai.Cmd{
 	MinArgs:   1,
 	MaxArgs:   1,
 	MatchArgs: `on|off`,
+	Cmds:      []*bonzai.Cmd{workInitCmd},
 	Call: func(x *bonzai.Cmd, args ...string) error {
 		switch args[0] {
 		case `on`:
@@ -71,8 +82,24 @@ var workCmd = &bonzai.Cmd{
 		case `off`:
 			return WorkOff()
 		default:
-			return fmt.Errorf("invalid argument: %s", args[0])
+			return fmt.Errorf(
+				"invalid argument: %s",
+				args[0],
+			)
 		}
+	},
+}
+
+var workInitCmd = &bonzai.Cmd{
+	Name:    `init`,
+	Alias:   `i`,
+	Short:   `new go.work in module for dependencies in monorepo`,
+	MinArgs: 1,
+	Call: func(x *bonzai.Cmd, args ...string) error {
+		if args[0] == `all` {
+			return WorkGenerate()
+		}
+		return WorkInit(args...)
 	},
 }
 

@@ -158,3 +158,56 @@ func ExampleCmd_Mark_noInteractiveTerminal() {
 	// On multiple lines.
 
 }
+
+func ExampleCmd_Hides() {
+
+	var subFooHiddenCmd = &bonzai.Cmd{
+		Name:  `iamhidden`,
+		Short: `i am hidden`,
+	}
+
+	var subFooCmd = &bonzai.Cmd{
+		Name:  `subfoo`,
+		Alias: `sf`,
+		Short: `under the foo command`,
+	}
+
+	var fooCmd = &bonzai.Cmd{
+		Name:  `foo`,
+		Alias: `f`,
+		Short: `foo this command`,
+		Cmds:  []*bonzai.Cmd{subFooCmd, subFooHiddenCmd.AsHidden()},
+		//Cmds:  []*bonzai.Cmd{subFooCmd, subFooHiddenCmd},
+	}
+
+	var barCmd = &bonzai.Cmd{
+		Name:  `bar`,
+		Alias: `b`,
+		Short: `bar this command`,
+	}
+
+	var Cmd = &bonzai.Cmd{
+		Name:  `mycmd`,
+		Alias: `my|cmd`,
+		Short: `my command short summary`,
+		Cmds:  []*bonzai.Cmd{fooCmd, barCmd},
+		Long: `
+			Here is a long description.
+			On multiple lines.`,
+	}
+
+	out, _ := io.ReadAll(Cmd.Mark())
+	fmt.Println(string(out))
+
+	// Output:
+	// # Usage
+	//
+	//     mycmd      ← my command short summary
+	//       foo      ← foo this command
+	//         subfoo ← under the foo command
+	//       bar      ← bar this command
+	//
+	// Here is a long description.
+	// On multiple lines.
+
+}
