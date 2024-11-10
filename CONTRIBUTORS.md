@@ -10,5 +10,6 @@ This project exists thanks to all the people who contribute.
 - `Cmd.WithName`
 - `Cmd.AsHidden`
 - [`vars.Fetch`]
+- [`depends`](depends)
 
 [`vars.Fetch`]: https://www.twitch.tv/rwxrob/clip/DistinctShinyOstrichVoHiYo-pHpcGa5QaREySHil
