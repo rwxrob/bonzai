@@ -9,7 +9,7 @@ import (
 )
 
 func ExampleAliases_Complete() {
-	foo := *new(bonzai.Cmd)
+	foo := bonzai.Cmd{}
 	foo.Alias = `box|b`
 
 	// if no args, we have to assume the command isn't finished yet
