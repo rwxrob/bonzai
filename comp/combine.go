@@ -5,11 +5,14 @@ import (
 	"github.com/rwxrob/bonzai/fn/redu"
 )
 
+// Combine is a [bonzai.Completer] that combines completions from
+// multiple [bonzai.Completer]s. It does not handle duplicates.
 type Combine []bonzai.Completer
 
-// Complete calls Complete on all items in its list returning the
-// resulting combined list (without removing duplicates).
-func (completers Combine) Complete(x bonzai.Cmd, args ...string) []string {
+func (completers Combine) Complete(
+	x bonzai.Cmd,
+	args ...string,
+) []string {
 	var list []string
 	for _, comp := range completers {
 		list = append(list, comp.Complete(x, args...)...)
@@ -18,6 +21,9 @@ func (completers Combine) Complete(x bonzai.Cmd, args ...string) []string {
 }
 
 var (
-	CmdsOpts        = Combine{Cmds, Opts}
-	FileDirCmdsOpts = Combine{FileDir, CmdsOpts}
+	CmdsOpts               = Combine{Cmds, Opts}
+	CmdsAliases            = Combine{Cmds, Aliases}
+	CmdsAliasesOpts        = Combine{Cmds, Aliases, Opts}
+	FileDirCmdsOpts        = Combine{FileDir, CmdsOpts}
+	FileDirCmdsAliasesOpts = Combine{FileDir, CmdsAliasesOpts}
 )

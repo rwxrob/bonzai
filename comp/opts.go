@@ -5,18 +5,15 @@ import (
 	"github.com/rwxrob/bonzai/fn/filt"
 )
 
-type _Opts struct{}
+type opts struct{}
 
-var Opts = new(_Opts)
+// Opts is a [bonzai.Completer] for all available [bonzai.Cmd.Opts].
+var Opts = new(opts)
 
-// Complete returns all [Cmd.Opts] that match [futil.HasPrefix] passed the
-// first argument. See [bonzai.Completer].
-func (_Opts) Complete(x bonzai.Cmd, args ...string) []string {
-	list := x.OptsSlice()
-
+func (opts) Complete(x bonzai.Cmd, args ...string) []string {
 	if len(args) == 0 {
-		return list
+		return []string{}
 	}
 
-	return filt.HasPrefix(list, args[0])
+	return filt.HasPrefix(x.OptsSlice(), args[0])
 }

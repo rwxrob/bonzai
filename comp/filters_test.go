@@ -4,53 +4,22 @@ import (
 	"fmt"
 
 	"github.com/rwxrob/bonzai"
-
 	"github.com/rwxrob/bonzai/comp"
+	"github.com/rwxrob/bonzai/comp/filt"
 )
 
-func ExampleWithMaxLen() {
-	fooCmd := &bonzai.Cmd{Name: "foo"}
-	barCmd := &bonzai.Cmd{Name: "bar"}
-	blahCmd := &bonzai.Cmd{Name: "blah"}
+func ExamplePipe_Complete() {
 	cmd := bonzai.Cmd{
-		Name: "cmd",
-		Cmds: []*bonzai.Cmd{fooCmd, barCmd, blahCmd},
+		Name: "foo",
+		Opts: `fooc|foobar|foobaz`,
+		Comp: comp.Pipe{comp.Opts, filt.Prefix("foo")},
 	}
-
-	fmt.Println(comp.WithMaxLen(3, comp.Cmds).Complete(cmd))
+	fmt.Println(cmd.Comp.Complete(cmd))
+	fmt.Println(cmd.Comp.Complete(cmd, ""))
+	fmt.Println(cmd.Comp.Complete(cmd, "b"))
 
 	// Output:
-	// [foo bar]
-}
-
-func ExampleWithMinLen() {
-	fooCmd := &bonzai.Cmd{Name: "foo"}
-	barCmd := &bonzai.Cmd{Name: "bar"}
-	blahCmd := &bonzai.Cmd{Name: "blah"}
-	cmd := bonzai.Cmd{
-		Name: "cmd",
-		Cmds: []*bonzai.Cmd{fooCmd, barCmd, blahCmd},
-	}
-
-	fmt.Println(comp.WithMinLen(4, comp.Cmds).Complete(cmd))
-
-	// Output:
-	// [blah]
-}
-
-func ExampleWithPrefix() {
-	fooCmd := &bonzai.Cmd{Name: "foo"}
-	barCmd := &bonzai.Cmd{Name: "bar"}
-	blahCmd := &bonzai.Cmd{Name: "blah"}
-	cmd := bonzai.Cmd{
-		Name: "cmd",
-		Cmds: []*bonzai.Cmd{fooCmd, barCmd, blahCmd},
-	}
-
-	fmt.Println(comp.WithPrefix("b", comp.Cmds).Complete(cmd))
-	fmt.Println(comp.WithPrefix("b", comp.Cmds).Complete(cmd, "a"))
-
-	// Output:
-	// [bar blah]
-	// [bar]
+	// []
+	// [fooc foobar foobaz]
+	// [foobar foobaz]
 }
