@@ -20,3 +20,7 @@ kimono list deps
 ```
 
 This keeps command trees the most organized since many, many things could have a `list` command.
+
+## Use of `v := foo.(type)` style
+
+Always use `v` to receive the value from a type switch.

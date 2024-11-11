@@ -1,13 +1,6 @@
 // Copyright 2022 Robert S. Muhlestein.
 // SPDX-License-Identifier: Apache-2.0
 
-/*
-Package fn implements the traditional map/filter/reduce/each functions
-and an array type (A) for those who prefer a more object-oriented
-approach. Unlike other implementations, the array (slice) is always
-first preventing the first-class in-line anonymous function from
-obfuscating the parameter list of the functional function.
-*/
 package fn
 
 import (
