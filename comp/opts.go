@@ -11,11 +11,9 @@ type opts struct{}
 var Opts = new(opts)
 
 func (opts) Complete(x bonzai.Cmd, args ...string) []string {
-	list := x.OptsSlice()
-
 	if len(args) == 0 {
-		return list
+		return []string{}
 	}
 
-	return filt.HasPrefix(list, args[0])
+	return filt.HasPrefix(x.OptsSlice(), args[0])
 }
