@@ -6,12 +6,26 @@ import (
 	"os"
 	"regexp"
 	"slices"
+	"strconv"
 	"strings"
 	"text/template"
 	"unicode"
 
 	"github.com/rwxrob/bonzai/run"
 )
+
+func init() {
+	val, exists := os.LookupEnv(`DEBUG`)
+	if !exists {
+		return
+	}
+	val = strings.ToLower(strings.TrimSpace(val))
+	isTruthy := slices.Contains([]string{"t", "true", "on"}, val)
+	if num, err := strconv.Atoi(val); (err == nil && num > 0) ||
+		isTruthy {
+		run.AllowPanic = true
+	}
+}
 
 // Completer specifies a struct with a [Completer.Complete] function
 // that will complete the first argument (usually a command of some kind)
@@ -306,7 +320,9 @@ func (x *Cmd) exitUnlessCallable() {
 func (x *Cmd) exitIfBadArgs(args []string) {
 	switch {
 	case len(args) < x.MinArgs:
-		run.ExitError(ErrNotEnoughArgs{Count: len(args), Min: x.MinArgs})
+		run.ExitError(
+			ErrNotEnoughArgs{Count: len(args), Min: x.MinArgs},
+		)
 		return
 	case x.MaxArgs > 0 && len(args) > x.MaxArgs:
 		run.ExitError(ErrTooManyArgs{Count: len(args), Max: x.MaxArgs})
