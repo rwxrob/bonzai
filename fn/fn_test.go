@@ -144,3 +144,29 @@ func ExampleFall() {
 	// three
 	//
 }
+
+/*
+
+// Leaving this here to show why not creating a MapFunc function type.
+// It's just better to make an interface to type switching is
+// consistent.
+
+func ExampleMapFunc() {
+
+	inc := fn.MapFunc[int](func(in int) int { in++; return in })
+
+	doit := func(in any) {
+		switch v := in.(type) {
+		case fn.MapFunc[int]:
+		default:
+			fmt.Printf("%T\n", v)
+		}
+	}
+
+	doit(inc)
+
+	// Output:
+	// some
+}
+
+*/
