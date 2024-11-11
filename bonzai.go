@@ -43,7 +43,7 @@ type Cmd struct {
 	Opts  string // ex: mon|wed|fri
 
 	// Work done by this command
-	Call Method // if nil, Def must be set
+	Call func(x *Cmd, args ...string) error
 
 	// Delegation to subcommands
 	Def  *Cmd   // default [Cmd] if no Call and no matching Cmds
@@ -75,13 +75,12 @@ type Cmd struct {
 	cmdAlias map[string]*Cmd // see [CacheCmdAlias]
 }
 
-// Method defines the main code to execute for a command [Cmd.Call]. By
-// convention the parameter list should be named "args" and the caller
-// "x". If either is unused an underscore should be used instead.
-type Method func(x *Cmd, args ...string) error
-
 // WithName sets the [Name] of the command [x] to the specified [name]
-// and returns a pointer to a copy of the updated command.
+// and returns a pointer to a copy of the updated command. This is to
+// cover a very specific niche conflict when two different commands use
+// the same name but are wanted at the same level within the command
+// tree, for example, a help comment that displays help in the local web
+// browser and another that sends it to the terminal pager.
 func (x Cmd) WithName(name string) *Cmd {
 	x.Name = name
 	return &x
