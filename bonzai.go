@@ -118,9 +118,9 @@ func (x Cmd) AsHidden() *Cmd {
 	return &x
 }
 
-// Names returns the [Cmd].Alias value split into a slice with the
+// Aliases returns the [Cmd].Alias value split into a slice with the
 // [Cmd].Name added as the last item.
-func (x *Cmd) Names() []string {
+func (x *Cmd) Aliases() []string {
 	var names []string
 	for _, alias := range x.aliasSlice() {
 		if len(alias) == 0 {
@@ -502,7 +502,7 @@ func (x *Cmd) Seek(args []string) (*Cmd, []string) {
 // pathCmds returns the path of commands used to arrive at this
 // command. The path is determined by walking backward from current
 // caller up rather than depending on anything from the command line
-// used to invoke the composing binary. Also see [PathNames].
+// used to invoke the composing binary.
 func (x *Cmd) pathCmds() []*Cmd {
 	path := []*Cmd{x}
 	for p := x.caller; p != nil; p = p.caller {

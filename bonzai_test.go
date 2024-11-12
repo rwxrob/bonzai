@@ -7,7 +7,7 @@ import (
 	"github.com/rwxrob/bonzai"
 )
 
-func ExampleCmd_Names() {
+func ExampleCmd_Aliases() {
 	barCmd := &bonzai.Cmd{
 		Name:  `bar`,
 		Alias: `b|rab`,
@@ -16,14 +16,14 @@ func ExampleCmd_Names() {
 			return nil
 		},
 	}
-	fmt.Printf("%q", barCmd.Names())
+	fmt.Printf("%q", barCmd.Aliases())
 
 	fooCmd := &bonzai.Cmd{
 		Name: `foo`,
 		Cmds: []*bonzai.Cmd{barCmd},
 	}
 
-	fmt.Printf("%q", fooCmd.Names())
+	fmt.Printf("%q", fooCmd.Aliases())
 
 	// Output:
 	// ["b" "rab" "bar"]["foo"]
