@@ -75,10 +75,10 @@ type Cmd struct {
 	// set at [Run] time for use in [Call] methods:
 	Caller *Cmd // delegation
 
-	aliases  []string        // see [CacheAlias]
-	opts     []string        // see [CacheOpts]
+	aliases  []string        // see [cacheAlias]
+	opts     []string        // see [cacheOpts]
 	hidden   bool            // see [AsHidden] and [IsHidden]
-	cmdAlias map[string]*Cmd // see [CacheCmdAlias]
+	cmdAlias map[string]*Cmd // see [cacheCmdAlias]
 }
 
 // WithName sets the [Name] of the command [x] to the specified [name]
@@ -130,12 +130,14 @@ func allLatinASCIILowerWithDashes(in string) bool {
 	return true
 }
 
-// CacheCmdAlias splits the [Cmd.Alias] for each [Cmd] in
-// [Cmds] with its respective [Cmd.AliasSlice] and assigns them
-// the [Cmd.CmdAliasMap] cache map. This is primarily used for bash
-// tab completion support in [Run] and use as a multicall binary. If
-// [Cmds] is nil or [Name] is empty silently returns.
-func (x *Cmd) CacheCmdAlias() {
+// cacheCmdAlias splits the [Cmd].Alias for each [Cmd] in [Cmds] with
+// its respective [Cmd.AliasSlice] and assigns them the private cache
+// map. If [Cmds] is nil or [Name] is empty silently returns. This is
+// primarily used for bash tab completion support in [Run] and use as
+// a multicall binary. It is exported (instead of private like the cache
+// map itself) so that a additional aliases can be created at run time
+// and updated.
+func (x *Cmd) cacheCmdAlias() {
 	x.cmdAlias = map[string]*Cmd{}
 	if x.Cmds == nil || len(x.Name) == 0 {
 		return
@@ -151,19 +153,19 @@ func (x *Cmd) CacheCmdAlias() {
 	}
 }
 
-// CmdAliasMap calls [CacheCmdAlias] to update cache if it
-// is nil and then returns it. [Hide] is not applied.
+// CmdAliasMap returns a cached map of all aliases pointing to this
+// command.
 func (x *Cmd) CmdAliasMap() map[string]*Cmd {
 	if x.cmdAlias == nil {
-		x.CacheCmdAlias()
+		x.cacheCmdAlias()
 	}
 	return x.cmdAlias
 }
 
-// CacheOpts updates the [opts] cache by splitting [Opts]. Remember
+// cacheOpts updates the [opts] cache by splitting [Opts]. Remember
 // to call this whenever dynamically altering the value at
 // runtime.
-func (x *Cmd) CacheOpts() {
+func (x *Cmd) cacheOpts() {
 	if len(x.Opts) > 0 {
 		x.opts = strings.Split(x.Opts, `|`)
 		return
@@ -171,19 +173,19 @@ func (x *Cmd) CacheOpts() {
 	x.opts = []string{}
 }
 
-// OptsSlice updates the [params] internal cache ([CacheOpts]) and
-// returns it as a slice.
+// OptsSlice returns the [Cmd] Opts as a cached slice (derived from the
+// delimited string).
 func (x *Cmd) OptsSlice() []string {
 	if x.opts == nil {
-		x.CacheOpts()
+		x.cacheOpts()
 	}
 	return x.opts
 }
 
-// CacheAlias updates the [aliases] cache by splitting [Alias]
+// cacheAlias updates the [aliases] cache by splitting [Alias]
 // and adding the [Name] to the end. Remember to call this whenever
 // dynamically altering the value at runtime.
-func (x *Cmd) CacheAlias() {
+func (x *Cmd) cacheAlias() {
 	if len(x.Alias) > 0 {
 		x.aliases = strings.Split(x.Alias, `|`)
 		return
@@ -191,25 +193,26 @@ func (x *Cmd) CacheAlias() {
 	x.aliases = []string{}
 }
 
-// AliasSlice updates the [aliases] internal cache ([CacheAlias]) and
-// returns it as a slice.
+// AliasSlice updates the [aliases] internal cache created from the
+// delimited [Cmd] Alias value and returns it as a slice.
 func (x *Cmd) AliasSlice() []string {
 	if x.aliases == nil {
-		x.CacheAlias()
+		x.cacheAlias()
 	}
 	return x.aliases
 }
 
-// Run method resolves [Cmd.Alias] and seeks the leaf [Cmd]. It then
-// calls the leaf's first-class [Cmd.Call] function passing itself as
-// the first argument along with any remaining command line arguments.
-// Run returns nothing because it usually exits the program. Normally,
-// Run is called from within main() to convert the Cmd into an actual
-// executable program. Use Call instead of Run when delegation is
-// needed. However, avoid tight-coupling that comes from delegation with
-// Call when possible. Also, Call automatically assumes the proper
-// number and type of arguments have already been checked (see
-// [Cmd.MinArgs], etc.) which is normally done by Run.
+// Run method resolves [Cmd].Alias and seeks the leaf [Cmd] depending on
+// the arguments. It then calls the leaf's first-class [Cmd.Call]
+// function passing itself as the first argument along with any
+// remaining command line arguments. Run returns nothing because it
+// usually exits the program. Normally, Run is called from within main()
+// to convert the Cmd into an actual executable program. Use Call
+// instead of Run when delegation is needed. However, avoid
+// tight-coupling that comes from delegation with Call when possible.
+// Also, Call automatically assumes the proper number and type of
+// arguments have already been checked (see [Cmd.MinArgs], etc.) which
+// is normally done by Run.
 //
 // # Completion
 //
@@ -529,7 +532,7 @@ func (x *Cmd) CmdNames() []string {
 // Opt returns the [Opts] entry matching name if found, empty string if not.
 func (x *Cmd) Opt(p string) string {
 	if x.opts == nil {
-		x.CacheOpts()
+		x.cacheOpts()
 	}
 	for _, c := range x.opts {
 		if p == c {
