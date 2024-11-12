@@ -16,7 +16,7 @@ var Cmd = &bonzai.Cmd{
 
 	MaxArgs: 1,
 
-	Call: func(x *bonzai.Cmd, args ...string) error {
+	Do: func(x *bonzai.Cmd, args ...string) error {
 		var ms int64 = 10
 		if len(args) > 0 {
 			ms, _ = strconv.ParseInt(args[0], 10, 64)
