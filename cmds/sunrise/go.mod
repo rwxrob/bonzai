@@ -3,7 +3,7 @@ module github.com/rwxrob/bonzai/cmds/sunrise
 go 1.23.2
 
 require (
-	github.com/rwxrob/bonzai v0.37.0
+	github.com/rwxrob/bonzai v0.38.0
 	github.com/rwxrob/bonzai/anim v0.1.0
 	github.com/rwxrob/bonzai/comp v0.6.0
 	github.com/rwxrob/bonzai/run v0.6.1
