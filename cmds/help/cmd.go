@@ -22,11 +22,10 @@ var Cmd = &bonzai.Cmd{
 		instead. Output is always Markdown.`,
 
 	Do: func(x *bonzai.Cmd, args ...string) error {
-
 		if len(args) > 0 {
-			x, args = x.Caller.Seek(args)
+			x, args = x.Caller().Seek(args)
 		} else {
-			x = x.Caller
+			x = x.Caller()
 		}
 
 		if Renderer != nil {
