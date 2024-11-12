@@ -12,7 +12,7 @@ var Renderer mark.Renderer
 
 var Cmd = &bonzai.Cmd{
 	Name:  `help`,
-	Vers:  `v0.1.0`,
+	Vers:  `v0.4.1`,
 	Short: `display command help`,
 	Alias: `-h|--help|--h|/?`,
 	Long: ` 
