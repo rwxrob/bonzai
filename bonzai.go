@@ -278,23 +278,32 @@ func (x *Cmd) Exec(args ...string) {
 // command fails validation in any way.
 func (x *Cmd) Run(args ...string) error {
 	c, args := x.Seek(args)
+
 	switch {
 	case c == nil:
 		return ErrIncorrectUsage{c}
+
 	case len(x.Short) > 50:
 		return ErrInvalidShort{x}
+
 	case IsValidName != nil && !IsValidName(x.Name):
 		return ErrInvalidName{x.Name}
-	case x.Do == nil && x.Def == nil:
+
+	case x.Do == nil && x.Def == nil && len(x.Cmds) == 0:
 		return ErrUncallable{x}
+
 	case x.Do != nil && x.Def != nil:
 		return ErrDoOrDef{x}
+
 	case len(args) < x.MinArgs:
 		return ErrNotEnoughArgs{Count: len(args), Min: x.MinArgs}
+
 	case x.MaxArgs > 0 && len(args) > x.MaxArgs:
 		return ErrTooManyArgs{Count: len(args), Max: x.MaxArgs}
+
 	case x.NumArgs > 0 && len(args) != x.NumArgs:
 		return ErrWrongNumArgs{Count: len(args), Num: x.NumArgs}
+
 	}
 	return c.call(args)
 }
@@ -658,7 +667,7 @@ type ErrUncallable struct {
 }
 
 func (e ErrUncallable) Error() string {
-	return fmt.Sprintf(`Cmd requires Do or Def: %v`, e.Cmd.Name)
+	return fmt.Sprintf(`Cmd requires Do or Def of Cmds: %v`, e.Cmd.Name)
 }
 
 // ErrDoOrDef suggests that a command cannot have both Do and Def
