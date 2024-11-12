@@ -1,11 +1,11 @@
 package vars
 
-type _Comp struct{}
+type cmp struct{}
 
-var Comp = new(_Comp)
+var Comp = new(cmp)
 
 // Complete takes a [*bonzai.Cmd] and then calls
-func (_Comp) Complete(args ...string) (list []string) {
+func (cmp) Complete(args ...string) (list []string) {
 	if Data == nil || len(args) == 0 {
 		return
 	}
