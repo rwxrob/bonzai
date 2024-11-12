@@ -12,13 +12,15 @@ import (
 )
 
 func ExampleCmdsOpts_Complete() {
-	// dynamic/runtime Cmd creation (normally a niche use case)
-	foo := new(bonzai.Cmd)
-	foo.Opts = `box`
-	foo.Comp = comp.CmdsOpts
-	foo.Add(`bar`)
-	foo.Add(`blah`)
-	comp.CmdsOpts.SetCmd(foo) // [bonzai.CmpCompleter]
+
+	foo := &bonzai.Cmd{
+		Name: `foo`,
+		Opts: `box`,
+		Comp: comp.CmdsOpts,
+		Cmds: []*bonzai.Cmd{{Name: `bar`}, {Name: `blah`}},
+	}
+
+	foo.Comp.(bonzai.CmdCompleter).SetCmd(foo)
 
 	// we know it's not a command, but no prefix just yet
 	// (usually this is when a space has been added after the command)

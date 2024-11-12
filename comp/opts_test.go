@@ -11,12 +11,15 @@ import (
 )
 
 func ExampleOpts_Complete() {
-	foo := new(bonzai.Cmd)
-	foo.Opts = `box`
-	foo.Comp = comp.Opts
-	foo.Add(`bar`)
-	foo.Add(`blah`)
-	comp.Opts.SetCmd(foo)
+
+	foo := &bonzai.Cmd{
+		Name: `foo`,
+		Opts: `box`,
+		Comp: comp.Opts,
+		Cmds: []*bonzai.Cmd{{Name: `bar`}, {Name: `blah`}},
+	}
+
+	foo.Comp.(bonzai.CmdCompleter).SetCmd(foo)
 
 	// everything that begins with b (which is everything)
 	fmt.Println(comp.Opts.Complete(`b`))

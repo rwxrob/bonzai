@@ -16,7 +16,7 @@ func (aliases) Complete(args ...string) []string {
 	if len(args) == 0 || current == nil {
 		return list
 	}
-	for _, c := range current.Names() {
+	for _, c := range current.Aliases() {
 		if len(c) > 0 {
 			list = append(list, c)
 		}

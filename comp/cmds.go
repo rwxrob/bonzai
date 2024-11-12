@@ -11,7 +11,7 @@ type cmds struct{}
 // excludes hidden commands.
 var Cmds = new(cmds)
 
-func (x cmds) Complete(args ...string) []string {
+func (cmds) Complete(args ...string) []string {
 	list := []string{}
 	if len(args) == 0 || current == nil {
 		return list

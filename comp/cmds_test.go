@@ -11,11 +11,15 @@ import (
 )
 
 func ExampleCmds_Complete() {
-	foo := new(bonzai.Cmd)
-	foo.Opts = `box`
-	foo.Add(`bar`)
-	foo.Add(`blah`)
-	comp.Cmds.SetCmd(foo) // [bonzai.CmpCompleter]
+
+	foo := &bonzai.Cmd{
+		Name: `foo`,
+		Opts: `box`,
+		Cmds: []*bonzai.Cmd{{Name: `bar`}, {Name: `blah`}},
+		Comp: comp.Cmds,
+	}
+
+	foo.Comp.(bonzai.CmdCompleter).SetCmd(foo)
 
 	// if no args, we have to assume the command isn't finished yet
 	fmt.Println(comp.Cmds.Complete())

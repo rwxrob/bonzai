@@ -8,9 +8,14 @@ import (
 )
 
 func ExampleAliases_Complete() {
-	foo := new(bonzai.Cmd)
-	foo.Alias = `box|b`
-	comp.Aliases.SetCmd(foo) // [bonzai.CmdCompleter]
+
+	foo := &bonzai.Cmd{
+		Name:  `foo`,
+		Alias: `box|b`,
+		Comp:  comp.Aliases,
+	}
+
+	foo.Comp.(bonzai.CmdCompleter).SetCmd(foo)
 
 	// if no args, we have to assume the command isn't finished yet
 	fmt.Println(comp.Aliases.Complete())
@@ -21,7 +26,7 @@ func ExampleAliases_Complete() {
 
 	// Output:
 	// []
-	// [box b]
+	// [box b foo]
 	// []
 	// [box b]
 	// [box]
