@@ -3,8 +3,8 @@ module github.com/rwxrob/bonzai/vars
 go 1.23.0
 
 require (
-	github.com/rwxrob/bonzai v0.37.0
-	github.com/rwxrob/bonzai/cmds/help v0.3.0
+	github.com/rwxrob/bonzai v0.38.0
+	github.com/rwxrob/bonzai/cmds/help v0.4.0
 	github.com/rwxrob/bonzai/comp v0.6.0
 	github.com/rwxrob/bonzai/edit v0.1.1
 	github.com/rwxrob/bonzai/fn v0.6.0
