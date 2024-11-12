@@ -12,14 +12,15 @@ var Renderer mark.Renderer
 
 var Cmd = &bonzai.Cmd{
 	Name:  `help`,
+	Vers:  `v0.1.0`,
 	Short: `display command help`,
 	Alias: `-h|--help|--h|/?`,
 	Long: ` 
 		The {{.Name}} command displays the help information for the
 		immediate previous command unless it is passed arguments, in which
-		case it resolves the arguments is if they were passed to the
-		previous command itself and the leaf command help is displayed
-		instead. Output is always Markdown.`,
+		case it resolves the arguments as if they were passed to the
+		previous command and the help for the leaf command is displayed
+		instead.`,
 
 	Do: func(x *bonzai.Cmd, args ...string) error {
 		if len(args) > 0 {
