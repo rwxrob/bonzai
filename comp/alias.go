@@ -11,15 +11,18 @@ type aliases struct{}
 // including [bonzai.Cmd.Name].
 var Aliases = new(aliases)
 
-func (aliases) Complete(x bonzai.Cmd, args ...string) []string {
+func (aliases) Complete(args ...string) []string {
 	list := []string{}
-	if len(args) == 0 {
+	if len(args) == 0 || current == nil {
 		return list
 	}
-	for _, c := range x.Names() {
+	for _, c := range current.Names() {
 		if len(c) > 0 {
 			list = append(list, c)
 		}
 	}
 	return filt.HasPrefix(list, args[0])
 }
+
+func (aliases) SetCmd(a *bonzai.Cmd) { current = a }
+func (aliases) Cmd() *bonzai.Cmd     { return current }

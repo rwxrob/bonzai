@@ -10,13 +10,13 @@ import (
 
 func ExamplePipe_Complete() {
 	cmd := bonzai.Cmd{
-		Name: "foo",
+		Name: `foo`,
 		Opts: `fooc|foobar|foobaz`,
-		Comp: comp.Pipe{comp.Opts, filt.Prefix("foo")},
+		Comp: comp.Pipe{comp.Opts, filt.Prefix(`foo`)},
 	}
-	fmt.Println(cmd.Comp.Complete(cmd))
-	fmt.Println(cmd.Comp.Complete(cmd, ""))
-	fmt.Println(cmd.Comp.Complete(cmd, "b"))
+	fmt.Println(cmd.Comp.Complete())
+	fmt.Println(cmd.Comp.Complete(``))
+	fmt.Println(cmd.Comp.Complete(`b`))
 
 	// Output:
 	// []

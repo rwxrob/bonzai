@@ -27,14 +27,20 @@ func init() {
 	}
 }
 
-// Completer specifies a struct with a [Completer.Complete] function
-// that will complete the first argument (usually a command of some kind)
+// Completer specifies anything with [Completer.Complete] function
 // based on the remaining arguments. The [Complete] method must never
-// panic and always return at least an empty slice of strings. By
-// convention Completers that do not make use of or other arguments
-// should use an underscore identifier since they are ignored.
+// panic and always return at least an empty slice of strings. For
+// completing data from a [Cmd] use [CmdCompleter] instead.
 type Completer interface {
-	Complete(x Cmd, args ...string) []string
+	Complete(args ...string) []string
+}
+
+// CmdCompleter is a specialized completer that requires a [Cmd]. This
+// includes completion of command names, aliases, options, etc.
+type CmdCompleter interface {
+	Completer
+	Cmd() *Cmd
+	SetCmd(x *Cmd)
 }
 
 type Cmd struct {
@@ -390,8 +396,12 @@ func (x *Cmd) detectCompletion(_ []string) {
 			return
 		}
 
+		if v, is := cmd.Comp.(CmdCompleter); is {
+			v.SetCmd(cmd)
+		}
+
 		// own completer, delegate
-		for _, completion := range cmd.Comp.Complete(*cmd, args...) {
+		for _, completion := range cmd.Comp.Complete(args...) {
 			fmt.Println(completion)
 		}
 		run.Exit()

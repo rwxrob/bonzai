@@ -11,12 +11,12 @@ type cmds struct{}
 // excludes hidden commands.
 var Cmds = new(cmds)
 
-func (cmds) Complete(x bonzai.Cmd, args ...string) []string {
+func (x cmds) Complete(args ...string) []string {
 	list := []string{}
-	if len(args) == 0 {
+	if len(args) == 0 || current == nil {
 		return list
 	}
-	for _, c := range x.Cmds {
+	for _, c := range current.Cmds {
 		if c.IsHidden() {
 			continue
 		}
@@ -24,3 +24,6 @@ func (cmds) Complete(x bonzai.Cmd, args ...string) []string {
 	}
 	return filt.HasPrefix(list, args[0])
 }
+
+func (cmds) SetCmd(a *bonzai.Cmd) { current = a }
+func (cmds) Cmd() *bonzai.Cmd     { return current }

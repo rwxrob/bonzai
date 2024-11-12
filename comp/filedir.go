@@ -7,7 +7,6 @@ import (
 	"path/filepath"
 	"strings"
 
-	"github.com/rwxrob/bonzai"
 	"github.com/rwxrob/bonzai/fn/filt"
 	"github.com/rwxrob/bonzai/futil"
 )
@@ -22,7 +21,7 @@ type fileDir struct{}
 // indication of the type of file is provided (i.e. dircolors support).
 var FileDir = fileDir{}
 
-func (fileDir) Complete(_ bonzai.Cmd, args ...string) []string {
+func (fileDir) Complete(args ...string) []string {
 	if len(args) > 1 {
 		return []string{}
 	}
