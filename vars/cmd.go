@@ -39,7 +39,7 @@ var GetCmd = &bonzai.Cmd{
 	Name:    `get`,
 	Comp:    Comp,
 	NumArgs: 1,
-	Call: func(x *bonzai.Cmd, args ...string) error {
+	Do: func(x *bonzai.Cmd, args ...string) error {
 		m, err := cmdDefMap(x)
 		if err != nil {
 			return err
@@ -58,7 +58,7 @@ var SetCmd = &bonzai.Cmd{
 	Name:    `set`,
 	Comp:    Comp,
 	MinArgs: 2,
-	Call: func(x *bonzai.Cmd, args ...string) error {
+	Do: func(x *bonzai.Cmd, args ...string) error {
 		m, err := cmdDefMap(x)
 		if err != nil {
 			return err
@@ -71,7 +71,7 @@ var loadCmd = &bonzai.Cmd{
 	Name:    `load`,
 	Comp:    comp.FileDir,
 	MaxArgs: 1,
-	Call: func(x *bonzai.Cmd, args ...string) error {
+	Do: func(x *bonzai.Cmd, args ...string) error {
 		m, err := cmdDefMap(x)
 		if err != nil {
 			return err
@@ -100,7 +100,7 @@ var grepkCmd = &bonzai.Cmd{
 	Name:    `keys`,
 	Alias:   `k`,
 	NumArgs: 1,
-	Call: func(x *bonzai.Cmd, args ...string) error {
+	Do: func(x *bonzai.Cmd, args ...string) error {
 		m, err := cmdDefMap(x)
 		if err != nil {
 			return err
@@ -118,7 +118,7 @@ var grepvCmd = &bonzai.Cmd{
 	Name:    `values`,
 	Alias:   `v|val|vals`,
 	NumArgs: 1,
-	Call: func(x *bonzai.Cmd, args ...string) error {
+	Do: func(x *bonzai.Cmd, args ...string) error {
 		m, err := cmdDefMap(x)
 		if err != nil {
 			return err
@@ -136,7 +136,7 @@ var initCmd = &bonzai.Cmd{
 	Name:    `init`,
 	Alias:   `i`,
 	NumArgs: 0,
-	Call: func(x *bonzai.Cmd, _ ...string) error {
+	Do: func(x *bonzai.Cmd, _ ...string) error {
 		m, err := cmdDefMap(x)
 		if err != nil {
 			return err
@@ -149,7 +149,7 @@ var clearCmd = &bonzai.Cmd{
 	Name:    `clear`,
 	Alias:   `cl`,
 	NumArgs: 0,
-	Call: func(x *bonzai.Cmd, _ ...string) error {
+	Do: func(x *bonzai.Cmd, _ ...string) error {
 		m, err := cmdDefMap(x)
 		if err != nil {
 			return err
@@ -161,7 +161,7 @@ var clearCmd = &bonzai.Cmd{
 var editCmd = &bonzai.Cmd{
 	Name:  `edit`,
 	Alias: `e|ed`,
-	Call: func(x *bonzai.Cmd, args ...string) error {
+	Do: func(x *bonzai.Cmd, args ...string) error {
 		m, err := cmdDefMap(x)
 		if err != nil {
 			return err
@@ -174,7 +174,7 @@ var deleteCmd = &bonzai.Cmd{
 	Name:    `delete`,
 	Alias:   `d|del`,
 	NumArgs: 1,
-	Call: func(x *bonzai.Cmd, args ...string) error {
+	Do: func(x *bonzai.Cmd, args ...string) error {
 		m, err := cmdDefMap(x)
 		if err != nil {
 			return err
@@ -186,7 +186,7 @@ var deleteCmd = &bonzai.Cmd{
 var dataCmd = &bonzai.Cmd{
 	Name:    `data`,
 	NumArgs: 0,
-	Call: func(x *bonzai.Cmd, _ ...string) error {
+	Do: func(x *bonzai.Cmd, _ ...string) error {
 		m, err := cmdDefMap(x)
 		if err != nil {
 			return err
