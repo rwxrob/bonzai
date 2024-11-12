@@ -21,7 +21,7 @@ var Cmd = &bonzai.Cmd{
 		previous command itself and the leaf command help is displayed
 		instead. Output is always Markdown.`,
 
-	Call: func(x *bonzai.Cmd, args ...string) error {
+	Do: func(x *bonzai.Cmd, args ...string) error {
 
 		if len(args) > 0 {
 			x, args = x.Caller.Seek(args)

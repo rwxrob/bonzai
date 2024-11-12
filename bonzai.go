@@ -27,16 +27,29 @@ func init() {
 	}
 }
 
-// Completer specifies anything with [Completer.Complete] function
-// based on the remaining arguments. The [Complete] method must never
-// panic and always return at least an empty slice of strings. For
-// completing data from a [Cmd] use [CmdCompleter] instead.
+// Completer specifies anything with Complete function based
+// on the remaining arguments. The Complete method must never panic
+// and always return at least an empty slice of strings. For completing
+// data from a [Cmd] use [CmdCompleter] instead. Implementations must
+// not examine anything from the command line itself depending entirely
+// on the passed arguments instead (which are usually the remaining
+// arguments from the command line). Implementations may and will often
+// depend on external data sources to determine the possible completion
+// values, for example, current host names, users, or data from a web
+// API endpoint.
 type Completer interface {
 	Complete(args ...string) []string
 }
 
-// CmdCompleter is a specialized completer that requires a [Cmd]. This
-// includes completion of command names, aliases, options, etc.
+// CmdCompleter is a specialized [Completer] that requires a [Cmd]. This
+// is used for the following core completions:
+//
+//   - [pkg/github.com/rwxrob/bonzai/comp.Cmds]
+//   - [pkg/github.com/rwxrob/bonzai/comp.Aliases]
+//   - [pkg/github.com/rwxrob/bonzai/comp.CmdsAliases]
+//   - [pkg/github.com/rwxrob/bonzai/comp.Opts]
+//   - [pkg/github.com/rwxrob/bonzai/comp.CmdsOpts]
+//   - [pkg/github.com/rwxrob/bonzai/comp.CmdsOptsAliases]
 type CmdCompleter interface {
 	Completer
 	Cmd() *Cmd
@@ -44,64 +57,72 @@ type CmdCompleter interface {
 }
 
 type Cmd struct {
-	Name  string // ex: delete
-	Alias string // ex: rm|d|del
-	Opts  string // ex: mon|wed|fri
+	Name  string // ex: delete (required)
+	Alias string // ex: rm|d|del (optional)
+	Opts  string // ex: mon|wed|fri (optional)
 
-	// Work done by this command
-	Call func(x *Cmd, args ...string) error
+	// Own work (optional if Cmds or Def)
+	Do func(x *Cmd, args ...string) error
 
-	// Delegation to subcommands
-	Def  *Cmd   // default [Cmd] if no Call and no matching Cmds
-	Cmds []*Cmd // compiled/composed commands in no particular order
+	// Delegated work
+	Def  *Cmd   // default Cmd (optional)
+	Cmds []*Cmd // composed commands (optional if Do or Cmds or Def)
 
 	// Documentation
-	Vers  string // text (<50 runes)
-	Short string // text (<50 runes)
-	Long  string // text/markup
-	Funcs template.FuncMap
+	Vers  string           // text (<50 runes) (optional)
+	Short string           // text (<50 runes) (optional)
+	Long  string           // text/markup (optional)
+	Funcs template.FuncMap // own template tags (optional)
 
-	// Faster than lots of "if" conditions in [Cmd.Call]. Consider
-	// [Cmd.Init] when more complex argument validation is needed.
+	// Faster than "if" conditions in [Cmd.Do] (all optional)
 	MinArgs   int    // min
 	MaxArgs   int    // max
-	NumArgs   int    // exact, also used for NoArg (0)
-	MatchArgs string // PCRE/Go regular expression (requires Usage)
+	NumArgs   int    // exact, doubles as NoArg (0)
+	MatchArgs string // regular expression filter (document in Long)
 
 	// Self-completion support: complete -C foo foo
 	Comp Completer
 
-	// Following are never assigned in declarations but are instead
-	// set at [Run] time for use in [Call] methods:
-	Caller *Cmd // delegation
-
+	caller   *Cmd            // delegation
 	aliases  []string        // see [cacheAlias]
 	opts     []string        // see [cacheOpts]
 	hidden   bool            // see [AsHidden] and [IsHidden]
 	cmdAlias map[string]*Cmd // see [cacheCmdAlias]
 }
 
-// WithName sets the [Name] of the command [x] to the specified [name]
-// and returns a pointer to a copy of the updated command. This is to
-// cover a very specific niche conflict when two different commands use
-// the same name but are wanted at the same level within the command
-// tree, for example, a help comment that displays help in the local web
-// browser and another that sends it to the terminal pager.
+// Caller returns the internal reference to the parent/caller of this
+// command. It is not set until [Cmd.Seek] is called or indirectly by
+// [Cmd.Run] or [Cmd.Exec]. Caller is set to itself if there is no
+// caller (see [Cmd.IsRoot]).
+func (x Cmd) Caller() *Cmd { return x.caller }
+
+// WithName sets the [Cmd].Name to name and returns a pointer to a copy
+// of the updated command with the new name. This covers a very specific
+// but important use case when a naming conflict exists between two
+// different commands at the same level within the command tree, for example,
+// a help command that displays help in the local web browser and
+// another help command with a new name that sends it to the terminal.
 func (x Cmd) WithName(name string) *Cmd {
 	x.Name = name
 	return &x
 }
 
-// AsHidden sets the internal hidden property to true.
+// AsHidden returns a copy of the [Cmd] with its internal hidden
+// property set to true preventing it from appearing in [Cmd.CmdTreeString]
+// and some [CmdCompleter] values. Use cases include convenient
+// inclusion of leaf commands that are already available elsewhere (like
+// help or var) and allowing deprecated commands to be supported but
+// hidden.
 func (x Cmd) AsHidden() *Cmd {
 	x.hidden = true
 	return &x
 }
 
-// Names returns slice of all [Alias] and the [Name] as the last item.
+// Names returns the [Cmd].Alias value split into a slice with the
+// [Cmd].Name added as the last item.
 func (x *Cmd) Names() []string {
 	var names []string
-	for _, alias := range x.AliasSlice() {
+	for _, alias := range x.aliasSlice() {
 		if len(alias) == 0 {
 			continue
 		}
@@ -131,9 +152,9 @@ func allLatinASCIILowerWithDashes(in string) bool {
 }
 
 // cacheCmdAlias splits the [Cmd].Alias for each [Cmd] in [Cmds] with
-// its respective [Cmd.AliasSlice] and assigns them the private cache
-// map. If [Cmds] is nil or [Name] is empty silently returns. This is
-// primarily used for bash tab completion support in [Run] and use as
+// its respective [Cmd.aliasSlice] and assigns them the private cache
+// map. If [Cmds] is nil or Name is empty silently returns. This is
+// primarily used for bash tab completion support in Run and use as
 // a multicall binary. It is exported (instead of private like the cache
 // map itself) so that a additional aliases can be created at run time
 // and updated.
@@ -143,7 +164,7 @@ func (x *Cmd) cacheCmdAlias() {
 		return
 	}
 	for _, c := range x.Cmds {
-		aliases := c.AliasSlice()
+		aliases := c.aliasSlice()
 		if len(aliases) == 0 {
 			continue
 		}
@@ -153,9 +174,9 @@ func (x *Cmd) cacheCmdAlias() {
 	}
 }
 
-// CmdAliasMap returns a cached map of all aliases pointing to this
+// cmdAliasMap returns a cached map of all aliases pointing to this
 // command.
-func (x *Cmd) CmdAliasMap() map[string]*Cmd {
+func (x *Cmd) cmdAliasMap() map[string]*Cmd {
 	if x.cmdAlias == nil {
 		x.cacheCmdAlias()
 	}
@@ -173,7 +194,7 @@ func (x *Cmd) cacheOpts() {
 	x.opts = []string{}
 }
 
-// OptsSlice returns the [Cmd] Opts as a cached slice (derived from the
+// OptsSlice returns the [Cmd].Opts as a cached slice (derived from the
 // delimited string).
 func (x *Cmd) OptsSlice() []string {
 	if x.opts == nil {
@@ -182,8 +203,8 @@ func (x *Cmd) OptsSlice() []string {
 	return x.opts
 }
 
-// cacheAlias updates the [aliases] cache by splitting [Alias]
-// and adding the [Name] to the end. Remember to call this whenever
+// cacheAlias updates the aliases cache by splitting Alias
+// and adding the Name to the end. Remember to call this whenever
 // dynamically altering the value at runtime.
 func (x *Cmd) cacheAlias() {
 	if len(x.Alias) > 0 {
@@ -193,95 +214,108 @@ func (x *Cmd) cacheAlias() {
 	x.aliases = []string{}
 }
 
-// AliasSlice updates the [aliases] internal cache created from the
-// delimited [Cmd] Alias value and returns it as a slice.
-func (x *Cmd) AliasSlice() []string {
+// aliasSlice updates the aliases internal cache created from the
+// delimited [Cmd].Alias value and returns it as a slice.
+func (x *Cmd) aliasSlice() []string {
 	if x.aliases == nil {
 		x.cacheAlias()
 	}
 	return x.aliases
 }
 
-// Run method resolves [Cmd].Alias and seeks the leaf [Cmd] depending on
-// the arguments. It then calls the leaf's first-class [Cmd.Call]
-// function passing itself as the first argument along with any
-// remaining command line arguments. Run returns nothing because it
-// usually exits the program. Normally, Run is called from within main()
-// to convert the Cmd into an actual executable program. Use Call
-// instead of Run when delegation is needed. However, avoid
-// tight-coupling that comes from delegation with Call when possible.
-// Also, Call automatically assumes the proper number and type of
-// arguments have already been checked (see [Cmd.MinArgs], etc.) which
-// is normally done by Run.
+// Exec is called from main function in the main package and never
+// returns, always exiting with either 0 or 1 usually printing any error
+// encountered. Exec calls [Cmd.Run] (which returns errors instead of
+// exiting) after the following runtime considerations.
 //
-// # Completion
+// # Self-completion
 //
-// Since Run is the main execution entry point for all Bonzai command
-// trees it is also responsible for handling bash completion. Only bash
-// completion is supported within the binary itself because only bash
-// provides self-completion (complete -C foo foo). However, zsh can also be
-// made to support it by adding a few functions from the
-// oh-my-zsh code base).
+// Exec checks the COMP_LINE environment variable and if found assumes
+// the program is being called in self-completion context by a user
+// tapping the tab key one or more times. See the bash man page section
+// "Programmable Completion" (although zsh can also be setup to enable
+// bash self-completion). All Bonzai programs can, therefore, be set to
+// complete themselves:
 //
-// Completion mode is triggered by the detection of the COMP_LINE
-// environment variable. (complete -C cmd cmd).
+//	complete -C foo foo
 //
-// When COMP_LINE is set, Run prints a list of possible completions to
-// standard output by calling the [Completer.Complete] function of its
-// [Comp] field. If [Comp] is nil no completion is attempted. Each
-// [Cmd] explicitly manages its own completion and can draw from an
-// growing ecosystem of Completers or assign its own. See the
-// [core/comp] package for more examples.
+// See [Completer] and [CmdCompleter] for more information about
+// completion and the [pkg/github.com/rwxrob/bonzai/comp/completers]
+// package for a growing collection of community maintained common
+// completer implementations. Contributions always welcome.
 //
-// # Multicall binary and links
+// # Trapped panics
 //
-// Popularized by BusyBox/Alpine, a multicall binary is a single
-// executable that behaves differently based on its name, either through
-// copying the binary to another name, or linking (symbolic or hard).
-// All Bonzai compiled binaries automatically behave as multicall
-// binaries provided the name of the actual binary or link matches the
-// name of [Cmd].
+// Exec traps any panics with
+// [pkg/github.com/rwxrob/bonzai/run.TrapPanic] unless the DEBUG
+// environment variable is set (truthy).
 //
-// Note that this method should never be used to obscure a highly
-// sensitive command thinking it won't be discovered. Discovering every
-// possible command is very easy to brute force.
+// # Multicall
 //
-// # Never panic
-//
-// All panics are trapped with [run.TrapPanic] which normally exits with 1 and
-// outputs the main message. See [run.TrapPanic] for details.
-//
-// # Valid name check
-//
-// Throws [ErrInvalidName] error and exist if [Name] does not pass
-// [ErrInvalidName] check.
-//
-// # Subcommand optional arguments
-//
-// If any argument is detected, delegation through recursive Run calls
-// to subcommands is attempted. If more than one argument, each
-// argument is assumed to be a [Name] or alias from [Alias] and so on
-// (see [Can] for details).
-func (x *Cmd) Run(args ...string) {
+// Exec uses [os.Args][0] compared to the [Cmd].Name to resolve what to
+// run enabling the use of multicall binaries with dashes in the name (a
+// common design pattern used by other monolith multicalls such as git and
+// busybox).
+func (x *Cmd) Exec(args ...string) {
 	defer run.TrapPanic()
-	x.exitUnlessValidName()
-	x.exitUnlessValidShort()
 	x.recurseIfMulti(args)
 	x.detectCompletion(args)
 	if len(args) == 0 {
 		args = os.Args[1:]
 	}
-	c, args := x.Seek(args)
-	if c == nil {
-		run.ExitError(ErrIncorrectUsage{c})
-		return
+	if err := x.Run(args...); err != nil {
+		run.ExitError(err)
 	}
-	c.exitUnlessCallable()
-	c.exitIfBadArgs(args)
-	c.call(args)
+	run.Exit()
 }
 
-// IsHidden returns true if [AsHidden] was used to create.
+// Run seeks the leaf command in the arguments passed, validates it, and
+// calls its [Cmd].Do method passing itself as the first argument
+// along with any remaining arguments. Run is always called from
+// [Cmd.Exec] but can be called directly from another command's Do
+// method to enable powerful command composition and delegation at
+// a high-level. Run returns an error if a command cannot be found or the
+// command fails validation in any way.
+func (x *Cmd) Run(args ...string) error {
+	c, args := x.Seek(args)
+	switch {
+	case c == nil:
+		return ErrIncorrectUsage{c}
+	case len(x.Short) > 50:
+		return ErrInvalidShort{x}
+	case IsValidName != nil && !IsValidName(x.Name):
+		return ErrInvalidName{x.Name}
+	case x.Do == nil && x.Def == nil:
+		return ErrUncallable{x}
+	case x.Do != nil && x.Def != nil:
+		return ErrDoOrDef{x}
+	case len(args) < x.MinArgs:
+		return ErrNotEnoughArgs{Count: len(args), Min: x.MinArgs}
+	case x.MaxArgs > 0 && len(args) > x.MaxArgs:
+		return ErrTooManyArgs{Count: len(args), Max: x.MaxArgs}
+	case x.NumArgs > 0 && len(args) != x.NumArgs:
+		return ErrWrongNumArgs{Count: len(args), Num: x.NumArgs}
+	}
+	return c.call(args)
+}
+
+func (x *Cmd) call(args []string) error {
+	if x.caller == nil {
+		x.caller = x
+	}
+	if x.Do != nil {
+		if err := x.Do(x, args...); err != nil {
+			return err
+		}
+		return nil
+	}
+	if x.Def != nil {
+		return x.Def.call(args)
+	}
+	return nil
+}
+
+// IsHidden returns true if [Cmd.AsHidden] was used to create.
 func (x *Cmd) IsHidden() bool { return x.hidden }
 
 func (x *Cmd) has(c *Cmd) bool {
@@ -293,67 +327,6 @@ func (x *Cmd) has(c *Cmd) bool {
 	return false
 }
 
-func (x *Cmd) call(args []string) {
-	if x.Caller == nil {
-		x.Caller = x
-	}
-	if x.Call != nil {
-		if err := x.Call(x, args...); err != nil {
-			run.ExitError(err)
-			return
-		}
-		run.Exit()
-		return
-	}
-	if x.Def != nil {
-		x.Def.call(args)
-		return
-	}
-	run.Exit()
-}
-
-// default to first Cmds if no Call defined
-func (x *Cmd) exitUnlessCallable() {
-	switch {
-	case x.Call == nil && x.Def == nil:
-		run.ExitError(ErrUncallable{x})
-		return
-	case x.Call != nil && x.Def != nil:
-		run.ExitError(ErrCallOrDef{x})
-		return
-	}
-}
-
-func (x *Cmd) exitIfBadArgs(args []string) {
-	switch {
-	case len(args) < x.MinArgs:
-		run.ExitError(
-			ErrNotEnoughArgs{Count: len(args), Min: x.MinArgs},
-		)
-		return
-	case x.MaxArgs > 0 && len(args) > x.MaxArgs:
-		run.ExitError(ErrTooManyArgs{Count: len(args), Max: x.MaxArgs})
-		return
-	case x.NumArgs > 0 && len(args) != x.NumArgs:
-		run.ExitError(ErrWrongNumArgs{Count: len(args), Num: x.NumArgs})
-		return
-	}
-}
-
-func (x *Cmd) exitUnlessValidName() {
-	if !IsValidName(x.Name) {
-		run.ExitError(ErrInvalidName{x.Name})
-		return
-	}
-}
-
-func (x *Cmd) exitUnlessValidShort() {
-	if len(x.Short) > 50 {
-		run.ExitError(ErrInvalidShort{x})
-		return
-	}
-}
-
 // called as multicall binary
 func (x *Cmd) recurseIfMulti(args []string) {
 	name := run.ExeName()
@@ -361,7 +334,7 @@ func (x *Cmd) recurseIfMulti(args []string) {
 		return
 	}
 	if c := x.Can(name); c != nil {
-		c.Run(args...)
+		c.Exec(args...)
 		return
 	}
 	if strings.Contains(name, `-`) {
@@ -373,7 +346,7 @@ func (x *Cmd) recurseIfMulti(args []string) {
 			if len(fields) > 1 {
 				args = append(fields[1:], args...)
 			}
-			c.Run(args...)
+			c.Exec(args...)
 			return
 		}
 	}
@@ -412,81 +385,46 @@ func (x *Cmd) detectCompletion(_ []string) {
 	}
 }
 
-// String fulfills the [fmt.Stringer] interface for debugging by simply
-// printing the Name of the [Cmd].
+// String fulfills the [fmt.Stringer] interface for [fmt.Print]
+// debugging and template inclusion by simply printing the [Cmd].Name.
 func (x Cmd) String() string { return x.Name }
 
-// Root returns the root [Cmd] from the current [Path]. This must always
-// be calculated every time since any Cmd can change positions and
-// pedigrees at any time at run time. Returns self if no [PathCmds]
-// found.
+// Root returns the root [Cmd] traversing up its [Cmd.Caller] tree
+// returning self if already root. The value returned will always return true
+// of its [Cmd.IsRoot] is called.
 func (x *Cmd) Root() *Cmd {
-	cmds := x.PathCmds()
+	cmds := x.pathCmds()
 	if len(cmds) > 0 {
-		return cmds[0].Caller
+		return cmds[0].caller
 	}
-	return x.Caller
+	return x.caller
 }
 
-// IsRoot determines if the command [x] is the root command by checking
-// if its [Caller] is the same as itself. It returns true if [x] is
-// the root command; otherwise, it returns false.
-func (x *Cmd) IsRoot() bool { return x.Caller == x }
+// IsRoot determines if the command has no parent commands above it by
+// checking if its [Cmd.Caller] is the same as itself returning true if so.
+func (x *Cmd) IsRoot() bool { return x.caller == x }
 
-// PrependCmd safely prepends the passed [*Cmd] to the [Cmds] slice.
-func (x *Cmd) PrependCmd(cmd *Cmd) {
-	old := x.Cmds
-	x.Cmds = []*Cmd{cmd}
-	if old != nil {
-		x.Cmds = append(x.Cmds, old...)
-	}
-}
-
-// AppendCmd safely appends the passed [*Cmd] to the [Cmds] slice.
-func (x *Cmd) AppendCmd(cmd *Cmd) {
-	if x.Cmds == nil {
-		x.Cmds = []*Cmd{}
-	}
-	x.Cmds = append(x.Cmds, cmd)
-}
-
-// Add creates a new Cmd and sets the [Name] and [Alias] and adds to
-// [Cmds] returning a reference to the new Cmd. Name must be
-// first.
-func (x *Cmd) Add(name string, aliases ...string) *Cmd {
-	c := &Cmd{
-		Name:  name,
-		Alias: strings.Join(aliases, `|`),
-	}
-	x.aliases = aliases
-	x.Cmds = append(x.Cmds, c)
-	return c
-}
-
-// Resolve looks up a given [Cmd] by name or alias from [Alias]
+// resolve looks up a given [Cmd] by name or alias from [Alias]
 // (caching a lookup map of aliases in the process).
-func (x *Cmd) Resolve(name string) *Cmd {
+func (x *Cmd) resolve(name string) *Cmd {
 	if x.Cmds == nil {
 		return nil
 	}
-
 	for _, c := range x.Cmds {
 		if name == c.Name {
 			return c
 		}
 	}
-
-	aliases := x.CmdAliasMap()
+	aliases := x.cmdAliasMap()
 	if c, has := aliases[name]; has {
 		return c
 	}
 	return nil
 }
 
-// Can returns the [*Cmd] from [Cmds] if the [Cmd.Name] or any
-// alias in [Cmd.Alias] for that command matches the name passed. If
-// more than one argument is passed calls itself recursively on each
-// item in the list.
+// Can returns the first pointer to a command from the [Cmd].Cmds list
+// that has a matching Name or Alias. If more than one argument is passed
+// calls itself recursively on each item in the list.
 func (x *Cmd) Can(names ...string) *Cmd {
 	var name string
 	switch len(names) {
@@ -510,14 +448,14 @@ func (x *Cmd) can(name string) *Cmd {
 			return c
 		}
 	}
-	aliases := x.CmdAliasMap() // to trigger cache if needed
+	aliases := x.cmdAliasMap() // to trigger cache if needed
 	if c, has := aliases[name]; has {
 		return c
 	}
 	return nil
 }
 
-// CmdNames returns the names of every [Cmd] from [Cmds]
+// CmdNames returns the names of all [Cmd].Cmds.
 func (x *Cmd) CmdNames() []string {
 	list := []string{}
 	for _, c := range x.Cmds {
@@ -529,23 +467,12 @@ func (x *Cmd) CmdNames() []string {
 	return list
 }
 
-// Opt returns the [Opts] entry matching name if found, empty string if not.
-func (x *Cmd) Opt(p string) string {
-	if x.opts == nil {
-		x.cacheOpts()
-	}
-	for _, c := range x.opts {
-		if p == c {
-			return c
-		}
-	}
-	return ""
-}
-
-// Seek checks the args for command names returning the deepest along
+// Seek checks the args passed for command names returning the deepest along
 // with the remaining arguments. Typically the args passed are directly
-// from the command line. Seek also sets the [Caller] on each [Cmd] found
-// during resolution.
+// derived from the command line. Seek also sets the [Cmd.Caller] for each
+// command found as it descends. Seek is indirectly called by [Cmd.Run]
+// and [Cmd.Exec]. See [pkg/github.com/rwxrob/bonzai/cmds/help] for
+// a practical example of how and why a command might need to call Seek.
 func (x *Cmd) Seek(args []string) (*Cmd, []string) {
 	if (len(args) == 1 && args[0] == "") || x.Cmds == nil {
 		return x, args
@@ -553,45 +480,27 @@ func (x *Cmd) Seek(args []string) (*Cmd, []string) {
 	cur := x
 	n := 0
 	for ; n < len(args); n++ {
-		next := cur.Resolve(args[n])
+		next := cur.resolve(args[n])
 		if next == nil {
 			break
 		}
-		next.Caller = cur
+		next.caller = cur
 		cur = next
 	}
 	return cur, args[n:]
 }
 
-// PathCmds returns the path of commands used to arrive at this
+// pathCmds returns the path of commands used to arrive at this
 // command. The path is determined by walking backward from current
-// Caller up rather than depending on anything from the command line
+// caller up rather than depending on anything from the command line
 // used to invoke the composing binary. Also see [PathNames].
-func (x *Cmd) PathCmds() []*Cmd {
+func (x *Cmd) pathCmds() []*Cmd {
 	path := []*Cmd{x}
-	for p := x.Caller; p != nil; p = p.Caller {
+	for p := x.caller; p != nil; p = p.caller {
 		path = append(path, p)
 	}
 	slices.Reverse(path)
 	return path[1:]
-}
-
-// PathNames returns the path of command names used to arrive at this
-// command. The path is determined by walking backward from current
-// Caller up rather than depending on anything from the command line
-// used to invoke the composing binary. Also see Path.
-func (x *Cmd) PathNames() []string {
-	names := []string{x.Name}
-	p := x.Caller
-	for p != nil {
-		names = append(names, p.Name)
-		if p == p.Caller {
-			break
-		}
-		p = p.Caller
-	}
-	slices.Reverse(names)
-	return names[1:]
 }
 
 // MarkString reads input from the [Cmd.Mark] [io.Reader] function
@@ -604,18 +513,18 @@ func (x *Cmd) MarkString() string {
 	return buf.String()
 }
 
-// Mark outputs a Markdown view of the [Cmd] filling the [Cmd.Long] by
+// Mark outputs a Markdown view of the [Cmd] filling the [Cmd].Long by
 // rendering it as a [pkg/text/template] using itself as the object and
-// Funcs field passed to the [pkg/text/template.Funcs] method. The
-// output of Mark is then the expected format for any implementation of
-// [pkg/github.com/rwxrob/bonzai/mark.Renderer] but can also simply be
-// piped directly to tools like [Glamour Glow].
+// [Cmd].Funcs field passed to the [pkg/text/template.Funcs] method. This
+// Markdown can be passed to any
+// [pkg/github.com/rwxrob/bonzai/mark.Renderer] but can also be piped
+// directly to tools that support Markdown like [Pandoc].
 //
-// [Glamour Glow]: https://github.com/charmbracelet/glamour
+// [Pandoc]: https://pandoc.org/
 func (x *Cmd) Mark() io.Reader {
 	out := new(strings.Builder)
 	out.WriteString("# Usage\n\n")
-	out.WriteString("{{.CmdTree}}\n")
+	out.WriteString("{{.CmdTreeString}}\n")
 	if len(x.Long) > 0 {
 		out.WriteString(dedent(x.Long))
 	}
@@ -693,11 +602,11 @@ func (x Cmd) cmdTree(depth int) string {
 	return out.String()
 }
 
-// CmdTree generates and returns a formatted string representation of
-// the command tree for the [Cmd] instance. It aligns dashes in the
-// output for better readability, adjusting spaces based on the position
-// of the dashes.
-func (x *Cmd) CmdTree() string {
+// CmdTreeString generates and returns a formatted string representation
+// of the command tree for the [Cmd] instance and all its [Cmd].Cmds
+// subcommands. It aligns [Cmd].Short summaries in the output for better
+// readability, adjusting spaces based on the position of the dashes.
+func (x *Cmd) CmdTreeString() string {
 	lines := strings.Split(x.cmdTree(2), "\n")
 	dashindex := make([]int, len(lines))
 	var dashcol int
@@ -722,8 +631,8 @@ func (x *Cmd) CmdTree() string {
 	return strings.Join(lines, "\n")
 }
 
-// -------------------------- ErrInvalidName --------------------------
-
+// ErrInvalidName indicates that the provided name for the command is invalid.
+// It includes the invalid [Name] that caused the error.
 type ErrInvalidName struct {
 	Name string
 }
@@ -732,8 +641,8 @@ func (e ErrInvalidName) Error() string {
 	return fmt.Sprintf(`invalid name: %v`, e.Name)
 }
 
-// -------------------------- ErrIncorrectUsage --------------------------
-
+// ErrIncorrectUsage signifies that the command was used incorrectly,
+// providing a reference to the [Cmd] that encountered the issue.
 type ErrIncorrectUsage struct {
 	Cmd *Cmd
 }
@@ -742,28 +651,28 @@ func (e ErrIncorrectUsage) Error() string {
 	return fmt.Sprintf(`incorrect usage for "%v" command`, e.Cmd.Name)
 }
 
-// ---------------------------- ErrUncallable ----------------------------
-
+// ErrUncallable indicates that a command requires a Do or Def function
+// for execution, providing a reference to the [Cmd] in question.
 type ErrUncallable struct {
 	Cmd *Cmd
 }
 
 func (e ErrUncallable) Error() string {
-	return fmt.Sprintf(`Cmd requires Call or Def: %v`, e.Cmd.Name)
+	return fmt.Sprintf(`Cmd requires Do or Def: %v`, e.Cmd.Name)
 }
 
-// ----------------------------- ErrCallOrDef ----------------------------
-
-type ErrCallOrDef struct {
+// ErrDoOrDef suggests that a command cannot have both Do and Def
+// functions, providing details on the conflicting [Cmd].
+type ErrDoOrDef struct {
 	Cmd *Cmd
 }
 
-func (e ErrCallOrDef) Error() string {
-	return fmt.Sprintf(`Call or Def (not both): %v`, e.Cmd.Name)
+func (e ErrDoOrDef) Error() string {
+	return fmt.Sprintf(`Do or Def (not both): %v`, e.Cmd.Name)
 }
 
-// --------------------------- ErrNotEnoughArgs --------------------------
-
+// ErrNotEnoughArgs indicates that insufficient arguments were provided,
+// describing the current [Count] and the minimum [Min] required.
 type ErrNotEnoughArgs struct {
 	Count int
 	Min   int
@@ -774,8 +683,8 @@ func (e ErrNotEnoughArgs) Error() string {
 		e.Count, e.Min)
 }
 
-// ---------------------------- ErrTooManyArgs ---------------------------
-
+// ErrTooManyArgs signifies that too many arguments were provided,
+// including the current [Count] and the maximum [Max] allowed.
 type ErrTooManyArgs struct {
 	Count int
 	Max   int
@@ -786,8 +695,8 @@ func (e ErrTooManyArgs) Error() string {
 		e.Count, e.Max)
 }
 
-// --------------------------- ErrWrongNumArgs ---------------------------
-
+// ErrWrongNumArgs indicates that the number of arguments does not match
+// the expected count, showing the current [Count] and the required [Num].
 type ErrWrongNumArgs struct {
 	Count int
 	Num   int
@@ -799,8 +708,8 @@ func (e ErrWrongNumArgs) Error() string {
 		e.Count, e.Num)
 }
 
-// -------------------------- ErrInvalidShort -------------------------
-
+// ErrInvalidShort indicates that the short description length exceeds 50
+// characters, providing a reference to the [Cmd] and its [Short] description.
 type ErrInvalidShort struct {
 	Cmd *Cmd
 }

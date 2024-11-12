@@ -7,32 +7,32 @@ import (
 	"github.com/rwxrob/bonzai"
 )
 
-func ExampleCmd_AliasSlice() {
+func ExampleCmd_Names() {
 	barCmd := &bonzai.Cmd{
 		Name:  `bar`,
 		Alias: `b|rab`,
-		Call: func(_ *bonzai.Cmd, _ ...string) error {
+		Do: func(_ *bonzai.Cmd, _ ...string) error {
 			fmt.Println(`i am bar`)
 			return nil
 		},
 	}
-	fmt.Printf("%q", barCmd.AliasSlice())
+	fmt.Printf("%q", barCmd.Names())
 
 	fooCmd := &bonzai.Cmd{
 		Name: `foo`,
 		Cmds: []*bonzai.Cmd{barCmd},
 	}
 
-	fmt.Printf("%q", fooCmd.AliasSlice())
+	fmt.Printf("%q", fooCmd.Names())
 
 	// Output:
-	// ["b" "rab"][]
+	// ["b" "rab" "bar"]["foo"]
 }
 
 func ExampleCmd_Can() {
 	barCmd := &bonzai.Cmd{
 		Name: `bar`,
-		Call: func(_ *bonzai.Cmd, _ ...string) error {
+		Do: func(_ *bonzai.Cmd, _ ...string) error {
 			fmt.Println(`i am bar`)
 			return nil
 		},
@@ -52,7 +52,7 @@ func ExampleCmd_Can() {
 func ExampleCmd_WithName() {
 	barCmd := &bonzai.Cmd{
 		Name: `bar`,
-		Call: func(_ *bonzai.Cmd, _ ...string) error {
+		Do: func(_ *bonzai.Cmd, _ ...string) error {
 			fmt.Println(`i am bar`)
 			return nil
 		},
@@ -60,9 +60,9 @@ func ExampleCmd_WithName() {
 
 	fooCmd := barCmd.WithName(`foo`)
 	fmt.Println(barCmd.Name)
-	barCmd.Call(barCmd)
+	barCmd.Do(barCmd)
 	fmt.Println(fooCmd.Name)
-	fooCmd.Call(fooCmd)
+	fooCmd.Do(fooCmd)
 
 	// Output:
 	// bar
@@ -71,7 +71,7 @@ func ExampleCmd_WithName() {
 	// i am bar
 }
 
-func ExampleCmd_Tree() {
+func ExampleCmd_CmdTreeString() {
 
 	var subFooCmd = &bonzai.Cmd{
 		Name:  `subfoo`,
@@ -100,7 +100,7 @@ func ExampleCmd_Tree() {
 	}
 
 	fmt.Print("# Synopsis\n\n")
-	fmt.Println(Cmd.CmdTree())
+	fmt.Println(Cmd.CmdTreeString())
 
 	// Output:
 	// # Synopsis
