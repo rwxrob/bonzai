@@ -8,17 +8,17 @@ import (
 )
 
 func ExampleCmd_Aliases() {
-	barCmd := &bonzai.Cmd{
+	var barCmd = &bonzai.Cmd{
 		Name:  `bar`,
 		Alias: `b|rab`,
-		Do: func(_ *bonzai.Cmd, _ ...string) error {
+		Do: func(*bonzai.Cmd, ...string) error {
 			fmt.Println(`i am bar`)
 			return nil
 		},
 	}
 	fmt.Printf("%q", barCmd.Aliases())
 
-	fooCmd := &bonzai.Cmd{
+	var fooCmd = &bonzai.Cmd{
 		Name: `foo`,
 		Cmds: []*bonzai.Cmd{barCmd},
 	}
@@ -30,15 +30,15 @@ func ExampleCmd_Aliases() {
 }
 
 func ExampleCmd_Can() {
-	barCmd := &bonzai.Cmd{
+	var barCmd = &bonzai.Cmd{
 		Name: `bar`,
-		Do: func(_ *bonzai.Cmd, _ ...string) error {
+		Do: func(*bonzai.Cmd, ...string) error {
 			fmt.Println(`i am bar`)
 			return nil
 		},
 	}
 
-	fooCmd := &bonzai.Cmd{
+	var fooCmd = &bonzai.Cmd{
 		Name: `foo`,
 		Cmds: []*bonzai.Cmd{barCmd},
 	}
@@ -50,9 +50,9 @@ func ExampleCmd_Can() {
 }
 
 func ExampleCmd_WithName() {
-	barCmd := &bonzai.Cmd{
+	var barCmd = &bonzai.Cmd{
 		Name: `bar`,
-		Do: func(_ *bonzai.Cmd, _ ...string) error {
+		Do: func(*bonzai.Cmd, ...string) error {
 			fmt.Println(`i am bar`)
 			return nil
 		},
@@ -72,7 +72,6 @@ func ExampleCmd_WithName() {
 }
 
 func ExampleCmd_CmdTreeString() {
-
 	var subFooCmd = &bonzai.Cmd{
 		Name:  `subfoo`,
 		Alias: `sf`,
@@ -109,11 +108,9 @@ func ExampleCmd_CmdTreeString() {
 	//       foo      ← foo this command
 	//         subfoo ← under the foo command
 	//       bar      ← bar this command
-
 }
 
 func ExampleCmd_Mark_noInteractiveTerminal() {
-
 	var subFooCmd = &bonzai.Cmd{
 		Name:  `subfoo`,
 		Alias: `sf`,
@@ -156,11 +153,9 @@ func ExampleCmd_Mark_noInteractiveTerminal() {
 	//
 	// Here is a long description.
 	// On multiple lines.
-
 }
 
-func ExampleCmd_Hides() {
-
+func ExampleCmd_AsHidden() {
 	var subFooHiddenCmd = &bonzai.Cmd{
 		Name:  `iamhidden`,
 		Short: `i am hidden`,
@@ -177,7 +172,7 @@ func ExampleCmd_Hides() {
 		Alias: `f`,
 		Short: `foo this command`,
 		Cmds:  []*bonzai.Cmd{subFooCmd, subFooHiddenCmd.AsHidden()},
-		//Cmds:  []*bonzai.Cmd{subFooCmd, subFooHiddenCmd},
+		// Cmds:  []*bonzai.Cmd{subFooCmd, subFooHiddenCmd},
 	}
 
 	var barCmd = &bonzai.Cmd{
@@ -209,12 +204,47 @@ func ExampleCmd_Hides() {
 	//
 	// Here is a long description.
 	// On multiple lines.
+}
 
+func ExampleCmd_Run() {
+	var fooCmd = &bonzai.Cmd{
+		Name: `foo`,
+		Do: func(*bonzai.Cmd, ...string) error {
+			fmt.Println(`I am foo`)
+			return nil
+		},
+	}
+
+	var barCmd = &bonzai.Cmd{
+		Name: `bar`,
+		Cmds: []*bonzai.Cmd{fooCmd},
+		Do: func(*bonzai.Cmd, ...string) error {
+			fmt.Println(`I am bar`)
+			return nil
+		},
+	}
+
+	var bazCmd = &bonzai.Cmd{
+		Name: `baz`,
+		Cmds: []*bonzai.Cmd{barCmd},
+		Do: func(*bonzai.Cmd, ...string) error {
+			fmt.Println(`I am baz`)
+			return nil
+		},
+	}
+
+	fooCmd.Run()
+	bazCmd.Run("bar")
+	bazCmd.Run("bar", "foo")
+
+	// Output:
+	// I am foo
+	// I am bar
+	// I am foo
 }
 
 func ExampleErrInvalidVers() {
-
-	foo := &bonzai.Cmd{
+	var foo = &bonzai.Cmd{
 		Name: `foo`,
 		Vers: `this is a long version that is longer than 50 runes`,
 	}
@@ -227,8 +257,7 @@ func ExampleErrInvalidVers() {
 }
 
 func ExampleErrInvalidShort() {
-
-	foo := &bonzai.Cmd{
+	var foo = &bonzai.Cmd{
 		Name:  `foo`,
 		Short: `this is a long short desc that is longer than 50 runes`,
 	}
