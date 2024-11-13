@@ -211,3 +211,31 @@ func ExampleCmd_Hides() {
 	// On multiple lines.
 
 }
+
+func ExampleErrInvalidVers() {
+
+	foo := &bonzai.Cmd{
+		Name: `foo`,
+		Vers: `this is a long version that is longer than 50 runes`,
+	}
+
+	err := foo.Run()
+	fmt.Println(err)
+
+	// Output:
+	// Cmd.Vers length >50 for "foo": "this is a long version that is longer than 50 runes"
+}
+
+func ExampleErrInvalidShort() {
+
+	foo := &bonzai.Cmd{
+		Name:  `foo`,
+		Short: `this is a long short desc that is longer than 50 runes`,
+	}
+
+	err := foo.Run()
+	fmt.Println(err)
+
+	// Output:
+	// Cmd.Short length >50 for "foo": "this is a long short desc that is longer than 50 runes"
+}

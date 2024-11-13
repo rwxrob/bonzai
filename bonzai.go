@@ -286,6 +286,9 @@ func (x *Cmd) Run(args ...string) error {
 	case len(x.Short) > 50:
 		return ErrInvalidShort{x}
 
+	case len(x.Vers) > 50:
+		return ErrInvalidVers{x}
+
 	case IsValidName != nil && !IsValidName(x.Name):
 		return ErrInvalidName{x.Name}
 
@@ -727,5 +730,15 @@ type ErrInvalidShort struct {
 }
 
 func (e ErrInvalidShort) Error() string {
-	return fmt.Sprintf(`short length >50 %v: %v`, e.Cmd, e.Cmd.Short)
+	return fmt.Sprintf(`Cmd.Short length >50 for %q: %q`, e.Cmd, e.Cmd.Short)
+}
+
+// ErrInvalidVers indicates that the short description length exceeds 50
+// characters, providing a reference to the [Cmd] and its [Vers] description.
+type ErrInvalidVers struct {
+	Cmd *Cmd
+}
+
+func (e ErrInvalidVers) Error() string {
+	return fmt.Sprintf(`Cmd.Vers length >50 for %q: %q`, e.Cmd, e.Cmd.Vers)
 }
