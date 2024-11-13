@@ -532,10 +532,13 @@ func (x *Cmd) MarkString() string {
 // [Pandoc]: https://pandoc.org/
 func (x *Cmd) Mark() io.Reader {
 	out := new(strings.Builder)
-	out.WriteString("# Usage\n\n")
-	out.WriteString("{{.CmdTreeString}}\n")
+	out.WriteString("# Usagen\n")
+	out.WriteString("{{.CmdTreeString}}")
 	if len(x.Long) > 0 {
-		out.WriteString(dedent(x.Long))
+		out.WriteString("\n" + dedent(x.Long))
+		if x.Long[len(x.Long)-1] != '\n' {
+			out.WriteString("\n")
+		}
 	}
 	str := x.render(out.String())
 	return strings.NewReader(str)
