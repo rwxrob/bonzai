@@ -13,27 +13,22 @@ Card](https://goreportcard.com/badge/github.com/rwxrob/bonzai)](https://goreport
 
 ![logo](assets/logo.png)
 
-Bonzai was born from a very real need to replace messy collections of shell scripts, wasteful completion sourcing, and OS-specific documentation with a single, stateful, binary composed of commands organized as rooted node trees with a clean, modular, portable, statically-compiled, and dynamically self-documenting design.
-
-There's no better language than Go for such things.
+Bonzai™ was born from a very real need to replace messy collections of shell scripts, wasteful completion sourcing, and OS-specific documentation with a single, stateful, multicall binary composed of commands organized as rooted node trees with a clean, modular, portable, statically-compiled, and dynamically self-documenting design. There's simply nothing else like it in Go or any other language, and there's no better language than Go for such things. Crafting homekit/rootkit binaries with embedded resources that don't bloat RAM consumption is a breeze. No other language can do it.
 
 Bonzai gets its name from the fact that Bonzai users are fond of meticulously manicuring their own stateful command trees, built from imported composite commands that they can easily copy and run on on any device, anywhere.
 
-Bonzai users can easily share their own commands with others just like they would any other Go module and since any Bonzai command also doubles as a high-level library package, even non-Bonzai users benefit.
+Bonzai users can easily share their own commands with others just like they would any other Go module and since most Bonzai commands also double as a high-level library package, even non-Bonzai users benefit. In fact, this monorepo is full of other Go modules containing cookbook recipe code for many of the things an avid techy with Go skills would want, the missing "batteries" that make Go really light up a well-crafted multicall command tree.
 
-Most realize Bonzai really distinguishes itself from anything else out there the first time they turn any command branch into a fully-documented, tab-completing, stand-alone binary simply by wrapping it in five lines of code. Such is the beauty of stateful command tree design. There's simply nothing else like it, in Go or any other language.
+# Getting started
 
-## Getting Started
+Take a look at the following commands to get an idea of what can be done:
 
-Copy or clone the example template:
+- [`kimono` - Go monorepo utility](./cmds/kimono)
+- [`help` - importable help command](./cmds/help)
+- [`var` - persistent variable tool](./vars/cmd/var)
+- [`sunrise` - fun terminal performance tester](./cmds/sunrise)
 
-* https://github.com/rwxrob/bonzai-example
-
-Get ideas for your own by looking at others
-
-* https://github.com/rwxrob/z
-* https://github.com/rwxrob/pomo
-* https://github.com/BuddhiLW/lazywal
+We have worked hard keep things as simple as possible so they are intuitive and to document this package as succinctly as possible so it is very usable from any decent tool that allows looking up documentation while writing the code.
 
 ## Legal
 
