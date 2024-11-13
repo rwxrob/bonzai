@@ -25,7 +25,7 @@ var Cmd = &bonzai.Cmd{
 	Name:  `kimono`,
 	Alias: `kmono|km`,
 	Short: `manage golang monorepos`,
-	Vers:  `v0.2.0`,
+	Vers:  `v0.2.1`,
 	Comp:  comp.Cmds,
 	Cmds: []*bonzai.Cmd{
 		sanitizeCmd,
