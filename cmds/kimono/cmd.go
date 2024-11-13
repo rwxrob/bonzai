@@ -6,6 +6,7 @@ import (
 	"path/filepath"
 
 	"github.com/rwxrob/bonzai"
+	"github.com/rwxrob/bonzai/cmds/help"
 	"github.com/rwxrob/bonzai/comp"
 	"github.com/rwxrob/bonzai/fn/each"
 	"github.com/rwxrob/bonzai/futil"
@@ -23,8 +24,8 @@ const (
 var Cmd = &bonzai.Cmd{
 	Name:  `kimono`,
 	Alias: `kmono|km`,
-	Short: `A tool for managing golang monorepos`,
-	Vers:  `0.0.1`,
+	Short: `manage golang monorepos`,
+	Vers:  `v0.2.0`,
 	Comp:  comp.Cmds,
 	Cmds: []*bonzai.Cmd{
 		sanitizeCmd,
@@ -32,7 +33,9 @@ var Cmd = &bonzai.Cmd{
 		tagCmd,
 		depsCmd,
 		vars.Cmd,
+		help.Cmd,
 	},
+	Def: help.Cmd,
 }
 
 var sanitizeCmd = &bonzai.Cmd{
@@ -108,8 +111,9 @@ var tagCmd = &bonzai.Cmd{
 	Alias: `t`,
 	Short: `manage or list tags for the go module`,
 	Comp:  comp.Cmds,
-	Cmds:  []*bonzai.Cmd{tagBumpCmd, tagListCmd, tagDeleteCmd},
-	Def:   tagListCmd,
+	Cmds: []*bonzai.Cmd{
+		tagBumpCmd, tagListCmd, tagDeleteCmd, help.Cmd.AsHidden()},
+	Def: tagListCmd,
 }
 
 var tagBumpCmd = &bonzai.Cmd{
@@ -117,7 +121,7 @@ var tagBumpCmd = &bonzai.Cmd{
 	Alias:   `b|up|i|inc`,
 	Short:   `bumps semver tags. based on given version part.`,
 	Comp:    comp.CmdsOpts,
-	Cmds:    []*bonzai.Cmd{vars.Cmd},
+	Cmds:    []*bonzai.Cmd{vars.Cmd.AsHidden()},
 	Opts:    `major|minor|patch|M|m|p`,
 	MaxArgs: 1,
 	Do: func(x *bonzai.Cmd, args ...string) error {
