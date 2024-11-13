@@ -1,4 +1,4 @@
-# 🌳 Go Bonzai™ Command Compositor
+# 🌳 Go Bonzai™ CLI Framework and Library
 
 [![GoDoc](https://godoc.org/github.com/rwxrob/bonzai?status.svg)](https://godoc.org/github.com/rwxrob/bonzai)
 [![License](https://img.shields.io/badge/license-Apache2-brightgreen.svg)](LICENSE)
