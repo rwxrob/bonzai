@@ -137,7 +137,7 @@ func SysExec(args ...string) error {
 		return err
 	}
 	// exits the program unless there is an error
-	return syscall.Exec(path, args[1:], os.Environ())
+	return syscall.Exec(path, args, os.Environ())
 }
 
 // Exec checks for existence of first argument as an executable on the
