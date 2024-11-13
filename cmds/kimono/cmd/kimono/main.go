@@ -5,5 +5,5 @@ import (
 )
 
 func main() {
-	kimono.Cmd.Run()
+	kimono.Cmd.Exec()
 }

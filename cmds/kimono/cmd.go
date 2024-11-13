@@ -41,7 +41,7 @@ var sanitizeCmd = &bonzai.Cmd{
 	Short:   "run `go get -u` and `go mod tidy` on all go modules in repo",
 	Comp:    comp.Cmds,
 	MaxArgs: 1,
-	Call: func(x *bonzai.Cmd, args ...string) error {
+	Do: func(x *bonzai.Cmd, args ...string) error {
 		if argIsOr(
 			args,
 			`all`,
@@ -75,7 +75,7 @@ var workCmd = &bonzai.Cmd{
 	MaxArgs:   1,
 	MatchArgs: `on|off`,
 	Cmds:      []*bonzai.Cmd{workInitCmd},
-	Call: func(x *bonzai.Cmd, args ...string) error {
+	Do: func(x *bonzai.Cmd, args ...string) error {
 		switch args[0] {
 		case `on`:
 			return WorkOn()
@@ -95,7 +95,7 @@ var workInitCmd = &bonzai.Cmd{
 	Alias:   `i`,
 	Short:   `new go.work in module for dependencies in monorepo`,
 	MinArgs: 1,
-	Call: func(x *bonzai.Cmd, args ...string) error {
+	Do: func(x *bonzai.Cmd, args ...string) error {
 		if args[0] == `all` {
 			return WorkGenerate()
 		}
@@ -120,7 +120,7 @@ var tagBumpCmd = &bonzai.Cmd{
 	Cmds:    []*bonzai.Cmd{vars.Cmd},
 	Opts:    `major|minor|patch|M|m|p`,
 	MaxArgs: 1,
-	Call: func(x *bonzai.Cmd, args ...string) error {
+	Do: func(x *bonzai.Cmd, args ...string) error {
 		mustPush := vars.Fetch(TagPushEnv, `push-tags`, false)
 		if len(args) == 0 {
 			part := optsToVerPart(
@@ -144,7 +144,7 @@ var tagDeleteCmd = &bonzai.Cmd{
 	Comp:    comp.Cmds,
 	MinArgs: 1,
 	MaxArgs: 1,
-	Call: func(x *bonzai.Cmd, args ...string) error {
+	Do: func(x *bonzai.Cmd, args ...string) error {
 		return TagDelete(
 			args[0],
 			vars.Fetch(
@@ -161,7 +161,7 @@ var tagListCmd = &bonzai.Cmd{
 	Alias: `l`,
 	Short: `list the tags for the go module`,
 	Comp:  comp.Cmds,
-	Call: func(x *bonzai.Cmd, args ...string) error {
+	Do: func(x *bonzai.Cmd, args ...string) error {
 		shorten := vars.Fetch(
 			TagShortenEnv,
 			`shorten-tags`,
@@ -185,7 +185,7 @@ var dependsOnCmd = &bonzai.Cmd{
 	Alias: `on|uses`,
 	Short: `list the dependencies for the go module`,
 	Comp:  comp.Cmds,
-	Call: func(x *bonzai.Cmd, args ...string) error {
+	Do: func(x *bonzai.Cmd, args ...string) error {
 		deps, err := ListDependencies()
 		if err != nil {
 			return err
@@ -200,7 +200,7 @@ var usedByCmd = &bonzai.Cmd{
 	Alias: `onme|usedby|me`,
 	Short: `list the dependents of the go module`,
 	Comp:  comp.Cmds,
-	Call: func(x *bonzai.Cmd, args ...string) error {
+	Do: func(x *bonzai.Cmd, args ...string) error {
 		deps, err := ListDependents()
 		if err != nil {
 			return err
