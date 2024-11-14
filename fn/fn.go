@@ -10,6 +10,18 @@ import (
 	"github.com/rwxrob/bonzai/fn/each"
 )
 
+type Transformer[I any, O any] interface {
+	Transform(in []I) []O
+}
+
+type Filterer[T any] interface {
+	Filter(in []T) []T
+}
+
+type Reducer[T any] interface {
+	Reduce(in []T) []T
+}
+
 // Number combines the primitives generally considered numbers by JSON
 // and other high-level structure data representations.
 type Number interface {

@@ -1,34 +1,21 @@
 package tr
 
-type Interface[I any, O any] interface {
-	Transform(in I) O
-}
+import "github.com/rwxrob/bonzai/fn"
 
-type String Interface[string, string]
-type Strings Interface[[]string, []string]
-type Int Interface[int, int]
-type Ints Interface[[]int, []int]
-type Any Interface[any, any]
-type Anys Interface[[]any, []any]
+type Strings fn.Transformer[string, string]
+type Ints fn.Transformer[int, int]
+type Anys fn.Transformer[any, any]
 
 // ------------------------------ Prefix ------------------------------
 
 type Prefix struct {
-	V string
+	With string
 }
 
-func (p Prefix) Transform(a string) string { return p.V + a }
-
-// ----------------------------- PrefixAll ----------------------------
-
-type PrefixAll struct {
-	V string
-}
-
-func (p PrefixAll) Transform(a []string) []string {
-	out := make([]string, len(a))
-	for n, it := range a {
-		out[n] = p.V + it
+func (p Prefix) Transform(in []string) []string {
+	out := make([]string, len(in))
+	for i, v := range in {
+		out[i] = p.With + v
 	}
 	return out
 }
