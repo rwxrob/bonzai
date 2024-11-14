@@ -1,6 +1,13 @@
 package redu
 
-import "github.com/rwxrob/bonzai/to"
+import (
+	"github.com/rwxrob/bonzai/fn"
+	"github.com/rwxrob/bonzai/to"
+)
+
+type Strings fn.Reducer[string]
+type Ints fn.Reducer[int]
+type Anys fn.Reducer[any]
 
 // Longest will convert everything [to.String] and return the length of
 // the longest string in the set.
