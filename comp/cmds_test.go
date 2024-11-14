@@ -22,20 +22,20 @@ func ExampleCmds_Complete() {
 	foo.Comp.(bonzai.CmdCompleter).SetCmd(foo)
 
 	// if no args, we have to assume the command isn't finished yet
-	fmt.Println(comp.Cmds.Complete())
+	fmt.Println(foo.Comp.Complete())
 
 	// we know it's not a command, but no prefix just yet
 	// (usually this is when a space has been added after the command)
-	fmt.Println(comp.Cmds.Complete(""))
+	fmt.Println(foo.Comp.Complete(""))
 
 	// everything that begins with a (nothing)
-	fmt.Println(comp.Cmds.Complete(`a`))
+	fmt.Println(foo.Comp.Complete(`a`))
 
 	// everything that begins with b (which is everything)
-	fmt.Println(comp.Cmds.Complete(`b`))
+	fmt.Println(foo.Comp.Complete(`b`))
 
 	// everything that begins with bl (just blah)
-	fmt.Println(comp.Cmds.Complete(`bl`))
+	fmt.Println(foo.Comp.Complete(`bl`))
 
 	// Output:
 	// []

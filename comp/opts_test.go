@@ -22,10 +22,10 @@ func ExampleOpts_Complete() {
 	foo.Comp.(bonzai.CmdCompleter).SetCmd(foo)
 
 	// everything that begins with b (which is everything)
-	fmt.Println(comp.Opts.Complete(`b`))
+	fmt.Println(foo.Comp.Complete(`b`))
 
 	// everything that begins with bl (just blah)
-	fmt.Println(comp.Opts.Complete(`bl`))
+	fmt.Println(foo.Comp.Complete(`bl`))
 
 	// Output:
 	// [box]
