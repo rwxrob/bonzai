@@ -10,9 +10,9 @@ import (
 	"github.com/rwxrob/bonzai/fn"
 )
 
-type Strings fn.Filterer[string, string]
-type Ints fn.Filterer[int, int]
-type Anys fn.Filterer[any, any]
+type Strings fn.Filterer[string]
+type Ints fn.Filterer[int]
+type Anys fn.Filterer[any]
 
 type Text interface {
 	string | []byte
