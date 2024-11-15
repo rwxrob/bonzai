@@ -59,7 +59,8 @@ type Cmd struct {
 	// Self-completion support: complete -C foo foo
 	Comp Completer
 
-	caller   *Cmd            // delegation
+	caller   *Cmd            // see [SetCallers], delegation
+	level    int             // see [SetCallers]
 	aliases  []string        // see [cacheAlias]
 	opts     []string        // see [cacheOpts]
 	hidden   bool            // see [AsHidden] and [IsHidden]
@@ -443,7 +444,7 @@ func (x Cmd) String() string { return x.Name }
 // returning self if already root. The value returned will always return true
 // of its [Cmd.IsRoot] is called.
 func (x *Cmd) Root() *Cmd {
-	cmds := x.CmdPath()
+	cmds := x.Path()
 	if len(cmds) > 0 {
 		return cmds[0].caller
 	}
@@ -517,13 +518,15 @@ func (x *Cmd) CmdNames() []string {
 	return list
 }
 
-// Seek checks the args passed for command names returning the deepest along
-// with the remaining arguments. Typically the args passed are directly
-// derived from the command line. Seek also sets the [Cmd.Caller] for each
-// command found as it descends. Seek is indirectly called by [Cmd.Run]
-// and [Cmd.Exec]. See [pkg/github.com/rwxrob/bonzai/cmds/help] for
+// Seek checks the args passed for command names returning the deepest
+// along with the remaining arguments. Typically the args passed are
+// directly derived from the command line. Seek also calls
+// [Cmd.SetCallers] so that the [Cmd.Caller] and [Cmd.Level] are set for
+// all commands in the tree. Seek is indirectly called by [Cmd.Run] and
+// [Cmd.Exec]. See [pkg/github.com/rwxrob/bonzai/cmds/help] for
 // a practical example of how and why a command might need to call Seek.
 func (x *Cmd) Seek(args []string) (*Cmd, []string) {
+	x.SetCallers()
 	if (len(args) == 1 && args[0] == "") || x.Cmds == nil {
 		return x, args
 	}
@@ -534,23 +537,97 @@ func (x *Cmd) Seek(args []string) (*Cmd, []string) {
 		if next == nil {
 			break
 		}
-		next.caller = cur
 		cur = next
 	}
 	return cur, args[n:]
 }
 
-// CmdPath returns the path of commands used to arrive at this command.
+// Path returns the path of commands used to arrive at this command.
 // The path is determined by walking backward from current caller up
 // rather than depending on anything from the command line
 // used to invoke the composing binary.
-func (x *Cmd) CmdPath() []*Cmd {
+func (x *Cmd) Path() []*Cmd {
 	path := []*Cmd{x}
 	for p := x.caller; p != nil; p = p.caller {
 		path = append(path, p)
 	}
 	slices.Reverse(path)
 	return path[1:]
+}
+
+// SetCallers assigns the parent command ([Cmd.Caller]) to each subcommand
+// in the command tree starting from the current command on down. It also
+// updates the [Cmd.Level] of each subcommand relative to its parent.
+// This is performed by walking the command tree deeply using
+// the [Cmd.WalkDeep] method. This method is rarely needed in common
+// practice since [Cmd.Exec], [Cmd.Run], and [Cmd.Seek] do the same.
+// Usually, this is found in test code.
+func (root *Cmd) SetCallers() {
+	setcaller := func(x *Cmd) error {
+		for _, cmd := range x.Cmds {
+			cmd.caller = x
+			cmd.level = x.level + 1
+		}
+		if x.Def != nil {
+			x.Def.caller = x
+			x.Def.level = x.level + 1
+		}
+		return nil
+	}
+	root.WalkDeep(setcaller, nil)
+}
+
+// Level returns the level at which this command appears in the command
+// tree and is set when SetCallers is called.
+func (x *Cmd) Level() int { return x.level }
+
+// WalkDeep recursively traverses the command tree starting from itself,
+// applying the function (fn) to each [Cmd]. If an error occurs while
+// executing fn, the onError function is called with the error. It also
+// checks if the default command Def is in the subcommands and invokes
+// WalkDeep on it if so. Enclosed context.Context and error queue
+// implementations can be added by developers when they are needed.
+func (x *Cmd) WalkDeep(fn func(*Cmd) error, onError func(error)) {
+	if x == nil {
+		return
+	}
+	if err := fn(x); err != nil {
+		onError(err)
+	}
+	var defInCmds bool
+	if len(x.Cmds) > 0 {
+		for _, cmd := range x.Cmds {
+			cmd.WalkDeep(fn, onError)
+			if x.Def != nil && x.Def == cmd {
+				defInCmds = true
+			}
+		}
+	}
+	if defInCmds {
+		x.Def.WalkDeep(fn, onError)
+	}
+}
+
+// WalkWide performs a breadth-first traversal (BFS) of the command tree
+// starting from the command itself, applying the function (fn) to each
+// [Cmd]. If an error occurs during the execution of fn, the onError
+// function is called with the error. It uses a queue to process each
+// command and its subcommands iteratively. Enclosed context.Context and
+// error queue implementations can be added by developers when they are
+// needed.
+func (x *Cmd) WalkWide(fn func(*Cmd) error, onError func(error)) {
+	if x == nil {
+		return
+	}
+	queue := []*Cmd{x}
+	for len(queue) > 0 {
+		current := queue[0]
+		queue = queue[1:]
+		if err := fn(current); err != nil {
+			onError(err)
+		}
+		queue = append(queue, current.Cmds...)
+	}
 }
 
 // ErrInvalidName indicates that the provided name for the command is invalid.
