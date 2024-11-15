@@ -2,15 +2,19 @@ package bonzai
 
 import (
 	"fmt"
+	"log"
 	"os"
+	"path/filepath"
 	"slices"
 	"strconv"
 	"strings"
 	"sync"
 	"text/template"
-
-	"github.com/rwxrob/bonzai/run"
 )
+
+// AllowsPanic if set will turn any panic into an exit with an error
+// message.
+var AllowPanic bool
 
 func init() {
 	val, exists := os.LookupEnv(`DEBUG`)
@@ -21,7 +25,7 @@ func init() {
 	isTruthy := slices.Contains([]string{"t", "true", "on"}, val)
 	if num, err := strconv.Atoi(val); (err == nil && num > 0) ||
 		isTruthy {
-		run.AllowPanic = true
+		AllowPanic = true
 	}
 }
 
@@ -260,9 +264,8 @@ func (x *Cmd) aliasSlice() []string {
 //
 // # Trapped panics
 //
-// Exec traps any panics with
-// [pkg/github.com/rwxrob/bonzai/run.TrapPanic] unless the DEBUG
-// environment variable is set (truthy).
+// Exec traps any panics with unless the DEBUG environment variable is
+// set (truthy).
 //
 // # Multicall
 //
@@ -271,16 +274,28 @@ func (x *Cmd) aliasSlice() []string {
 // common design pattern used by other monolith multicalls such as git and
 // busybox).
 func (x *Cmd) Exec(args ...string) {
-	defer run.TrapPanic()
+	defer trapPanic()
 	x.recurseIfMulti(args)
-	x.detectCompletion(args)
+	x.detectCompletion()
 	if len(args) == 0 {
 		args = os.Args[1:]
 	}
 	if err := x.Run(args...); err != nil {
-		run.ExitError(err)
+		log.Println(err)
+		os.Exit(1)
 	}
-	run.Exit()
+	os.Exit(0)
+}
+
+// trapPanic recovers from any panic and more gracefully displays the
+// panic by logging it before exiting with a return value of 1.
+var trapPanic = func() {
+	if !AllowPanic {
+		if r := recover(); r != nil {
+			log.Println(r)
+			os.Exit(1)
+		}
+	}
 }
 
 // Run seeks the leaf command in the arguments passed, validates it, and
@@ -355,7 +370,7 @@ func (x *Cmd) has(c *Cmd) bool {
 
 // called as multicall binary
 func (x *Cmd) recurseIfMulti(args []string) {
-	name := run.ExeName()
+	name := filepath.Base(os.Args[0])
 	if name == x.Name {
 		return
 	}
@@ -378,24 +393,34 @@ func (x *Cmd) recurseIfMulti(args []string) {
 	}
 }
 
+func argsFrom(line string) []string {
+	args := []string{}
+	if line == "" {
+		return args
+	}
+	args = strings.Fields(line)
+	if line[len(line)-1] == ' ' {
+		args = append(args, "")
+	}
+	return args
+}
+
 // complete -C foo foo (man bash, Programmable Completion)
-func (x *Cmd) detectCompletion(_ []string) {
+func (x *Cmd) detectCompletion() {
 	if line := os.Getenv("COMP_LINE"); len(line) > 0 {
 
 		// find the leaf command
-		lineargs := run.ArgsFrom(line)
+		lineargs := argsFrom(line)
 		cmd, args := x.Seek(lineargs[1:])
 
 		if cmd.Comp == nil {
-			run.Exit()
-			return
+			os.Exit(0)
 		}
 
 		// not sure we've completed the command name itself yet
 		if len(args) == 0 {
 			fmt.Println(cmd.Name)
-			run.Exit()
-			return
+			os.Exit(0)
 		}
 
 		if v, is := cmd.Comp.(CmdCompleter); is {
@@ -406,8 +431,7 @@ func (x *Cmd) detectCompletion(_ []string) {
 		for _, completion := range cmd.Comp.Complete(args...) {
 			fmt.Println(completion)
 		}
-		run.Exit()
-		return
+		os.Exit(0)
 	}
 }
 
