@@ -12,6 +12,7 @@ require (
 
 require (
 	github.com/rogpeppe/go-internal v1.13.1 // indirect
+	github.com/rwxrob/bonzai/comp v0.9.5 // indirect
 	github.com/rwxrob/bonzai/ds v0.1.1 // indirect
 	github.com/rwxrob/bonzai/fn v0.8.2 // indirect
 	github.com/rwxrob/bonzai/futil v0.1.0 // indirect
