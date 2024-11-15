@@ -8,6 +8,7 @@ import (
 	"slices"
 	"strconv"
 	"strings"
+	"sync"
 	"text/template"
 	"unicode"
 
@@ -25,6 +26,56 @@ func init() {
 		isTruthy {
 		run.AllowPanic = true
 	}
+}
+
+type Cmd struct {
+	Name  string // ex: delete (required)
+	Alias string // ex: rm|d|del (optional)
+	Opts  string // ex: mon|wed|fri (optional)
+
+	// Shareable variables also used for persistent initial values
+	Vars map[string]Var
+
+	// Own work (optional if Cmds or Def)
+	Do func(x *Cmd, args ...string) error
+
+	// Delegated work
+	Def  *Cmd   // default Cmd (optional)
+	Cmds []*Cmd // composed commands (optional if Do or Cmds or Def)
+
+	// Documentation
+	Vers  string           // text (<50 runes) (optional)
+	Short string           // text (<50 runes) (optional)
+	Long  string           // text/markup (optional)
+	Funcs template.FuncMap // own template tags (optional)
+
+	// Faster than "if" conditions in [Cmd.Do] (all optional)
+	MinArgs   int    // min
+	MaxArgs   int    // max
+	NumArgs   int    // exact, doubles as NoArg (0)
+	MatchArgs string // regular expression filter (document in Long)
+
+	// Self-completion support: complete -C foo foo
+	Comp Completer
+
+	caller   *Cmd            // delegation
+	aliases  []string        // see [cacheAlias]
+	opts     []string        // see [cacheOpts]
+	hidden   bool            // see [AsHidden] and [IsHidden]
+	cmdAlias map[string]*Cmd // see [cacheCmdAlias]
+}
+
+// Var contains information to be shared between [Cmd] instances and
+// contains a [sync.Mutex] allowing safe-for-concurrency modification
+// when needed. The Str
+type Var struct {
+	sync.Mutex
+	Key   string // same as that used in Vars (map[string]Var)
+	Short string // short description of variable
+	Str   string
+	Int   int
+	Bool  bool
+	Any   any
 }
 
 // Completer specifies anything with Complete function based
@@ -54,40 +105,6 @@ type CmdCompleter interface {
 	Completer
 	Cmd() *Cmd
 	SetCmd(x *Cmd)
-}
-
-type Cmd struct {
-	Name  string // ex: delete (required)
-	Alias string // ex: rm|d|del (optional)
-	Opts  string // ex: mon|wed|fri (optional)
-
-	// Own work (optional if Cmds or Def)
-	Do func(x *Cmd, args ...string) error
-
-	// Delegated work
-	Def  *Cmd   // default Cmd (optional)
-	Cmds []*Cmd // composed commands (optional if Do or Cmds or Def)
-
-	// Documentation
-	Vers  string           // text (<50 runes) (optional)
-	Short string           // text (<50 runes) (optional)
-	Long  string           // text/markup (optional)
-	Funcs template.FuncMap // own template tags (optional)
-
-	// Faster than "if" conditions in [Cmd.Do] (all optional)
-	MinArgs   int    // min
-	MaxArgs   int    // max
-	NumArgs   int    // exact, doubles as NoArg (0)
-	MatchArgs string // regular expression filter (document in Long)
-
-	// Self-completion support: complete -C foo foo
-	Comp Completer
-
-	caller   *Cmd            // delegation
-	aliases  []string        // see [cacheAlias]
-	opts     []string        // see [cacheOpts]
-	hidden   bool            // see [AsHidden] and [IsHidden]
-	cmdAlias map[string]*Cmd // see [cacheCmdAlias]
 }
 
 // Caller returns the internal reference to the parent/caller of this
