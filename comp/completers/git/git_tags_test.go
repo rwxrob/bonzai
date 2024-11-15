@@ -4,8 +4,6 @@ import (
 	"fmt"
 	"os"
 
-	"github.com/rwxrob/bonzai"
-
 	"github.com/rwxrob/bonzai/futil"
 	"github.com/rwxrob/bonzai/run"
 
@@ -15,13 +13,12 @@ import (
 func ExampleCompTags_Complete() {
 	setupTags()
 	defer teardownGitRepo()
-	cmd := bonzai.Cmd{}
-	fmt.Println(git.CompTags.Complete(cmd))
-	fmt.Println(git.CompTags.Complete(cmd, ``))
-	fmt.Println(git.CompTags.Complete(cmd, `tag-`))
-	fmt.Println(git.CompTags.Complete(cmd, `tag-b`))
-	fmt.Println(git.CompTags.Complete(cmd, `tag-f`))
-	fmt.Println(git.CompTags.Complete(cmd, `tag-ba`))
+	fmt.Println(git.CompTags.Complete())
+	fmt.Println(git.CompTags.Complete(``))
+	fmt.Println(git.CompTags.Complete(`tag-`))
+	fmt.Println(git.CompTags.Complete(`tag-b`))
+	fmt.Println(git.CompTags.Complete(`tag-f`))
+	fmt.Println(git.CompTags.Complete(`tag-ba`))
 	// Output:
 	// []
 	// [tag-bar tag-blah tag-foo]
