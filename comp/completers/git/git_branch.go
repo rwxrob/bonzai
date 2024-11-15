@@ -7,12 +7,12 @@ import (
 	"github.com/rwxrob/bonzai/run"
 )
 
-type _Branches struct{}
+type branches struct{}
 
 // CompBranches is a [bonzai.Completer] that completes for git branches.
-var CompBranches = _Branches{}
+var CompBranches bonzai.Completer = branches{}
 
-func (t _Branches) Complete(_ bonzai.Cmd, args ...string) []string {
+func (t branches) Complete(args ...string) []string {
 	list := make([]string, 0)
 	if len(args) == 0 {
 		return list

@@ -7,12 +7,12 @@ import (
 	"github.com/rwxrob/bonzai/run"
 )
 
-type _Tags struct{}
+type tags struct{}
 
 // CompTags is a [bonzai.Completer] that completes for git tags.
-var CompTags = _Tags{}
+var CompTags bonzai.Completer = tags{}
 
-func (t _Tags) Complete(_ bonzai.Cmd, args ...string) []string {
+func (t tags) Complete(args ...string) []string {
 	list := make([]string, 0)
 	if len(args) == 0 {
 		return list
