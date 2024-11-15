@@ -14,6 +14,7 @@ import (
 
 type node struct {
 	name         string
+	path         string
 	dependencies []*node
 	dependents   []*node
 }
@@ -26,9 +27,17 @@ func newGraph() *graph {
 	return &graph{nodes: make(map[string]*node)}
 }
 
-func (g *graph) addNode(name string) {
+func (g *graph) addNode(name, path string) {
 	if _, ok := g.nodes[name]; !ok {
-		g.nodes[name] = &node{name: name}
+		if path == "" {
+			g.nodes[name] = &node{name: name}
+		} else {
+			g.nodes[name] = &node{name: name, path: path}
+		}
+	} else {
+		if g.nodes[name].path == "" {
+			g.nodes[name].path = path
+		}
 	}
 }
 
@@ -107,6 +116,8 @@ func ListDependencies() ([]string, error) {
 	return dependencies, nil
 }
 
+// dependencyGraph walks the current git repository and builds a graph of all
+// Go modules and their dependencies.
 func dependencyGraph() (*graph, error) {
 	graph := newGraph()
 	root, err := futil.HereOrAbove(".git")
@@ -126,7 +137,7 @@ func dependencyGraph() (*graph, error) {
 			if !d.IsDir() {
 				return nil
 			}
-			if d.Name() == ".git" || d.Name() == "vendor" {
+			if d.Name() == ".git" {
 				return filepath.SkipDir
 			}
 			if !futil.Exists(
@@ -145,7 +156,7 @@ func dependencyGraph() (*graph, error) {
 				run.Out("go", "list", "-m"),
 			)
 			modName = fmt.Sprint(modName, "@", latestTag())
-			graph.addNode(modName)
+			graph.addNode(modName, path)
 			dependencies := to.Lines(run.Out("go", "list", "-m", "all"))[1:]
 			for _, dep := range dependencies {
 				dep = strings.TrimSpace(dep)
@@ -153,7 +164,7 @@ func dependencyGraph() (*graph, error) {
 				name := parts[0]
 				ver := parts[1]
 				dep = fmt.Sprint(name, "@", ver)
-				graph.addNode(dep)
+				graph.addNode(dep, "")
 				graph.addDependency(modName, dep)
 			}
 			return nil
