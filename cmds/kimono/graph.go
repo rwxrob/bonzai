@@ -157,10 +157,17 @@ func dependencyGraph() (*graph, error) {
 			)
 			modName = fmt.Sprint(modName, "@", latestTag())
 			graph.addNode(modName, path)
-			dependencies := to.Lines(run.Out("go", "list", "-m", "all"))[1:]
+			dependencies := to.Lines(run.Out("go", "list", "-m", "all"))
+			if len(dependencies) < 2 {
+				return nil
+			}
+			dependencies = dependencies[1:]
 			for _, dep := range dependencies {
 				dep = strings.TrimSpace(dep)
 				parts := strings.Split(dep, " ")
+				if len(parts) < 2 {
+					continue
+				}
 				name := parts[0]
 				ver := parts[1]
 				dep = fmt.Sprint(name, "@", ver)
