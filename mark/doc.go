@@ -1,15 +1,13 @@
 /*
 # Specification
 
-The following is in PEGN:
-
 	Grammar   <- Block*
-	Block     <- Bulleted / Numbered / Verbatim / Paragraph
-	Header    <- '# ' (!EOB !LF unipoint)* EOB
-	Bulleted  <- '* ' (!EOB unipoint)* EOB
-	Numbered  <- '1. ' (!EOB unipoint)* EOB
-	Verbatim  <- '    ' (!EOB unipoint)* EOB
-	Paragraph <- (!EOB unipoint)* EOB
+	Block     <- Header / Bulleted / Numbered / Verbatim / Paragraph
+	Header    <- '#'{1,6} SP (!EOB !LF rune)* EOB
+	Bulleted  <- '* ' (!EOB rune)* EOB
+	Numbered  <- '1. ' (!EOB rune)* EOB
+	Verbatim  <- SP{4} (!EOB rune)* EOB
+	Paragraph <- (!EOB rune)* EOB
 	EOB       <- LF{2} / EOD
 	EOD       <- # end of data stream
 
@@ -24,7 +22,7 @@ formatting to each as follows:
   - Verbatim      - beginning with four spaces
 
 Everything else is considered a "paragraph" and will be unwrapped
-minto a single long line (which is normally wrapped later).
+into a single long line (which is normally wrapped later).
 
 If no blocks are parsed returns an empty slice of Block pointers.
 
