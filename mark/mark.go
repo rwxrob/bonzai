@@ -20,23 +20,46 @@ import (
 // developers must understand such specialization will be much less
 // useful to as many people.
 //
-// # First fill template input
+// # Templates not included
 //
-// All implementations must first fill the incoming data using the
-// functions passed in f template.FuncMap (if any). The string returned
-// from any function in template.FuncMap must therefore only return
-// Markdown (preferably BonzaiMark for best compatibility). The filled
-// template data is then rendered using whatever method implemented by
-// the Renderer. For example, {{code "foo"}} returns `foo` instead of
-// something else like <code>foo</code> or an equivalent with ANSI
-// escapes.
+// Note that although BonzaiMark will often be generated from Go
+// [pkg/text/template] templates (such as is allowed in Long) that the
+// template itself is never a part of the specification, even though
+// someone commands (like {{code "go mod init"}}) are designed to help
+// with the generation of Markdown from within Go strings.
+//
+// # Renderers as viewers
+//
+// Renderers are not intended to fire off a viewer instead leaving that
+// work to the caller. Renderers can, however, have very specific ideas
+// about how the output will be rendered (ANSI escapes, HTML, etc.).
 //
 // # Reference implementations and examples
 //
 //   - [pkg/github.com/rwxrob/bonzai/mark/renderers]
 //   - [pkg/github.com/rwxrob/bonzai/cmds/help]
 type Renderer interface {
-	Render(this any, f template.FuncMap, zmark io.Reader) (io.Reader, error)
+	Render(zmark io.Reader) (io.Reader, error)
+}
+
+type HTMLRenderer interface {
+	RenderHTML(zmark io.Reader) (io.Reader, error)
+}
+
+type ANSIRenderer interface {
+	RenderANSI(zmark io.Reader) (io.Reader, error)
+}
+
+type TextRenderer interface {
+	RenderText(zmark io.Reader) (io.Reader, error)
+}
+
+type ManRenderer interface {
+	RenderMan(zmark io.Reader) (io.Reader, error)
+}
+
+type PDFRenderer interface {
+	RenderPDF(zmark io.Reader) (io.Reader, error)
 }
 
 // Usage outputs a Markdown view of a Cmd from
