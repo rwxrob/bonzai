@@ -7,7 +7,7 @@ import (
 
 type aliases struct{}
 
-// Aliases is a [bonzai.Completer] for all available [bonzai.Cmd.Alias]
+// Aliases is a [bonzai.Completer] for all available [bonzai.Cmd.Aliases]
 // including [bonzai.Cmd.Name].
 var Aliases = new(aliases)
 

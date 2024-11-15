@@ -2,7 +2,6 @@ package mark
 
 import (
 	"io"
-	"strings"
 	"text/template"
 )
 
@@ -16,36 +15,21 @@ import (
 // developers must understand such specialization will be much less
 // useful to as many people.
 //
-// See the following for examples of implementations:
+// # First fill template input
+//
+// All implementations must first fill the incoming data using the
+// functions passed in f template.FuncMap (if any). The string returned
+// from any function in template.FuncMap must therefore only return
+// Markdown (preferably BonzaiMark for best compatibility). The filled
+// template data is then rendered using whatever method implemented by
+// the Renderer. For example, {{code "foo"}} returns `foo` instead of
+// something else like <code>foo</code> or an equivalent with ANSI
+// escapes.
+//
+// # Reference implementations and examples
 //
 //   - [pkg/github.com/rwxrob/bonzai/mark/renderers]
 //   - [pkg/github.com/rwxrob/bonzai/cmds/help]
 type Renderer interface {
 	Render(this any, f template.FuncMap, zmark io.Reader) (io.Reader, error)
-}
-
-// Render simplifies rendering a [text/template] by processes the input
-// (in) and using the provided [template.FuncMap] and the data
-// context (this). It returns the rendered output as a string or an
-// error if any step fails. The input is not required to be in
-// BonzaiMark format (unlike implementations of [Renderer]).
-func Render(this any, f template.FuncMap, in string) (string, error) {
-	tmpl, err := template.New("t").Funcs(f).Parse(in)
-	if err != nil {
-		return "", err
-	}
-	out := new(strings.Builder)
-	if err := tmpl.Execute(out, this); err != nil {
-		return "", err
-	}
-	return out.String(), nil
-}
-
-// MustRender calls [Render] but panics if an error occurs.
-func MustRender(this any, f template.FuncMap, in string) string {
-	out, err := Render(this, f, in)
-	if err != nil {
-		panic(err)
-	}
-	return out
 }

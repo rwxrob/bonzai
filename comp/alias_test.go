@@ -18,11 +18,11 @@ func ExampleAliases_Complete() {
 	foo.Comp.(bonzai.CmdCompleter).SetCmd(foo)
 
 	// if no args, we have to assume the command isn't finished yet
-	fmt.Println(comp.Aliases.Complete())
-	fmt.Println(comp.Aliases.Complete(""))
-	fmt.Println(comp.Aliases.Complete("a"))
-	fmt.Println(comp.Aliases.Complete("b"))
-	fmt.Println(comp.Aliases.Complete("bo"))
+	fmt.Println(foo.Comp.Complete())
+	fmt.Println(foo.Comp.Complete(""))
+	fmt.Println(foo.Comp.Complete("a"))
+	fmt.Println(foo.Comp.Complete("b"))
+	fmt.Println(foo.Comp.Complete("bo"))
 
 	// Output:
 	// []

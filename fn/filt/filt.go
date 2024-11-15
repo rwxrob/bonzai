@@ -6,7 +6,13 @@ package filt
 import (
 	"path/filepath"
 	"strings"
+
+	"github.com/rwxrob/bonzai/fn"
 )
+
+type Strings fn.Filterer[string]
+type Ints fn.Filterer[int]
+type Anys fn.Filterer[any]
 
 type Text interface {
 	string | []byte

@@ -10,11 +10,13 @@ func ExamplePrefix() {
 
 	FooPrefixer := tr.Prefix{`foo`}
 
-	fmt.Println(FooPrefixer.Transform(`thing`))
+	this := []string{`one`, `two`, `three`}
+
+	fmt.Println(FooPrefixer.Transform(this))
 
 	printType := func(an any) {
 		switch v := an.(type) {
-		case tr.String:
+		case tr.Strings:
 			fmt.Printf("I'm a string transformer: %v", v)
 		default:
 			fmt.Printf("unknown type: %T (%v)", v, v)
@@ -24,7 +26,7 @@ func ExamplePrefix() {
 	printType(FooPrefixer)
 
 	// Output:
-	// foothing
+	// [fooone footwo foothree]
 	// I'm a string transformer: {foo}
 
 }
