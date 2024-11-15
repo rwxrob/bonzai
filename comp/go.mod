@@ -3,8 +3,8 @@ module github.com/rwxrob/bonzai/comp
 go 1.23.0
 
 require (
-	github.com/rwxrob/bonzai v0.39.3
-	github.com/rwxrob/bonzai/fn v0.6.0
+	github.com/rwxrob/bonzai v0.42.0
+	github.com/rwxrob/bonzai/fn v0.8.2
 	github.com/rwxrob/bonzai/futil v0.1.0
 )
 
