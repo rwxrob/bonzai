@@ -1,6 +1,7 @@
 package funcs
 
 import (
+	"fmt"
 	"html/template"
 	"os"
 	"path/filepath"
@@ -24,6 +25,7 @@ var Map = template.FuncMap{
 	"pathsep":      func() string { return string(os.PathSeparator) },
 	"pathjoin":     filepath.Join,
 	"aka":          AKA,
+	"code":         Code,
 }
 
 // AKA returns the name followed by all aliases in parenthesis joined
@@ -47,3 +49,11 @@ func AKA(x *bonzai.Cmd) string {
 
 	return "`" + x.Name + "`" + " (" + strings.Join(aliases, "|") + ")"
 }
+
+// Code returns a string with Markdown backticks surrounding it after
+// converting it to a string with [fmt.Printf]. This is also available
+// as "code" in [Map]. This fulfills a  specific use case when
+// a developer would like to use backticks in a [bonzai.Cmd].Long or
+// [bonzai.Cmd].Short but cannot because backticks are already used to
+// contain the multi-line text itself.
+func Code(it any) string { return fmt.Sprintf("`%v`", it) }
