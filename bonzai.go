@@ -2,15 +2,12 @@ package bonzai
 
 import (
 	"fmt"
-	"io"
 	"os"
-	"regexp"
 	"slices"
 	"strconv"
 	"strings"
 	"sync"
 	"text/template"
-	"unicode"
 
 	"github.com/rwxrob/bonzai/run"
 )
@@ -422,7 +419,7 @@ func (x Cmd) String() string { return x.Name }
 // returning self if already root. The value returned will always return true
 // of its [Cmd.IsRoot] is called.
 func (x *Cmd) Root() *Cmd {
-	cmds := x.pathCmds()
+	cmds := x.CmdPath()
 	if len(cmds) > 0 {
 		return cmds[0].caller
 	}
@@ -519,148 +516,17 @@ func (x *Cmd) Seek(args []string) (*Cmd, []string) {
 	return cur, args[n:]
 }
 
-// pathCmds returns the path of commands used to arrive at this
-// command. The path is determined by walking backward from current
-// caller up rather than depending on anything from the command line
+// CmdPath returns the path of commands used to arrive at this command.
+// The path is determined by walking backward from current caller up
+// rather than depending on anything from the command line
 // used to invoke the composing binary.
-func (x *Cmd) pathCmds() []*Cmd {
+func (x *Cmd) CmdPath() []*Cmd {
 	path := []*Cmd{x}
 	for p := x.caller; p != nil; p = p.caller {
 		path = append(path, p)
 	}
 	slices.Reverse(path)
 	return path[1:]
-}
-
-// MarkString reads input from the [Cmd.Mark] [io.Reader] function
-// associated with the command and returns it as a string. It uses
-// a [strings.Builder] to efficiently build the output string and
-// ignores any errors.
-func (x *Cmd) MarkString() string {
-	var buf strings.Builder
-	io.Copy(&buf, x.Mark())
-	return buf.String()
-}
-
-// Mark outputs a Markdown view of the [Cmd] filling the [Cmd].Long by
-// rendering it as a [pkg/text/template] using itself as the object and
-// [Cmd].Funcs field passed to the [pkg/text/template.Funcs] method. This
-// Markdown can be passed to any
-// [pkg/github.com/rwxrob/bonzai/mark.Renderer] but can also be piped
-// directly to tools that support Markdown like [Pandoc].
-//
-// [Pandoc]: https://pandoc.org/
-func (x *Cmd) Mark() io.Reader {
-	out := new(strings.Builder)
-	out.WriteString("# Usage\n\n")
-	out.WriteString("{{.CmdTreeString}}")
-	if len(x.Long) > 0 {
-		out.WriteString("\n" + dedent(x.Long))
-		if x.Long[len(x.Long)-1] != '\n' {
-			out.WriteString("\n")
-		}
-	}
-	str := x.render(out.String())
-	return strings.NewReader(str)
-}
-
-func (x *Cmd) render(in string) string {
-	tmpl, err := template.New("t").Funcs(x.Funcs).Parse(in)
-	if err != nil {
-		panic(err) // bad templates should always panic
-	}
-	out := new(strings.Builder)
-	if err := tmpl.Execute(out, x); err != nil {
-		panic(err) // bad values should always panic
-	}
-	return out.String()
-}
-
-var isblank = regexp.MustCompile(`^\s*$`)
-
-func indentation(in string) int {
-	var n int
-	var v rune
-	for n, v = range []rune(in) {
-		if !unicode.IsSpace(v) {
-			break
-		}
-	}
-	return n
-}
-
-func dedent(in string) string {
-	lines := strings.Split(in, "\n")
-	for len(lines) == 1 && isblank.MatchString(lines[0]) {
-		return ""
-	}
-	var n int
-	for len(lines[n]) == 0 || isblank.MatchString(lines[n]) {
-		n++
-	}
-	starts := n
-	indent := indentation(lines[n])
-	for ; n < len(lines); n++ {
-		if len(lines[n]) >= indent {
-			lines[n] = lines[n][indent:]
-		}
-	}
-	return strings.Join(lines[starts:], "\n")
-}
-
-func (x Cmd) cmdTree(depth int) string {
-	if x.IsHidden() {
-		return ""
-	}
-	out := new(strings.Builder)
-	for range depth {
-		out.WriteString("  ")
-	}
-	if len(x.Name) == 0 {
-		x.Name = `noname`
-	}
-	out.WriteString(x.Name)
-	if len(x.Short) > 0 {
-		out.WriteString(" ← " + x.Short)
-	}
-	out.WriteString("\n")
-	depth++
-	for _, c := range x.Cmds {
-		if c.IsHidden() {
-			continue
-		}
-		out.WriteString(c.cmdTree(depth))
-	}
-	return out.String()
-}
-
-// CmdTreeString generates and returns a formatted string representation
-// of the command tree for the [Cmd] instance and all its [Cmd].Cmds
-// subcommands. It aligns [Cmd].Short summaries in the output for better
-// readability, adjusting spaces based on the position of the dashes.
-func (x *Cmd) CmdTreeString() string {
-	lines := strings.Split(x.cmdTree(2), "\n")
-	dashindex := make([]int, len(lines))
-	var dashcol int
-	for i, line := range lines {
-		n := strings.Index(line, "←")
-		dashindex[i] = n
-		if n > dashcol {
-			dashcol = n
-		}
-	}
-	for i, line := range lines {
-		n := dashindex[i]
-		numspace := dashcol - n
-		spaces := new(strings.Builder)
-		for range numspace {
-			spaces.WriteString(` `)
-		}
-		if n > 0 {
-			lines[i] = line[:n] + spaces.String() + line[n:]
-		}
-	}
-	return strings.Join(lines, "\n")
 }
 
 // ErrInvalidName indicates that the provided name for the command is invalid.
