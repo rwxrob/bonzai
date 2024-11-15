@@ -2,18 +2,19 @@ package bonzai
 
 import (
 	"fmt"
-	"io"
+	"log"
 	"os"
-	"regexp"
+	"path/filepath"
 	"slices"
 	"strconv"
 	"strings"
 	"sync"
 	"text/template"
-	"unicode"
-
-	"github.com/rwxrob/bonzai/run"
 )
+
+// AllowsPanic if set will turn any panic into an exit with an error
+// message.
+var AllowPanic bool
 
 func init() {
 	val, exists := os.LookupEnv(`DEBUG`)
@@ -24,7 +25,7 @@ func init() {
 	isTruthy := slices.Contains([]string{"t", "true", "on"}, val)
 	if num, err := strconv.Atoi(val); (err == nil && num > 0) ||
 		isTruthy {
-		run.AllowPanic = true
+		AllowPanic = true
 	}
 }
 
@@ -58,7 +59,8 @@ type Cmd struct {
 	// Self-completion support: complete -C foo foo
 	Comp Completer
 
-	caller   *Cmd            // delegation
+	caller   *Cmd            // see [SetCallers], delegation
+	level    int             // see [SetCallers]
 	aliases  []string        // see [cacheAlias]
 	opts     []string        // see [cacheOpts]
 	hidden   bool            // see [AsHidden] and [IsHidden]
@@ -263,9 +265,8 @@ func (x *Cmd) aliasSlice() []string {
 //
 // # Trapped panics
 //
-// Exec traps any panics with
-// [pkg/github.com/rwxrob/bonzai/run.TrapPanic] unless the DEBUG
-// environment variable is set (truthy).
+// Exec traps any panics with unless the DEBUG environment variable is
+// set (truthy).
 //
 // # Multicall
 //
@@ -274,16 +275,28 @@ func (x *Cmd) aliasSlice() []string {
 // common design pattern used by other monolith multicalls such as git and
 // busybox).
 func (x *Cmd) Exec(args ...string) {
-	defer run.TrapPanic()
+	defer trapPanic()
 	x.recurseIfMulti(args)
-	x.detectCompletion(args)
+	x.detectCompletion()
 	if len(args) == 0 {
 		args = os.Args[1:]
 	}
 	if err := x.Run(args...); err != nil {
-		run.ExitError(err)
+		log.Println(err)
+		os.Exit(1)
 	}
-	run.Exit()
+	os.Exit(0)
+}
+
+// trapPanic recovers from any panic and more gracefully displays the
+// panic by logging it before exiting with a return value of 1.
+var trapPanic = func() {
+	if !AllowPanic {
+		if r := recover(); r != nil {
+			log.Println(r)
+			os.Exit(1)
+		}
+	}
 }
 
 // Run seeks the leaf command in the arguments passed, validates it, and
@@ -358,7 +371,7 @@ func (x *Cmd) has(c *Cmd) bool {
 
 // called as multicall binary
 func (x *Cmd) recurseIfMulti(args []string) {
-	name := run.ExeName()
+	name := filepath.Base(os.Args[0])
 	if name == x.Name {
 		return
 	}
@@ -381,24 +394,34 @@ func (x *Cmd) recurseIfMulti(args []string) {
 	}
 }
 
+func argsFrom(line string) []string {
+	args := []string{}
+	if line == "" {
+		return args
+	}
+	args = strings.Fields(line)
+	if line[len(line)-1] == ' ' {
+		args = append(args, "")
+	}
+	return args
+}
+
 // complete -C foo foo (man bash, Programmable Completion)
-func (x *Cmd) detectCompletion(_ []string) {
+func (x *Cmd) detectCompletion() {
 	if line := os.Getenv("COMP_LINE"); len(line) > 0 {
 
 		// find the leaf command
-		lineargs := run.ArgsFrom(line)
+		lineargs := argsFrom(line)
 		cmd, args := x.Seek(lineargs[1:])
 
 		if cmd.Comp == nil {
-			run.Exit()
-			return
+			os.Exit(0)
 		}
 
 		// not sure we've completed the command name itself yet
 		if len(args) == 0 {
 			fmt.Println(cmd.Name)
-			run.Exit()
-			return
+			os.Exit(0)
 		}
 
 		if v, is := cmd.Comp.(CmdCompleter); is {
@@ -409,8 +432,7 @@ func (x *Cmd) detectCompletion(_ []string) {
 		for _, completion := range cmd.Comp.Complete(args...) {
 			fmt.Println(completion)
 		}
-		run.Exit()
-		return
+		os.Exit(0)
 	}
 }
 
@@ -422,7 +444,7 @@ func (x Cmd) String() string { return x.Name }
 // returning self if already root. The value returned will always return true
 // of its [Cmd.IsRoot] is called.
 func (x *Cmd) Root() *Cmd {
-	cmds := x.pathCmds()
+	cmds := x.Path()
 	if len(cmds) > 0 {
 		return cmds[0].caller
 	}
@@ -496,13 +518,15 @@ func (x *Cmd) CmdNames() []string {
 	return list
 }
 
-// Seek checks the args passed for command names returning the deepest along
-// with the remaining arguments. Typically the args passed are directly
-// derived from the command line. Seek also sets the [Cmd.Caller] for each
-// command found as it descends. Seek is indirectly called by [Cmd.Run]
-// and [Cmd.Exec]. See [pkg/github.com/rwxrob/bonzai/cmds/help] for
+// Seek checks the args passed for command names returning the deepest
+// along with the remaining arguments. Typically the args passed are
+// directly derived from the command line. Seek also calls
+// [Cmd.SetCallers] so that the [Cmd.Caller] and [Cmd.Level] are set for
+// all commands in the tree. Seek is indirectly called by [Cmd.Run] and
+// [Cmd.Exec]. See [pkg/github.com/rwxrob/bonzai/cmds/help] for
 // a practical example of how and why a command might need to call Seek.
 func (x *Cmd) Seek(args []string) (*Cmd, []string) {
+	x.SetCallers()
 	if (len(args) == 1 && args[0] == "") || x.Cmds == nil {
 		return x, args
 	}
@@ -513,17 +537,16 @@ func (x *Cmd) Seek(args []string) (*Cmd, []string) {
 		if next == nil {
 			break
 		}
-		next.caller = cur
 		cur = next
 	}
 	return cur, args[n:]
 }
 
-// pathCmds returns the path of commands used to arrive at this
-// command. The path is determined by walking backward from current
-// caller up rather than depending on anything from the command line
+// Path returns the path of commands used to arrive at this command.
+// The path is determined by walking backward from current caller up
+// rather than depending on anything from the command line
 // used to invoke the composing binary.
-func (x *Cmd) pathCmds() []*Cmd {
+func (x *Cmd) Path() []*Cmd {
 	path := []*Cmd{x}
 	for p := x.caller; p != nil; p = p.caller {
 		path = append(path, p)
@@ -532,135 +555,79 @@ func (x *Cmd) pathCmds() []*Cmd {
 	return path[1:]
 }
 
-// MarkString reads input from the [Cmd.Mark] [io.Reader] function
-// associated with the command and returns it as a string. It uses
-// a [strings.Builder] to efficiently build the output string and
-// ignores any errors.
-func (x *Cmd) MarkString() string {
-	var buf strings.Builder
-	io.Copy(&buf, x.Mark())
-	return buf.String()
+// SetCallers assigns the parent command ([Cmd.Caller]) to each subcommand
+// in the command tree starting from the current command on down. It also
+// updates the [Cmd.Level] of each subcommand relative to its parent.
+// This is performed by walking the command tree deeply using
+// the [Cmd.WalkDeep] method. This method is rarely needed in common
+// practice since [Cmd.Exec], [Cmd.Run], and [Cmd.Seek] do the same.
+// Usually, this is found in test code.
+func (root *Cmd) SetCallers() {
+	setcaller := func(x *Cmd) error {
+		for _, cmd := range x.Cmds {
+			cmd.caller = x
+			cmd.level = x.level + 1
+		}
+		if x.Def != nil {
+			x.Def.caller = x
+			x.Def.level = x.level + 1
+		}
+		return nil
+	}
+	root.WalkDeep(setcaller, nil)
 }
 
-// Mark outputs a Markdown view of the [Cmd] filling the [Cmd].Long by
-// rendering it as a [pkg/text/template] using itself as the object and
-// [Cmd].Funcs field passed to the [pkg/text/template.Funcs] method. This
-// Markdown can be passed to any
-// [pkg/github.com/rwxrob/bonzai/mark.Renderer] but can also be piped
-// directly to tools that support Markdown like [Pandoc].
-//
-// [Pandoc]: https://pandoc.org/
-func (x *Cmd) Mark() io.Reader {
-	out := new(strings.Builder)
-	out.WriteString("# Usage\n\n")
-	out.WriteString("{{.CmdTreeString}}")
-	if len(x.Long) > 0 {
-		out.WriteString("\n" + dedent(x.Long))
-		if x.Long[len(x.Long)-1] != '\n' {
-			out.WriteString("\n")
+// Level returns the level at which this command appears in the command
+// tree and is set when SetCallers is called.
+func (x *Cmd) Level() int { return x.level }
+
+// WalkDeep recursively traverses the command tree starting from itself,
+// applying the function (fn) to each [Cmd]. If an error occurs while
+// executing fn, the onError function is called with the error. It also
+// checks if the default command Def is in the subcommands and invokes
+// WalkDeep on it if so. Enclosed context.Context and error queue
+// implementations can be added by developers when they are needed.
+func (x *Cmd) WalkDeep(fn func(*Cmd) error, onError func(error)) {
+	if x == nil {
+		return
+	}
+	if err := fn(x); err != nil {
+		onError(err)
+	}
+	var defInCmds bool
+	if len(x.Cmds) > 0 {
+		for _, cmd := range x.Cmds {
+			cmd.WalkDeep(fn, onError)
+			if x.Def != nil && x.Def == cmd {
+				defInCmds = true
+			}
 		}
 	}
-	str := x.render(out.String())
-	return strings.NewReader(str)
+	if defInCmds {
+		x.Def.WalkDeep(fn, onError)
+	}
 }
 
-func (x *Cmd) render(in string) string {
-	tmpl, err := template.New("t").Funcs(x.Funcs).Parse(in)
-	if err != nil {
-		panic(err) // bad templates should always panic
+// WalkWide performs a breadth-first traversal (BFS) of the command tree
+// starting from the command itself, applying the function (fn) to each
+// [Cmd]. If an error occurs during the execution of fn, the onError
+// function is called with the error. It uses a queue to process each
+// command and its subcommands iteratively. Enclosed context.Context and
+// error queue implementations can be added by developers when they are
+// needed.
+func (x *Cmd) WalkWide(fn func(*Cmd) error, onError func(error)) {
+	if x == nil {
+		return
 	}
-	out := new(strings.Builder)
-	if err := tmpl.Execute(out, x); err != nil {
-		panic(err) // bad values should always panic
-	}
-	return out.String()
-}
-
-var isblank = regexp.MustCompile(`^\s*$`)
-
-func indentation(in string) int {
-	var n int
-	var v rune
-	for n, v = range []rune(in) {
-		if !unicode.IsSpace(v) {
-			break
+	queue := []*Cmd{x}
+	for len(queue) > 0 {
+		current := queue[0]
+		queue = queue[1:]
+		if err := fn(current); err != nil {
+			onError(err)
 		}
+		queue = append(queue, current.Cmds...)
 	}
-	return n
-}
-
-func dedent(in string) string {
-	lines := strings.Split(in, "\n")
-	for len(lines) == 1 && isblank.MatchString(lines[0]) {
-		return ""
-	}
-	var n int
-	for len(lines[n]) == 0 || isblank.MatchString(lines[n]) {
-		n++
-	}
-	starts := n
-	indent := indentation(lines[n])
-	for ; n < len(lines); n++ {
-		if len(lines[n]) >= indent {
-			lines[n] = lines[n][indent:]
-		}
-	}
-	return strings.Join(lines[starts:], "\n")
-}
-
-func (x Cmd) cmdTree(depth int) string {
-	if x.IsHidden() {
-		return ""
-	}
-	out := new(strings.Builder)
-	for range depth {
-		out.WriteString("  ")
-	}
-	if len(x.Name) == 0 {
-		x.Name = `noname`
-	}
-	out.WriteString(x.Name)
-	if len(x.Short) > 0 {
-		out.WriteString(" ← " + x.Short)
-	}
-	out.WriteString("\n")
-	depth++
-	for _, c := range x.Cmds {
-		if c.IsHidden() {
-			continue
-		}
-		out.WriteString(c.cmdTree(depth))
-	}
-	return out.String()
-}
-
-// CmdTreeString generates and returns a formatted string representation
-// of the command tree for the [Cmd] instance and all its [Cmd].Cmds
-// subcommands. It aligns [Cmd].Short summaries in the output for better
-// readability, adjusting spaces based on the position of the dashes.
-func (x *Cmd) CmdTreeString() string {
-	lines := strings.Split(x.cmdTree(2), "\n")
-	dashindex := make([]int, len(lines))
-	var dashcol int
-	for i, line := range lines {
-		n := strings.Index(line, "←")
-		dashindex[i] = n
-		if n > dashcol {
-			dashcol = n
-		}
-	}
-	for i, line := range lines {
-		n := dashindex[i]
-		numspace := dashcol - n
-		spaces := new(strings.Builder)
-		for range numspace {
-			spaces.WriteString(` `)
-		}
-		if n > 0 {
-			lines[i] = line[:n] + spaces.String() + line[n:]
-		}
-	}
-	return strings.Join(lines, "\n")
 }
 
 // ErrInvalidName indicates that the provided name for the command is invalid.

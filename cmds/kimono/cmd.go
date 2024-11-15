@@ -14,7 +14,7 @@ import (
 )
 
 const (
-	SanitizeAllEnv    = `KIMONO_SANITIZE_ALL`
+	SanitizeScopeEnv  = `KIMONO_SANITIZE_SCOPE`
 	TagPushEnv        = `KIMONO_PUSH_TAG`
 	TagShortenEnv     = `KIMONO_SHORTEN_TAG`
 	TagVersionPartEnv = `KIMONO_VERSION_PART`
@@ -41,30 +41,39 @@ var Cmd = &bonzai.Cmd{
 var sanitizeCmd = &bonzai.Cmd{
 	Name:    `sanitize`,
 	Alias:   `tidy|update`,
+	Opts:    `all|a|deps|depsonme|dependencies|dependents`,
 	Short:   "run `go get -u` and `go mod tidy` on all go modules in repo",
 	Comp:    comp.Cmds,
 	MaxArgs: 1,
 	Do: func(x *bonzai.Cmd, args ...string) error {
-		if argIsOr(
-			args,
-			`all`,
-			vars.Fetch(
-				SanitizeAllEnv,
-				`sanitize-all`,
-				false,
-			),
-		) {
+		if len(args) == 0 {
+			pwd, err := os.Getwd()
+			if err != nil {
+				return err
+			}
+			return TidyAll(pwd)
+		}
+		scope := args[0]
+		switch scope {
+		case ``:
+			scope = vars.Fetch(
+				SanitizeScopeEnv,
+				`sanitize-scope`,
+				``,
+			)
+			fallthrough
+		case `all`:
 			root, err := futil.HereOrAbove(".git")
 			if err != nil {
 				return err
 			}
-			return Tidy(filepath.Dir(root))
+			return TidyAll(filepath.Dir(root))
+		case `deps`, `dependencies`:
+			TidyDependencies()
+		case `depsonme`, `dependents`, `deps-on-me`:
+			TidyDependents()
 		}
-		pwd, err := os.Getwd()
-		if err != nil {
-			return err
-		}
-		return Tidy(pwd)
+		return nil
 	},
 }
 
@@ -112,7 +121,8 @@ var tagCmd = &bonzai.Cmd{
 	Short: `manage or list tags for the go module`,
 	Comp:  comp.Cmds,
 	Cmds: []*bonzai.Cmd{
-		tagBumpCmd, tagListCmd, tagDeleteCmd, help.Cmd.AsHidden()},
+		tagBumpCmd, tagListCmd, tagDeleteCmd, help.Cmd.AsHidden(),
+	},
 	Def: tagListCmd,
 }
 

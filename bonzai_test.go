@@ -2,7 +2,6 @@ package bonzai_test
 
 import (
 	"fmt"
-	"io"
 
 	"github.com/rwxrob/bonzai"
 )
@@ -71,141 +70,6 @@ func ExampleCmd_WithName() {
 	// i am bar
 }
 
-func ExampleCmd_CmdTreeString() {
-	var subFooCmd = &bonzai.Cmd{
-		Name:  `subfoo`,
-		Alias: `sf`,
-		Short: `under the foo command`,
-	}
-
-	var fooCmd = &bonzai.Cmd{
-		Name:  `foo`,
-		Alias: `f`,
-		Short: `foo this command`,
-		Cmds:  []*bonzai.Cmd{subFooCmd},
-	}
-
-	var barCmd = &bonzai.Cmd{
-		Name:  `bar`,
-		Alias: `b`,
-		Short: `bar this command`,
-	}
-
-	var Cmd = &bonzai.Cmd{
-		Name:  `mycmd`,
-		Alias: `my|cmd`,
-		Short: `my command short summary`,
-		Cmds:  []*bonzai.Cmd{fooCmd, barCmd},
-	}
-
-	fmt.Print("# Synopsis\n\n")
-	fmt.Println(Cmd.CmdTreeString())
-
-	// Output:
-	// # Synopsis
-	//
-	//     mycmd      ← my command short summary
-	//       foo      ← foo this command
-	//         subfoo ← under the foo command
-	//       bar      ← bar this command
-}
-
-func ExampleCmd_Mark_noInteractiveTerminal() {
-	var subFooCmd = &bonzai.Cmd{
-		Name:  `subfoo`,
-		Alias: `sf`,
-		Short: `under the foo command`,
-	}
-
-	var fooCmd = &bonzai.Cmd{
-		Name:  `foo`,
-		Alias: `f`,
-		Short: `foo this command`,
-		Cmds:  []*bonzai.Cmd{subFooCmd},
-	}
-
-	var barCmd = &bonzai.Cmd{
-		Name:  `bar`,
-		Alias: `b`,
-		Short: `bar this command`,
-	}
-
-	var Cmd = &bonzai.Cmd{
-		Name:  `mycmd`,
-		Alias: `my|cmd`,
-		Short: `my command short summary`,
-		Cmds:  []*bonzai.Cmd{fooCmd, barCmd},
-		Long: `
-			Here is a long description.
-			On multiple lines.`,
-	}
-
-	out, _ := io.ReadAll(Cmd.Mark())
-	fmt.Println(string(out))
-
-	// Output:
-	// # Usage
-	//
-	//     mycmd      ← my command short summary
-	//       foo      ← foo this command
-	//         subfoo ← under the foo command
-	//       bar      ← bar this command
-	//
-	// Here is a long description.
-	// On multiple lines.
-}
-
-func ExampleCmd_AsHidden() {
-	var subFooHiddenCmd = &bonzai.Cmd{
-		Name:  `iamhidden`,
-		Short: `i am hidden`,
-	}
-
-	var subFooCmd = &bonzai.Cmd{
-		Name:  `subfoo`,
-		Alias: `sf`,
-		Short: `under the foo command`,
-	}
-
-	var fooCmd = &bonzai.Cmd{
-		Name:  `foo`,
-		Alias: `f`,
-		Short: `foo this command`,
-		Cmds:  []*bonzai.Cmd{subFooCmd, subFooHiddenCmd.AsHidden()},
-		// Cmds:  []*bonzai.Cmd{subFooCmd, subFooHiddenCmd},
-	}
-
-	var barCmd = &bonzai.Cmd{
-		Name:  `bar`,
-		Alias: `b`,
-		Short: `bar this command`,
-	}
-
-	var Cmd = &bonzai.Cmd{
-		Name:  `mycmd`,
-		Alias: `my|cmd`,
-		Short: `my command short summary`,
-		Cmds:  []*bonzai.Cmd{fooCmd, barCmd},
-		Long: `
-			Here is a long description.
-			On multiple lines.`,
-	}
-
-	out, _ := io.ReadAll(Cmd.Mark())
-	fmt.Println(string(out))
-
-	// Output:
-	// # Usage
-	//
-	//     mycmd      ← my command short summary
-	//       foo      ← foo this command
-	//         subfoo ← under the foo command
-	//       bar      ← bar this command
-	//
-	// Here is a long description.
-	// On multiple lines.
-}
-
 func ExampleCmd_Run() {
 	var fooCmd = &bonzai.Cmd{
 		Name: `foo`,
@@ -267,4 +131,76 @@ func ExampleErrInvalidShort() {
 
 	// Output:
 	// Cmd.Short length >50 for "foo": "this is a long short desc that is longer than 50 runes"
+}
+
+func ExampleCmd_WalkDeep() {
+
+	var barCmd = &bonzai.Cmd{Name: `bar`}
+
+	var fooCmd = &bonzai.Cmd{
+		Name: `foo`,
+		Cmds: []*bonzai.Cmd{barCmd, barCmd.WithName(`bar2`)},
+	}
+
+	var Cmd = &bonzai.Cmd{
+		Name: `top`,
+		Cmds: []*bonzai.Cmd{fooCmd, fooCmd.WithName(`foo2`)},
+	}
+
+	Cmd.SetCallers() // no Run/Exec/Seek, so explicit
+
+	names := []string{} // enclosed
+
+	aggregate := func(x *bonzai.Cmd) error {
+		names = append(names, fmt.Sprintf("%v-%v", x.Name, x.Level()))
+		return nil
+	}
+
+	errors := []error{} // enclosed
+	onerror := func(err error) {
+		errors = append(errors, err)
+	}
+
+	Cmd.WalkDeep(aggregate, onerror)
+	fmt.Println(names)
+
+	// Output:
+	// [top-0 foo-1 bar-2 bar2-2 foo2-1 bar-2 bar2-2]
+
+}
+
+func ExampleCmd_WalkWide() {
+
+	var barCmd = &bonzai.Cmd{Name: `bar`}
+
+	var fooCmd = &bonzai.Cmd{
+		Name: `foo`,
+		Cmds: []*bonzai.Cmd{barCmd, barCmd.WithName(`bar2`)},
+	}
+
+	var Cmd = &bonzai.Cmd{
+		Name: `top`,
+		Cmds: []*bonzai.Cmd{fooCmd, fooCmd.WithName(`foo2`)},
+	}
+
+	Cmd.SetCallers() // no Run/Exec/Seek, so explicit
+
+	names := []string{} // enclosed
+
+	aggregate := func(x *bonzai.Cmd) error {
+		names = append(names, fmt.Sprintf("%v-%v", x.Name, x.Level()))
+		return nil
+	}
+
+	errors := []error{} // enclosed
+	onerror := func(err error) {
+		errors = append(errors, err)
+	}
+
+	Cmd.WalkWide(aggregate, onerror)
+	fmt.Println(names)
+
+	// Output:
+	// [top-0 foo-1 foo2-1 bar-2 bar2-2 bar-2 bar2-2]
+
 }

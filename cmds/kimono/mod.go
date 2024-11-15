@@ -13,8 +13,64 @@ import (
 
 // Tidy runs `go get -u` and `go mod tidy` on all supported Go
 // modules in the current git repository.
-func Tidy(root string) error {
+func TidyAll(root string) error {
 	return filepath.WalkDir(root, sanitizeWalkDirFn)
+}
+
+func TidyDependents() error {
+	deps, err := dependencyGraph()
+	if err != nil {
+		return err
+	}
+	root, err := futil.HereOrAbove(`.git`)
+	if err != nil {
+		return err
+	}
+	root = filepath.Dir(root)
+	modName := strings.TrimSpace(run.Out("go", "list", "-m"))
+	dependents := getDependents(deps, modName)
+	for _, dep := range dependents {
+		if dep.path == "" {
+			continue
+		}
+		rel, err := filepath.Rel(root, dep.path)
+		if err != nil {
+			return err
+		}
+		fmt.Printf("\n%s:\n",rel)
+		os.Chdir(dep.path)
+		update()
+		tidy()
+	}
+	return nil
+}
+
+func TidyDependencies() error {
+	deps, err := dependencyGraph()
+	if err != nil {
+		return err
+	}
+	root, err := futil.HereOrAbove(`.git`)
+	if err != nil {
+		return err
+	}
+	root = filepath.Dir(root)
+	modName := strings.TrimSpace(run.Out("go", "list", "-m"))
+	node := deps.nodes[modName]
+	for _, dep := range node.dependencies {
+		if dep.path == "" {
+			continue
+		}
+		rel, err := filepath.Rel(root, dep.path)
+		if err != nil {
+			return err
+		}
+		fmt.Printf("\n%s:\n",rel)
+		os.Chdir(dep.path)
+		update()
+		tidy()
+	}
+	return nil
 }
 
 func sanitizeWalkDirFn(path string, d fs.DirEntry, err error) error {
