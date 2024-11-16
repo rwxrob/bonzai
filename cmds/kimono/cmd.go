@@ -28,14 +28,53 @@ var Cmd = &bonzai.Cmd{
 	Vers:  `v0.2.1`,
 	Comp:  comp.Cmds,
 	Cmds: []*bonzai.Cmd{
-		sanitizeCmd,
 		workCmd,
+		sanitizeCmd,
 		tagCmd,
 		depsCmd,
 		vars.Cmd,
 		help.Cmd,
 	},
 	Def: help.Cmd,
+}
+
+var workCmd = &bonzai.Cmd{
+	Name:      `work`,
+	Alias:     `w`,
+	Short:     `toggle go work files on or off`,
+	Long:      ``,
+	NumArgs:   1,
+	MatchArgs: `on|off`,
+	Opts:      `on|off`,
+	Comp:      comp.CmdsOpts,
+	Cmds:      []*bonzai.Cmd{workInitCmd},
+	Do: func(x *bonzai.Cmd, args ...string) error {
+		switch args[0] {
+		case `on`:
+			return WorkOn()
+		case `off`:
+			return WorkOff()
+		default:
+			return fmt.Errorf(
+				"invalid argument: %s",
+				args[0],
+			)
+		}
+	},
+}
+
+var workInitCmd = &bonzai.Cmd{
+	Name:      `init`,
+	Alias:     `i`,
+	Short:     `new go.work in module using dependencies from monorepo`,
+	MinArgs:   1,
+	MatchArgs: `all`,
+	Do: func(x *bonzai.Cmd, args ...string) error {
+		if args[0] == `all` {
+			return WorkGenerate()
+		}
+		return WorkInit(args...)
+	},
 }
 
 var sanitizeCmd = &bonzai.Cmd{
@@ -74,44 +113,6 @@ var sanitizeCmd = &bonzai.Cmd{
 			TidyDependents()
 		}
 		return nil
-	},
-}
-
-var workCmd = &bonzai.Cmd{
-	Name:      `work`,
-	Alias:     `w`,
-	Short:     `toggle go work files on or off`,
-	Comp:      comp.CmdsOpts,
-	Opts:      `on|off`,
-	MinArgs:   1,
-	MaxArgs:   1,
-	MatchArgs: `on|off`,
-	Cmds:      []*bonzai.Cmd{workInitCmd},
-	Do: func(x *bonzai.Cmd, args ...string) error {
-		switch args[0] {
-		case `on`:
-			return WorkOn()
-		case `off`:
-			return WorkOff()
-		default:
-			return fmt.Errorf(
-				"invalid argument: %s",
-				args[0],
-			)
-		}
-	},
-}
-
-var workInitCmd = &bonzai.Cmd{
-	Name:    `init`,
-	Alias:   `i`,
-	Short:   `new go.work in module for dependencies in monorepo`,
-	MinArgs: 1,
-	Do: func(x *bonzai.Cmd, args ...string) error {
-		if args[0] == `all` {
-			return WorkGenerate()
-		}
-		return WorkInit(args...)
 	},
 }
 
