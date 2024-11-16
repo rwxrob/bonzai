@@ -557,44 +557,61 @@ func (x *Cmd) Path() []*Cmd {
 	return path[1:]
 }
 
-// WalkDeep recursively traverses the command tree starting from itself,
-// applying the function (fn) to each [Cmd]. If an error occurs while
-// executing fn, the onError function is called with the error.
-func (x *Cmd) WalkDeep(fn func(*Cmd) error, onError func(error)) {
+func (x *Cmd) walkDeep(level int, fn func(int, *Cmd) error, onError func(error)) {
 	if x == nil {
 		return
 	}
-	if err := fn(x); err != nil {
+	if err := fn(level, x); err != nil {
 		onError(err)
 	}
+	sublevel := level + 1
 	if len(x.Cmds) > 0 {
 		for _, cmd := range x.Cmds {
-			cmd.WalkDeep(fn, onError)
+			cmd.walkDeep(sublevel, fn, onError)
 		}
 	}
-	x.Def.WalkDeep(fn, onError)
+}
+
+// WalkDeep recursively traverses the command tree starting from itself,
+// applying the function (fn) to each [Cmd] with its level. If an error
+// occurs while executing fn, the onError function is called with the
+// error.
+func (x *Cmd) WalkDeep(fn func(int, *Cmd) error, onError func(error)) {
+	x.walkDeep(0, fn, onError)
+}
+
+type leveled struct {
+	cmd   *Cmd
+	level int
+}
+
+func (x *Cmd) walkWide(level int, fn func(int, *Cmd) error, onError func(error)) {
+	if x == nil {
+		return
+	}
+	queue := []leveled{leveled{x, level}}
+	for len(queue) > 0 {
+		cur := queue[0]
+		queue = queue[1:]
+		if err := fn(cur.level, cur.cmd); err != nil {
+			onError(err)
+		}
+		sublevel := level + 1
+		for _, cmd := range cur.cmd.Cmds {
+			queue = append(queue, leveled{cmd, sublevel})
+		}
+	}
 }
 
 // WalkWide performs a breadth-first traversal (BFS) of the command tree
-// starting from the command itself, applying the function (fn) to each
-// [Cmd]. If an error occurs during the execution of fn, the onError
-// function is called with the error. It uses a queue to process each
-// command and its subcommands iteratively. Enclosed context.Context and
-// error queue implementations can be added by developers when they are
-// needed.
-func (x *Cmd) WalkWide(fn func(*Cmd) error, onError func(error)) {
-	if x == nil {
-		return
-	}
-	queue := []*Cmd{x}
-	for len(queue) > 0 {
-		current := queue[0]
-		queue = queue[1:]
-		if err := fn(current); err != nil {
-			onError(err)
-		}
-		queue = append(queue, current.Cmds...)
-	}
+// starting from the command itself, applying the function (fn) with the
+// current level to each [Cmd]. If an error occurs during the execution
+// of fn, the onError function is called with the error. It uses a queue
+// to process each command and its subcommands iteratively. Enclosed
+// context.Context and error queue implementations can be added by
+// developers when they are needed.
+func (x *Cmd) WalkWide(fn func(int, *Cmd) error, onError func(error)) {
+	x.walkWide(0, fn, onError)
 }
 
 // ErrInvalidName indicates that the provided name for the command is invalid.

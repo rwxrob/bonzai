@@ -149,8 +149,8 @@ func ExampleCmd_WalkDeep() {
 
 	names := []string{} // enclosed
 
-	aggregate := func(x *bonzai.Cmd) error {
-		names = append(names, fmt.Sprintf("%v", x.Name))
+	aggregate := func(level int, x *bonzai.Cmd) error {
+		names = append(names, fmt.Sprintf("%v-%v", x.Name, level))
 		return nil
 	}
 
@@ -163,7 +163,7 @@ func ExampleCmd_WalkDeep() {
 	fmt.Println(names)
 
 	// Output:
-	// [top foo bar bar2 foo2 bar bar2]
+	// [top-0 foo-1 bar-2 bar2-2 foo2-1 bar-2 bar2-2]
 
 }
 
@@ -183,8 +183,8 @@ func ExampleCmd_WalkWide() {
 
 	names := []string{} // enclosed
 
-	aggregate := func(x *bonzai.Cmd) error {
-		names = append(names, fmt.Sprintf("%v", x.Name))
+	aggregate := func(level int, x *bonzai.Cmd) error {
+		names = append(names, fmt.Sprintf("%v-%v", x.Name, level))
 		return nil
 	}
 
@@ -197,6 +197,6 @@ func ExampleCmd_WalkWide() {
 	fmt.Println(names)
 
 	// Output:
-	// [top foo foo2 bar bar2 bar bar2]
+	// [top-0 foo-1 foo2-1 bar-1 bar2-1 bar-1 bar2-1]
 
 }
