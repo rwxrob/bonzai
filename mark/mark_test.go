@@ -211,6 +211,60 @@ func ExampleUsage_missingShort() {
 	// On multiple lines.
 }
 
+func ExampleUsage_middle() {
+	var subFooHiddenCmd = &bonzai.Cmd{
+		Name:  `iamhidden`,
+		Short: `i am hidden`,
+	}
+
+	var subFooCmd = &bonzai.Cmd{
+		Name:  `subfoo`,
+		Alias: `sf`,
+		Short: `under the foo command`,
+	}
+
+	var fooCmd = &bonzai.Cmd{
+		Name:  `foo`,
+		Alias: `f`,
+		//Short: `foo this command`,
+		Cmds: []*bonzai.Cmd{subFooCmd, subFooHiddenCmd.AsHidden()},
+		// Cmds:  []*bonzai.Cmd{subFooCmd, subFooHiddenCmd},
+	}
+
+	var barCmd = &bonzai.Cmd{
+		Name:  `bar`,
+		Alias: `b`,
+		Short: `bar this command`,
+	}
+
+	var Cmd = &bonzai.Cmd{
+		Name:  `mycmd`,
+		Alias: `my|cmd`,
+		Short: `my command short summary`,
+		Cmds:  []*bonzai.Cmd{fooCmd, barCmd},
+		Long: `
+			Here is a long description.
+			On multiple lines.`,
+	}
+
+	Cmd.SetCallers()
+
+	r, err := mark.Usage(fooCmd)
+	if err != nil {
+		fmt.Println(err)
+	}
+
+	out, _ := io.ReadAll(r)
+	fmt.Println(string(out))
+
+	// Output:
+	// # Usage
+	//
+	//     foo
+	//     ├─subfoo   ← under the foo command
+	//     └─(hidden) ← contains hidden subcommands
+}
+
 func ExampleUsage_longFirstName() {
 
 	var fooCmd = &bonzai.Cmd{

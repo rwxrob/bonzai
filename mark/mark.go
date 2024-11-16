@@ -126,13 +126,14 @@ func cmdTree(x *bonzai.Cmd, depth int) string {
 		caller := c.Caller()
 		clevel := c.Level()
 		xlevel := x.Level()
-		if clevel-xlevel > depth {
+		ldiff := clevel - xlevel
+		if ldiff > depth {
 			return nil
 		}
-		for range clevel - 1 {
+		for range ldiff - 1 {
 			out.WriteString("│ ")
 		}
-		if clevel > 0 {
+		if ldiff > 0 {
 			switch {
 			case isLastOf(c, caller):
 				out.WriteString("└─")
