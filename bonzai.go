@@ -603,7 +603,7 @@ func (x *Cmd) WalkDeep(fn func(*Cmd) error, onError func(error)) {
 			}
 		}
 	}
-	if defInCmds {
+	if !defInCmds {
 		x.Def.WalkDeep(fn, onError)
 	}
 }

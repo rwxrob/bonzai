@@ -1,7 +1,9 @@
 package mark
 
 import (
+	"fmt"
 	"io"
+	"slices"
 	"strings"
 	"text/template"
 
@@ -107,29 +109,56 @@ func UsageString(x *bonzai.Cmd) (string, error) {
 	return buf.String(), nil
 }
 
+func isLastOf(this, caller *bonzai.Cmd) bool {
+	// default is always last if not also in command list
+	if caller.Def != nil &&
+		this == caller.Def &&
+		!slices.Contains(caller.Cmds, this) {
+		return true
+	}
+	l := len(caller.Cmds)
+	return l > 0 && this == caller.Cmds[l-1]
+}
+
 func cmdTree(x *bonzai.Cmd, depth int) string {
-	if x.IsHidden() {
-		return ""
-	}
 	out := new(strings.Builder)
-	for range depth {
-		out.WriteString("  ")
-	}
-	if len(x.Name) == 0 {
-		x.Name = `noname`
-	}
-	out.WriteString(x.Name)
-	if len(x.Short) > 0 {
-		out.WriteString(" ← " + x.Short)
-	}
-	out.WriteString("\n")
-	depth++
-	for _, c := range x.Cmds {
-		if c.IsHidden() {
-			continue
+	addbranch := func(c *bonzai.Cmd) error {
+		caller := c.Caller()
+		clevel := c.Level()
+		xlevel := x.Level()
+		if clevel-xlevel > depth {
+			return nil
 		}
-		out.WriteString(cmdTree(c, depth))
+		for range clevel - 1 {
+			out.WriteString("│ ")
+		}
+		if clevel > 0 {
+			switch {
+			case isLastOf(c, caller):
+				out.WriteString("└─")
+			default:
+				out.WriteString("├─")
+			}
+		}
+		if c.IsHidden() {
+			out.WriteString("(hidden) ← contains hidden subcommands\n")
+			return nil
+		}
+		name := c.Name
+		if len(name) == 0 {
+			name = `noname`
+		}
+		out.WriteString(name)
+		if len(c.Short) > 0 {
+			out.WriteString(" ← " + c.Short)
+		}
+		if caller != nil && caller.Def == c {
+			out.WriteString(" (default)")
+		}
+		out.WriteString("\n")
+		return nil
 	}
+	x.WalkDeep(addbranch, nil)
 	return out.String()
 }
 
@@ -138,28 +167,21 @@ func cmdTree(x *bonzai.Cmd, depth int) string {
 // subcommands. It aligns [Cmd].Short summaries in the output for better
 // readability, adjusting spaces based on the position of the dashes.
 func CmdTree(x *bonzai.Cmd) string {
-	lines := strings.Split(cmdTree(x, 2), "\n")
-	dashindex := make([]int, len(lines))
-	var dashcol int
-	for i, line := range lines {
-		n := strings.Index(line, "←")
-		dashindex[i] = n
-		if n > dashcol {
-			dashcol = n
+	tree := cmdTree(x, 2)
+	lines := to.Lines(tree)
+	var widest int
+	for _, line := range lines {
+		if length := strings.IndexRune(line, '←'); length > widest {
+			widest = length
 		}
 	}
 	for i, line := range lines {
-		n := dashindex[i]
-		numspace := dashcol - n
-		spaces := new(strings.Builder)
-		for range numspace {
-			spaces.WriteString(` `)
-		}
-		if n > 0 {
-			lines[i] = line[:n] + spaces.String() + line[n:]
+		parts := strings.Split(line, "←")
+		if len(parts) > 1 {
+			lines[i] = fmt.Sprintf("    %-*v←%v", widest-6, parts[0], parts[1])
 		}
 	}
-	return strings.Join(lines, "\n")
+	return strings.Join(lines, "\n") + "\n"
 }
 
 // Render processes the input string (in) as a template using the provided
