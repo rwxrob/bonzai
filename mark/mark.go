@@ -108,28 +108,53 @@ func UsageString(x *bonzai.Cmd) (string, error) {
 }
 
 func cmdTree(x *bonzai.Cmd, depth int) string {
+
 	if x.IsHidden() {
 		return ""
 	}
+
 	out := new(strings.Builder)
-	for range depth {
-		out.WriteString("  ")
-	}
-	if len(x.Name) == 0 {
-		x.Name = `noname`
-	}
-	out.WriteString(x.Name)
-	if len(x.Short) > 0 {
-		out.WriteString(" ← " + x.Short)
-	}
-	out.WriteString("\n")
-	depth++
-	for _, c := range x.Cmds {
-		if c.IsHidden() {
-			continue
+
+	addbranch := func(c *bonzai.Cmd) error {
+
+		clevel := c.Level()
+		xlevel := x.Level()
+		if clevel-xlevel > depth {
+			return nil
 		}
-		out.WriteString(cmdTree(c, depth))
+
+		for range c.Level() {
+			out.WriteString(" ")
+		}
+		name := c.Name
+		if len(name) == 0 {
+			name = `noname`
+		}
+		out.WriteString(name)
+		if len(c.Short) > 0 {
+			out.WriteString(" ← " + c.Short)
+		}
+		out.WriteString("\n")
+		return nil
 	}
+
+	x.WalkDeep(addbranch, nil)
+
+	/*
+		for range depth {
+			out.WriteString("  ")
+		}
+		out.WriteString(x.Name)
+
+		depth++
+		for _, c := range x.Cmds {
+			if c.IsHidden() {
+				continue
+			}
+			out.WriteString(cmdTree(c, depth))
+		}
+	*/
+
 	return out.String()
 }
 
@@ -138,7 +163,8 @@ func cmdTree(x *bonzai.Cmd, depth int) string {
 // subcommands. It aligns [Cmd].Short summaries in the output for better
 // readability, adjusting spaces based on the position of the dashes.
 func CmdTree(x *bonzai.Cmd) string {
-	lines := strings.Split(cmdTree(x, 2), "\n")
+	tree := cmdTree(x, 2)
+	lines := strings.Split(tree, "\n")
 	dashindex := make([]int, len(lines))
 	var dashcol int
 	for i, line := range lines {
@@ -156,7 +182,7 @@ func CmdTree(x *bonzai.Cmd) string {
 			spaces.WriteString(` `)
 		}
 		if n > 0 {
-			lines[i] = line[:n] + spaces.String() + line[n:]
+			lines[i] = "    " + line[:n] + spaces.String() + line[n:]
 		}
 	}
 	return strings.Join(lines, "\n")

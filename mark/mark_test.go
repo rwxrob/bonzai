@@ -79,6 +79,9 @@ func ExampleCmdTree() {
 		Cmds:  []*bonzai.Cmd{fooCmd, barCmd},
 	}
 
+	//  ─ │ ┐ ┘ ┌ └ ├ ┤ ┬ ┴ ┼
+
+	Cmd.SetCallers()
 	fmt.Print("# Synopsis\n\n")
 	fmt.Println(mark.CmdTree(Cmd))
 
@@ -86,9 +89,9 @@ func ExampleCmdTree() {
 	// # Synopsis
 	//
 	//     mycmd      ← my command short summary
-	//       foo      ← foo this command
-	//         subfoo ← under the foo command
-	//       bar      ← bar this command
+	//     ├─foo      ← foo this command
+	//     │ └─subfoo ← under the foo command
+	//     └─bar      ← bar this command
 }
 
 func ExampleUsage_noInteractiveTerminal() {
