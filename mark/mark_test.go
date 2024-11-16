@@ -210,3 +210,39 @@ func ExampleUsage_missingShort() {
 	// Here is a long description.
 	// On multiple lines.
 }
+
+func ExampleUsage_longFirstName() {
+
+	var fooCmd = &bonzai.Cmd{
+		Name: `foo`,
+		//Short: `a foo`,
+		Do: func(_ *bonzai.Cmd, _ ...string) error {
+			return nil
+		},
+	}
+
+	var Cmd = &bonzai.Cmd{
+		Name:  `help-test`,
+		Alias: `h|ht`,
+		Short: `just a help test`,
+		Opts:  `some|-y|--yaml`,
+		Cmds:  []*bonzai.Cmd{fooCmd, fooCmd.WithName(`foo2`)},
+		Def:   fooCmd,
+	}
+
+	Cmd.SetCallers()
+	r, err := mark.Usage(Cmd)
+	if err != nil {
+		fmt.Println(err)
+	}
+	out, _ := io.ReadAll(r)
+	fmt.Println(string(out))
+
+	// Output:
+	// # Usage
+	//
+	//     help-test ← just a help test
+	//     ├─foo     ← (default)
+	//     └─foo2
+
+}

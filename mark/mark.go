@@ -153,6 +153,9 @@ func cmdTree(x *bonzai.Cmd, depth int) string {
 			out.WriteString(" ← " + c.Short)
 		}
 		if caller != nil && caller.Def == c {
+			if len(c.Short) == 0 {
+				out.WriteString(" ←")
+			}
 			out.WriteString(" (default)")
 		}
 		out.WriteString("\n")
@@ -160,6 +163,18 @@ func cmdTree(x *bonzai.Cmd, depth int) string {
 	}
 	x.WalkDeep(addbranch, nil)
 	return out.String()
+}
+
+// strings.Index and IndexRune don't do what you think
+func countRunes(in string, it rune) int {
+	var i int
+	for _, r := range []rune(in) {
+		if r == it {
+			return i
+		}
+		i++
+	}
+	return i
 }
 
 // CmdTreeString generates and returns a formatted string representation
@@ -171,14 +186,14 @@ func CmdTree(x *bonzai.Cmd) string {
 	lines := to.Lines(tree)
 	var widest int
 	for _, line := range lines {
-		if length := strings.IndexRune(line, '←'); length > widest {
+		if length := countRunes(line, '←'); length > widest {
 			widest = length
 		}
 	}
 	for i, line := range lines {
 		parts := strings.Split(line, "←")
 		if len(parts) > 1 {
-			lines[i] = fmt.Sprintf("    %-*v←%v", widest-6, parts[0], parts[1])
+			lines[i] = fmt.Sprintf("    %-*v←%v", widest, parts[0], parts[1])
 		} else {
 			lines[i] = "    " + line
 		}
