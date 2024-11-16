@@ -77,6 +77,7 @@ func ExampleCmdTree() {
 		Alias: `my|cmd`,
 		Short: `my command short summary`,
 		Cmds:  []*bonzai.Cmd{fooCmd, barCmd},
+		Def:   fooCmd,
 	}
 
 	//  ─ │ ┐ ┘ ┌ └ ├ ┤ ┬ ┴ ┼

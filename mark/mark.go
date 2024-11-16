@@ -109,20 +109,14 @@ func UsageString(x *bonzai.Cmd) (string, error) {
 
 func cmdTree(x *bonzai.Cmd, depth int) string {
 
-	if x.IsHidden() {
-		return ""
-	}
-
 	out := new(strings.Builder)
 
 	addbranch := func(c *bonzai.Cmd) error {
-
 		clevel := c.Level()
 		xlevel := x.Level()
-		if clevel-xlevel > depth {
+		if x.IsHidden() || clevel-xlevel > depth {
 			return nil
 		}
-
 		for range c.Level() {
 			out.WriteString(" ")
 		}
@@ -133,6 +127,9 @@ func cmdTree(x *bonzai.Cmd, depth int) string {
 		out.WriteString(name)
 		if len(c.Short) > 0 {
 			out.WriteString(" ← " + c.Short)
+		}
+		if caller := c.Caller(); caller != nil && caller.Def == c {
+			out.WriteString(" (default)")
 		}
 		out.WriteString("\n")
 		return nil
