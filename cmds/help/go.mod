@@ -5,7 +5,7 @@ go 1.23.0
 require (
 	github.com/rwxrob/bonzai v0.43.1
 	github.com/rwxrob/bonzai/comp v0.9.5
-	github.com/rwxrob/bonzai/mark v0.10.2
+	github.com/rwxrob/bonzai/mark v0.10.3
 	github.com/rwxrob/bonzai/term v0.2.1
 )
 
