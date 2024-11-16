@@ -179,6 +179,8 @@ func CmdTree(x *bonzai.Cmd) string {
 		parts := strings.Split(line, "←")
 		if len(parts) > 1 {
 			lines[i] = fmt.Sprintf("    %-*v←%v", widest-6, parts[0], parts[1])
+		} else {
+			lines[i] = "    " + line
 		}
 	}
 	return strings.Join(lines, "\n") + "\n"
