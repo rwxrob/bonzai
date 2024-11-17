@@ -40,6 +40,9 @@ type Cmd struct {
 	Vars map[string]Var    // not automatically persisted (see vars)
 	Env  map[string]string // set for self and all child processes
 
+	// Initialization with [SeekInit]
+	Init func(*Cmd, ...string) error
+
 	// Own work (optional if Cmds or Def)
 	Do func(x *Cmd, args ...string) error
 
@@ -313,7 +316,10 @@ func (x *Cmd) Run(args ...string) error {
 	if err := x.Validate(args...); err != nil {
 		return err
 	}
-	c, args := x.Seek(args...)
+	c, args, err := x.SeekInit(args...)
+	if err != nil {
+		return err
+	}
 	if err := c.Validate(args...); err != nil {
 		return err
 	}
@@ -547,8 +553,9 @@ func (x *Cmd) CmdNames() []string {
 // on each [Cmd] in the path. Seek is indirectly called by [Cmd.Run] and
 // [Cmd.Exec]. See [pkg/github.com/rwxrob/bonzai/cmds/help] for
 // a practical example of how and why a command might need to call Seek.
+// Also see [Cmd.SeekInit] when environment variables and initialization
+// functions are wanted as well.
 func (x *Cmd) Seek(args ...string) (*Cmd, []string) {
-	x.exportenv()
 	if (len(args) == 1 && args[0] == "") || x.Cmds == nil {
 		return x, args
 	}
@@ -559,11 +566,42 @@ func (x *Cmd) Seek(args ...string) (*Cmd, []string) {
 		if next == nil {
 			break
 		}
-		next.exportenv()
 		next.caller = cur
 		cur = next
 	}
 	return cur, args[n:]
+}
+
+// SeekInit is the same as [Cmd.Seek] but [Cmd].Env variables are exported
+// and the [Cmd].Init functions are called (if any). Returns early with
+// nil values and the error if any Init function produces an error.
+func (x *Cmd) SeekInit(args ...string) (*Cmd, []string, error) {
+	x.exportenv()
+	if x.Init != nil {
+		if err := x.Init(x, args...); err != nil {
+			return nil, nil, err
+		}
+	}
+	if (len(args) == 1 && args[0] == "") || x.Cmds == nil {
+		return x, args, nil
+	}
+	cur := x
+	n := 0
+	for ; n < len(args); n++ {
+		next := cur.resolve(args[n])
+		if next == nil {
+			break
+		}
+		next.exportenv()
+		if next.Init != nil {
+			if err := next.Init(next, args...); err != nil {
+				return nil, nil, err
+			}
+		}
+		next.caller = cur
+		cur = next
+	}
+	return cur, args[n:], nil
 }
 
 func (x *Cmd) exportenv() {

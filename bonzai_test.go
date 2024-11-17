@@ -301,3 +301,26 @@ func ExampleCmd_Env() {
 	// Output:
 	// thing
 }
+
+func ExampleCmd_Init() {
+
+	printname := func(x *bonzai.Cmd, _ ...string) error {
+		fmt.Print(x.Name + " ")
+		return nil
+	}
+
+	var Cmd = &bonzai.Cmd{
+		Name: `foo`,
+		Init: printname,
+		Cmds: []*bonzai.Cmd{
+			{Name: `nothing`, Init: printname},
+			{Name: `other`, Init: printname},
+		},
+	}
+
+	Cmd.Run(`nothing`)
+	Cmd.Run(`other`)
+
+	// Output:
+	// foo nothing foo other
+}
