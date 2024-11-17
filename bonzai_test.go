@@ -130,7 +130,7 @@ func ExampleErrInvalidShort() {
 	fmt.Println(err)
 
 	// Output:
-	// Cmd.Short length >50 for "foo": "this is a long short desc that is longer than 50 runes"
+	// Short length >50 or not lower for "foo": "this is a long short desc that is longer than 50 runes"
 }
 
 func ExampleErrInvalidArg() {
@@ -162,12 +162,10 @@ func ExampleCmd_WalkDeep() {
 		Cmds: []*bonzai.Cmd{fooCmd, fooCmd.WithName(`foo2`)},
 	}
 
-	Cmd.SetCallers() // no Run/Exec/Seek, so explicit
-
 	names := []string{} // enclosed
 
-	aggregate := func(x *bonzai.Cmd) error {
-		names = append(names, fmt.Sprintf("%v-%v", x.Name, x.Level()))
+	aggregate := func(level int, x *bonzai.Cmd) error {
+		names = append(names, fmt.Sprintf("%v-%v", x.Name, level))
 		return nil
 	}
 
@@ -198,12 +196,10 @@ func ExampleCmd_WalkWide() {
 		Cmds: []*bonzai.Cmd{fooCmd, fooCmd.WithName(`foo2`)},
 	}
 
-	Cmd.SetCallers() // no Run/Exec/Seek, so explicit
-
 	names := []string{} // enclosed
 
-	aggregate := func(x *bonzai.Cmd) error {
-		names = append(names, fmt.Sprintf("%v-%v", x.Name, x.Level()))
+	aggregate := func(level int, x *bonzai.Cmd) error {
+		names = append(names, fmt.Sprintf("%v-%v", x.Name, level))
 		return nil
 	}
 
@@ -216,6 +212,6 @@ func ExampleCmd_WalkWide() {
 	fmt.Println(names)
 
 	// Output:
-	// [top-0 foo-1 foo2-1 bar-2 bar2-2 bar-2 bar2-2]
+	// [top-0 foo-1 foo2-1 bar-1 bar2-1 bar-1 bar2-1]
 
 }

@@ -11,6 +11,7 @@ import (
 	"strings"
 	"sync"
 	"text/template"
+	"unicode"
 )
 
 // AllowsPanic if set will turn any panic into an exit with an error
@@ -42,8 +43,8 @@ type Cmd struct {
 	Do func(x *Cmd, args ...string) error
 
 	// Delegated work
-	Def  *Cmd   // default Cmd (optional)
 	Cmds []*Cmd // composed commands (optional if Do or Cmds or Def)
+	Def  *Cmd   // default Cmd (optional)
 
 	// Documentation
 	Vers  string           // text (<50 runes) (optional)
@@ -61,8 +62,7 @@ type Cmd struct {
 	// Self-completion support: complete -C foo foo
 	Comp Completer
 
-	caller   *Cmd            // see [SetCallers], delegation
-	level    int             // see [SetCallers]
+	caller   *Cmd            // see [Caller],[Seek], delegation
 	aliases  []string        // see [cacheAlias]
 	opts     []string        // see [cacheOpts]
 	hidden   bool            // see [AsHidden] and [IsHidden]
@@ -315,7 +315,7 @@ func (x *Cmd) Run(args ...string) error {
 	case c == nil:
 		return ErrIncorrectUsage{c}
 
-	case len(c.Short) > 50:
+	case len(c.Short) > 0 && (len(c.Short) > 50 || !unicode.IsLower(rune(c.Short[0]))):
 		return ErrInvalidShort{c}
 
 	case len(c.Vers) > 50:
@@ -324,11 +324,11 @@ func (x *Cmd) Run(args ...string) error {
 	case IsValidName != nil && !IsValidName(c.Name):
 		return ErrInvalidName{c.Name}
 
-	case c.Do == nil && c.Def == nil && len(c.Cmds) == 0:
-		return ErrUncallable{c}
+	case c.Do == nil && len(c.Cmds) == 0:
+		return ErrUncallable{x}
 
-	case c.Do != nil && c.Def != nil:
-		return ErrDoOrDef{c}
+	case c.Def != nil && !slices.Contains(c.Cmds, c.Def):
+		return ErrMissingDef{c}
 
 	case len(args) < c.MinArgs:
 		return ErrNotEnoughArgs{Count: len(args), Min: c.MinArgs}
@@ -536,13 +536,11 @@ func (x *Cmd) CmdNames() []string {
 
 // Seek checks the args passed for command names returning the deepest
 // along with the remaining arguments. Typically the args passed are
-// directly derived from the command line. Seek also calls
-// [Cmd.SetCallers] so that the [Cmd.Caller] and [Cmd.Level] are set for
-// all commands in the tree. Seek is indirectly called by [Cmd.Run] and
+// directly derived from the command line. Seek also sets [Cmd.Caller]
+// on each [Cmd] in the path. Seek is indirectly called by [Cmd.Run] and
 // [Cmd.Exec]. See [pkg/github.com/rwxrob/bonzai/cmds/help] for
 // a practical example of how and why a command might need to call Seek.
 func (x *Cmd) Seek(args []string) (*Cmd, []string) {
-	x.SetCallers()
 	if (len(args) == 1 && args[0] == "") || x.Cmds == nil {
 		return x, args
 	}
@@ -553,6 +551,7 @@ func (x *Cmd) Seek(args []string) (*Cmd, []string) {
 		if next == nil {
 			break
 		}
+		next.caller = cur
 		cur = next
 	}
 	return cur, args[n:]
@@ -571,79 +570,61 @@ func (x *Cmd) Path() []*Cmd {
 	return path[1:]
 }
 
-// SetCallers assigns the parent command ([Cmd.Caller]) to each subcommand
-// in the command tree starting from the current command on down. It also
-// updates the [Cmd.Level] of each subcommand relative to its parent.
-// This is performed by walking the command tree deeply using
-// the [Cmd.WalkDeep] method. This method is rarely needed in common
-// practice since [Cmd.Exec], [Cmd.Run], and [Cmd.Seek] do the same.
-// Usually, this is found in test code.
-func (root *Cmd) SetCallers() {
-	setcaller := func(x *Cmd) error {
-		for _, cmd := range x.Cmds {
-			cmd.caller = x
-			cmd.level = x.level + 1
-		}
-		if x.Def != nil {
-			x.Def.caller = x
-			x.Def.level = x.level + 1
-		}
-		return nil
-	}
-	root.WalkDeep(setcaller, nil)
-}
-
-// Level returns the level at which this command appears in the command
-// tree and is set when SetCallers is called.
-func (x *Cmd) Level() int { return x.level }
-
-// WalkDeep recursively traverses the command tree starting from itself,
-// applying the function (fn) to each [Cmd]. If an error occurs while
-// executing fn, the onError function is called with the error. It also
-// checks if the default command Def is in the subcommands and invokes
-// WalkDeep on it if so. Enclosed context.Context and error queue
-// implementations can be added by developers when they are needed.
-func (x *Cmd) WalkDeep(fn func(*Cmd) error, onError func(error)) {
+func (x *Cmd) walkDeep(level int, fn func(int, *Cmd) error, onError func(error)) {
 	if x == nil {
 		return
 	}
-	if err := fn(x); err != nil {
+	if err := fn(level, x); err != nil {
 		onError(err)
 	}
-	var defInCmds bool
+	sublevel := level + 1
 	if len(x.Cmds) > 0 {
 		for _, cmd := range x.Cmds {
-			cmd.WalkDeep(fn, onError)
-			if x.Def != nil && x.Def == cmd {
-				defInCmds = true
-			}
+			cmd.walkDeep(sublevel, fn, onError)
 		}
 	}
-	if !defInCmds {
-		x.Def.WalkDeep(fn, onError)
+}
+
+// WalkDeep recursively traverses the command tree starting from itself,
+// applying the function (fn) to each [Cmd] with its level. If an error
+// occurs while executing fn, the onError function is called with the
+// error.
+func (x *Cmd) WalkDeep(fn func(int, *Cmd) error, onError func(error)) {
+	x.walkDeep(0, fn, onError)
+}
+
+type leveled struct {
+	cmd   *Cmd
+	level int
+}
+
+func (x *Cmd) walkWide(level int, fn func(int, *Cmd) error, onError func(error)) {
+	if x == nil {
+		return
+	}
+	queue := []leveled{leveled{x, level}}
+	for len(queue) > 0 {
+		cur := queue[0]
+		queue = queue[1:]
+		if err := fn(cur.level, cur.cmd); err != nil {
+			onError(err)
+		}
+		sublevel := level + 1
+		for _, cmd := range cur.cmd.Cmds {
+			queue = append(queue, leveled{cmd, sublevel})
+		}
 	}
 }
 
 // WalkWide performs a breadth-first traversal (BFS) of the command tree
-// starting from the command itself, applying the function (fn) to each
-// [Cmd]. If an error occurs during the execution of fn, the onError
-// function is called with the error. It uses a queue to process each
-// command and its subcommands iteratively. Enclosed context.Context and
-// error queue implementations can be added by developers when they are
-// needed.
-func (x *Cmd) WalkWide(fn func(*Cmd) error, onError func(error)) {
-	if x == nil {
-		return
-	}
-	queue := []*Cmd{x}
-	for len(queue) > 0 {
-		current := queue[0]
-		queue = queue[1:]
-		if err := fn(current); err != nil {
-			onError(err)
-		}
-		queue = append(queue, current.Cmds...)
-	}
+// starting from the command itself, applying the function (fn) with the
+// current level to each [Cmd]. If an error occurs during the execution
+// of fn, the onError function is called with the error. It uses a queue
+// to process each command and its subcommands iteratively. Enclosed
+// context.Context and error queue implementations can be added by
+// developers when they are needed.
+func (x *Cmd) WalkWide(fn func(int, *Cmd) error, onError func(error)) {
+	x.walkWide(0, fn, onError)
 }
 
 // ErrInvalidName indicates that the provided name for the command is invalid.
@@ -666,14 +647,24 @@ func (e ErrIncorrectUsage) Error() string {
 	return fmt.Sprintf(`incorrect usage for "%v" command`, e.Cmd.Name)
 }
 
-// ErrUncallable indicates that a command requires a Do or Def function
-// for execution, providing a reference to the [Cmd] in question.
+// ErrUncallable indicates that a command requires a Do or at least one
+// [Cmd].Cmds.
 type ErrUncallable struct {
 	Cmd *Cmd
 }
 
 func (e ErrUncallable) Error() string {
-	return fmt.Sprintf(`Cmd requires Do or Def of Cmds: %v`, e.Cmd.Name)
+	return fmt.Sprintf(`Cmd requires Do or Cmds: %v`, e.Cmd.Name)
+}
+
+// ErrMissingDef indicates that a command has a [Cmd].Def that is not
+// found in the [Cmd].Cmds list.
+type ErrMissingDef struct {
+	Cmd *Cmd
+}
+
+func (e ErrMissingDef) Error() string {
+	return fmt.Sprintf(`Def missing from Cmds: %v`, e.Cmd.Name)
 }
 
 // ErrDoOrDef suggests that a command cannot have both Do and Def
@@ -730,7 +721,7 @@ type ErrInvalidShort struct {
 }
 
 func (e ErrInvalidShort) Error() string {
-	return fmt.Sprintf(`Cmd.Short length >50 for %q: %q`, e.Cmd, e.Cmd.Short)
+	return fmt.Sprintf(`Short length >50 or not lower for %q: %q`, e.Cmd, e.Cmd.Short)
 }
 
 // ErrInvalidVers indicates that the short description length exceeds 50
