@@ -43,8 +43,8 @@ type Cmd struct {
 	Do func(x *Cmd, args ...string) error
 
 	// Delegated work
-	Cmds []*Cmd // composed commands (optional if Do or Cmds or Def)
-	Def  *Cmd   // default Cmd (optional)
+	Cmds []*Cmd // composed subcommands (optional if Do or Def)
+	Def  *Cmd   // default (optional, if Do or Cmds, not required in Cmds)
 
 	// Documentation
 	Vers  string           // text (<50 runes) (optional)
@@ -334,11 +334,8 @@ func (c *Cmd) Validate(args ...string) error {
 	case IsValidName != nil && !IsValidName(c.Name):
 		return ErrInvalidName{c.Name}
 
-	case c.Do == nil && len(c.Cmds) == 0:
+	case c.Do == nil && len(c.Cmds) == 0 && c.Def == nil:
 		return ErrUncallable{c}
-
-	case c.Def != nil && !slices.Contains(c.Cmds, c.Def):
-		return ErrMissingDef{c}
 
 	case len(args) < c.MinArgs:
 		return ErrNotEnoughArgs{Count: len(args), Min: c.MinArgs}
@@ -595,9 +592,10 @@ func (x *Cmd) walkDeep(level int, fn func(int, *Cmd) error, onError func(error))
 }
 
 // WalkDeep recursively traverses the command tree starting from itself,
-// applying the function (fn) to each [Cmd] with its level. If an error
-// occurs while executing fn, the onError function is called with the
-// error.
+// applying the function (fn) to each [Cmd] within [Cmd].Cmds with its
+// level. If an error occurs while executing fn, the onError function is
+// called with the error. Note that [Cmd].Def is only included if it is
+// also in the Cmds slice.
 func (x *Cmd) WalkDeep(fn func(int, *Cmd) error, onError func(error)) {
 	x.walkDeep(0, fn, onError)
 }
@@ -627,11 +625,11 @@ func (x *Cmd) walkWide(level int, fn func(int, *Cmd) error, onError func(error))
 
 // WalkWide performs a breadth-first traversal (BFS) of the command tree
 // starting from the command itself, applying the function (fn) with the
-// current level to each [Cmd]. If an error occurs during the execution
-// of fn, the onError function is called with the error. It uses a queue
-// to process each command and its subcommands iteratively. Enclosed
-// context.Context and error queue implementations can be added by
-// developers when they are needed.
+// current level to each [Cmd] in [Cmd].Cmds recursively. If an error
+// occurs during the execution of fn, the onError function is called
+// with the error. It uses a queue to process each command and its
+// subcommands iteratively. Note that [Cmd].Def is only included if it
+// is also in the Cmds slice.
 func (x *Cmd) WalkWide(fn func(int, *Cmd) error, onError func(error)) {
 	x.walkWide(0, fn, onError)
 }
@@ -656,24 +654,14 @@ func (e ErrIncorrectUsage) Error() string {
 	return fmt.Sprintf(`incorrect usage for "%v" command`, e.Cmd.Name)
 }
 
-// ErrUncallable indicates that a command requires a Do or at least one
-// [Cmd].Cmds.
+// ErrUncallable indicates that a command requires a Do, one
+// [Cmd].Cmds or a [Cmd].Def assigned.
 type ErrUncallable struct {
 	Cmd *Cmd
 }
 
 func (e ErrUncallable) Error() string {
-	return fmt.Sprintf(`Cmd requires Do or Cmds: %v`, e.Cmd.Name)
-}
-
-// ErrMissingDef indicates that a command has a [Cmd].Def that is not
-// found in the [Cmd].Cmds list.
-type ErrMissingDef struct {
-	Cmd *Cmd
-}
-
-func (e ErrMissingDef) Error() string {
-	return fmt.Sprintf(`Def missing from Cmds: %v`, e.Cmd.Name)
+	return fmt.Sprintf(`Cmd requires Do, Def, or Cmds: %v`, e.Cmd.Name)
 }
 
 // ErrDoOrDef suggests that a command cannot have both Do and Def
