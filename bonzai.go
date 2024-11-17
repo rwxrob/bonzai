@@ -40,15 +40,13 @@ type Cmd struct {
 	Vars VarMap // not automatically persisted (see vars)
 	Env  VarMap // set for self and children (use Var.Str)
 
-	// Initialization with [SeekInit]
-	Init func(x *Cmd, args ...string) error
-
-	// Own work (optional if Cmds or Def)
-	Do func(x *Cmd, args ...string) error
+	// Work down by this command itself
+	Init func(x *Cmd, args ...string) error // initialization with [SeekInit]
+	Do   func(x *Cmd, args ...string) error // main (optional if Def or Cmds)
 
 	// Delegated work
 	Cmds []*Cmd // composed subcommands (optional if Do or Def)
-	Def  *Cmd   // default (optional, if Do or Cmds, not required in Cmds)
+	Def  *Cmd   // default (optional if Do or Cmds, not required in Cmds)
 
 	// Documentation
 	Vers  string           // text (<50 runes) (optional)
