@@ -1,4 +1,4 @@
-package fishies
+package rayfish
 
 import (
 	"gonum.org/v1/gonum/spatial/r3"

@@ -1,4 +1,4 @@
-package fishies
+package rayfish
 
 import (
 	"math"

@@ -1,4 +1,4 @@
-module github.com/rwxrob/bonzai/cmds/fishies
+module github.com/rwxrob/bonzai/cmds/rayfish
 
 go 1.23.3
 

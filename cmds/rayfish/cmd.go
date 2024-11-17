@@ -1,4 +1,4 @@
-package fishies
+package rayfish
 
 import (
 	"strconv"
@@ -9,8 +9,8 @@ import (
 )
 
 var Cmd = &bonzai.Cmd{
-	Name:  `fishies`,
-	Alias: `fish`,
+	Name:  `rayfish`,
+	Alias: `fish|fishies`,
 	Short: `terminal-based 3D fish animation`,
 	Vers:  `v1.0.0`,
 	Comp:  comp.Cmds,
@@ -24,7 +24,7 @@ var Cmd = &bonzai.Cmd{
 var animateCmd = &bonzai.Cmd{
 	Name:  `animate`,
 	Alias: `a|run|start`,
-	Short: `run the fish animation with optional number of fish and ground`,
+	Short: `animate with optional number of fish and ground`,
 	Long: `
         Starts a terminal-based 3D animation of swimming fish.
         
@@ -36,9 +36,9 @@ var animateCmd = &bonzai.Cmd{
             Ctrl+C: Exit the animation
         
         Examples:
-            fishies         # Run with 3 fish, no ground
-            fishies 5       # Run with 5 fish
-            fishies 5 ground  # Run with 5 fish and ground`,
+            rayfish           # Run with 3 fish, no ground
+            rayfish 5         # Run with 5 fish
+            rayfish 5 ground  # Run with 5 fish and ground`,
 	Comp:    comp.Cmds,
 	MaxArgs: 2,
 	Do: func(x *bonzai.Cmd, args ...string) error {

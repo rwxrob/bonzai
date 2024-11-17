@@ -1,4 +1,4 @@
-# Fishies
+# RayFish
 
 A terminal-based 3D fish animation written in Go, by Frank Buss.
 
@@ -7,7 +7,7 @@ A terminal-based 3D fish animation written in Go, by Frank Buss.
 Run the program specifying the number of fish and whether to show the ground plane:
 
 ```bash
-./fishies 10 ground
+./rayfish 10 ground
 ```
 Looks like this:
 
