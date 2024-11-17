@@ -5,6 +5,7 @@ import (
 	"log"
 	"os"
 	"path/filepath"
+	"regexp"
 	"slices"
 	"strconv"
 	"strings"
@@ -52,10 +53,11 @@ type Cmd struct {
 	Funcs template.FuncMap // own template tags (optional)
 
 	// Faster than "if" conditions in [Cmd.Do] (all optional)
-	MinArgs   int    // min
-	MaxArgs   int    // max
-	NumArgs   int    // exact, doubles as NoArg (0)
-	MatchArgs string // regular expression filter (document in Long)
+	MinArgs  int    // min
+	MaxArgs  int    // max
+	NumArgs  int    // exact
+	NoArgs   bool   // 0
+	RegxArgs string // regx check each arg (document in Long)
 
 	// Self-completion support: complete -C foo foo
 	Comp Completer
@@ -313,32 +315,43 @@ func (x *Cmd) Run(args ...string) error {
 	case c == nil:
 		return ErrIncorrectUsage{c}
 
-	case len(x.Short) > 0 && (len(x.Short) > 50 || !unicode.IsLower(rune(x.Short[0]))):
-		return ErrInvalidShort{x}
+	case len(c.Short) > 0 && (len(c.Short) > 50 || !unicode.IsLower(rune(c.Short[0]))):
+		return ErrInvalidShort{c}
 
-	case len(x.Vers) > 50:
-		return ErrInvalidVers{x}
+	case len(c.Vers) > 50:
+		return ErrInvalidVers{c}
 
-	case IsValidName != nil && !IsValidName(x.Name):
-		return ErrInvalidName{x.Name}
+	case IsValidName != nil && !IsValidName(c.Name):
+		return ErrInvalidName{c.Name}
 
-	case x.Do == nil && len(x.Cmds) == 0:
+	case c.Do == nil && len(c.Cmds) == 0:
 		return ErrUncallable{x}
 
-	case x.Def != nil && !slices.Contains(x.Cmds, x.Def):
-		return ErrMissingDef{x}
+	case c.Def != nil && !slices.Contains(c.Cmds, c.Def):
+		return ErrMissingDef{c}
 
-	case x.Do != nil && x.Def != nil:
-		return ErrDoOrDef{x}
+	case len(args) < c.MinArgs:
+		return ErrNotEnoughArgs{Count: len(args), Min: c.MinArgs}
 
-	case len(args) < x.MinArgs:
-		return ErrNotEnoughArgs{Count: len(args), Min: x.MinArgs}
+	case c.MaxArgs > 0 && len(args) > c.MaxArgs:
+		return ErrTooManyArgs{Count: len(args), Max: c.MaxArgs}
 
-	case x.MaxArgs > 0 && len(args) > x.MaxArgs:
-		return ErrTooManyArgs{Count: len(args), Max: x.MaxArgs}
+	case c.NumArgs > 0 && len(args) != c.NumArgs:
+		return ErrWrongNumArgs{Count: len(args), Num: c.NumArgs}
 
-	case x.NumArgs > 0 && len(args) != x.NumArgs:
-		return ErrWrongNumArgs{Count: len(args), Num: x.NumArgs}
+	case c.NoArgs && len(args) > 0:
+		return ErrWrongNumArgs{Count: len(args), Num: c.NumArgs}
+
+	case len(c.RegxArgs) > 0:
+		regx, err := regexp.Compile(c.RegxArgs)
+		if err != nil {
+			return err
+		}
+		for n, arg := range args {
+			if !regx.MatchString(arg) {
+				return ErrInvalidArg{Exp: c.RegxArgs, Index: n}
+			}
+		}
 
 	}
 	return c.call(args)
@@ -719,4 +732,15 @@ type ErrInvalidVers struct {
 
 func (e ErrInvalidVers) Error() string {
 	return fmt.Sprintf(`Cmd.Vers length >50 for %q: %q`, e.Cmd, e.Cmd.Vers)
+}
+
+// ErrInvalidArg indicates that the arguments did not match
+// a particular possible regular expression.
+type ErrInvalidArg struct {
+	Exp   string
+	Index int
+}
+
+func (e ErrInvalidArg) Error() string {
+	return fmt.Sprintf(`arg #%v must match: %v`, e.Index+1, e.Exp)
 }
