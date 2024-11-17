@@ -312,7 +312,7 @@ func (x *Cmd) Run(args ...string) error {
 	if err := x.Validate(args...); err != nil {
 		return err
 	}
-	c, args := x.Seek(args)
+	c, args := x.Seek(args...)
 	if err := x.Validate(args...); err != nil {
 		return err
 	}
@@ -434,7 +434,7 @@ func (x *Cmd) detectCompletion() {
 
 		// find the leaf command
 		lineargs := argsFrom(line)
-		cmd, args := x.Seek(lineargs[1:])
+		cmd, args := x.Seek(lineargs[1:]...)
 
 		if cmd.Comp == nil {
 			os.Exit(0)
@@ -546,7 +546,7 @@ func (x *Cmd) CmdNames() []string {
 // on each [Cmd] in the path. Seek is indirectly called by [Cmd.Run] and
 // [Cmd.Exec]. See [pkg/github.com/rwxrob/bonzai/cmds/help] for
 // a practical example of how and why a command might need to call Seek.
-func (x *Cmd) Seek(args []string) (*Cmd, []string) {
+func (x *Cmd) Seek(args ...string) (*Cmd, []string) {
 	if (len(args) == 1 && args[0] == "") || x.Cmds == nil {
 		return x, args
 	}

@@ -257,3 +257,30 @@ func ExampleValidate_callableDefOnly() {
 	// Output:
 	// <nil>
 }
+
+func ExampleSeek() {
+
+	var after = &bonzai.Cmd{
+		Name: `after`,
+		Cmds: []*bonzai.Cmd{&bonzai.Cmd{Name: `some`}},
+	}
+
+	var foo = &bonzai.Cmd{
+		Name: `foo`,
+		Cmds: []*bonzai.Cmd{after},
+	}
+
+	var Cmd = &bonzai.Cmd{
+		Name: `main`,
+		Cmds: []*bonzai.Cmd{foo},
+	}
+
+	cmd, args := Cmd.Seek(`foo`, `after`, `some`, `arg1`, `arg2`)
+	fmt.Println(`cmd:`, cmd)
+	fmt.Println(`args:`, args)
+
+	// Output:
+	// cmd: some
+	// args: [arg1 arg2]
+
+}
