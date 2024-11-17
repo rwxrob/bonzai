@@ -64,7 +64,13 @@ Configures the scope.
   - module: Toggles the go.work file in the current module.
   - repo: Toggles all go.work files in the monorepo.
   - tree: Toggles go.work files in the directory tree starting from pwd.
-`,
+  `,
+	Env: bonzai.VarMap{
+		WorkScopeEnv: bonzai.Var{Key: WorkScopeEnv, Str: `module`},
+	},
+	Vars: bonzai.VarMap{
+		WorkScopeVar: bonzai.Var{Key: WorkScopeVar, Str: `module`},
+	},
 	NumArgs:  1,
 	RegxArgs: `on|off`,
 	Opts:     `on|off`,
@@ -85,6 +91,7 @@ Configures the scope.
 		default:
 			return invArgsErr
 		}
+		// FIXME: the default here could come from Env or Vars.
 		scope := vars.Fetch(WorkScopeEnv, WorkScopeVar, `module`)
 		switch scope {
 		case `module`:
@@ -105,9 +112,9 @@ Configures the scope.
 }
 
 var workInitCmd = &bonzai.Cmd{
-	Name:     `init`,
-	Alias:    `i`,
-	Short:    `new go.work in module using dependencies from monorepo`,
+	Name:  `init`,
+	Alias: `i`,
+	Short: `new go.work in module using dependencies from monorepo`,
 	Long: `
 The "init" subcommand initializes a new Go workspace file (go.work) 
 for the current module. It helps automate the creation of a workspace
