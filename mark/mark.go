@@ -77,7 +77,7 @@ type PDFRenderer interface {
 func Usage(x *bonzai.Cmd) (string, error) {
 	out := new(strings.Builder)
 	out.WriteString("# Usage\n\n")
-	out.WriteString("{{cmdtree .}}\n")
+	out.WriteString("{{cmdtree .}}")
 	if len(x.Long) > 0 {
 		out.WriteString("\n" + to.Dedented(x.Long))
 		if x.Long[len(x.Long)-1] != '\n' {
