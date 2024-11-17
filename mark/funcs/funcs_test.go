@@ -41,3 +41,45 @@ I'll use the {{code "{{code}}"}} thing instead with something like
 	// `go mod init` since cannot use backticks.
 
 }
+
+func ExampleCmdTree() {
+	var subFooCmd = &bonzai.Cmd{
+		Name:  `subfoo`,
+		Alias: `sf`,
+		Short: `under the foo command`,
+	}
+
+	var fooCmd = &bonzai.Cmd{
+		Name:  `foo`,
+		Alias: `f`,
+		Short: `foo this command`,
+		Cmds:  []*bonzai.Cmd{subFooCmd},
+	}
+
+	var barCmd = &bonzai.Cmd{
+		Name:  `bar`,
+		Alias: `b`,
+		Short: `bar this command`,
+	}
+
+	var Cmd = &bonzai.Cmd{
+		Name:  `mycmd`,
+		Alias: `my|cmd`,
+		Short: `my command short summary`,
+		Cmds:  []*bonzai.Cmd{fooCmd, barCmd},
+		Def:   fooCmd,
+	}
+
+	Cmd.Seek(`foo`, `subfoo`) // required for default detection
+
+	fmt.Print("# Synopsis\n\n")
+	fmt.Println(funcs.CmdTree(Cmd))
+
+	// Output:
+	// # Synopsis
+	//
+	//     mycmd      ← my command short summary
+	//       foo      ← foo this command (default)
+	//         subfoo ← under the foo command
+	//       bar      ← bar this command
+}

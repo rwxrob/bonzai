@@ -1,5 +1,7 @@
 # 🌳 Go Bonzai™ CLI Framework and Library
 
+***Bonzai is undergoing a major upgrade and a [v1.0 should be here by 2025](https://github.com/rwxrob/bonzai/issues/226). We recommend waiting until then before migrating any existing stuff or embarking on RRIB shell script collections in your Dot files. Come join us on https://linktr.ee/rwxrob to help us finish up the new version.***
+
 [![GoDoc](https://godoc.org/github.com/rwxrob/bonzai?status.svg)](https://godoc.org/github.com/rwxrob/bonzai)
 [![License](https://img.shields.io/badge/license-Apache2-brightgreen.svg)](LICENSE)
 [![Go Report

@@ -2,7 +2,6 @@ package mark_test
 
 import (
 	"fmt"
-	"io"
 	"text/template"
 
 	"github.com/rwxrob/bonzai"
@@ -18,7 +17,7 @@ func (a Thing) Summary() string {
 	return fmt.Sprintf("%v %v", a.Name, a.Count)
 }
 
-func ExampleRenderString() {
+func ExampleFill() {
 
 	/* cannot declare type with method within function, but this is it
 
@@ -34,12 +33,12 @@ func ExampleRenderString() {
 	*/
 
 	thing := Thing{`Thing`, 20}
-	zmark := `
+	tmpl := `
 	{{hello}}, my name is {{.Name}} with {{.Count}}. Summary: {{.Summary}}`
 	funcs := template.FuncMap{}
 	funcs[`hello`] = func() string { return `Hello` }
 
-	out, err := mark.Render(thing, funcs, zmark)
+	out, err := mark.Fill(thing, funcs, tmpl)
 	if err != nil {
 		fmt.Println(err)
 		return
@@ -50,47 +49,6 @@ func ExampleRenderString() {
 	// Output:
 	// Hello, my name is Thing with 20. Summary: Thing 20
 
-}
-
-func ExampleCmdTree() {
-	var subFooCmd = &bonzai.Cmd{
-		Name:  `subfoo`,
-		Alias: `sf`,
-		Short: `under the foo command`,
-	}
-
-	var fooCmd = &bonzai.Cmd{
-		Name:  `foo`,
-		Alias: `f`,
-		Short: `foo this command`,
-		Cmds:  []*bonzai.Cmd{subFooCmd},
-	}
-
-	var barCmd = &bonzai.Cmd{
-		Name:  `bar`,
-		Alias: `b`,
-		Short: `bar this command`,
-	}
-
-	var Cmd = &bonzai.Cmd{
-		Name:  `mycmd`,
-		Alias: `my|cmd`,
-		Short: `my command short summary`,
-		Cmds:  []*bonzai.Cmd{fooCmd, barCmd},
-		Def:   fooCmd,
-	}
-
-	Cmd.SetCallers()
-	fmt.Print("# Synopsis\n\n")
-	fmt.Println(mark.CmdTree(Cmd))
-
-	// Output:
-	// # Synopsis
-	//
-	//     mycmd      ← my command short summary
-	//     ├─foo      ← foo this command (default)
-	//     │ └─subfoo ← under the foo command
-	//     └─bar      ← bar this command
 }
 
 func ExampleUsage_withHiddenCmds() {
@@ -129,24 +87,17 @@ func ExampleUsage_withHiddenCmds() {
 			On multiple lines.`,
 	}
 
-	Cmd.SetCallers()
-
-	r, err := mark.Usage(Cmd)
-	if err != nil {
-		fmt.Println(err)
-	}
-
-	out, _ := io.ReadAll(r)
+	out, _ := mark.Usage(Cmd)
 	fmt.Println(string(out))
 
 	// Output:
 	// # Usage
 	//
 	//     mycmd        ← my command short summary
-	//     ├─foo        ← foo this command
-	//     │ ├─subfoo   ← under the foo command
-	//     │ └─(hidden) ← contains hidden subcommands
-	//     └─bar        ← bar this command
+	//       foo        ← foo this command
+	//         subfoo   ← under the foo command
+	//         (hidden) ← contains hidden subcommands
+	//       bar        ← bar this command
 	//
 	// Here is a long description.
 	// On multiple lines.
@@ -188,24 +139,17 @@ func ExampleUsage_missingShort() {
 			On multiple lines.`,
 	}
 
-	Cmd.SetCallers()
-
-	r, err := mark.Usage(Cmd)
-	if err != nil {
-		fmt.Println(err)
-	}
-
-	out, _ := io.ReadAll(r)
-	fmt.Println(string(out))
+	out, _ := mark.Usage(Cmd)
+	fmt.Println(out)
 
 	// Output:
 	// # Usage
 	//
 	//     mycmd        ← my command short summary
-	//     ├─foo
-	//     │ ├─subfoo   ← under the foo command
-	//     │ └─(hidden) ← contains hidden subcommands
-	//     └─bar        ← bar this command
+	//       foo
+	//         subfoo   ← under the foo command
+	//         (hidden) ← contains hidden subcommands
+	//       bar        ← bar this command
 	//
 	// Here is a long description.
 	// On multiple lines.
@@ -247,22 +191,20 @@ func ExampleUsage_middle() {
 			On multiple lines.`,
 	}
 
-	Cmd.SetCallers()
+	_ = Cmd
 
-	r, err := mark.Usage(fooCmd)
+	out, err := mark.Usage(fooCmd)
 	if err != nil {
 		fmt.Println(err)
 	}
-
-	out, _ := io.ReadAll(r)
-	fmt.Println(string(out))
+	fmt.Println(out)
 
 	// Output:
 	// # Usage
 	//
 	//     foo
-	//     ├─subfoo   ← under the foo command
-	//     └─(hidden) ← contains hidden subcommands
+	//       subfoo   ← under the foo command
+	//       (hidden) ← contains hidden subcommands
 }
 
 func ExampleUsage_longFirstName() {
@@ -270,7 +212,7 @@ func ExampleUsage_longFirstName() {
 	var fooCmd = &bonzai.Cmd{
 		Name: `foo`,
 		//Short: `a foo`,
-		Do: func(_ *bonzai.Cmd, _ ...string) error {
+		Do: func(*bonzai.Cmd, ...string) error {
 			return nil
 		},
 	}
@@ -284,19 +226,16 @@ func ExampleUsage_longFirstName() {
 		Def:   fooCmd,
 	}
 
-	Cmd.SetCallers()
-	r, err := mark.Usage(Cmd)
-	if err != nil {
-		fmt.Println(err)
-	}
-	out, _ := io.ReadAll(r)
+	Cmd.Seek(`foo`) // for default
+
+	out, _ := mark.Usage(Cmd)
 	fmt.Println(string(out))
 
 	// Output:
 	// # Usage
 	//
 	//     help-test ← just a help test
-	//     ├─foo     ← (default)
-	//     └─foo2
+	//       foo     ← (default)
+	//       foo2
 
 }

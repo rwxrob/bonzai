@@ -5,11 +5,13 @@ import (
 	"log"
 	"os"
 	"path/filepath"
+	"regexp"
 	"slices"
 	"strconv"
 	"strings"
 	"sync"
 	"text/template"
+	"unicode"
 )
 
 // AllowsPanic if set will turn any panic into an exit with an error
@@ -34,15 +36,17 @@ type Cmd struct {
 	Alias string // ex: rm|d|del (optional)
 	Opts  string // ex: mon|wed|fri (optional)
 
-	// Shareable variables also used for persistent initial values
-	Vars map[string]Var
+	// Shareable variables
+	Vars VarMap // not automatically persisted (see vars)
+	Env  VarMap // set for self and children (use Var.Str)
 
-	// Own work (optional if Cmds or Def)
-	Do func(x *Cmd, args ...string) error
+	// Work down by this command itself
+	Init func(x *Cmd, args ...string) error // initialization with [SeekInit]
+	Do   func(x *Cmd, args ...string) error // main (optional if Def or Cmds)
 
 	// Delegated work
-	Def  *Cmd   // default Cmd (optional)
-	Cmds []*Cmd // composed commands (optional if Do or Cmds or Def)
+	Cmds []*Cmd // composed subcommands (optional if Do or Def)
+	Def  *Cmd   // default (optional if Do or Cmds, not required in Cmds)
 
 	// Documentation
 	Vers  string           // text (<50 runes) (optional)
@@ -51,16 +55,16 @@ type Cmd struct {
 	Funcs template.FuncMap // own template tags (optional)
 
 	// Faster than "if" conditions in [Cmd.Do] (all optional)
-	MinArgs   int    // min
-	MaxArgs   int    // max
-	NumArgs   int    // exact, doubles as NoArg (0)
-	MatchArgs string // regular expression filter (document in Long)
+	MinArgs  int    // min
+	MaxArgs  int    // max
+	NumArgs  int    // exact
+	NoArgs   bool   // 0
+	RegxArgs string // regx check each arg (document in Long)
 
 	// Self-completion support: complete -C foo foo
 	Comp Completer
 
-	caller   *Cmd            // see [SetCallers], delegation
-	level    int             // see [SetCallers]
+	caller   *Cmd            // see [Caller],[Seek], delegation
 	aliases  []string        // see [cacheAlias]
 	opts     []string        // see [cacheOpts]
 	hidden   bool            // see [AsHidden] and [IsHidden]
@@ -79,6 +83,8 @@ type Var struct {
 	Bool  bool
 	Any   any
 }
+
+type VarMap map[string]Var
 
 // Completer specifies anything with Complete function based
 // on the remaining arguments. The Complete method must never panic
@@ -307,38 +313,61 @@ var trapPanic = func() {
 // a high-level. Run returns an error if a command cannot be found or the
 // command fails validation in any way.
 func (x *Cmd) Run(args ...string) error {
-	c, args := x.Seek(args)
+	if err := x.Validate(args...); err != nil {
+		return err
+	}
+	c, args, err := x.SeekInit(args...)
+	if err != nil {
+		return err
+	}
+	if err := c.Validate(args...); err != nil {
+		return err
+	}
+	return c.call(args)
+}
 
+func (c *Cmd) Validate(args ...string) error {
 	switch {
+
 	case c == nil:
 		return ErrIncorrectUsage{c}
 
-	case len(x.Short) > 50:
-		return ErrInvalidShort{x}
+	case len(c.Short) > 0 && (len(c.Short) > 50 || !unicode.IsLower(rune(c.Short[0]))):
+		return ErrInvalidShort{c}
 
-	case len(x.Vers) > 50:
-		return ErrInvalidVers{x}
+	case len(c.Vers) > 50:
+		return ErrInvalidVers{c}
 
-	case IsValidName != nil && !IsValidName(x.Name):
-		return ErrInvalidName{x.Name}
+	case IsValidName != nil && !IsValidName(c.Name):
+		return ErrInvalidName{c.Name}
 
-	case x.Do == nil && x.Def == nil && len(x.Cmds) == 0:
-		return ErrUncallable{x}
+	case c.Do == nil && len(c.Cmds) == 0 && c.Def == nil:
+		return ErrUncallable{c}
 
-	case x.Do != nil && x.Def != nil:
-		return ErrDoOrDef{x}
+	case len(args) < c.MinArgs:
+		return ErrNotEnoughArgs{Count: len(args), Min: c.MinArgs}
 
-	case len(args) < x.MinArgs:
-		return ErrNotEnoughArgs{Count: len(args), Min: x.MinArgs}
+	case c.MaxArgs > 0 && len(args) > c.MaxArgs:
+		return ErrTooManyArgs{Count: len(args), Max: c.MaxArgs}
 
-	case x.MaxArgs > 0 && len(args) > x.MaxArgs:
-		return ErrTooManyArgs{Count: len(args), Max: x.MaxArgs}
+	case c.NumArgs > 0 && len(args) != c.NumArgs:
+		return ErrWrongNumArgs{Count: len(args), Num: c.NumArgs}
 
-	case x.NumArgs > 0 && len(args) != x.NumArgs:
-		return ErrWrongNumArgs{Count: len(args), Num: x.NumArgs}
+	case c.NoArgs && len(args) > 0:
+		return ErrWrongNumArgs{Count: len(args), Num: c.NumArgs}
 
+	case len(c.RegxArgs) > 0:
+		regx, err := regexp.Compile(c.RegxArgs)
+		if err != nil {
+			return err
+		}
+		for n, arg := range args {
+			if !regx.MatchString(arg) {
+				return ErrInvalidArg{Exp: c.RegxArgs, Index: n}
+			}
+		}
 	}
-	return c.call(args)
+	return nil
 }
 
 func (x *Cmd) call(args []string) error {
@@ -412,7 +441,7 @@ func (x *Cmd) detectCompletion() {
 
 		// find the leaf command
 		lineargs := argsFrom(line)
-		cmd, args := x.Seek(lineargs[1:])
+		cmd, args := x.Seek(lineargs[1:]...)
 
 		if cmd.Comp == nil {
 			os.Exit(0)
@@ -520,13 +549,13 @@ func (x *Cmd) CmdNames() []string {
 
 // Seek checks the args passed for command names returning the deepest
 // along with the remaining arguments. Typically the args passed are
-// directly derived from the command line. Seek also calls
-// [Cmd.SetCallers] so that the [Cmd.Caller] and [Cmd.Level] are set for
-// all commands in the tree. Seek is indirectly called by [Cmd.Run] and
+// directly derived from the command line. Seek also sets [Cmd.Caller]
+// on each [Cmd] in the path. Seek is indirectly called by [Cmd.Run] and
 // [Cmd.Exec]. See [pkg/github.com/rwxrob/bonzai/cmds/help] for
 // a practical example of how and why a command might need to call Seek.
-func (x *Cmd) Seek(args []string) (*Cmd, []string) {
-	x.SetCallers()
+// Also see [Cmd.SeekInit] when environment variables and initialization
+// functions are wanted as well.
+func (x *Cmd) Seek(args ...string) (*Cmd, []string) {
 	if (len(args) == 1 && args[0] == "") || x.Cmds == nil {
 		return x, args
 	}
@@ -537,9 +566,51 @@ func (x *Cmd) Seek(args []string) (*Cmd, []string) {
 		if next == nil {
 			break
 		}
+		next.caller = cur
 		cur = next
 	}
 	return cur, args[n:]
+}
+
+// SeekInit is the same as [Cmd.Seek] but [Cmd].Env variables are exported
+// and the [Cmd].Init functions are called (if any). Returns early with
+// nil values and the error if any Init function produces an error.
+func (x *Cmd) SeekInit(args ...string) (*Cmd, []string, error) {
+	x.exportenv()
+	if x.Init != nil {
+		if err := x.Init(x, args...); err != nil {
+			return nil, nil, err
+		}
+	}
+	if (len(args) == 1 && args[0] == "") || x.Cmds == nil {
+		return x, args, nil
+	}
+	cur := x
+	n := 0
+	for ; n < len(args); n++ {
+		next := cur.resolve(args[n])
+		if next == nil {
+			break
+		}
+		next.exportenv()
+		if next.Init != nil {
+			if err := next.Init(next, args...); err != nil {
+				return nil, nil, err
+			}
+		}
+		next.caller = cur
+		cur = next
+	}
+	return cur, args[n:], nil
+}
+
+func (x *Cmd) exportenv() {
+	for k, v := range x.Env {
+		_, has := os.LookupEnv(k)
+		if !has {
+			os.Setenv(k, v.Str)
+		}
+	}
 }
 
 // Path returns the path of commands used to arrive at this command.
@@ -555,79 +626,62 @@ func (x *Cmd) Path() []*Cmd {
 	return path[1:]
 }
 
-// SetCallers assigns the parent command ([Cmd.Caller]) to each subcommand
-// in the command tree starting from the current command on down. It also
-// updates the [Cmd.Level] of each subcommand relative to its parent.
-// This is performed by walking the command tree deeply using
-// the [Cmd.WalkDeep] method. This method is rarely needed in common
-// practice since [Cmd.Exec], [Cmd.Run], and [Cmd.Seek] do the same.
-// Usually, this is found in test code.
-func (root *Cmd) SetCallers() {
-	setcaller := func(x *Cmd) error {
-		for _, cmd := range x.Cmds {
-			cmd.caller = x
-			cmd.level = x.level + 1
-		}
-		if x.Def != nil {
-			x.Def.caller = x
-			x.Def.level = x.level + 1
-		}
-		return nil
-	}
-	root.WalkDeep(setcaller, nil)
-}
-
-// Level returns the level at which this command appears in the command
-// tree and is set when SetCallers is called.
-func (x *Cmd) Level() int { return x.level }
-
-// WalkDeep recursively traverses the command tree starting from itself,
-// applying the function (fn) to each [Cmd]. If an error occurs while
-// executing fn, the onError function is called with the error. It also
-// checks if the default command Def is in the subcommands and invokes
-// WalkDeep on it if so. Enclosed context.Context and error queue
-// implementations can be added by developers when they are needed.
-func (x *Cmd) WalkDeep(fn func(*Cmd) error, onError func(error)) {
+func (x *Cmd) walkDeep(level int, fn func(int, *Cmd) error, onError func(error)) {
 	if x == nil {
 		return
 	}
-	if err := fn(x); err != nil {
+	if err := fn(level, x); err != nil {
 		onError(err)
 	}
-	var defInCmds bool
+	sublevel := level + 1
 	if len(x.Cmds) > 0 {
 		for _, cmd := range x.Cmds {
-			cmd.WalkDeep(fn, onError)
-			if x.Def != nil && x.Def == cmd {
-				defInCmds = true
-			}
+			cmd.walkDeep(sublevel, fn, onError)
 		}
 	}
-	if !defInCmds {
-		x.Def.WalkDeep(fn, onError)
+}
+
+// WalkDeep recursively traverses the command tree starting from itself,
+// applying the function (fn) to each [Cmd] within [Cmd].Cmds with its
+// level. If an error occurs while executing fn, the onError function is
+// called with the error. Note that [Cmd].Def is only included if it is
+// also in the Cmds slice.
+func (x *Cmd) WalkDeep(fn func(int, *Cmd) error, onError func(error)) {
+	x.walkDeep(0, fn, onError)
+}
+
+type leveled struct {
+	cmd   *Cmd
+	level int
+}
+
+func (x *Cmd) walkWide(level int, fn func(int, *Cmd) error, onError func(error)) {
+	if x == nil {
+		return
+	}
+	queue := []leveled{leveled{x, level}}
+	for len(queue) > 0 {
+		cur := queue[0]
+		queue = queue[1:]
+		if err := fn(cur.level, cur.cmd); err != nil {
+			onError(err)
+		}
+		sublevel := level + 1
+		for _, cmd := range cur.cmd.Cmds {
+			queue = append(queue, leveled{cmd, sublevel})
+		}
 	}
 }
 
 // WalkWide performs a breadth-first traversal (BFS) of the command tree
-// starting from the command itself, applying the function (fn) to each
-// [Cmd]. If an error occurs during the execution of fn, the onError
-// function is called with the error. It uses a queue to process each
-// command and its subcommands iteratively. Enclosed context.Context and
-// error queue implementations can be added by developers when they are
-// needed.
-func (x *Cmd) WalkWide(fn func(*Cmd) error, onError func(error)) {
-	if x == nil {
-		return
-	}
-	queue := []*Cmd{x}
-	for len(queue) > 0 {
-		current := queue[0]
-		queue = queue[1:]
-		if err := fn(current); err != nil {
-			onError(err)
-		}
-		queue = append(queue, current.Cmds...)
-	}
+// starting from the command itself, applying the function (fn) with the
+// current level to each [Cmd] in [Cmd].Cmds recursively. If an error
+// occurs during the execution of fn, the onError function is called
+// with the error. It uses a queue to process each command and its
+// subcommands iteratively. Note that [Cmd].Def is only included if it
+// is also in the Cmds slice.
+func (x *Cmd) WalkWide(fn func(int, *Cmd) error, onError func(error)) {
+	x.walkWide(0, fn, onError)
 }
 
 // ErrInvalidName indicates that the provided name for the command is invalid.
@@ -650,14 +704,14 @@ func (e ErrIncorrectUsage) Error() string {
 	return fmt.Sprintf(`incorrect usage for "%v" command`, e.Cmd.Name)
 }
 
-// ErrUncallable indicates that a command requires a Do or Def function
-// for execution, providing a reference to the [Cmd] in question.
+// ErrUncallable indicates that a command requires a Do, one
+// [Cmd].Cmds or a [Cmd].Def assigned.
 type ErrUncallable struct {
 	Cmd *Cmd
 }
 
 func (e ErrUncallable) Error() string {
-	return fmt.Sprintf(`Cmd requires Do or Def of Cmds: %v`, e.Cmd.Name)
+	return fmt.Sprintf(`Cmd requires Do, Def, or Cmds: %v`, e.Cmd.Name)
 }
 
 // ErrDoOrDef suggests that a command cannot have both Do and Def
@@ -714,7 +768,7 @@ type ErrInvalidShort struct {
 }
 
 func (e ErrInvalidShort) Error() string {
-	return fmt.Sprintf(`Cmd.Short length >50 for %q: %q`, e.Cmd, e.Cmd.Short)
+	return fmt.Sprintf(`Short length >50 or not lower for %q: %q`, e.Cmd, e.Cmd.Short)
 }
 
 // ErrInvalidVers indicates that the short description length exceeds 50
@@ -725,4 +779,15 @@ type ErrInvalidVers struct {
 
 func (e ErrInvalidVers) Error() string {
 	return fmt.Sprintf(`Cmd.Vers length >50 for %q: %q`, e.Cmd, e.Cmd.Vers)
+}
+
+// ErrInvalidArg indicates that the arguments did not match
+// a particular possible regular expression.
+type ErrInvalidArg struct {
+	Exp   string
+	Index int
+}
+
+func (e ErrInvalidArg) Error() string {
+	return fmt.Sprintf(`arg #%v must match: %v`, e.Index+1, e.Exp)
 }
