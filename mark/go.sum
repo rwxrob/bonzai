@@ -18,6 +18,8 @@ github.com/rwxrob/bonzai/mark/funcs v0.3.0 h1:C9omiB2IDnODvxZRjlVMe2HCYKVaF05V+x
 github.com/rwxrob/bonzai/mark/funcs v0.3.0/go.mod h1:sWeUmbf+TX0V1xI6v7mj+YC8JNp2q/4f9EFyRpLLP+M=
 github.com/rwxrob/bonzai/mark/funcs v0.4.0 h1:z8PWIHVV1G7cZTgz82z8DlFVlcNZEAnIy0Tr93G5TQk=
 github.com/rwxrob/bonzai/mark/funcs v0.4.0/go.mod h1:QJy9P2Q48iUc7ZOlL+OwtJIbU2BZLyhXHV5ScE2HiR8=
+github.com/rwxrob/bonzai/mark/funcs v0.4.1 h1:fHwJUr8Tolp+DXid2kq69P6O5mvWYu5SfwfK0TlF1Rk=
+github.com/rwxrob/bonzai/mark/funcs v0.4.1/go.mod h1:QJy9P2Q48iUc7ZOlL+OwtJIbU2BZLyhXHV5ScE2HiR8=
 github.com/rwxrob/bonzai/run v0.7.0 h1:rP1GPxkLocijBVEs58duMymKTiyQfbthfoAh7VoThG0=
 github.com/rwxrob/bonzai/run v0.7.0/go.mod h1:KhMNAJ3t78LDAHur60xiGA564UejG69PgV51k2QjXD8=
 github.com/rwxrob/bonzai/scanner v0.1.0 h1:xPf5817Mt0lkm2GvygJIGBqq0sS7thvh5ceK3RjWhkQ=
