@@ -70,7 +70,7 @@ func ExampleCmdTree() {
 		Def:   fooCmd,
 	}
 
-	Cmd.Seek([]string{`foo`, `subfoo`}) // required for default detection
+	Cmd.Seek(`foo`, `subfoo`) // required for default detection
 
 	fmt.Print("# Synopsis\n\n")
 	fmt.Println(funcs.CmdTree(Cmd))
