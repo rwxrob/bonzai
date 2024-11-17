@@ -476,11 +476,16 @@ func Type[T any](from string, this T) T {
 		result = is.Truthy(from)
 	case int:
 		result, err = strconv.Atoi(from)
+		if err != nil {
+			return this
+		}
 	case float64:
 		result, err = strconv.ParseFloat(from, 64)
 		if err != nil {
 			return this
 		}
+	case string:
+		result = from
 	}
 	return result.(T)
 }

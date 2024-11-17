@@ -20,21 +20,22 @@ func (s stringer) String() string { return "stringer" }
 func ExampleString() {
 	r := strings.NewReader(`reader`)
 	stuff := []any{
-		"some", []byte{'t', 'h', 'i', 'n', 'g'},
-		1, 2.234, stringer{}, r,
+		"some",
+		[]byte{'t', 'h', 'i', 'n', 'g'},
+		1, 2.234,
+		stringer{},
+		r,
 	}
 	for _, s := range stuff {
 		fmt.Printf("%q ", to.String(s))
 	}
 	// Output:
 	// "some" "thing" "1" "2.234" "stringer" "reader"
-
 }
 
 func Foo() {}
 
 func ExampleFuncName() {
-
 	f1 := func() {}
 	f2 := func() {}
 
@@ -137,10 +138,8 @@ func ExampleIndentation() {
 	// 1
 }
 
-//wrapped, count = to.Wrapped("There I was not knowing what to do about this exceedingly long line and knowing that certain people would shun me for injecting\nreturns wherever I wanted.", 40)
-
+// wrapped, count = to.Wrapped("There I was not knowing what to do about this exceedingly long line and knowing that certain people would shun me for injecting\nreturns wherever I wanted.", 40)
 func ExampleWrapped() {
-
 	wrapped, count := to.Wrapped("some thing", 3)
 	fmt.Printf("%q %v\n", wrapped, count)
 
@@ -161,10 +160,9 @@ func ExampleWrapped_long() {
 	fmt.Println(count)
 	fmt.Printf("%q", out)
 
-	//Output:
+	// Output:
 	// 58
 	// "The config command allows configuration of the current command in YAML and JSON\n(since all JSON is valid YAML). All changes to configuration values are done via\nthe <edit> command since configurations may be complex and deeply nested in some\ncases. Querying configuration data, however, can be easily accomplished with the\n<query> command that uses jq-like selection syntax."
-
 }
 
 func ExampleWrapped_escapes() {
@@ -175,7 +173,6 @@ func ExampleWrapped_escapes() {
 	// Output:
 	// 5
 	// "Here is a \x1b[34mblue\x1b[0m\nthing"
-
 }
 
 func ExampleIndented() {
@@ -194,7 +191,6 @@ func ExamplePrefixed() {
 }
 
 func ExampleIndentWrapped() {
-
 	description := `
 		The y2j command converts YAML (including references and
 		anchors) to compressed JSON (with a single training newline) using
@@ -215,7 +211,6 @@ func ExampleIndentWrapped() {
 	//        of this only YAML maps are supported as a base type
 	//        (no arrays). An array can easily be done as the value
 	//        of a map key.
-
 }
 
 func ExampleMergedMaps() {
@@ -248,7 +243,7 @@ func ExampleHTTPS() {
 }
 
 func ExampleRuneCount() {
-	//scan.Trace++
+	// scan.Trace++
 	fmt.Println(to.RuneCount("\033some\033"))
 	fmt.Println(to.RuneCount("some"))
 	fmt.Println(to.RuneCount("\033[32msome\033[0m"))
@@ -294,7 +289,6 @@ func ExampleBytes_bork() {
 }
 
 func ExampleCrunchSpace() {
-
 	fmt.Printf("%q\n", to.CrunchSpace(`here    is some`))
 	fmt.Printf("%q\n", to.CrunchSpace(`   here is some`))
 	fmt.Printf("%q\n", to.CrunchSpace(`here is some   `))
@@ -309,11 +303,9 @@ func ExampleCrunchSpace() {
 	// "here is some"
 	// "here is some"
 	// "here is some"
-
 }
 
 func ExampleTrimCrunchSpace() {
-
 	fmt.Printf("%q\n", to.TrimCrunchSpace(`here    is some`))
 	fmt.Printf("%q\n", to.TrimCrunchSpace(`   here is some`))
 	fmt.Printf("%q\n", to.TrimCrunchSpace(`here is some   `))
@@ -328,18 +320,15 @@ func ExampleTrimCrunchSpace() {
 	// "here is some"
 	// "here is some"
 	// "here is some"
-
 }
 
 func ExampleTrimCrunchSpaceVisible() {
-
 	fmt.Printf("%q\n", to.TrimCrunchSpaceVisible(" here  \033  is\nsome "))
 	fmt.Printf("%q\n", to.TrimCrunchSpaceVisible(" here  \033  is \nsome "))
 
 	// Output:
 	// "here is some"
 	// "here is some"
-
 }
 
 func ExampleType() {
@@ -359,6 +348,8 @@ func ExampleType() {
 	fmt.Println("-14, 0.0", to.Type("-14", 0.0))
 	fmt.Println(`"", 0.0`, to.Type("", 0.0))
 
+	fmt.Println("hello, hello", to.Type("hello", "default"))
+
 	// Output:
 	// true, false true
 	// false, false false
@@ -373,4 +364,5 @@ func ExampleType() {
 	// 14, 0.0 14
 	// -14, 0.0 -14
 	// "", 0.0 0
+	// hello, hello hello
 }
