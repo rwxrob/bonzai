@@ -226,7 +226,7 @@ func ExampleUsage_longFirstName() {
 		Def:   fooCmd,
 	}
 
-	Cmd.Seek([]string{`foo`}) // for default
+	Cmd.Seek(`foo`) // for default
 
 	out, _ := mark.Usage(Cmd)
 	fmt.Println(string(out))
