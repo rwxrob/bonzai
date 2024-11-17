@@ -21,7 +21,7 @@ var Cmd = &bonzai.Cmd{
 	Do: func(x *bonzai.Cmd, args ...string) error {
 
 		if len(args) > 0 {
-			x, args = x.Caller().Seek(args)
+			x, args = x.Caller().Seek(args...)
 		} else {
 			x = x.Caller()
 		}

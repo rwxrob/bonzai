@@ -3,8 +3,8 @@ module github.com/rwxrob/bonzai/cmds/help
 go 1.23.0
 
 require (
-	github.com/rwxrob/bonzai v0.45.1
-	github.com/rwxrob/bonzai/mark v0.10.5
+	github.com/rwxrob/bonzai v0.46.0
+	github.com/rwxrob/bonzai/mark v0.10.6
 	github.com/rwxrob/bonzai/term v0.2.1
 )
 
@@ -15,7 +15,7 @@ require (
 	github.com/rwxrob/bonzai/fn v0.8.2 // indirect
 	github.com/rwxrob/bonzai/futil v0.1.0 // indirect
 	github.com/rwxrob/bonzai/is v0.3.0 // indirect
-	github.com/rwxrob/bonzai/mark/funcs v0.4.1 // indirect
+	github.com/rwxrob/bonzai/mark/funcs v0.4.2 // indirect
 	github.com/rwxrob/bonzai/run v0.7.0 // indirect
 	github.com/rwxrob/bonzai/scanner v0.1.0 // indirect
 	github.com/rwxrob/bonzai/to v0.2.0 // indirect

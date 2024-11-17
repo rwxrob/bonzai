@@ -2,6 +2,8 @@ github.com/rogpeppe/go-internal v1.13.1 h1:KvO1DLK/DRN07sQ1LQKScxyZJuNnedQ5/wKSR
 github.com/rogpeppe/go-internal v1.13.1/go.mod h1:uMEvuHeurkdAXX61udpOXGD/AzZDWNMNyH2VO9fmH0o=
 github.com/rwxrob/bonzai v0.45.1 h1:kkvVOLRbja3OnHyyQe0dyM0gEZTYIhnNPSjuCfqYYnk=
 github.com/rwxrob/bonzai v0.45.1/go.mod h1:217QTdfv41+Dji8cAeko6oXcaPR9I31xvbOP9ksNx5U=
+github.com/rwxrob/bonzai v0.46.0 h1:DgqVefmtN3t7sp3rmSsQsw1LPvVootDJVUsAZBCAy/0=
+github.com/rwxrob/bonzai v0.46.0/go.mod h1:217QTdfv41+Dji8cAeko6oXcaPR9I31xvbOP9ksNx5U=
 github.com/rwxrob/bonzai/comp v0.9.5 h1:6N9aIMlrazKhMCKwB76YWHedgGpdmrHgDPaBOC1gksE=
 github.com/rwxrob/bonzai/comp v0.9.5/go.mod h1:+MNs1lxC9QSxyBp8AzefQ/wGN8X+kD3dxSY5x8s/qaA=
 github.com/rwxrob/bonzai/ds v0.1.1 h1:yC+GoUH/5TPt86qJmQRsD8OHuODJoDt9UgkWQM8yPzA=
@@ -16,8 +18,12 @@ github.com/rwxrob/bonzai/mark v0.10.4 h1:cOEgDOaHB70YWIPrNWzHCkOSZZ/ph++gtuFSrZy
 github.com/rwxrob/bonzai/mark v0.10.4/go.mod h1:jFlH460G5NtwzO29HEgfIG2Nf3CbKTcMTlnoggw/0Mg=
 github.com/rwxrob/bonzai/mark v0.10.5 h1:J6MW4gYdbY73BThXvgQlkk5tGKnjoBDQGtzNdFeid8A=
 github.com/rwxrob/bonzai/mark v0.10.5/go.mod h1:jFlH460G5NtwzO29HEgfIG2Nf3CbKTcMTlnoggw/0Mg=
+github.com/rwxrob/bonzai/mark v0.10.6 h1:UXo3FQP3Dmwvntc9/TT5Xg/MT0f4Zr8pI6ZfkQc6nF4=
+github.com/rwxrob/bonzai/mark v0.10.6/go.mod h1:n0iqfTJGPBXBJBhSfEjrBiEO/NmxSyLPwvMah7i0kqU=
 github.com/rwxrob/bonzai/mark/funcs v0.4.1 h1:fHwJUr8Tolp+DXid2kq69P6O5mvWYu5SfwfK0TlF1Rk=
 github.com/rwxrob/bonzai/mark/funcs v0.4.1/go.mod h1:QJy9P2Q48iUc7ZOlL+OwtJIbU2BZLyhXHV5ScE2HiR8=
+github.com/rwxrob/bonzai/mark/funcs v0.4.2 h1:EpHjD2UO+4IV37nmAfyw+Ve0NptTCyf8VQ128Q6WM80=
+github.com/rwxrob/bonzai/mark/funcs v0.4.2/go.mod h1:PZO12ik9kfsgLRGsTN60m/KXfzscQb1j9ch4bLBcEmk=
 github.com/rwxrob/bonzai/run v0.7.0 h1:rP1GPxkLocijBVEs58duMymKTiyQfbthfoAh7VoThG0=
 github.com/rwxrob/bonzai/run v0.7.0/go.mod h1:KhMNAJ3t78LDAHur60xiGA564UejG69PgV51k2QjXD8=
 github.com/rwxrob/bonzai/scanner v0.1.0 h1:xPf5817Mt0lkm2GvygJIGBqq0sS7thvh5ceK3RjWhkQ=
