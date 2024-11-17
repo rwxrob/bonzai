@@ -4,8 +4,9 @@ go 1.23.2
 
 require (
 	github.com/rwxrob/bonzai v0.49.2
-	github.com/rwxrob/bonzai/cmds/help v0.7.1
+	github.com/rwxrob/bonzai/cmds/help v0.7.3
 	github.com/rwxrob/bonzai/comp v0.9.5
+	github.com/rwxrob/bonzai/comp/completers/git v0.2.0
 	github.com/rwxrob/bonzai/fn v0.8.2
 	github.com/rwxrob/bonzai/futil v0.1.0
 	github.com/rwxrob/bonzai/run v0.7.0
