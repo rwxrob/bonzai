@@ -244,3 +244,16 @@ func ExampleCmd_WalkWide() {
 	// [top-0 foo-1 foo2-1 bar-1 bar2-1 bar-1 bar2-1]
 
 }
+
+func ExampleValidate_callableDefOnly() {
+
+	var Cmd = &bonzai.Cmd{
+		Name: `foo`,
+		Def:  &bonzai.Cmd{Name: `something`},
+	}
+
+	fmt.Println(Cmd.Validate())
+
+	// Output:
+	// <nil>
+}
