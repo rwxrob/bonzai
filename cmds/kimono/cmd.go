@@ -30,8 +30,7 @@ const (
 	TagPushEnv = `KIMONO_PUSH_TAG`
 	TagPushVar = `push-tags`
 
-	TidyScopeEnv     = `KIMONO_TIDY_SCOPE`
-	SanitizeScopeEnv = `KIMONO_SANITIZE_SCOPE`
+	TidyScopeEnv = `KIMONO_TIDY_SCOPE`
 )
 
 var Cmd = &bonzai.Cmd{
@@ -42,7 +41,7 @@ var Cmd = &bonzai.Cmd{
 	Comp:  comp.Cmds,
 	Cmds: []*bonzai.Cmd{
 		workCmd,
-		sanitizeCmd,
+		tidyCmd,
 		tagCmd,
 		depsCmd,
 		vars.Cmd,
@@ -343,8 +342,8 @@ Automatically push the incremented tag:
 	},
 }
 
-var sanitizeCmd = &bonzai.Cmd{
-	Name:    `sanitize`,
+var tidyCmd = &bonzai.Cmd{
+	Name:    `tidy`,
 	Alias:   `tidy|update`,
 	Opts:    `all|a|deps|depsonme|dependencies|dependents`,
 	Short:   "run `go get -u` and `go mod tidy` on all go modules in repo",
@@ -362,8 +361,8 @@ var sanitizeCmd = &bonzai.Cmd{
 		switch scope {
 		case ``:
 			scope = vars.Fetch(
-				SanitizeScopeEnv,
-				`sanitize-scope`,
+				TidyScopeEnv,
+				`tidy-scope`,
 				``,
 			)
 			fallthrough
