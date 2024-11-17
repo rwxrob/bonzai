@@ -8,21 +8,30 @@ import (
 	"github.com/rwxrob/bonzai"
 	"github.com/rwxrob/bonzai/cmds/help"
 	"github.com/rwxrob/bonzai/comp"
+	"github.com/rwxrob/bonzai/comp/completers/git"
 	"github.com/rwxrob/bonzai/fn/each"
 	"github.com/rwxrob/bonzai/futil"
 	"github.com/rwxrob/bonzai/vars"
 )
 
 const (
-	WorkScopeVar = `work-scope`
 	WorkScopeEnv = `KIMONO_WORK_SCOPE`
+	WorkScopeVar = `work-scope`
 
-	TidyScopeEnv      = `KIMONO_TIDY_SCOPE`
-	SanitizeScopeEnv  = `KIMONO_SANITIZE_SCOPE`
-	TagPushEnv        = `KIMONO_PUSH_TAG`
-	TagShortenEnv     = `KIMONO_SHORTEN_TAG`
-	TagVersionPartEnv = `KIMONO_VERSION_PART`
-	TagDeleteRemote   = `KIMONO_DELETE_REMOTE_TAG`
+	TagVerPartEnv = `KIMONO_VERSION_PART`
+	TagVerPartVar = `version-part`
+
+	TagShortenEnv = `KIMONO_TAG_SHORTEN`
+	TagShortenVar = `shorten-tags`
+
+	TagRmRemoteEnv = `KIMONO_TAG_RM_REMOTE`
+	TagRmRemoteVar = `rm-remote-tag`
+
+	TagPushEnv = `KIMONO_PUSH_TAG`
+	TagPushVar = `push-tags`
+
+	TidyScopeEnv     = `KIMONO_TIDY_SCOPE`
+	SanitizeScopeEnv = `KIMONO_SANITIZE_SCOPE`
 )
 
 var Cmd = &bonzai.Cmd{
@@ -60,7 +69,7 @@ in which to toggle the work files can be configured using either the
 # Environment Variables
 
 - KIMONO_WORK_SCOPE: module|repo|tree (Defaults to "module")
-Configures the scope.
+  Configures the scope in which to toggle.
   - module: Toggles the go.work file in the current module.
   - repo: Toggles all go.work files in the monorepo.
   - tree: Toggles go.work files in the directory tree starting from pwd.
@@ -75,7 +84,11 @@ Configures the scope.
 	RegxArgs: `on|off`,
 	Opts:     `on|off`,
 	Comp:     comp.CmdsOpts,
-	Cmds:     []*bonzai.Cmd{workInitCmd},
+	Cmds: []*bonzai.Cmd{
+		workInitCmd,
+		help.Cmd.AsHidden(),
+		vars.Cmd.AsHidden(),
+	},
 	Do: func(x *bonzai.Cmd, args ...string) error {
 		root := ``
 		var err error
@@ -126,19 +139,207 @@ development.
            dependencies from the monorepo.
   modules: Relative path(s) to modules, same as used with 'go work use'.
 
-# Usage
-
 Run "work init all" to include all dependencies from the monorepo in a 
 new go.work file. Alternatively, provide specific module paths to 
 initialize a workspace tailored to those dependencies.
 `,
 	MinArgs:  1,
 	RegxArgs: `all`,
+	Cmds: []*bonzai.Cmd{
+		help.Cmd.AsHidden(),
+		vars.Cmd.AsHidden(),
+	},
 	Do: func(x *bonzai.Cmd, args ...string) error {
 		if args[0] == `all` {
 			return WorkGenerate()
 		}
 		return WorkInit(args...)
+	},
+}
+
+var tagCmd = &bonzai.Cmd{
+	Name:  `tag`,
+	Alias: `t`,
+	Short: `manage or list tags for the go module`,
+	Comp:  comp.Cmds,
+	Cmds: []*bonzai.Cmd{
+		tagBumpCmd,
+		tagListCmd,
+		tagDeleteCmd,
+		help.Cmd.AsHidden(),
+		vars.Cmd.AsHidden(),
+	},
+	Def: tagListCmd,
+}
+
+var tagListCmd = &bonzai.Cmd{
+	Name:  `list`,
+	Alias: `l`,
+	Short: `list the tags for the go module`,
+	Long: `
+The "list" subcommand displays the list of semantic version (semver)
+tags for the current Go module. This is particularly useful for
+inspecting version history or understanding the current state of version 
+tags in your project.
+
+# Behavior
+
+By default, the command lists all tags that are valid semver tags and 
+associated with the current module. The tags can be displayed in their 
+full form or shortened by setting the KIMONO_TAG_SHORTEN env var.
+
+# Environment Variables
+
+- KIMONO_TAG_SHORTEN: (Defaults to "true")
+  Determines whether to display tags in a shortened format, removing 
+  the module prefix. It accepts any truthy value.
+
+# Examples
+
+List tags with the module prefix:
+
+    $ export TAG_SHORTEN=false
+    $ tag list
+
+List tags in shortened form (default behavior):
+
+    $ KIMONO_TAG_SHORTEN=1 tag list
+
+The tags are automatically sorted in semantic version order.
+`,
+	Env: bonzai.VarMap{
+		TagShortenEnv: bonzai.Var{
+			Key: TagShortenEnv,
+			Str: "true",
+		},
+	},
+	Vars: bonzai.VarMap{
+		TagShortenVar: bonzai.Var{
+			Key:  TagShortenVar,
+			Bool: true,
+		},
+	},
+	Do: func(x *bonzai.Cmd, args ...string) error {
+		shorten := vars.Fetch(
+			TagShortenEnv,
+			TagShortenVar,
+			false,
+		)
+		each.Println(TagList(shorten))
+		return nil
+	},
+}
+
+var tagDeleteCmd = &bonzai.Cmd{
+	Name:  `delete`,
+	Alias: `d|del|rm`,
+	Short: `delete the given semver tag for the go module`,
+	Long: `
+The "delete" subcommand removes a specified semantic version (semver) 
+tag. This operation is useful for cleaning up incorrect, outdated, or
+unnecessary version tags.
+By default, the "delete" command only removes the tag locally. To 
+delete a tag both locally and remotely, set the TAG_RM_REMOTE 
+environment variable or variable to "true". For example:
+
+
+# Arguments
+  tag: The semver tag to be deleted.
+
+# Environment Variables
+
+- TAG_RM_REMOTE: (Defaults to "false")
+  Configures whether the semver tag should also be deleted from the 
+  remote repository. Set to "true" to enable remote deletion.
+
+# Examples
+
+    $ tag delete v1.2.3
+    $ TAG_RM_REMOTE=true tag delete submodule/v1.2.3
+
+This command integrates with Git to manage semver tags effectively.
+`,
+	Env: bonzai.VarMap{
+		TagRmRemoteEnv: bonzai.Var{Key: TagRmRemoteEnv, Str: "false"},
+	},
+	Vars: bonzai.VarMap{
+		TagRmRemoteVar: bonzai.Var{Key: TagRmRemoteVar, Bool: false},
+	},
+	NumArgs: 1,
+	Comp:    comp.Combine{git.CompTags},
+	Cmds:    []*bonzai.Cmd{help.Cmd.AsHidden(), vars.Cmd.AsHidden()},
+	Do: func(x *bonzai.Cmd, args ...string) error {
+		rmRemote := vars.Fetch(
+			TagRmRemoteEnv,
+			TagRmRemoteVar,
+			false,
+		)
+		return TagDelete(args[0], rmRemote)
+	},
+}
+
+var tagBumpCmd = &bonzai.Cmd{
+	Name:  `bump`,
+	Alias: `b|up|i|inc`,
+	Short: `bumps semver tags based on given version part.`,
+	Long: `
+The "bump" subcommand increments the current semantic version (semver) 
+tag of the Go module based on the specified version part. This command 
+is ideal for managing versioning in a structured manner, following 
+semver conventions.
+
+# Arguments
+  part: (Defaults to "patch") The version part to increment.
+        Accepted values:
+          - major (or M): Increments the major version (x.0.0).
+          - minor (or m): Increments the minor version (a.x.0).
+          - patch (or p): Increments the patch version (a.b.x).
+
+# Environment Variables
+
+- TAG_VER_PART: (Defaults to "patch")
+  Specifies the default version part to increment when no argument is 
+  passed.
+
+- TAG_PUSH: (Defaults to "false")
+  Configures whether the bumped tag should be pushed to the remote 
+  repository after being created. Set to "true" to enable automatic 
+  pushing. It accepts any truthy value.
+
+# Examples
+
+Increment the version tag locally:
+
+    $ tag bump patch
+
+Automatically push the incremented tag:
+
+    $ TAG_PUSH=true tag bump minor
+`,
+	Env: bonzai.VarMap{
+		TagVerPartEnv: bonzai.Var{Key: TagVerPartEnv, Str: `patch`},
+		TagPushEnv:    bonzai.Var{Key: TagPushEnv, Str: `false`},
+	},
+	Vars: bonzai.VarMap{
+		TagVerPartVar: bonzai.Var{Key: TagVerPartVar, Str: `patch`},
+		TagPushVar:    bonzai.Var{Key: TagPushVar, Bool: false},
+	},
+	MaxArgs: 1,
+	Opts:    `major|minor|patch|M|m|p`,
+	Comp:    comp.CmdsOpts,
+	Cmds:    []*bonzai.Cmd{help.Cmd.AsHidden(), vars.Cmd.AsHidden()},
+	Do: func(x *bonzai.Cmd, args ...string) error {
+		mustPush := vars.Fetch(TagPushEnv, TagPushVar, false)
+		if len(args) == 0 {
+			part := vars.Fetch(
+				TagVerPartEnv,
+				TagVerPartVar,
+				`patch`,
+			)
+			return TagBump(optsToVerPart(part), mustPush)
+		}
+		part := optsToVerPart(args[0])
+		return TagBump(part, mustPush)
 	},
 }
 
@@ -177,77 +378,6 @@ var sanitizeCmd = &bonzai.Cmd{
 		case `depsonme`, `dependents`, `deps-on-me`:
 			TidyDependents()
 		}
-		return nil
-	},
-}
-
-var tagCmd = &bonzai.Cmd{
-	Name:  `tag`,
-	Alias: `t`,
-	Short: `manage or list tags for the go module`,
-	Comp:  comp.Cmds,
-	Cmds: []*bonzai.Cmd{
-		tagBumpCmd, tagListCmd, tagDeleteCmd, help.Cmd.AsHidden(),
-	},
-	Def: tagListCmd,
-}
-
-var tagBumpCmd = &bonzai.Cmd{
-	Name:    `bump`,
-	Alias:   `b|up|i|inc`,
-	Short:   `bumps semver tags. based on given version part.`,
-	Comp:    comp.CmdsOpts,
-	Cmds:    []*bonzai.Cmd{vars.Cmd.AsHidden()},
-	Opts:    `major|minor|patch|M|m|p`,
-	MaxArgs: 1,
-	Do: func(x *bonzai.Cmd, args ...string) error {
-		mustPush := vars.Fetch(TagPushEnv, `push-tags`, false)
-		if len(args) == 0 {
-			part := optsToVerPart(
-				vars.Fetch(
-					TagVersionPartEnv,
-					`version-part`,
-					`patch`,
-				),
-			)
-			return TagBump(part, mustPush)
-		}
-		part := optsToVerPart(args[0])
-		return TagBump(part, mustPush)
-	},
-}
-
-var tagDeleteCmd = &bonzai.Cmd{
-	Name:    `delete`,
-	Alias:   `d|del|rm`,
-	Short:   `delete the given semver tag for the go module`,
-	Comp:    comp.Cmds,
-	MinArgs: 1,
-	MaxArgs: 1,
-	Do: func(x *bonzai.Cmd, args ...string) error {
-		return TagDelete(
-			args[0],
-			vars.Fetch(
-				TagDeleteRemote,
-				`delete-remote-tag`,
-				false,
-			),
-		)
-	},
-}
-
-var tagListCmd = &bonzai.Cmd{
-	Name:  `list`,
-	Alias: `l`,
-	Short: `list the tags for the go module`,
-	Comp:  comp.Cmds,
-	Do: func(x *bonzai.Cmd, args ...string) error {
-		shorten := vars.Fetch(
-			TagShortenEnv,
-			`shorten-tags`,
-			false,
-		)
-		each.Println(TagList(shorten))
 		return nil
 	},
 }
