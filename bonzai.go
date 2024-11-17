@@ -36,8 +36,9 @@ type Cmd struct {
 	Alias string // ex: rm|d|del (optional)
 	Opts  string // ex: mon|wed|fri (optional)
 
-	// Shareable variables also used for persistent initial values
-	Vars map[string]Var
+	// Shareable variables
+	Vars map[string]Var    // not automatically persisted (see vars)
+	Env  map[string]string // set for self and all child processes
 
 	// Own work (optional if Cmds or Def)
 	Do func(x *Cmd, args ...string) error
@@ -313,7 +314,7 @@ func (x *Cmd) Run(args ...string) error {
 		return err
 	}
 	c, args := x.Seek(args...)
-	if err := x.Validate(args...); err != nil {
+	if err := c.Validate(args...); err != nil {
 		return err
 	}
 	return c.call(args)
@@ -547,6 +548,7 @@ func (x *Cmd) CmdNames() []string {
 // [Cmd.Exec]. See [pkg/github.com/rwxrob/bonzai/cmds/help] for
 // a practical example of how and why a command might need to call Seek.
 func (x *Cmd) Seek(args ...string) (*Cmd, []string) {
+	x.exportenv()
 	if (len(args) == 1 && args[0] == "") || x.Cmds == nil {
 		return x, args
 	}
@@ -557,10 +559,20 @@ func (x *Cmd) Seek(args ...string) (*Cmd, []string) {
 		if next == nil {
 			break
 		}
+		next.exportenv()
 		next.caller = cur
 		cur = next
 	}
 	return cur, args[n:]
+}
+
+func (x *Cmd) exportenv() {
+	for k, v := range x.Env {
+		_, has := os.LookupEnv(k)
+		if !has {
+			os.Setenv(k, v)
+		}
+	}
 }
 
 // Path returns the path of commands used to arrive at this command.

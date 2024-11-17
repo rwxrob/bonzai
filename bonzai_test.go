@@ -2,6 +2,7 @@ package bonzai_test
 
 import (
 	"fmt"
+	"os"
 
 	"github.com/rwxrob/bonzai"
 )
@@ -283,4 +284,20 @@ func ExampleSeek() {
 	// cmd: some
 	// args: [arg1 arg2]
 
+}
+
+func ExampleCmd_Env() {
+	defer os.Unsetenv(`SOME`)
+
+	var Cmd = &bonzai.Cmd{
+		Name: `foo`,
+		Env:  map[string]string{`SOME`: `thing`},
+		Def:  &bonzai.Cmd{Name: `nothing`},
+	}
+
+	Cmd.Run()
+	fmt.Println(os.Getenv(`SOME`))
+
+	// Output:
+	// thing
 }
