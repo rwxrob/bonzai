@@ -3,7 +3,7 @@ module github.com/rwxrob/bonzai/mark/funcs
 go 1.23.0
 
 require (
-	github.com/rwxrob/bonzai v0.46.0
+	github.com/rwxrob/bonzai v0.49.2
 	github.com/rwxrob/bonzai/futil v0.1.0
 	github.com/rwxrob/bonzai/mark v0.6.0
 	github.com/rwxrob/bonzai/run v0.7.0
