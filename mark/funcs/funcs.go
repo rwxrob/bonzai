@@ -10,7 +10,7 @@ import (
 	"github.com/rwxrob/bonzai"
 	"github.com/rwxrob/bonzai/futil"
 	"github.com/rwxrob/bonzai/run"
-	"github.com/rwxrob/to"
+	"github.com/rwxrob/bonzai/to"
 )
 
 var Map = template.FuncMap{
