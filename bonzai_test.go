@@ -133,6 +133,35 @@ func ExampleErrInvalidShort() {
 	// Short length >50 or not lower for "foo": "this is a long short desc that is longer than 50 runes"
 }
 
+func ExampleValidate() {
+
+	var after = &bonzai.Cmd{
+		Name: `after`,
+		Cmds: []*bonzai.Cmd{&bonzai.Cmd{Name: `some`}},
+	}
+
+	var foo = &bonzai.Cmd{
+		Name:  `foo`,
+		Short: `this is a long short desc that is longer than 50 runes`,
+		Cmds:  []*bonzai.Cmd{after},
+	}
+
+	var Cmd = &bonzai.Cmd{
+		Name: `main`,
+		Cmds: []*bonzai.Cmd{foo},
+	}
+
+	err := foo.Validate()
+	fmt.Println(err)
+
+	err = Cmd.Validate() // does not check anything but self
+	fmt.Println(err)
+
+	// Output:
+	// Short length >50 or not lower for "foo": "this is a long short desc that is longer than 50 runes"
+	// <nil>
+}
+
 func ExampleErrInvalidArg() {
 	var foo = &bonzai.Cmd{
 		Name:     `foo`,
