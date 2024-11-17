@@ -41,7 +41,7 @@ type Cmd struct {
 	Env  VarMap // set for self and children (use Var.Str)
 
 	// Initialization with [SeekInit]
-	Init func(*Cmd, ...string) error
+	Init func(x *Cmd, args ...string) error
 
 	// Own work (optional if Cmds or Def)
 	Do func(x *Cmd, args ...string) error
