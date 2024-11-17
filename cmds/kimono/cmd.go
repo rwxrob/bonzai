@@ -14,6 +14,10 @@ import (
 )
 
 const (
+	WorkScopeVar = `work-scope`
+	WorkScopeEnv = `KIMONO_WORK_SCOPE`
+
+	TidyScopeEnv      = `KIMONO_TIDY_SCOPE`
 	SanitizeScopeEnv  = `KIMONO_SANITIZE_SCOPE`
 	TagPushEnv        = `KIMONO_PUSH_TAG`
 	TagShortenEnv     = `KIMONO_SHORTEN_TAG`
@@ -25,7 +29,7 @@ var Cmd = &bonzai.Cmd{
 	Name:  `kimono`,
 	Alias: `kmono|km`,
 	Short: `manage golang monorepos`,
-	Vers:  `v0.2.1`,
+	Vers:  `v0.7.0`,
 	Comp:  comp.Cmds,
 	Cmds: []*bonzai.Cmd{
 		workCmd,
@@ -39,36 +43,90 @@ var Cmd = &bonzai.Cmd{
 }
 
 var workCmd = &bonzai.Cmd{
-	Name:      `work`,
-	Alias:     `w`,
-	Short:     `toggle go work files on or off`,
-	Long:      ``,
-	NumArgs:   1,
-	MatchArgs: `on|off`,
-	Opts:      `on|off`,
-	Comp:      comp.CmdsOpts,
-	Cmds:      []*bonzai.Cmd{workInitCmd},
+	Name:  `work`,
+	Alias: `w`,
+	Short: `toggle go work files on or off`,
+	Long: `
+Work command toggles the state of Go workspace files (go.work) between
+active (on) and inactive (off) modes. This is useful for managing
+monorepo development by toggling Go workspace configurations. The scope
+in which to toggle the work files can be configured using either the
+'work-scope' variable or the 'KIMONO_WORK_SCOPE' environment variable.
+
+# Arguments
+  on  : Renames go.work.off to go.work, enabling the workspace.
+  off : Renames go.work to go.work.off, disabling the workspace.
+
+# Environment Variables
+
+- KIMONO_WORK_SCOPE: module|repo|tree (Defaults to "module")
+Configures the scope.
+  - module: Toggles the go.work file in the current module.
+  - repo: Toggles all go.work files in the monorepo.
+  - tree: Toggles go.work files in the directory tree starting from pwd.
+`,
+	NumArgs:  1,
+	RegxArgs: `on|off`,
+	Opts:     `on|off`,
+	Comp:     comp.CmdsOpts,
+	Cmds:     []*bonzai.Cmd{workInitCmd},
 	Do: func(x *bonzai.Cmd, args ...string) error {
+		root := ``
+		var err error
+		var from, to string
+		invArgsErr := fmt.Errorf("invalid arguments: %s", args[0])
 		switch args[0] {
 		case `on`:
-			return WorkOn()
+			from = `go.work.off`
+			to = `go.work`
 		case `off`:
-			return WorkOff()
+			from = `go.work`
+			to = `go.work.off`
 		default:
-			return fmt.Errorf(
-				"invalid argument: %s",
-				args[0],
-			)
+			return invArgsErr
 		}
+		scope := vars.Fetch(WorkScopeEnv, WorkScopeVar, `module`)
+		switch scope {
+		case `module`:
+			return WorkToggleModule(from, to)
+		case `repo`:
+			root, err = getGitRoot()
+			if err != nil {
+				return err
+			}
+		case `tree`:
+			root, err = os.Getwd()
+			if err != nil {
+				return err
+			}
+		}
+		return WorkToggleRecursive(root, from, to)
 	},
 }
 
 var workInitCmd = &bonzai.Cmd{
-	Name:      `init`,
-	Alias:     `i`,
-	Short:     `new go.work in module using dependencies from monorepo`,
-	MinArgs:   1,
-	MatchArgs: `all`,
+	Name:     `init`,
+	Alias:    `i`,
+	Short:    `new go.work in module using dependencies from monorepo`,
+	Long: `
+The "init" subcommand initializes a new Go workspace file (go.work) 
+for the current module. It helps automate the creation of a workspace
+file that includes relevant dependencies, streamlining monorepo
+development.
+
+# Arguments
+  all:     Automatically generates a go.work file with all module
+           dependencies from the monorepo.
+  modules: Relative path(s) to modules, same as used with 'go work use'.
+
+# Usage
+
+Run "work init all" to include all dependencies from the monorepo in a 
+new go.work file. Alternatively, provide specific module paths to 
+initialize a workspace tailored to those dependencies.
+`,
+	MinArgs:  1,
+	RegxArgs: `all`,
 	Do: func(x *bonzai.Cmd, args ...string) error {
 		if args[0] == `all` {
 			return WorkGenerate()
@@ -246,4 +304,12 @@ func argIsOr(args []string, is string, fallback bool) bool {
 		return fallback
 	}
 	return args[0] == is
+}
+
+func getGitRoot() (string, error) {
+	root, err := futil.HereOrAbove(".git")
+	if err != nil {
+		return "", err
+	}
+	return filepath.Dir(root), nil
 }
