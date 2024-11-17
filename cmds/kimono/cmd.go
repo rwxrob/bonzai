@@ -15,22 +15,18 @@ import (
 )
 
 const (
-	WorkScopeEnv = `KIMONO_WORK_SCOPE`
-	WorkScopeVar = `work-scope`
-
-	TagVerPartEnv = `KIMONO_VERSION_PART`
-	TagVerPartVar = `version-part`
-
-	TagShortenEnv = `KIMONO_TAG_SHORTEN`
-	TagShortenVar = `shorten-tags`
-
+	WorkScopeEnv   = `KIMONO_WORK_SCOPE`
+	WorkScopeVar   = `work-scope`
+	TagVerPartEnv  = `KIMONO_VERSION_PART`
+	TagVerPartVar  = `tag-ver-part`
+	TagShortenEnv  = `KIMONO_TAG_SHORTEN`
+	TagShortenVar  = `tag-shorten`
 	TagRmRemoteEnv = `KIMONO_TAG_RM_REMOTE`
-	TagRmRemoteVar = `rm-remote-tag`
-
-	TagPushEnv = `KIMONO_PUSH_TAG`
-	TagPushVar = `push-tags`
-
-	TidyScopeEnv = `KIMONO_TIDY_SCOPE`
+	TagRmRemoteVar = `tag-rm-remote`
+	TagPushEnv     = `KIMONO_PUSH_TAG`
+	TagPushVar     = `tag-push`
+	TidyScopeEnv   = `KIMONO_TIDY_SCOPE`
+	TidyScopeVar   = `tidy-scope`
 )
 
 var Cmd = &bonzai.Cmd{
@@ -343,30 +339,74 @@ Automatically push the incremented tag:
 }
 
 var tidyCmd = &bonzai.Cmd{
-	Name:    `tidy`,
-	Alias:   `tidy|update`,
-	Opts:    `all|a|deps|depsonme|dependencies|dependents`,
-	Short:   "run `go get -u` and `go mod tidy` on all go modules in repo",
-	Comp:    comp.Cmds,
+	Name:  `tidy`,
+	Alias: `tidy|update`,
+	Short: "update and tidy dependencies on all modules in repo",
+	Long: `
+The "tidy" command updates and tidies the Go module dependencies
+across all modules in a monorepo or within a specific scope. This
+is particularly useful for maintaining consistency and ensuring
+that dependencies are up-to-date.
+
+# Arguments:
+  module|mod:          Tidy the current module only.
+  repo:                Tidy all modules in the repository.
+  deps|dependencies:   Tidy dependencies of the current module in the 
+                       monorepo.
+  depsonme|dependents: Tidy modules in the monorepo dependent on the 
+                       current module.
+
+# Environment Variables:
+
+- KIMONO_TIDY_SCOPE: (Defaults to "module")
+  Defines the scope of the tidy operation. Can be set to "module(mod)",
+  "root", "dependencies(deps)", or "dependent(depsonme)".
+
+The scope can also be configured using the "tidy-scope" variable or
+the "KIMONO_TIDY_SCOPE" environment variable. If no argument is provided,
+the default scope is "module".
+
+# Examples:
+
+    # Tidy all modules in the repository
+    $ kimono tidy root
+
+    # Tidy only dependencies of the current module in the monorepo
+    $ kimono tidy deps
+
+    # Tidy modules in the monorepo dependent on the current module
+    $ kimono tidy depsonme
+
+`,
+	Env: bonzai.VarMap{
+		TidyScopeEnv: bonzai.Var{Key: TidyScopeEnv, Str: `module`},
+	},
+	Vars: bonzai.VarMap{
+		TidyScopeVar: bonzai.Var{Key: TidyScopeVar, Str: `module`},
+	},
 	MaxArgs: 1,
+	Opts:    `module|mod|repo|deps|depsonme|dependencies|dependents`,
+	Comp:    comp.Opts,
+	Cmds:    []*bonzai.Cmd{help.Cmd.AsHidden(), vars.Cmd.AsHidden()},
 	Do: func(x *bonzai.Cmd, args ...string) error {
+		var scope string
 		if len(args) == 0 {
+			scope = vars.Fetch(
+				TidyScopeEnv,
+				TidyScopeVar,
+				`module`,
+			)
+		} else {
+			scope = args[0]
+		}
+		switch scope {
+		case `module`:
 			pwd, err := os.Getwd()
 			if err != nil {
 				return err
 			}
 			return TidyAll(pwd)
-		}
-		scope := args[0]
-		switch scope {
-		case ``:
-			scope = vars.Fetch(
-				TidyScopeEnv,
-				`tidy-scope`,
-				``,
-			)
-			fallthrough
-		case `all`:
+		case `repo`:
 			root, err := futil.HereOrAbove(".git")
 			if err != nil {
 				return err
