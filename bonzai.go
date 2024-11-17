@@ -309,9 +309,19 @@ var trapPanic = func() {
 // a high-level. Run returns an error if a command cannot be found or the
 // command fails validation in any way.
 func (x *Cmd) Run(args ...string) error {
+	if err := x.Validate(args...); err != nil {
+		return err
+	}
 	c, args := x.Seek(args)
+	if err := x.Validate(args...); err != nil {
+		return err
+	}
+	return c.call(args)
+}
 
+func (c *Cmd) Validate(args ...string) error {
 	switch {
+
 	case c == nil:
 		return ErrIncorrectUsage{c}
 
@@ -325,7 +335,7 @@ func (x *Cmd) Run(args ...string) error {
 		return ErrInvalidName{c.Name}
 
 	case c.Do == nil && len(c.Cmds) == 0:
-		return ErrUncallable{x}
+		return ErrUncallable{c}
 
 	case c.Def != nil && !slices.Contains(c.Cmds, c.Def):
 		return ErrMissingDef{c}
@@ -352,9 +362,8 @@ func (x *Cmd) Run(args ...string) error {
 				return ErrInvalidArg{Exp: c.RegxArgs, Index: n}
 			}
 		}
-
 	}
-	return c.call(args)
+	return nil
 }
 
 func (x *Cmd) call(args []string) error {
