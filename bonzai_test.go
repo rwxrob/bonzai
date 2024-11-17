@@ -133,6 +133,21 @@ func ExampleErrInvalidShort() {
 	// Cmd.Short length >50 for "foo": "this is a long short desc that is longer than 50 runes"
 }
 
+func ExampleErrInvalidArg() {
+	var foo = &bonzai.Cmd{
+		Name:     `foo`,
+		Short:    `just oooo`,
+		RegxArgs: `^o+$`,
+		Cmds:     []*bonzai.Cmd{&bonzai.Cmd{Name: `foo`}},
+	}
+
+	err := foo.Run(`fooo`)
+	fmt.Println(err)
+
+	// Output:
+	// arg #1 must match: ^o+$
+}
+
 func ExampleCmd_WalkDeep() {
 
 	var barCmd = &bonzai.Cmd{Name: `bar`}
