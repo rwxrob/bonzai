@@ -26,7 +26,7 @@ var Cmd = &bonzai.Cmd{
 			x = x.Caller()
 		}
 
-		out, err := mark.UsageString(x)
+		out, err := mark.Usage(x)
 		if err != nil {
 			return err
 		}
