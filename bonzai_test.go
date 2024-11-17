@@ -291,7 +291,7 @@ func ExampleCmd_Env() {
 
 	var Cmd = &bonzai.Cmd{
 		Name: `foo`,
-		Env:  map[string]string{`SOME`: `thing`},
+		Env:  bonzai.VarMap{`SOME`: {Str: `thing`}},
 		Def:  &bonzai.Cmd{Name: `nothing`},
 	}
 

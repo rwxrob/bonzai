@@ -37,8 +37,8 @@ type Cmd struct {
 	Opts  string // ex: mon|wed|fri (optional)
 
 	// Shareable variables
-	Vars map[string]Var    // not automatically persisted (see vars)
-	Env  map[string]string // set for self and all child processes
+	Vars VarMap // not automatically persisted (see vars)
+	Env  VarMap // set for self and children (use Var.Str)
 
 	// Initialization with [SeekInit]
 	Init func(*Cmd, ...string) error
@@ -85,6 +85,8 @@ type Var struct {
 	Bool  bool
 	Any   any
 }
+
+type VarMap map[string]Var
 
 // Completer specifies anything with Complete function based
 // on the remaining arguments. The Complete method must never panic
@@ -608,7 +610,7 @@ func (x *Cmd) exportenv() {
 	for k, v := range x.Env {
 		_, has := os.LookupEnv(k)
 		if !has {
-			os.Setenv(k, v)
+			os.Setenv(k, v.Str)
 		}
 	}
 }
