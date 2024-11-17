@@ -11,59 +11,50 @@ import (
 	"github.com/rwxrob/bonzai/run"
 )
 
-func WorkOn() error {
-	root, err := futil.HereOrAbove(".git")
-	if err != nil {
-		return err
-	}
-	return filepath.WalkDir(filepath.Dir(root), workOnWalkDirFn)
+func WorkToggleRecursive(root, from, to string) error {
+	return filepath.WalkDir(
+		filepath.Dir(root),
+		renameRecursive(from, to),
+	)
 }
 
-func workOnWalkDirFn(path string, d fs.DirEntry, err error) error {
+func WorkToggleModule(from, to string) error {
+	path, err := futil.HereOrAbove(`go.mod`)
 	if err != nil {
-		return err
+		return fmt.Errorf(`not inside a module`)
 	}
-	if d.Name() == ".git" || d.Name() == "vendor" {
-		return filepath.SkipDir
-	}
-	if d.IsDir() {
-		return nil
-	}
-	if d.Name() == "go.work.off" {
-		_ = os.Rename(
-			path,
-			filepath.Join(filepath.Dir(path), "go.work"),
+	path = filepath.Dir(path)
+	if !futil.Exists(from) {
+		return fmt.Errorf(
+			`%s does not exist in current module`,
+			filepath.Base(from),
 		)
 	}
-	return nil
+	return os.Rename(from, to)
 }
 
-func WorkOff() error {
-	root, err := futil.HereOrAbove(".git")
-	if err != nil {
-		return err
-	}
-	return filepath.WalkDir(filepath.Dir(root), workOffWalkDirFn)
-}
-
-func workOffWalkDirFn(path string, d fs.DirEntry, err error) error {
-	if err != nil {
-		return err
-	}
-	if !d.IsDir() {
+func renameRecursive(from, to string) fs.WalkDirFunc {
+	return func(path string, d fs.DirEntry, err error) error {
+		if err != nil {
+			return err
+		}
+		if d.Name() == ".git" {
+			return filepath.SkipDir
+		}
+		if d.IsDir() {
+			return nil
+		}
+		if d.Name() == from {
+			err := os.Rename(
+				path,
+				filepath.Join(filepath.Dir(path), to),
+			)
+			if err != nil {
+				fmt.Println(err)
+			}
+		}
 		return nil
 	}
-	if d.Name() == ".git" || d.Name() == "vendor" {
-		return filepath.SkipDir
-	}
-	if !futil.Exists(filepath.Join(path, "go.work")) {
-		return nil
-	}
-	if err := os.Chdir(path); err != nil {
-		return err
-	}
-	_ = os.Rename("go.work", "go.work.off")
-	return nil
 }
 
 func WorkInit(args ...string) error {
