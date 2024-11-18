@@ -9,8 +9,8 @@ import (
 	"strings"
 )
 
-// CompletionOptions defines the configuration for environment variable completion.
-type CompletionOptions struct {
+// Env defines the configuration for environment variable completion.
+type Env struct {
 	// Prefix is prepended to the environment variable search.
 	// For example, if Prefix is "APP_", only environment variables
 	// starting with "APP_" will be included in completions.
@@ -21,18 +21,14 @@ type CompletionOptions struct {
 	Insensitive bool
 }
 
-type configuredCompleter struct {
-	opts CompletionOptions
-}
-
-func (c configuredCompleter) complete(args []string) []string {
+func (c Env) Complete(args ...string) []string {
 	if len(args) == 0 {
 		return []string{}
 	}
 
-	prefix := c.opts.Prefix
+	prefix := c.Prefix
 	arg := args[0]
-	if c.opts.Insensitive {
+	if c.Insensitive {
 		prefix = strings.ToLower(prefix)
 		arg = strings.ToLower(arg)
 	}
@@ -51,7 +47,7 @@ func (c configuredCompleter) complete(args []string) []string {
 	return c.findMatches(prefix, arg)
 }
 
-func (c configuredCompleter) findMatches(prefix, arg string) []string {
+func (c Env) findMatches(prefix, arg string) []string {
 	var matches []string
 
 	for _, env := range os.Environ() {
@@ -65,8 +61,8 @@ func (c configuredCompleter) findMatches(prefix, arg string) []string {
 	return matches
 }
 
-func (c configuredCompleter) isMatch(key, prefix, arg string) bool {
-	if c.opts.Insensitive {
+func (c Env) isMatch(key, prefix, arg string) bool {
+	if c.Insensitive {
 		key = strings.ToLower(key)
 	}
 	return strings.HasPrefix(key, prefix+arg)

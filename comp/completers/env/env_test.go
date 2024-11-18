@@ -4,7 +4,9 @@ import (
 	"fmt"
 	"os"
 
+	"github.com/rwxrob/bonzai/comp"
 	"github.com/rwxrob/bonzai/comp/completers/env"
+	"github.com/rwxrob/bonzai/fn/tr"
 )
 
 func ExampleCompNames_Complete() {
@@ -16,12 +18,13 @@ func ExampleCompNames_Complete() {
 	})
 	defer cleanupTestEnvironment()
 
-	fmt.Println(env.CompNames.Complete())
-	fmt.Println(env.CompNames.Complete(``))
-	fmt.Println(env.CompNames.Complete(`o`))
-	fmt.Println(env.CompNames.Complete(`O`))
-	fmt.Println(env.CompNames.Complete(`T`))
-	fmt.Println(env.CompNames.Complete(`TW`))
+	c := env.Env{}
+	fmt.Println(c.Complete())
+	fmt.Println(c.Complete(``))
+	fmt.Println(c.Complete(`o`))
+	fmt.Println(c.Complete(`O`))
+	fmt.Println(c.Complete(`T`))
+	fmt.Println(c.Complete(`TW`))
 	// Output:
 	// []
 	// [ONE THREE TWO one]
@@ -29,6 +32,31 @@ func ExampleCompNames_Complete() {
 	// [ONE]
 	// [THREE TWO]
 	// [TWO]
+}
+
+func ExampleCompNames_CombinedPrefix() {
+	setupTestEnvironment(map[string]string{
+		"ONE":   "1",
+		"one":   "1",
+		"TWO":   "2",
+		"THREE": "3",
+	})
+	defer cleanupTestEnvironment()
+
+	c := comp.Combine{env.Env{}, tr.Prefix{`$`}}
+	fmt.Println(c.Complete())
+	fmt.Println(c.Complete(``))
+	fmt.Println(c.Complete(`o`))
+	fmt.Println(c.Complete(`O`))
+	fmt.Println(c.Complete(`T`))
+	fmt.Println(c.Complete(`TW`))
+	// Output:
+	// []
+	// [$ONE $THREE $TWO $one]
+	// [$one]
+	// [$ONE]
+	// [$THREE $TWO]
+	// [$TWO]
 }
 
 func ExampleCompNames_CompleteCaseInsensitive() {
@@ -39,7 +67,7 @@ func ExampleCompNames_CompleteCaseInsensitive() {
 	})
 	defer cleanupTestEnvironment()
 
-	c := env.NewCompNames("", true)
+	c := env.Env{"", true}
 	fmt.Println(c.Complete())
 	fmt.Println(c.Complete(``))
 	fmt.Println(c.Complete(`O`))
@@ -62,7 +90,7 @@ func ExampleCompNames_CompletePrefix() {
 	})
 	defer cleanupTestEnvironment()
 
-	c := env.NewCompNames("API_", true)
+	c := env.Env{"API_", true}
 	fmt.Println(c.Complete())
 	fmt.Println(c.Complete(``))
 	fmt.Println(c.Complete(`A`))
