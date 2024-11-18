@@ -90,12 +90,11 @@ func cmdTree(x *bonzai.Cmd, depth int) string {
 		if level > depth {
 			return nil
 		}
+		if c.IsHidden() {
+			return nil
+		}
 		for range level {
 			out.WriteString(`  `)
-		}
-		if c.IsHidden() {
-			out.WriteString("(hidden) ← contains hidden subcommands\n")
-			return nil
 		}
 		name := c.Name
 		if len(name) == 0 {
