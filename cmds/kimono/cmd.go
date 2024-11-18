@@ -32,9 +32,35 @@ const (
 var Cmd = &bonzai.Cmd{
 	Name:  `kimono`,
 	Alias: `kmono|km`,
-	Short: `manage golang monorepos`,
 	Vers:  `v0.7.0`,
-	Comp:  comp.Cmds,
+	Short: `manage golang monorepos`,
+	Long: `
+The kimono tool helps manage Go monorepos - single repositories
+containing multiple related Go modules. It simplifies common monorepo
+operations and workflow management.
+
+Key features:
+- Toggle go.work files on/off for local development
+- Perform coordinated version tagging
+- Keep go.mod files tidy across modules
+- View dependency graphs and module information
+- Track dependent modules and their relationships
+
+Main commands:
+- work:     Toggle go.work files for local development
+- tidy:     run 'go get -u' and 'go mod tidy' across modules
+- tag:      List and coordinate version tagging across modules
+- deps:     List and manage module dependencies
+- depsonme: List and manage module dependencies
+- vars:     View and set configuration variables
+
+Kimono integrates with Go workspaces to provide a seamless development
+experience when working across multiple modules in a monorepo.
+
+Use 'kimono help <command> <subcommand>' for detailed information about
+each command.
+`,
+	Comp: comp.Cmds,
 	Cmds: []*bonzai.Cmd{
 		workCmd,
 		tidyCmd,
