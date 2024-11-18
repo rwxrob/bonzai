@@ -93,11 +93,10 @@ func ExampleUsage_withHiddenCmds() {
 	// Output:
 	// # Usage
 	//
-	//     mycmd        ← my command short summary
-	//       foo        ← foo this command
-	//         subfoo   ← under the foo command
-	//         (hidden) ← contains hidden subcommands
-	//       bar        ← bar this command
+	//     mycmd      ← my command short summary
+	//       foo      ← foo this command
+	//         subfoo ← under the foo command
+	//       bar      ← bar this command
 	//
 	// Here is a long description.
 	// On multiple lines.
@@ -145,11 +144,10 @@ func ExampleUsage_missingShort() {
 	// Output:
 	// # Usage
 	//
-	//     mycmd        ← my command short summary
+	//     mycmd      ← my command short summary
 	//       foo
-	//         subfoo   ← under the foo command
-	//         (hidden) ← contains hidden subcommands
-	//       bar        ← bar this command
+	//         subfoo ← under the foo command
+	//       bar      ← bar this command
 	//
 	// Here is a long description.
 	// On multiple lines.
@@ -203,8 +201,7 @@ func ExampleUsage_middle() {
 	// # Usage
 	//
 	//     foo
-	//       subfoo   ← under the foo command
-	//       (hidden) ← contains hidden subcommands
+	//       subfoo ← under the foo command
 }
 
 func ExampleUsage_longFirstName() {
