@@ -16,7 +16,7 @@ func ExampleAKA() {
 	}
 
 	fmt.Println(funcs.AKA(help))
-	out, _ := mark.Render(help, funcs.Map, `The {{aka .}} command.`)
+	out, _ := mark.Fill(help, funcs.Map, `The {{aka .}} command.`)
 	fmt.Println(out)
 
 	// Output:
@@ -31,7 +31,7 @@ I'll use the {{code "{{code}}"}} thing instead with something like
 {{code "go mod init"}} since cannot use backticks.`
 
 	fmt.Println(funcs.Code(`go mod init`))
-	out, _ := mark.Render(nil, funcs.Map, long)
+	out, _ := mark.Fill(nil, funcs.Map, long)
 	fmt.Println(out)
 
 	// Output:
@@ -54,6 +54,53 @@ func ExampleCmdTree() {
 		Alias: `f`,
 		Short: `foo this command`,
 		Cmds:  []*bonzai.Cmd{subFooCmd},
+	}
+
+	var barCmd = &bonzai.Cmd{
+		Name:  `bar`,
+		Alias: `b`,
+		Short: `bar this command`,
+	}
+
+	var Cmd = &bonzai.Cmd{
+		Name:  `mycmd`,
+		Alias: `my|cmd`,
+		Short: `my command short summary`,
+		Cmds:  []*bonzai.Cmd{fooCmd, barCmd},
+		Def:   fooCmd,
+	}
+
+	Cmd.Seek(`foo`, `subfoo`) // required for default detection
+
+	fmt.Print("# Synopsis\n\n")
+	fmt.Println(funcs.CmdTree(Cmd))
+
+	// Output:
+	// # Synopsis
+	//
+	//     mycmd      ← my command short summary
+	//       foo      ← foo this command (default)
+	//         subfoo ← under the foo command
+	//       bar      ← bar this command
+}
+
+func ExampleCmdTree_hidden() {
+	var subFooCmd = &bonzai.Cmd{
+		Name:  `subfoo`,
+		Alias: `sf`,
+		Short: `under the foo command`,
+	}
+
+	var sssh = &bonzai.Cmd{
+		Name: `sssh`,
+		Do:   bonzai.Nothing,
+	}
+
+	var fooCmd = &bonzai.Cmd{
+		Name:  `foo`,
+		Alias: `f`,
+		Short: `foo this command`,
+		Cmds:  []*bonzai.Cmd{subFooCmd, sssh.AsHidden()},
 	}
 
 	var barCmd = &bonzai.Cmd{
