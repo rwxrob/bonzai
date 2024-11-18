@@ -654,6 +654,27 @@ func (x *Cmd) Path() []*Cmd {
 	return path[1:]
 }
 
+// PathNames returns a slice of strings containing the names of all
+// commands in the command path for the command. It retrieves
+// the commands using [Cmd.Path] and constructs a slice with their
+// respective Name fields before returning it.
+func (x *Cmd) PathNames() []string {
+	cmds := x.Path()
+	names := make([]string, len(cmds))
+	for i, c := range cmds {
+		names[i] = c.Name
+	}
+	return names
+}
+
+// PathDashed returns a string representation of the command path for
+// the command with each command name joined by a dash ('-').
+// It utilizes the [Cmd.PathNames] method to obtain the names of the
+// commands in the path.
+func (x *Cmd) PathDashed() string {
+	return strings.Join(x.PathNames(), `-`)
+}
+
 func (x *Cmd) walkDeep(level int, fn func(int, *Cmd) error, onError func(error)) {
 	if x == nil {
 		return

@@ -377,3 +377,100 @@ func ExampleCmd_Init() {
 	// Output:
 	// foo nothing foo other
 }
+
+func ExampleWalkDeep_hidden() {
+	var subFooCmd = &bonzai.Cmd{
+		Name:  `subfoo`,
+		Alias: `sf`,
+		Short: `under the foo command`,
+	}
+
+	var sssh = &bonzai.Cmd{
+		Name: `sssh`,
+		Do:   bonzai.Nothing,
+	}
+
+	var fooCmd = &bonzai.Cmd{
+		Name:  `foo`,
+		Alias: `f`,
+		Short: `foo this command`,
+		Cmds:  []*bonzai.Cmd{subFooCmd, sssh.AsHidden()},
+	}
+
+	var barCmd = &bonzai.Cmd{
+		Name:  `bar`,
+		Alias: `b`,
+		Short: `bar this command`,
+	}
+
+	var Cmd = &bonzai.Cmd{
+		Name:  `mycmd`,
+		Alias: `my|cmd`,
+		Short: `my command short summary`,
+		Cmds:  []*bonzai.Cmd{fooCmd, barCmd},
+		Def:   fooCmd,
+	}
+
+	printname := func(level int, x *bonzai.Cmd) error {
+		if x.IsHidden() {
+			return nil
+		}
+		for range level {
+			fmt.Print("  ")
+		}
+		fmt.Println(x.Name)
+		return nil
+	}
+
+	Cmd.WalkDeep(printname, nil)
+
+	// Output:
+	// mycmd
+	//   foo
+	//     subfoo
+	//   bar
+
+}
+
+func ExampleCmd_PathDashed() {
+	var subFooCmd = &bonzai.Cmd{
+		Name:  `subfoo`,
+		Alias: `sf`,
+		Short: `under the foo command`,
+	}
+
+	var sssh = &bonzai.Cmd{
+		Name: `sssh`,
+		Do:   bonzai.Nothing,
+	}
+
+	var fooCmd = &bonzai.Cmd{
+		Name:  `foo`,
+		Alias: `f`,
+		Short: `foo this command`,
+		Cmds:  []*bonzai.Cmd{subFooCmd, sssh.AsHidden()},
+	}
+
+	var barCmd = &bonzai.Cmd{
+		Name:  `bar`,
+		Alias: `b`,
+		Short: `bar this command`,
+	}
+
+	var Cmd = &bonzai.Cmd{
+		Name:  `mycmd`,
+		Alias: `my|cmd`,
+		Short: `my command short summary`,
+		Cmds:  []*bonzai.Cmd{fooCmd, barCmd},
+		Def:   fooCmd,
+	}
+
+	cmd, args, err := Cmd.SeekInit(`foo`, `sssh`)
+	fmt.Println(cmd, args, err)
+	fmt.Println(cmd.PathDashed())
+
+	// Output:
+	// sssh [] <nil>
+	// foo-sssh
+
+}
