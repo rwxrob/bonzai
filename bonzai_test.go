@@ -71,6 +71,44 @@ func ExampleCmd_WithName() {
 	// i am bar
 }
 
+func ExampleCmd_SeekInit() {
+
+	var foo = &bonzai.Cmd{
+		Name: `foo`,
+		Do: func(*bonzai.Cmd, ...string) error {
+			fmt.Println(`I am foo`)
+			return nil
+		},
+	}
+
+	var bar = &bonzai.Cmd{
+		Name: `bar`,
+		Cmds: []*bonzai.Cmd{foo},
+		Do: func(*bonzai.Cmd, ...string) error {
+			fmt.Println(`I am bar`)
+			return nil
+		},
+	}
+
+	var baz = &bonzai.Cmd{
+		Name:   `baz`,
+		Cmds:   []*bonzai.Cmd{bar},
+		NoArgs: true,
+		Do: func(*bonzai.Cmd, ...string) error {
+			fmt.Println(`I am baz`)
+			return nil
+		},
+	}
+
+	fmt.Println(baz.SeekInit(`bar`))
+	fmt.Println(baz.SeekInit(`bar`, `arg1`))
+
+	// Output:
+	// bar [] <nil>
+	// bar [arg1] <nil>
+
+}
+
 func ExampleCmd_Run() {
 	var fooCmd = &bonzai.Cmd{
 		Name: `foo`,
@@ -118,7 +156,8 @@ func ExampleErrInvalidVers() {
 	fmt.Println(err)
 
 	// Output:
-	// Cmd.Vers length >50 for "foo": "this is a long version that is longer than 50 runes"
+	// developer error: Cmd.Vers (foo) length must be less than 50 runes
+
 }
 
 func ExampleErrInvalidShort() {
@@ -131,7 +170,8 @@ func ExampleErrInvalidShort() {
 	fmt.Println(err)
 
 	// Output:
-	// Short length >50 or not lower for "foo": "this is a long short desc that is longer than 50 runes"
+	// developer error: Cmd.Short (foo) length must be less than 50 runes and must begin with a lowercase letter
+
 }
 
 func ExampleValidate() {
@@ -159,7 +199,7 @@ func ExampleValidate() {
 	fmt.Println(err)
 
 	// Output:
-	// Short length >50 or not lower for "foo": "this is a long short desc that is longer than 50 runes"
+	// developer error: Cmd.Short (foo) length must be less than 50 runes and must begin with a lowercase letter
 	// <nil>
 }
 
@@ -175,7 +215,7 @@ func ExampleErrInvalidArg() {
 	fmt.Println(err)
 
 	// Output:
-	// arg #1 must match: ^o+$
+	// usage error: arg #1 must match: ^o+$
 }
 
 func ExampleCmd_WalkDeep() {
@@ -313,13 +353,26 @@ func ExampleCmd_Init() {
 		Name: `foo`,
 		Init: printname,
 		Cmds: []*bonzai.Cmd{
-			{Name: `nothing`, Init: printname},
-			{Name: `other`, Init: printname},
+			{
+				Name: `nothing`,
+				Init: printname,
+				Do:   bonzai.Nothing,
+			},
+			{
+				Name: `other`,
+				Init: printname,
+				Do:   bonzai.Nothing,
+			},
 		},
 	}
 
-	Cmd.Run(`nothing`)
-	Cmd.Run(`other`)
+	if err := Cmd.Run(`nothing`); err != nil {
+		fmt.Println(err)
+	}
+
+	if err := Cmd.Run(`other`); err != nil {
+		fmt.Println(err)
+	}
 
 	// Output:
 	// foo nothing foo other

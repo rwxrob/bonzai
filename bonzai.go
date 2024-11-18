@@ -305,32 +305,38 @@ var trapPanic = func() {
 	}
 }
 
-// Run seeks the leaf command in the arguments passed, validates it, and
-// calls its [Cmd].Do method passing itself as the first argument
-// along with any remaining arguments. Run is always called from
-// [Cmd.Exec] but can be called directly from another command's Do
-// method to enable powerful command composition and delegation at
-// a high-level. Run returns an error if a command cannot be found or the
-// command fails validation in any way.
+// Run seeks the leaf command in the arguments passed, validating all
+// with [Cmd.SeekInit] and calls its [Cmd].Do method passing itself as
+// the first argument along with any remaining arguments. Run is always
+// called from [Cmd.Exec] but can be called directly from another
+// command's Do method to enable powerful command composition and
+// delegation at a high-level. Run returns an error if a command cannot
+// be found or the command fails validation in any way.
 func (x *Cmd) Run(args ...string) error {
-	if err := x.Validate(args...); err != nil {
-		return err
-	}
 	c, args, err := x.SeekInit(args...)
 	if err != nil {
-		return err
-	}
-	if err := c.Validate(args...); err != nil {
 		return err
 	}
 	return c.call(args)
 }
 
-func (c *Cmd) Validate(args ...string) error {
+// Nothing is a no-op function that implements the command function signature
+// for [Cmd]. It takes a command [*Cmd] and a variadic number of string
+// arguments and always returns nil, indicating no operation is performed.
+var Nothing = func(*Cmd, ...string) error { return nil }
+
+// Validate checks the integrity of the command. It verifies that
+// the command is not nil, validates the length and format of the
+// Short and Vers fields, checks the validity of the command
+// Name, and ensures that the command is callable by checking the
+// associated function Do, Def, and subcommands. It returns an error
+// if any validation check fails. Validate is automatically called for
+// every command during the [Cmd.SeekInit] descent to the leaf command.
+func (c *Cmd) Validate() error {
 	switch {
 
 	case c == nil:
-		return ErrIncorrectUsage{c}
+		return fmt.Errorf(`developer error: Validate called with nil receiver`)
 
 	case len(c.Short) > 0 && (len(c.Short) > 50 || !unicode.IsLower(rune(c.Short[0]))):
 		return ErrInvalidShort{c}
@@ -343,6 +349,21 @@ func (c *Cmd) Validate(args ...string) error {
 
 	case c.Do == nil && len(c.Cmds) == 0 && c.Def == nil:
 		return ErrUncallable{c}
+	}
+	return nil
+}
+
+// ValidateArgs checks the validity of the provided args against the
+// constraints defined in the command. It returns an error if the
+// arguments do not meet the minimum or maximum requirements, do not
+// match the expected number, or fail regex validation. ValidateArgs is
+// automatically called from [Cmd.SeekInit] right before the leaf
+// command and its arguments are returned.
+func (c *Cmd) ValidateArgs(args ...string) error {
+	switch {
+
+	case c == nil:
+		return fmt.Errorf(`developer error: Validate called with nil receiver`)
 
 	case len(args) < c.MinArgs:
 		return ErrNotEnoughArgs{Count: len(args), Min: c.MinArgs}
@@ -354,7 +375,7 @@ func (c *Cmd) Validate(args ...string) error {
 		return ErrWrongNumArgs{Count: len(args), Num: c.NumArgs}
 
 	case c.NoArgs && len(args) > 0:
-		return ErrWrongNumArgs{Count: len(args), Num: c.NumArgs}
+		return ErrTooManyArgs{Count: len(args), Max: 0}
 
 	case len(c.RegxArgs) > 0:
 		regx, err := regexp.Compile(c.RegxArgs)
@@ -577,9 +598,12 @@ func (x *Cmd) Seek(args ...string) (*Cmd, []string) {
 // nil values and the error if any Init function produces an error.
 func (x *Cmd) SeekInit(args ...string) (*Cmd, []string, error) {
 	x.exportenv()
+	if err := x.Validate(); err != nil {
+		return x, args, err
+	}
 	if x.Init != nil {
 		if err := x.Init(x, args...); err != nil {
-			return nil, nil, err
+			return x, args, err
 		}
 	}
 	if (len(args) == 1 && args[0] == "") || x.Cmds == nil {
@@ -593,15 +617,19 @@ func (x *Cmd) SeekInit(args ...string) (*Cmd, []string, error) {
 			break
 		}
 		next.exportenv()
+		if err := next.Validate(); err != nil {
+			return next, args[n:], err
+		}
 		if next.Init != nil {
-			if err := next.Init(next, args...); err != nil {
-				return nil, nil, err
+			if err := next.Init(next, args[n:]...); err != nil {
+				return next, args[n:], err
 			}
 		}
 		next.caller = cur
 		cur = next
 	}
-	return cur, args[n:], nil
+	err := cur.ValidateArgs(args[n:]...)
+	return cur, args[n:], err
 }
 
 func (x *Cmd) exportenv() {
@@ -691,17 +719,7 @@ type ErrInvalidName struct {
 }
 
 func (e ErrInvalidName) Error() string {
-	return fmt.Sprintf(`invalid name: %v`, e.Name)
-}
-
-// ErrIncorrectUsage signifies that the command was used incorrectly,
-// providing a reference to the [Cmd] that encountered the issue.
-type ErrIncorrectUsage struct {
-	Cmd *Cmd
-}
-
-func (e ErrIncorrectUsage) Error() string {
-	return fmt.Sprintf(`incorrect usage for "%v" command`, e.Cmd.Name)
+	return fmt.Sprintf(`developer error: invalid name: %v`, e.Name)
 }
 
 // ErrUncallable indicates that a command requires a Do, one
@@ -711,7 +729,8 @@ type ErrUncallable struct {
 }
 
 func (e ErrUncallable) Error() string {
-	return fmt.Sprintf(`Cmd requires Do, Def, or Cmds: %v`, e.Cmd.Name)
+	return fmt.Sprintf(
+		`developer error: Cmd (%v) requires Do, Def, or Cmds`, e.Cmd)
 }
 
 // ErrDoOrDef suggests that a command cannot have both Do and Def
@@ -721,7 +740,8 @@ type ErrDoOrDef struct {
 }
 
 func (e ErrDoOrDef) Error() string {
-	return fmt.Sprintf(`Do or Def (not both): %v`, e.Cmd.Name)
+	return fmt.Sprintf(
+		`developer error: Cmd.Do or Cmd.Def (never both) (%v)`, e.Cmd.Path())
 }
 
 // ErrNotEnoughArgs indicates that insufficient arguments were provided,
@@ -732,7 +752,8 @@ type ErrNotEnoughArgs struct {
 }
 
 func (e ErrNotEnoughArgs) Error() string {
-	return fmt.Sprintf(`%v is not enough arguments, %v required`,
+	return fmt.Sprintf(
+		`usage error: %v is not enough arguments, %v required`,
 		e.Count, e.Min)
 }
 
@@ -744,7 +765,8 @@ type ErrTooManyArgs struct {
 }
 
 func (e ErrTooManyArgs) Error() string {
-	return fmt.Sprintf(`%v is too many arguments, %v maximum`,
+	return fmt.Sprintf(
+		`usage error: %v is too many arguments, %v maximum`,
 		e.Count, e.Max)
 }
 
@@ -757,8 +779,8 @@ type ErrWrongNumArgs struct {
 
 func (e ErrWrongNumArgs) Error() string {
 	return fmt.Sprintf(
-		`%v arguments, %v required`,
-		e.Count, e.Num)
+		`usage error: requires exactly %v arguments (not %v)`,
+		e.Num, e.Count)
 }
 
 // ErrInvalidShort indicates that the short description length exceeds 50
@@ -768,7 +790,8 @@ type ErrInvalidShort struct {
 }
 
 func (e ErrInvalidShort) Error() string {
-	return fmt.Sprintf(`Short length >50 or not lower for %q: %q`, e.Cmd, e.Cmd.Short)
+	return fmt.Sprintf(
+		`developer error: Cmd.Short (%v) length must be less than 50 runes and must begin with a lowercase letter`, e.Cmd)
 }
 
 // ErrInvalidVers indicates that the short description length exceeds 50
@@ -778,7 +801,10 @@ type ErrInvalidVers struct {
 }
 
 func (e ErrInvalidVers) Error() string {
-	return fmt.Sprintf(`Cmd.Vers length >50 for %q: %q`, e.Cmd, e.Cmd.Vers)
+	return fmt.Sprintf(
+		`developer error: Cmd.Vers (%v) length must be less than 50 runes`,
+		e.Cmd,
+	)
 }
 
 // ErrInvalidArg indicates that the arguments did not match
@@ -789,5 +815,8 @@ type ErrInvalidArg struct {
 }
 
 func (e ErrInvalidArg) Error() string {
-	return fmt.Sprintf(`arg #%v must match: %v`, e.Index+1, e.Exp)
+	return fmt.Sprintf(
+		`usage error: arg #%v must match: %v`,
+		e.Index+1, e.Exp,
+	)
 }
