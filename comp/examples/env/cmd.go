@@ -6,11 +6,10 @@ import (
 	"github.com/rwxrob/bonzai"
 	"github.com/rwxrob/bonzai/cmds/help"
 	"github.com/rwxrob/bonzai/comp"
-	"github.com/rwxrob/bonzai/comp/completers/env"
 	"github.com/rwxrob/bonzai/fn/tr"
 )
 
-var XDG = env.Env{"XDG_", false}
+var XDG = cmd.Env{"XDG_", false}
 var NamesCmd = &bonzai.Cmd{
 	Name:  "names",
 	Alias: `n|-n|--names`,
@@ -21,7 +20,7 @@ var NamesCmd = &bonzai.Cmd{
 	},
 }
 
-var XDGCaseInsensitive = comp.Combine{env.Env{"XDG_", true}, tr.Prefix{`$`}}
+var XDGCaseInsensitive = comp.Combine{cmd.Env{"XDG_", true}, tr.Prefix{`$`}}
 var VarsCmd = &bonzai.Cmd{
 	Name:  "vars",
 	Alias: `v|-v|--vars`,

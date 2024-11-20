@@ -1,11 +1,10 @@
-package env_test
+package comp_test
 
 import (
 	"fmt"
 	"os"
 
 	"github.com/rwxrob/bonzai/comp"
-	"github.com/rwxrob/bonzai/comp/completers/env"
 	"github.com/rwxrob/bonzai/fn/tr"
 )
 
@@ -18,7 +17,7 @@ func ExampleCompNames_Complete() {
 	})
 	defer cleanupTestEnvironment()
 
-	c := env.Env{}
+	c := comp.Env{}
 	fmt.Println(c.Complete())
 	fmt.Println(c.Complete(``))
 	fmt.Println(c.Complete(`o`))
@@ -43,7 +42,7 @@ func ExampleCompNames_CombinedPrefix() {
 	})
 	defer cleanupTestEnvironment()
 
-	c := comp.Combine{env.Env{}, tr.Prefix{`$`}}
+	c := comp.Combine{comp.Env{}, tr.Prefix{`$`}}
 	fmt.Println(c.Complete())
 	fmt.Println(c.Complete(``))
 	fmt.Println(c.Complete(`o`))
@@ -67,7 +66,7 @@ func ExampleCompNames_CompleteCaseInsensitive() {
 	})
 	defer cleanupTestEnvironment()
 
-	c := env.Env{"", true}
+	c := comp.Env{"", true}
 	fmt.Println(c.Complete())
 	fmt.Println(c.Complete(``))
 	fmt.Println(c.Complete(`O`))
@@ -90,7 +89,7 @@ func ExampleCompNames_CompletePrefix() {
 	})
 	defer cleanupTestEnvironment()
 
-	c := env.Env{"API_", true}
+	c := comp.Env{"API_", true}
 	fmt.Println(c.Complete())
 	fmt.Println(c.Complete(``))
 	fmt.Println(c.Complete(`A`))

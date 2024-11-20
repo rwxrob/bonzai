@@ -1,7 +1,4 @@
-// Package env provides environment variable completion functionality for the Bonzai command tree.
-// It supports case-sensitive and case-insensitive completion of environment variable names
-// and values, with optional prefixing.
-package env
+package comp
 
 import (
 	"os"
