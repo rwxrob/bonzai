@@ -9,7 +9,7 @@ import (
 	"github.com/rwxrob/bonzai/fn/tr"
 )
 
-var XDG = cmd.Env{"XDG_", false}
+var XDG = comp.Env{"XDG_", false}
 var NamesCmd = &bonzai.Cmd{
 	Name:  "names",
 	Alias: `n|-n|--names`,
@@ -20,7 +20,7 @@ var NamesCmd = &bonzai.Cmd{
 	},
 }
 
-var XDGCaseInsensitive = comp.Combine{cmd.Env{"XDG_", true}, tr.Prefix{`$`}}
+var XDGCaseInsensitive = comp.Combine{comp.Env{"XDG_", true}, tr.Prefix{`$`}}
 var VarsCmd = &bonzai.Cmd{
 	Name:  "vars",
 	Alias: `v|-v|--vars`,
