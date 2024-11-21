@@ -106,13 +106,15 @@ func (v Var) String() string {
 // was not declared in [Cmd].Vars silently returns empty string.
 func (x *Cmd) Get(key string) string {
 	v, has := x.vars[key]
-	if !has {
+	switch {
+	case !has:
 		return ""
-	}
-	if len(v.Env) > 0 {
+	case len(v.Env) > 0:
 		if val, has := os.LookupEnv(v.Env); has {
 			return val
 		}
+	case Persistence != nil && v.Persist:
+		return Persistence.Get(key)
 	}
 	return v.V
 }
@@ -123,16 +125,17 @@ func (x *Cmd) Get(key string) string {
 // string.
 func (x *Cmd) Set(key, value string) {
 	v, has := x.vars[key]
-	if !has {
+	switch {
+	case !has:
 		return
+	case len(v.Env) > 0:
+		if _, has := os.LookupEnv(v.Env); has {
+			os.Setenv(v.Env, value)
+		}
+	case Persistence != nil && v.Persist:
+		Persistence.Set(key, value)
 	}
 	v.V = value
-	if len(v.Env) > 0 {
-
-		if _, has := os.LookupEnv(v.Env); has {
-			os.Setenv(v.Env, v.V)
-		}
-	}
 }
 
 // VarsSlice returns a slice with a copy of the current [Cmd].Vars. Use
@@ -176,10 +179,21 @@ type CmdCompleter interface {
 	SetCmd(x *Cmd)
 }
 
-// Persistence interface specifies anything that implements
+// Persistence is used by [Cmd.Get] and [Cmd.Set] if not nil.
+var Persistence Persister
+
+func init() {
+	if Persistence != nil {
+		Persistence.Init()
+	}
+}
+
+// Persister interface specifies anything that implements
 // a persistence layer for high-speed storage and retrieval of key/value
 // combinations. Implementations may use whatever technology for
-// persisting the data.
+// persisting the data including simple files, key/value databases, API
+// endpoints, or in-memory storage for applications where commands
+// remain running beyond invocation.
 //
 // # Init
 //
@@ -222,7 +236,7 @@ type CmdCompleter interface {
 // perform any of the interface operations or even if they will ever
 // complete at all. Latency requirements and timeouts must be managed
 // externally.
-type Persistence interface {
+type Persister interface {
 	CmdCompleter
 	Init() error
 	Clear() error
