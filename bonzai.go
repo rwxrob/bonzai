@@ -176,6 +176,62 @@ type CmdCompleter interface {
 	SetCmd(x *Cmd)
 }
 
+// Persistence interface specifies anything that implements
+// a persistence layer for high-speed storage and retrieval of key/value
+// combinations. Implementations may use whatever technology for
+// persisting the data.
+//
+// # Init
+//
+// Initialize a new persistence store if one does not yet exist. Must
+// never clear or delete one that has been previously initialized.
+// Usually this is called within an init() function after the other
+// specific configurations of the driver have been set (much like
+// database or other drivers).
+//
+// # Clear
+//
+// Clear removes all persistence (without disposing) restoring the
+// persistent state to the same as before it was ever used historically.
+// Most implementations will hold on to the same references created
+// during [Init].
+//
+// # Get
+//
+// Get retrieves a value for a specific key in a case-sensitive way or
+// returns an empty string if not found.
+//
+// # Set
+//
+// Set sets value for a given key. If the key does not exist, creates
+// it and then sets. Otherwise, updates the value.
+//
+// # Delete
+//
+// Delete must delete a key from the persistent storage.
+//
+// # Best practices
+//
+// Usually it is best to keep driver implementation small and
+// self-contained within its own package to enable the use of
+// packaged-scoped variables during [init] when setting up the specifics
+// of a particular driver implementation.
+//
+// Although the least amount of latency is preferred (generally
+// sub-second) a driver makes no guarantees about the time it takes to
+// perform any of the interface operations or even if they will ever
+// complete at all. Latency requirements and timeouts must be managed
+// externally.
+type Persistence interface {
+	CmdCompleter
+	Init() error
+	Clear() error
+	Has(key string) bool
+	Get(key string) string
+	Set(key, val string)
+	Delete(key string)
+}
+
 // Caller returns the internal reference to the parent/caller of this
 // command. It is not set until [Cmd.Seek] is called or indirectly by
 // [Cmd.Run] or [Cmd.Exec]. Caller is set to itself if there is no
