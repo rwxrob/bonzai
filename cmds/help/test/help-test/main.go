@@ -12,17 +12,13 @@ var cmd = &bonzai.Cmd{
 	Short: `just a help test`,
 	Opts:  `some|-y|--yaml`,
 	Cmds:  []*bonzai.Cmd{help.Cmd, fooCmd},
-	// Cmds:  []*bonzai.Cmd{fooCmd},
-	Comp: comp.CmdsOpts,
-	Def:  help.Cmd,
-	// Def:   fooCmd,
+	Comp:  comp.CmdsOpts,
+	Def:   help.Cmd,
 }
 
 var fooCmd = &bonzai.Cmd{
 	Name: `foo`,
-	Do: func(_ *bonzai.Cmd, _ ...string) error {
-		return nil
-	},
+	Do:   bonzai.Nothing,
 }
 
 func main() {
