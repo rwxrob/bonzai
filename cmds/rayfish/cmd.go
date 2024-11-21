@@ -12,7 +12,7 @@ var Cmd = &bonzai.Cmd{
 	Name:  `rayfish`,
 	Alias: `fish|fishies`,
 	Short: `terminal-based 3D fish animation`,
-	Vers:  `v1.0.0`,
+	Vers:  `v1.0.2`,
 	Comp:  comp.Cmds,
 	Cmds: []*bonzai.Cmd{
 		animateCmd,
