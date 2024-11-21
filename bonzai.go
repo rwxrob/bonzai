@@ -636,10 +636,19 @@ func (x *Cmd) CmdNames() []string {
 // [Cmd.Exec]. See [pkg/github.com/rwxrob/bonzai/cmds/help] for
 // a practical example of how and why a command might need to call Seek.
 // Also see [Cmd.SeekInit] when environment variables and initialization
-// functions are wanted as well.
+// functions are wanted as well. Seek returns its receiver and the same
+// single empty string argument if there is only one argument and it is
+// an empty string (a special case used for completion). Returns self
+// and the arguments passed if both Cmds and the default command (Def)
+// are nil. If Cmds is nil but Def is not, returns the default command
+// and the same list of arguments passed.
 func (x *Cmd) Seek(args ...string) (*Cmd, []string) {
-	if (len(args) == 1 && args[0] == "") || x.Cmds == nil {
+	if (len(args) == 1 && args[0] == "") || (x.Cmds == nil && x.Def == nil) {
 		return x, args
+	}
+	if x.Cmds == nil && x.Def != nil {
+		x.Def.caller = x
+		return x.Def, args
 	}
 	cur := x
 	n := 0
@@ -654,9 +663,10 @@ func (x *Cmd) Seek(args ...string) (*Cmd, []string) {
 	return cur, args[n:]
 }
 
-// SeekInit is the same as [Cmd.Seek] Vars are cached and the [Cmd].Init
-// functions are called (if any). Returns early with nil values and the
-// error if any Init function produces an error.
+// SeekInit is the same as [Cmd.Seek] but Vars are cached and the
+// [Cmd].Validate and [Cmd].Init functions are called (if any).
+// Returns early with nil values and the error if any Validate or Init
+// function produces an error.
 func (x *Cmd) SeekInit(args ...string) (*Cmd, []string, error) {
 	x.cacheVars()
 	if err := x.Validate(); err != nil {
@@ -667,8 +677,12 @@ func (x *Cmd) SeekInit(args ...string) (*Cmd, []string, error) {
 			return x, args, err
 		}
 	}
-	if (len(args) == 1 && args[0] == "") || x.Cmds == nil {
+	if (len(args) == 1 && args[0] == "") || (x.Cmds == nil && x.Def == nil) {
 		return x, args, nil
+	}
+	if x.Cmds == nil && x.Def != nil {
+		x.Def.caller = x
+		return x.Def.SeekInit(args...)
 	}
 	cur := x
 	n := 0

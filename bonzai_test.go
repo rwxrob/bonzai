@@ -174,6 +174,28 @@ func ExampleErrInvalidShort() {
 
 }
 
+func ExampleCmd_Def() {
+
+	var foo = &bonzai.Cmd{
+		Name: `foo`,
+		Do:   bonzai.Nothing,
+	}
+
+	var Cmd = &bonzai.Cmd{
+		Name: `mycmd`,
+		Def:  foo,
+	}
+
+	x, args, err := Cmd.SeekInit(`arg1`, `arg2`)
+	fmt.Println(x, args, err)
+	fmt.Println(x.Caller())
+
+	// Output:
+	// foo [arg1 arg2] <nil>
+	// mycmd
+
+}
+
 func ExampleValidate() {
 
 	var after = &bonzai.Cmd{
