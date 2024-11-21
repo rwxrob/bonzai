@@ -1,6 +1,7 @@
 package bonzai
 
 import (
+	"encoding/json"
 	"fmt"
 	"log"
 	"os"
@@ -36,9 +37,9 @@ type Cmd struct {
 	Alias string // ex: rm|d|del (optional)
 	Opts  string // ex: mon|wed|fri (optional)
 
-	// Shareable variables
-	Vars VarMap // not automatically persisted (see vars)
-	Env  VarMap // set for self and children (use Var.Str)
+	// Declaration of shareable variables (set to nil at runtime after
+	// caching internal map, see [Cmd.VarsSlice], [Cmd.Get], [Cmd.Set]).
+	Vars Vars
 
 	// Work down by this command itself
 	Init func(x *Cmd, args ...string) error // initialization with [SeekInit]
@@ -69,22 +70,82 @@ type Cmd struct {
 	opts     []string        // see [cacheOpts]
 	hidden   bool            // see [AsHidden] and [IsHidden]
 	cmdAlias map[string]*Cmd // see [cacheCmdAlias]
+	vars     map[string]*Var // see [Vars]
+}
+
+type Vars []Var
+
+func (vs Vars) String() string {
+	buf, _ := json.Marshal(vs)
+	return string(buf)
 }
 
 // Var contains information to be shared between [Cmd] instances and
 // contains a [sync.Mutex] allowing safe-for-concurrency modification
-// when needed. The Str
+// when needed. The Env contains the optional name of an environment
+// variable to use instead if set, even if empty (see [Cmd.Get]). If
+// Persist is set to true, persistence drivers used by callers can
+// determine whether to persist or not. See [Cmd.Set].
 type Var struct {
 	sync.Mutex
-	Key   string // same as that used in Vars (map[string]Var)
-	Short string // short description of variable
-	Str   string
-	Int   int
-	Bool  bool
-	Any   any
+	K       string `json:"k,omitempty"`
+	V       string `json:"v,omitempty"`
+	Env     string `json:"env,omitempty"`
+	Short   string `json:"short,omitempty"`
+	Persist bool   `json:"persist,omitempty"`
 }
 
-type VarMap map[string]Var
+func (v Var) String() string {
+	buf, _ := json.Marshal(v)
+	return string(buf)
+}
+
+// Get returns the value of [os.LookupEnv] if Env was set, otherwise,
+// returns the current internal value of Vars[key] (even though Vars is
+// always empty after [Cmd.SeekInit] caches the initial values). If key
+// was not declared in [Cmd].Vars silently returns empty string.
+func (x *Cmd) Get(key string) string {
+	v, has := x.vars[key]
+	if !has {
+		return ""
+	}
+	if len(v.Env) > 0 {
+		if val, has := os.LookupEnv(v.Env); has {
+			return val
+		}
+	}
+	return v.V
+}
+
+// Set sets the value of the internal Var value for the given key. If
+// the Var.Env is found to exist with [os.LookupEnv] then it is also
+// set. If key was not declared in [Cmd].Vars silenty returns empty
+// string.
+func (x *Cmd) Set(key, value string) {
+	v, has := x.vars[key]
+	if !has {
+		return
+	}
+	v.V = value
+	if len(v.Env) > 0 {
+
+		if _, has := os.LookupEnv(v.Env); has {
+			os.Setenv(v.Env, v.V)
+		}
+	}
+}
+
+// VarsSlice returns a slice with a copy of the current [Cmd].Vars. Use
+// [Cmd.Get] and [Cmd.Set] to access the actual value.
+func (x *Cmd) VarsSlice() Vars {
+	list := make([]Var, len(x.vars))
+	n := 0
+	for _, v := range x.vars {
+		list[n] = *v
+		n++
+	}
+	return list
+}
 
 // Completer specifies anything with Complete function based
 // on the remaining arguments. The Complete method must never panic
@@ -593,11 +654,11 @@ func (x *Cmd) Seek(args ...string) (*Cmd, []string) {
 	return cur, args[n:]
 }
 
-// SeekInit is the same as [Cmd.Seek] but [Cmd].Env variables are exported
-// and the [Cmd].Init functions are called (if any). Returns early with
-// nil values and the error if any Init function produces an error.
+// SeekInit is the same as [Cmd.Seek] Vars are cached and the [Cmd].Init
+// functions are called (if any). Returns early with nil values and the
+// error if any Init function produces an error.
 func (x *Cmd) SeekInit(args ...string) (*Cmd, []string, error) {
-	x.exportenv()
+	x.cacheVars()
 	if err := x.Validate(); err != nil {
 		return x, args, err
 	}
@@ -616,7 +677,7 @@ func (x *Cmd) SeekInit(args ...string) (*Cmd, []string, error) {
 		if next == nil {
 			break
 		}
-		next.exportenv()
+		next.cacheVars()
 		if err := next.Validate(); err != nil {
 			return next, args[n:], err
 		}
@@ -632,13 +693,12 @@ func (x *Cmd) SeekInit(args ...string) (*Cmd, []string, error) {
 	return cur, args[n:], err
 }
 
-func (x *Cmd) exportenv() {
-	for k, v := range x.Env {
-		_, has := os.LookupEnv(k)
-		if !has {
-			os.Setenv(k, v.Str)
-		}
+func (x *Cmd) cacheVars() {
+	x.vars = make(map[string]*Var, len(x.Vars))
+	for _, v := range x.Vars {
+		x.vars[v.K] = &v
 	}
+	x.Vars = nil
 }
 
 // Path returns the path of commands used to arrive at this command.
