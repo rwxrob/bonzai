@@ -326,22 +326,6 @@ func ExampleSeek() {
 
 }
 
-func ExampleCmd_Env() {
-	defer os.Unsetenv(`SOME`)
-
-	var Cmd = &bonzai.Cmd{
-		Name: `foo`,
-		Env:  bonzai.VarMap{`SOME`: {Str: `thing`}},
-		Def:  &bonzai.Cmd{Name: `nothing`},
-	}
-
-	Cmd.Run()
-	fmt.Println(os.Getenv(`SOME`))
-
-	// Output:
-	// thing
-}
-
 func ExampleCmd_Init() {
 
 	printname := func(x *bonzai.Cmd, _ ...string) error {
@@ -472,5 +456,40 @@ func ExampleCmd_PathDashed() {
 	// Output:
 	// sssh [] <nil>
 	// foo-sssh
+
+}
+
+func ExampleCmd_Vars() {
+
+	os.Setenv(`ENV1`, `env1val`)
+	defer os.Unsetenv(`ENV1`)
+
+	var Cmd = &bonzai.Cmd{
+		Name: `foo`,
+		Vars: bonzai.Vars{
+			{K: `key1`, V: `val1`},
+			{K: `key2`, V: `val2`},
+			{K: `env1`, Env: `ENV1`},
+		},
+		Do: bonzai.Nothing,
+	}
+
+	Cmd.SeekInit(`foo`)                 // caches and zeros Cmd.Vars
+	fmt.Println(Cmd.Vars)               // zeroed out after first SeekInit
+	fmt.Println(Cmd.VarsSlice())        // copy of cached slice
+	fmt.Println(Cmd.Get(`env1`))        // env var wins
+	Cmd.Set(`env1`, `newval`)           // changeable
+	fmt.Println(Cmd.Get(`env1`))        // returns ENV1 value
+	fmt.Println(os.Getenv(`ENV1`))      // which is set for all
+	Cmd.Set(`env2`, `ignored`)          // but nothing new
+	fmt.Printf("%q\n", Cmd.Get(`env2`)) // silently ignored
+
+	// Output:
+	// null
+	// [{"k":"key1","v":"val1"},{"k":"key2","v":"val2"},{"k":"env1","env":"ENV1"}]
+	// env1val
+	// newval
+	// newval
+	// ""
 
 }
