@@ -61,7 +61,8 @@ about each command.
 		workCmd,
 		tidyCmd,
 		tagCmd,
-		depsCmd,
+		dependenciesCmd,
+		dependentsCmd,
 		vars.Cmd,
 		help.Cmd,
 	},
@@ -178,7 +179,13 @@ var tagCmd = &bonzai.Cmd{
 	Name:  `tag`,
 	Alias: `t`,
 	Short: `manage or list tags for the go module`,
-	Comp:  comp.Cmds,
+	Long: `
+The tag command helps with listing, smart tagging of modules in a
+monorepo. This ensures that all modules are consistently tagged with the
+appropriate module prefix and version numbers, facilitating error-free
+version control and release management.
+`,
+	Comp: comp.Cmds,
 	Cmds: []*bonzai.Cmd{
 		tagBumpCmd,
 		tagListCmd,
@@ -363,7 +370,7 @@ Automatically push the incremented tag:
 var tidyCmd = &bonzai.Cmd{
 	Name:  `tidy`,
 	Alias: `tidy|update`,
-	Short: "update and tidy dependencies on all modules in repo",
+	Short: "tidy dependencies on all modules in repo",
 	Long: `
 The "tidy" command updates and tidies the Go module dependencies
 across all modules in a monorepo or within a specific scope. This
@@ -443,19 +450,31 @@ the default scope is "module".
 	},
 }
 
-var depsCmd = &bonzai.Cmd{
+var dependenciesCmd = &bonzai.Cmd{
 	Name:  `dependencies`,
-	Alias: `deps|dep`,
+	Alias: `deps`,
+	Short: `list or update dependencies`,
 	Comp:  comp.Cmds,
-	Cmds:  []*bonzai.Cmd{dependsOnCmd, usedByCmd},
-	Def:   dependsOnCmd,
+	Cmds: []*bonzai.Cmd{
+		help.Cmd.AsHidden(),
+		vars.Cmd.AsHidden(),
+		dependencyListCmd,
+		// dependencyUpdateCmd,
+	},
+	Def: help.Cmd,
 }
 
-var dependsOnCmd = &bonzai.Cmd{
-	Name:  `depends-on`,
-	Alias: `on|uses`,
+var dependencyListCmd = &bonzai.Cmd{
+	Name:  `list`,
+	Alias: `on`,
 	Short: `list the dependencies for the go module`,
-	Comp:  comp.Cmds,
+	Long: `
+The list subcommand provides a list of all dependencies for the Go
+module. The scope of dependencies can be customized using the options
+provided. By default, it lists all dependencies.
+`,
+	NoArgs: true,
+	Cmds:   []*bonzai.Cmd{help.Cmd.AsHidden(), vars.Cmd.AsHidden()},
 	Do: func(x *bonzai.Cmd, args ...string) error {
 		deps, err := ListDependencies()
 		if err != nil {
@@ -466,11 +485,30 @@ var dependsOnCmd = &bonzai.Cmd{
 	},
 }
 
-var usedByCmd = &bonzai.Cmd{
-	Name:  `depends-on-me`,
-	Alias: `onme|usedby|me`,
-	Short: `list the dependents of the go module`,
+var dependentsCmd = &bonzai.Cmd{
+	Name:  `dependents`,
+	Alias: `depsonme`,
+	Short: `list or update dependents`,
 	Comp:  comp.Cmds,
+	Cmds: []*bonzai.Cmd{
+		help.Cmd.AsHidden(),
+		vars.Cmd.AsHidden(),
+		dependentListCmd,
+		// dependentUpdateCmd,
+	},
+	Def: help.Cmd,
+}
+
+var dependentListCmd = &bonzai.Cmd{
+	Name:  `list`,
+	Alias: `onme`,
+	Short: `list the dependents of the go module`,
+	Long: `
+The list subcommand provides a list of all modules or packages that
+depend on the current Go module. This is useful to determine the
+downstream impact of changes made to the current module.
+`,
+	Comp: comp.Cmds,
 	Do: func(x *bonzai.Cmd, args ...string) error {
 		deps, err := ListDependents()
 		if err != nil {
