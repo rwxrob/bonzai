@@ -91,12 +91,14 @@ in which to toggle the work files can be configured using either the
   - module: Toggles the go.work file in the current module.
   - repo: Toggles all go.work files in the monorepo.
   - tree: Toggles go.work files in the directory tree starting from pwd.
-  `,
-	Env: bonzai.VarMap{
-		WorkScopeEnv: bonzai.Var{Key: WorkScopeEnv, Str: `module`},
-	},
-	Vars: bonzai.VarMap{
-		WorkScopeVar: bonzai.Var{Key: WorkScopeVar, Str: `module`},
+`,
+	Vars: bonzai.Vars{
+		{
+			K:     WorkScopeVar,
+			V:     `module`,
+			Env:   WorkScopeVar,
+			Short: `Configures the scope in which to toggle work files`,
+		},
 	},
 	NumArgs:  1,
 	RegxArgs: `on|off`,
@@ -231,17 +233,8 @@ List tags in shortened form (default behavior):
 
 The tags are automatically sorted in semantic version order.
 `,
-	Env: bonzai.VarMap{
-		TagShortenEnv: bonzai.Var{
-			Key: TagShortenEnv,
-			Str: "true",
-		},
-	},
-	Vars: bonzai.VarMap{
-		TagShortenVar: bonzai.Var{
-			Key:  TagShortenVar,
-			Bool: true,
-		},
+	Vars: bonzai.Vars{
+		{K: TagShortenVar, V: `true`, Env: TagShortenEnv},
 	},
 	Do: func(x *bonzai.Cmd, args ...string) error {
 		shorten := vars.Fetch(
@@ -283,11 +276,8 @@ environment variable or variable to "true". For example:
 
 This command integrates with Git to manage semver tags effectively.
 `,
-	Env: bonzai.VarMap{
-		TagRmRemoteEnv: bonzai.Var{Key: TagRmRemoteEnv, Str: "false"},
-	},
-	Vars: bonzai.VarMap{
-		TagRmRemoteVar: bonzai.Var{Key: TagRmRemoteVar, Bool: false},
+	Vars: bonzai.Vars{
+		{K: TagRmRemoteVar, V: `false`, Env: TagRmRemoteEnv},
 	},
 	NumArgs: 1,
 	Comp:    comp.Combine{git.CompTags},
@@ -340,13 +330,9 @@ Automatically push the incremented tag:
 
     $ TAG_PUSH=true tag bump minor
 `,
-	Env: bonzai.VarMap{
-		TagVerPartEnv: bonzai.Var{Key: TagVerPartEnv, Str: `patch`},
-		TagPushEnv:    bonzai.Var{Key: TagPushEnv, Str: `false`},
-	},
-	Vars: bonzai.VarMap{
-		TagVerPartVar: bonzai.Var{Key: TagVerPartVar, Str: `patch`},
-		TagPushVar:    bonzai.Var{Key: TagPushVar, Bool: false},
+	Vars: bonzai.Vars{
+		{K: TagPushVar, V: `false`, Env: TagPushEnv},
+		{K: TagVerPartVar, V: `false`, Env: TagVerPartEnv},
 	},
 	MaxArgs: 1,
 	Opts:    `major|minor|patch|M|m|p`,
@@ -407,11 +393,8 @@ the default scope is "module".
     $ kimono tidy depsonme
 
 `,
-	Env: bonzai.VarMap{
-		TidyScopeEnv: bonzai.Var{Key: TidyScopeEnv, Str: `module`},
-	},
-	Vars: bonzai.VarMap{
-		TidyScopeVar: bonzai.Var{Key: TidyScopeVar, Str: `module`},
+	Vars: bonzai.Vars{
+		{K: TidyScopeVar, V: `module`, Env: TidyScopeEnv},
 	},
 	MaxArgs: 1,
 	Opts:    `module|mod|repo|deps|depsonme|dependencies|dependents`,
