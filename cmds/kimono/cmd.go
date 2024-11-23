@@ -15,35 +15,54 @@ import (
 )
 
 const (
-	WorkScopeEnv = `KIMONO_WORK_SCOPE`
-	WorkScopeVar = `work-scope`
-
-	TagVerPartEnv = `KIMONO_VERSION_PART`
-	TagVerPartVar = `version-part`
-
-	TagShortenEnv = `KIMONO_TAG_SHORTEN`
-	TagShortenVar = `shorten-tags`
-
+	WorkScopeEnv   = `KIMONO_WORK_SCOPE`
+	WorkScopeVar   = `work-scope`
+	TagVerPartEnv  = `KIMONO_VERSION_PART`
+	TagVerPartVar  = `tag-ver-part`
+	TagShortenEnv  = `KIMONO_TAG_SHORTEN`
+	TagShortenVar  = `tag-shorten`
 	TagRmRemoteEnv = `KIMONO_TAG_RM_REMOTE`
-	TagRmRemoteVar = `rm-remote-tag`
-
-	TagPushEnv = `KIMONO_PUSH_TAG`
-	TagPushVar = `push-tags`
-
-	TidyScopeEnv = `KIMONO_TIDY_SCOPE`
+	TagRmRemoteVar = `tag-rm-remote`
+	TagPushEnv     = `KIMONO_PUSH_TAG`
+	TagPushVar     = `tag-push`
+	TidyScopeEnv   = `KIMONO_TIDY_SCOPE`
+	TidyScopeVar   = `tidy-scope`
 )
 
 var Cmd = &bonzai.Cmd{
 	Name:  `kimono`,
 	Alias: `kmono|km`,
-	Short: `manage golang monorepos`,
 	Vers:  `v0.7.0`,
-	Comp:  comp.Cmds,
+	Short: `manage golang monorepos`,
+	Long: `
+The kimono tool helps manage Go monorepos. It simplifies common monorepo
+operations and workflow management.
+
+# Features:
+- Toggle go.work files on/off for local development
+- Perform coordinated version tagging
+- Keep go.mod files tidy across modules
+- View dependency graphs and module information
+- Track dependent modules and their relationships
+
+# Commands:
+- work:     Toggle go.work files for local development
+- tidy:     run 'go get -u' and 'go mod tidy' across modules
+- tag:      List and coordinate version tagging across modules
+- deps:     List and manage module dependencies
+- depsonme: List and manage module dependencies
+- vars:     View and set configuration variables
+
+Use 'kimono help <command> <subcommand>...' for detailed information
+about each command.
+`,
+	Comp: comp.Cmds,
 	Cmds: []*bonzai.Cmd{
 		workCmd,
 		tidyCmd,
 		tagCmd,
-		depsCmd,
+		dependenciesCmd,
+		dependentsCmd,
 		vars.Cmd,
 		help.Cmd,
 	},
@@ -72,12 +91,14 @@ in which to toggle the work files can be configured using either the
   - module: Toggles the go.work file in the current module.
   - repo: Toggles all go.work files in the monorepo.
   - tree: Toggles go.work files in the directory tree starting from pwd.
-  `,
-	Env: bonzai.VarMap{
-		WorkScopeEnv: bonzai.Var{Key: WorkScopeEnv, Str: `module`},
-	},
-	Vars: bonzai.VarMap{
-		WorkScopeVar: bonzai.Var{Key: WorkScopeVar, Str: `module`},
+`,
+	Vars: bonzai.Vars{
+		{
+			K:     WorkScopeVar,
+			V:     `module`,
+			Env:   WorkScopeVar,
+			Short: `Configures the scope in which to toggle work files`,
+		},
 	},
 	NumArgs:  1,
 	RegxArgs: `on|off`,
@@ -160,7 +181,13 @@ var tagCmd = &bonzai.Cmd{
 	Name:  `tag`,
 	Alias: `t`,
 	Short: `manage or list tags for the go module`,
-	Comp:  comp.Cmds,
+	Long: `
+The tag command helps with listing, smart tagging of modules in a
+monorepo. This ensures that all modules are consistently tagged with the
+appropriate module prefix and version numbers, facilitating error-free
+version control and release management.
+`,
+	Comp: comp.Cmds,
 	Cmds: []*bonzai.Cmd{
 		tagBumpCmd,
 		tagListCmd,
@@ -206,17 +233,8 @@ List tags in shortened form (default behavior):
 
 The tags are automatically sorted in semantic version order.
 `,
-	Env: bonzai.VarMap{
-		TagShortenEnv: bonzai.Var{
-			Key: TagShortenEnv,
-			Str: "true",
-		},
-	},
-	Vars: bonzai.VarMap{
-		TagShortenVar: bonzai.Var{
-			Key:  TagShortenVar,
-			Bool: true,
-		},
+	Vars: bonzai.Vars{
+		{K: TagShortenVar, V: `true`, Env: TagShortenEnv},
 	},
 	Do: func(x *bonzai.Cmd, args ...string) error {
 		shorten := vars.Fetch(
@@ -258,11 +276,8 @@ environment variable or variable to "true". For example:
 
 This command integrates with Git to manage semver tags effectively.
 `,
-	Env: bonzai.VarMap{
-		TagRmRemoteEnv: bonzai.Var{Key: TagRmRemoteEnv, Str: "false"},
-	},
-	Vars: bonzai.VarMap{
-		TagRmRemoteVar: bonzai.Var{Key: TagRmRemoteVar, Bool: false},
+	Vars: bonzai.Vars{
+		{K: TagRmRemoteVar, V: `false`, Env: TagRmRemoteEnv},
 	},
 	NumArgs: 1,
 	Comp:    comp.Combine{git.CompTags},
@@ -315,13 +330,9 @@ Automatically push the incremented tag:
 
     $ TAG_PUSH=true tag bump minor
 `,
-	Env: bonzai.VarMap{
-		TagVerPartEnv: bonzai.Var{Key: TagVerPartEnv, Str: `patch`},
-		TagPushEnv:    bonzai.Var{Key: TagPushEnv, Str: `false`},
-	},
-	Vars: bonzai.VarMap{
-		TagVerPartVar: bonzai.Var{Key: TagVerPartVar, Str: `patch`},
-		TagPushVar:    bonzai.Var{Key: TagPushVar, Bool: false},
+	Vars: bonzai.Vars{
+		{K: TagPushVar, V: `false`, Env: TagPushEnv},
+		{K: TagVerPartVar, V: `false`, Env: TagVerPartEnv},
 	},
 	MaxArgs: 1,
 	Opts:    `major|minor|patch|M|m|p`,
@@ -343,30 +354,71 @@ Automatically push the incremented tag:
 }
 
 var tidyCmd = &bonzai.Cmd{
-	Name:    `tidy`,
-	Alias:   `tidy|update`,
-	Opts:    `all|a|deps|depsonme|dependencies|dependents`,
-	Short:   "run `go get -u` and `go mod tidy` on all go modules in repo",
-	Comp:    comp.Cmds,
+	Name:  `tidy`,
+	Alias: `tidy|update`,
+	Short: "tidy dependencies on all modules in repo",
+	Long: `
+The "tidy" command updates and tidies the Go module dependencies
+across all modules in a monorepo or within a specific scope. This
+is particularly useful for maintaining consistency and ensuring
+that dependencies are up-to-date.
+
+# Arguments:
+  module|mod:          Tidy the current module only.
+  repo:                Tidy all modules in the repository.
+  deps|dependencies:   Tidy dependencies of the current module in the 
+                       monorepo.
+  depsonme|dependents: Tidy modules in the monorepo dependent on the 
+                       current module.
+
+# Environment Variables:
+
+- KIMONO_TIDY_SCOPE: (Defaults to "module")
+  Defines the scope of the tidy operation. Can be set to "module(mod)",
+  "root", "dependencies(deps)", or "dependent(depsonme)".
+
+The scope can also be configured using the "tidy-scope" variable or
+the "KIMONO_TIDY_SCOPE" environment variable. If no argument is provided,
+the default scope is "module".
+
+# Examples:
+
+    # Tidy all modules in the repository
+    $ kimono tidy root
+
+    # Tidy only dependencies of the current module in the monorepo
+    $ kimono tidy deps
+
+    # Tidy modules in the monorepo dependent on the current module
+    $ kimono tidy depsonme
+
+`,
+	Vars: bonzai.Vars{
+		{K: TidyScopeVar, V: `module`, Env: TidyScopeEnv},
+	},
 	MaxArgs: 1,
+	Opts:    `module|mod|repo|deps|depsonme|dependencies|dependents`,
+	Comp:    comp.Opts,
+	Cmds:    []*bonzai.Cmd{help.Cmd.AsHidden(), vars.Cmd.AsHidden()},
 	Do: func(x *bonzai.Cmd, args ...string) error {
+		var scope string
 		if len(args) == 0 {
+			scope = vars.Fetch(
+				TidyScopeEnv,
+				TidyScopeVar,
+				`module`,
+			)
+		} else {
+			scope = args[0]
+		}
+		switch scope {
+		case `module`:
 			pwd, err := os.Getwd()
 			if err != nil {
 				return err
 			}
 			return TidyAll(pwd)
-		}
-		scope := args[0]
-		switch scope {
-		case ``:
-			scope = vars.Fetch(
-				TidyScopeEnv,
-				`tidy-scope`,
-				``,
-			)
-			fallthrough
-		case `all`:
+		case `repo`:
 			root, err := futil.HereOrAbove(".git")
 			if err != nil {
 				return err
@@ -381,19 +433,31 @@ var tidyCmd = &bonzai.Cmd{
 	},
 }
 
-var depsCmd = &bonzai.Cmd{
+var dependenciesCmd = &bonzai.Cmd{
 	Name:  `dependencies`,
-	Alias: `deps|dep`,
+	Alias: `deps`,
+	Short: `list or update dependencies`,
 	Comp:  comp.Cmds,
-	Cmds:  []*bonzai.Cmd{dependsOnCmd, usedByCmd},
-	Def:   dependsOnCmd,
+	Cmds: []*bonzai.Cmd{
+		help.Cmd.AsHidden(),
+		vars.Cmd.AsHidden(),
+		dependencyListCmd,
+		// dependencyUpdateCmd,
+	},
+	Def: help.Cmd,
 }
 
-var dependsOnCmd = &bonzai.Cmd{
-	Name:  `depends-on`,
-	Alias: `on|uses`,
+var dependencyListCmd = &bonzai.Cmd{
+	Name:  `list`,
+	Alias: `on`,
 	Short: `list the dependencies for the go module`,
-	Comp:  comp.Cmds,
+	Long: `
+The list subcommand provides a list of all dependencies for the Go
+module. The scope of dependencies can be customized using the options
+provided. By default, it lists all dependencies.
+`,
+	NoArgs: true,
+	Cmds:   []*bonzai.Cmd{help.Cmd.AsHidden(), vars.Cmd.AsHidden()},
 	Do: func(x *bonzai.Cmd, args ...string) error {
 		deps, err := ListDependencies()
 		if err != nil {
@@ -404,11 +468,30 @@ var dependsOnCmd = &bonzai.Cmd{
 	},
 }
 
-var usedByCmd = &bonzai.Cmd{
-	Name:  `depends-on-me`,
-	Alias: `onme|usedby|me`,
-	Short: `list the dependents of the go module`,
+var dependentsCmd = &bonzai.Cmd{
+	Name:  `dependents`,
+	Alias: `depsonme`,
+	Short: `list or update dependents`,
 	Comp:  comp.Cmds,
+	Cmds: []*bonzai.Cmd{
+		help.Cmd.AsHidden(),
+		vars.Cmd.AsHidden(),
+		dependentListCmd,
+		// dependentUpdateCmd,
+	},
+	Def: help.Cmd,
+}
+
+var dependentListCmd = &bonzai.Cmd{
+	Name:  `list`,
+	Alias: `onme`,
+	Short: `list the dependents of the go module`,
+	Long: `
+The list subcommand provides a list of all modules or packages that
+depend on the current Go module. This is useful to determine the
+downstream impact of changes made to the current module.
+`,
+	Comp: comp.Cmds,
 	Do: func(x *bonzai.Cmd, args ...string) error {
 		deps, err := ListDependents()
 		if err != nil {
