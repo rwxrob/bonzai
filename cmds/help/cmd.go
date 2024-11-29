@@ -8,9 +8,9 @@ import (
 
 var Cmd = &bonzai.Cmd{
 	Name:  `help`,
-	Vers:  `v0.4.1`,
+	Alias: `h|-h|--help|--h|/?`,
+	Vers:  `v0.7.7`,
 	Short: `display command help`,
-	Alias: `-h|--help|--h|/?`,
 	Long: `
 		The {{aka .}} command displays the help information for the
 		immediate previous command unless it is passed arguments, in which
