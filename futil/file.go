@@ -49,6 +49,23 @@ func Touch(path string) error {
 	return nil
 }
 
+// Append appends one or more slices of bytes to the specified file. If
+// the file does not exist, it is created. The file is opened in append
+// and write-only mode.
+func Append[T string | []byte](path string, these ...T) error {
+	file, err := os.OpenFile(path, os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644)
+	if err != nil {
+		return err
+	}
+	defer file.Close()
+	for _, buf := range these {
+		if _, err := file.Write([]byte(buf)); err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
 // Replace replaces a file at a specified location with another
 // successfully retrieved file from the specified URL or file path and
 // duplicates the original files permissions. Only http and https URLs
