@@ -8,6 +8,7 @@ import (
 	"os"
 	"path"
 	"path/filepath"
+	"runtime"
 	"strconv"
 	"strings"
 	"time"
@@ -353,8 +354,46 @@ func IsSymLink(path string) (bool, error) {
 }
 
 var UserHomeDir = os.UserHomeDir
-var UserCacheDir = os.UserCacheDir
-var UserConfigDir = os.UserConfigDir
+
+// UserConfigDir returns the path to the user's config directory,
+// checking [$XDG_CONFIG_HOME] environment variable first. It defaults to
+// joining [UserHomeDir] with `.config` if the variable is unset on Unix
+// systems (including darwin unlike [pkg/os.UserConfigDir]). On Windows it
+// returns %AppData%. It returns an error if [UserHomeDir] fails.
+func UserConfigDir() (string, error) {
+	if runtime.GOOS == "windows" {
+		return os.Getenv(`AppData`), nil
+	}
+	path, has := os.LookupEnv(`XDG_CONFIG_HOME`)
+	if !has {
+		dir, err := UserHomeDir()
+		if err != nil {
+			return "", err
+		}
+		path = filepath.Join(dir, `.config`)
+	}
+	return path, nil
+}
+
+// UserCacheDir returns the path to the user's cache directory,
+// checking [$XDG_CACHE_HOME] environment variable first. It defaults to
+// joining [UserHomeDir] with `.cache` if the variable is unset on Unix
+// systems (including darwin unlike [pkg/os.UserCacheDir]). On Windows it
+// returns %LocalAppData%. It returns an error if [UserHomeDir] fails.
+func UserCacheDir() (string, error) {
+	if runtime.GOOS == "windows" {
+		return os.Getenv(`LocalAppData`), nil
+	}
+	path, has := os.LookupEnv(`XDG_CACHE_HOME`)
+	if !has {
+		dir, err := UserHomeDir()
+		if err != nil {
+			return "", err
+		}
+		path = filepath.Join(dir, `.cache`)
+	}
+	return path, nil
+}
 
 // UserStateDir returns the path to the user's state directory,
 // checking [XDG_STATE_HOME] environment variable first. It defaults
