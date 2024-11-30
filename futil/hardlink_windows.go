@@ -1,3 +1,3 @@
 package futil
 
-func IsHardLink() bool { return false }
+func IsHardLink(path string) (bool, error) { return false, nil }
