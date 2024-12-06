@@ -91,16 +91,16 @@ func ExampleCmdTree_hidden() {
 		Short: `under the foo command`,
 	}
 
-	var sssh = &bonzai.Cmd{
-		Name: `sssh`,
-		Do:   bonzai.Nothing,
+	var hiddenCmd = &bonzai.Cmd{
+		Name: `imhidden`,
+		Cmds: []*bonzai.Cmd{{Name: `some`}, {Name: `other`}},
 	}
 
 	var fooCmd = &bonzai.Cmd{
 		Name:  `foo`,
 		Alias: `f`,
 		Short: `foo this command`,
-		Cmds:  []*bonzai.Cmd{subFooCmd, sssh.AsHidden()},
+		Cmds:  []*bonzai.Cmd{subFooCmd},
 	}
 
 	var barCmd = &bonzai.Cmd{
@@ -113,11 +113,11 @@ func ExampleCmdTree_hidden() {
 		Name:  `mycmd`,
 		Alias: `my|cmd`,
 		Short: `my command short summary`,
-		Cmds:  []*bonzai.Cmd{fooCmd, barCmd},
+		Cmds:  []*bonzai.Cmd{fooCmd, barCmd, hiddenCmd.AsHidden()},
 		Def:   fooCmd,
 	}
 
-	Cmd.Seek(`foo`, `subfoo`) // required for default detection
+	Cmd.Seek(`foo`, `sssh`, `some`) // required for default detection
 
 	fmt.Print("# Synopsis\n\n")
 	fmt.Println(funcs.CmdTree(Cmd))
@@ -129,4 +129,5 @@ func ExampleCmdTree_hidden() {
 	//       foo      ← foo this command (default)
 	//         subfoo ← under the foo command
 	//       bar      ← bar this command
+
 }
