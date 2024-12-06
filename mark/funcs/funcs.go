@@ -86,12 +86,20 @@ func CmdTree(x *bonzai.Cmd) string {
 
 func cmdTree(x *bonzai.Cmd, depth int) string {
 	out := new(strings.Builder)
+	hideunder := -1
 	addbranch := func(level int, c *bonzai.Cmd) error {
 		if level > depth {
 			return nil
 		}
 		if c.IsHidden() {
+			hideunder = level
 			return nil
+		}
+		if hideunder >= 0 && level > hideunder {
+			return nil
+		}
+		if hideunder >= 0 && level < hideunder {
+			hideunder = -1
 		}
 		for range level {
 			out.WriteString(`  `)
