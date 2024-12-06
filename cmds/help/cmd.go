@@ -9,7 +9,7 @@ import (
 var Cmd = &bonzai.Cmd{
 	Name:  `help`,
 	Alias: `h|-h|--help|--h|/?`,
-	Vers:  `v0.7.7`,
+	Vers:  `v0.7.8`,
 	Short: `display command help`,
 	Long: `
 		The {{aka .}} command displays the help information for the
@@ -18,10 +18,10 @@ var Cmd = &bonzai.Cmd{
 		previous command and the help for the leaf command is displayed
 		instead.`,
 
-	Do: func(x *bonzai.Cmd, args ...string) error {
+	Do: func(x *bonzai.Cmd, args ...string) (err error) {
 
 		if len(args) > 0 {
-			x, args = x.Caller().Seek(args...)
+			x, args, err = x.Caller().SeekInit(args...)
 		} else {
 			x = x.Caller()
 		}
