@@ -30,6 +30,58 @@ func init() {
 		isTruthy {
 		AllowPanic = true
 	}
+	if Persistence != nil {
+		if err := Persistence.Init(); err != nil {
+			panic(err)
+		}
+	}
+}
+
+// Default persister for any [Cmd] that is not created with its own
+// persistence using [Cmd.WithPersistence]. The [Cmd.Get] and [Cmd.Set]
+// will use this if Cmd does not have its own. If assigned, will have
+// its [Persister.Init] method called during init of the bonzai package.
+var Persistence Persister
+
+// Driver specifies anything that implements a persistence layer for
+// high-speed storage and retrieval of key/value combinations. This is
+// usually automatically called from [Cmd.SeekInit] or the init function
+// when being used in package scope.
+//
+// # Empty values
+//
+// Since all implementations must return and set strings, the empty
+// string value is considered unset or non-existent. This is consistent
+// with working with [pkg/os.Getenv]. Therefore, there is no Delete or
+// Has equivalent since a Set("") works to delete a value and
+// a len(Get())>0 is the same as Has.
+//
+// # Init
+//
+// Initialize a new persistence store if one does not yet exist. Must
+// never clear or delete one that has been previously initialized.
+// Usually this is called within an init() function after the other
+// specific configurations of the driver have been set (much like
+// database or other drivers). When called from init should usually
+// panic since something serious has gone wrong during initialization
+// and no attempt to run main should proceed.
+//
+// # Get
+//
+// Retrieves a value for a specific key in a case-sensitive way or
+// returns an empty string if not found.
+//
+// # Set
+//
+// Assigns a value for a given key. If the key did not exist, must
+// create it. Callers can choose to check for the declaration of a key
+// before calling Set, such as with [Cmd.Vars] and [Cmd.Get] and
+// [Cmd.Set] (which themselves are not implementations of this interface
+// although they use one internally).
+type Persister interface {
+	Init() error                    // initialize (not clear)
+	Get(key string) (string, error) // accessor, "" if non-existent
+	Set(key, val string) error      // mutator, "" to effectively delete
 }
 
 type Cmd struct {
@@ -65,12 +117,13 @@ type Cmd struct {
 	// Self-completion support: complete -C foo foo
 	Comp Completer
 
-	caller   *Cmd            // see [Caller],[Seek], delegation
-	aliases  []string        // see [cacheAlias]
-	opts     []string        // see [cacheOpts]
-	hidden   bool            // see [AsHidden] and [IsHidden]
-	cmdAlias map[string]*Cmd // see [cacheCmdAlias]
-	vars     map[string]*Var // see [Vars]
+	caller    *Cmd            // see [Caller],[Seek], delegation
+	aliases   []string        // see [cacheAlias]
+	opts      []string        // see [cacheOpts]
+	hidden    bool            // see [AsHidden] and [IsHidden]
+	cmdAlias  map[string]*Cmd // see [cacheCmdAlias]
+	vars      map[string]*Var // see [Vars]
+	persister Persister       // see [Persister]
 }
 
 type Vars []Var
@@ -98,6 +151,13 @@ type Var struct {
 func (v Var) String() string {
 	buf, _ := json.Marshal(v)
 	return string(buf)
+}
+
+// WithPersistence returns a pointer to a copy of the [Cmd] that has had
+// its internal [Persister] assigned that passed as an argument.
+func (x Cmd) WithPersistence(a Persister) *Cmd {
+	x.persister = a
+	return &x
 }
 
 // Get returns the value of [os.LookupEnv] if Env was set, otherwise,
