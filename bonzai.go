@@ -56,15 +56,18 @@ var Persistence Persister
 // Has equivalent since a Set("") works to delete a value and
 // a len(Get())>0 is the same as Has.
 //
-// # Init
+// # Setup
 //
-// Initialize a new persistence store if one does not yet exist. Must
-// never clear or delete one that has been previously initialized.
-// Usually this is called within an init() function after the other
-// specific configurations of the driver have been set (much like
-// database or other drivers). When called from init should usually
-// panic since something serious has gone wrong during initialization
-// and no attempt to run main should proceed.
+// Set up an existing persistence store or create and initialize a new
+// one if one does not yet exist. Never clears or deletes one that has
+// been previously initialized (which is outside the scope of this
+// interface). Usually this is called within an init() function after
+// the other specific configurations of the driver have been set (much
+// like database or other drivers). When called from init should usually
+// prompt a panic since something has gone wrong during initialization
+// and no attempt to run main should proceed, but this depends on the
+// severity of the error, and that is up to the implementations to
+// decide.
 //
 // # Get
 //
@@ -79,7 +82,7 @@ var Persistence Persister
 // [Cmd.Set] (which themselves are not implementations of this interface
 // although they use one internally).
 type Persister interface {
-	Init() error                    // initialize (not clear)
+	Setup() error                   // setup existing or create (never clear)
 	Get(key string) (string, error) // accessor, "" if non-existent
 	Set(key, val string) error      // mutator, "" to effectively delete
 }
@@ -155,9 +158,9 @@ func (v Var) String() string {
 
 // WithPersistence returns a pointer to a copy of the [Cmd] that has had
 // its internal [Persister] assigned that passed as an argument. The
-// [Persister.Init] method is called and if returns an error panics.
+// [Persister.Setup] method is called and if returns an error panics.
 func (x Cmd) WithPersistence(a Persister) *Cmd {
-	if err := a.Init(); err != nil {
+	if err := a.Setup(); err != nil {
 		panic(err)
 	}
 	x.persister = a
