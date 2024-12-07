@@ -31,7 +31,7 @@ func init() {
 		AllowPanic = true
 	}
 	if Persistence != nil {
-		if err := Persistence.Init(); err != nil {
+		if err := Persistence.Setup(); err != nil {
 			panic(err)
 		}
 	}
@@ -40,7 +40,7 @@ func init() {
 // Default persister for any [Cmd] that is not created with its own
 // persistence using [Cmd.WithPersistence]. The [Cmd.Get] and [Cmd.Set]
 // will use this if Cmd does not have its own. If assigned, will have
-// its [Persister.Init] method called during init of the bonzai package.
+// its [Persister.Setup] method called during init of the bonzai package.
 var Persistence Persister
 
 // Driver specifies anything that implements a persistence layer for
