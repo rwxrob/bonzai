@@ -43,10 +43,8 @@ func init() {
 // its [Persister.Setup] method called during init of the bonzai package.
 var Persistence Persister
 
-// Driver specifies anything that implements a persistence layer for
-// high-speed storage and retrieval of key/value combinations. This is
-// usually automatically called from [Cmd.SeekInit] or the init function
-// when being used in package scope.
+// Persister specifies anything that implements a persistence layer for
+// storage and retrieval of key/value combinations.
 //
 // # Empty values
 //
@@ -138,11 +136,90 @@ func (vs Vars) String() string {
 
 // Var contains information to be shared between [Cmd] instances and
 // contains a [sync.Mutex] allowing safe-for-concurrency modification
-// when needed. The Env contains the optional name of an environment
-// variable to use instead if set, even if empty (see [Cmd.Get]). If
-// Persist is set to true then uses internal persistence set
-// [Cmd].Persist or [pkg/bonzai.Persistence] if either are
-// available, otherwise silently fails to persist.
+// when needed. This is used instead of [sync.RWMutex] because it is
+// common for the first Get operation to also set the declared initial
+// value such as when working with persistence.
+//
+// # Empty string means undefined
+//
+// Bonzai variables are assumed to be undefined when empty (much like
+// the use of traditional environment variables). This means that
+// command creators must use something besides an empty string for
+// booleans and such. There are no other specific string-to-type
+// marshaling standards defined by Bonzai conventions, only that an
+// empty string means "undefined".
+//
+// # Mandatory explicit declaration
+//
+// Any [Cmd].Get or [Cmd].Set will panic if the key is not
+// declared in the [Cmd].Vars slice. This includes keys with empty
+// values (V) that are to be inherited from commands above in the
+// [Cmd].SeekInit path.
+//
+// # Environment variables
+//
+// When Env is set and an initial value (V) is not set, the value Env is
+// taken as the exact name of an environment variable that, if found to
+// exist, even if blank, is used exactly as if the initial V value had
+// been explicitly assigned that value returned from the environment
+// variable. One use case is to allow users to decide if they prefer to manage
+// initial values through environment variables instead of the
+// alternatives. Note that when V is assigned indirectly in this way
+// that any persistence is also applied in addition to the in-memory
+// assignment of the value of V.
+//
+// When Env is set and an initial value (V) is also set, the environment
+// variable, if found to exist, even if blank, is said to "shadow" the
+// initial and current value (V) as well as any persistence. Get and Set
+// operations will be applied to the in-memory environment variable
+// only. This is useful for use cases that temporarily alter behavior
+// without changing default values or persistent values, such as when
+// debugging, or creating "dry runs". This also provides
+// a well-supported conventional alternative to getopts style options:
+//
+//		LANG=en greet
+//	  GOOS=arch go build
+//
+// # Persistence
+//
+// When Persist is true then either internal persistence ([Cmd].Persist)
+// or default persistence ([pkg/bonzai.Persistence]) is checked and used
+// if available (not nil). If neither is available then it is as if
+// Persist is false. In-memory values (V) are always kept in sync with
+// those persisted depending on the method of persistence employed by
+// the [Persister]. Both are always safe for concurrency.
+//
+// When Persist is true but the initial value (V) is empty, then persistence
+// is assumed to have the value or be okay with an undefined persisted value.
+//
+// When Persist is true and the initial value (V) is set and [Cmd].Get
+// retrieves an empty value (after the delegated call to
+// [Persister].Get), then the initial value (V) is passed to
+// [Persister].Set persisting it for the next time.
+//
+// # Explicit inheritance
+//
+// When the initial value (V) is empty and neither Env nor Persist are
+// set then the Var is said to be an "inheritor" meaning that it must
+// inherit from a command above it in the [Cmd].SeekInit path and if not
+// found must panic. When found the inheritor (without a V) is replaced
+// in the internal vars cache map with a direct reference to the inherited
+// Var producing the same result as if the inherited Var had been
+// explicitly declared in the Vars of the command declaring the
+// value-less inheritor. At that point, the both commands ([Cmd]) share
+// the same internal Var for all variable-related operations (Get, Set,
+// Var).
+//
+// # Scope and depth
+//
+// There is no concept of variable scope or depth. This means any
+// subcommand at any depth level may declare that it wants to inherit
+// and therefore retrieve and modify any declared variable above it. It
+// is assumed that any developer composing a Bonzai command branch would
+// look at such declarations in Vars to decide if it is safe to import
+// and compose that subcommand into the compilation of the overall
+// command. The requirement to declare all Vars makes this knowledge
+// explicit for all Bonzai commands.
 type Var struct {
 	sync.Mutex
 	K       string `json:"k,omitempty"`
@@ -180,14 +257,16 @@ func (x Cmd) WithPersistence(a Persister) *Cmd {
 // ensuring that initial [Cmd].Vars declarations are persisted if they
 // need to be for the first time. Note that none of this works until
 // [Cmd.SeekInit] is called which caches the Vars and sets up
-// persistence. If key was never declared in [Cmd].Vars then returns
-// empty string.
+// persistence. Panics if key was never declared. Locks the variable so
+// safe for concurrency but persisters must implement their own
+// file-level locking if shared between multiple processes.
 func (x *Cmd) Get(key string) string {
-	// return empty if wasn't declared
 	v, has := x.vars[key]
 	if !has {
-		return ""
+		panic(`not declared in Vars: ` + key)
 	}
+	v.Lock()
+	defer v.Unlock()
 	switch {
 	case len(v.Env) > 0:
 		if val, has := os.LookupEnv(v.Env); has {
@@ -218,17 +297,20 @@ func (x *Cmd) Get(key string) string {
 // Set assigns the value of the internal vars value for the given key. If
 // the [Var].Env is found to exist with [os.LookupEnv] then it is only set
 // instead. This allows environment variables to shadow in-memory and
-// persistent variables. If [Cmd].Persist is set then attempts to
+// persistent variables. If [Cmd].Persist is set, then attempts to
 // persist using the internal persister created with [Cmd].Persist or
 // the [pkg/bonzai.Persistence] default if either is not nil. Otherwise,
 // assumes no persistence and only changes the in-memory value.
-// If key was not declared in [Cmd].Vars returns empty string.
+// Panics if key was not declared in [Cmd].Vars. Locks the Var in
+// question so safe for concurrency.
 func (x *Cmd) Set(key, value string) {
 	// ignore if undeclared
 	v, has := x.vars[key]
 	if !has {
-		return
+		panic(`not declared in Vars: ` + key)
 	}
+	v.Lock()
+	defer v.Unlock()
 	// only set corresponding env var if found
 	if len(v.Env) > 0 {
 		if _, has := os.LookupEnv(v.Env); has {
@@ -249,6 +331,13 @@ func (x *Cmd) Set(key, value string) {
 		}
 	}
 }
+
+// Var returns a pointer to the cached Var if key was declared in
+// [Cmd].Vars. This should be used with caution since it bypasses
+// the rules and priorities of Get and Set with regard to environment
+// variable shadowing and persistence. Its primary purpose is to lookup
+// inherited (V-less) Vars during variable caching in SeekInit.
+func (x *Cmd) Var(key string) *Var { return x.vars[key] }
 
 // VarsSlice returns a slice with a copy of the current [Cmd].Vars. Use
 // [Cmd.Get] and [Cmd.Set] to access the actual value.
@@ -822,13 +911,31 @@ func (x *Cmd) SeekInit(args ...string) (*Cmd, []string, error) {
 	return cur, args[n:], err
 }
 
+func (x *Cmd) inheritVar(key string) *Var {
+	for {
+		cur := x.Caller()
+		if cur == nil {
+			break
+		}
+		if v := cur.Var(key); v != nil {
+			return v
+		}
+	}
+	panic(`failed to find inherited Var: ` + key)
+	return nil
+}
+
 func (x *Cmd) cacheVars() {
 	x.vars = make(map[string]*Var, len(x.Vars))
 	if x.Persist != nil {
 		x.Persist.Setup()
 	}
 	for _, v := range x.Vars {
-		x.vars[v.K] = &v
+		if len(v.V) == 0 {
+			x.vars[v.K] = x.inheritVar(v.K)
+		} else {
+			x.vars[v.K] = &v
+		}
 	}
 	x.Vars = nil
 }
