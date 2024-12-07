@@ -154,8 +154,12 @@ func (v Var) String() string {
 }
 
 // WithPersistence returns a pointer to a copy of the [Cmd] that has had
-// its internal [Persister] assigned that passed as an argument.
+// its internal [Persister] assigned that passed as an argument. The
+// [Persister.Init] method is called and if returns an error panics.
 func (x Cmd) WithPersistence(a Persister) *Cmd {
+	if err := a.Init(); err != nil {
+		panic(err)
+	}
 	x.persister = a
 	return &x
 }
