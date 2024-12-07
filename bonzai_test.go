@@ -3,6 +3,7 @@ package bonzai_test
 import (
 	"fmt"
 	"os"
+	"sync"
 
 	"github.com/rwxrob/bonzai"
 )
@@ -514,4 +515,48 @@ func ExampleCmd_Vars() {
 	// newval
 	// ""
 
+}
+
+type InMem struct {
+	sync.Mutex
+	m map[string]string
+}
+
+func (p *InMem) Setup() error {
+	p.m = make(map[string]string)
+	return nil
+}
+func (p *InMem) Set(k, v string) {
+	p.Lock()
+	defer p.Unlock()
+	p.m[k] = v
+}
+func (p *InMem) Get(k string) string {
+	p.Lock()
+	defer p.Unlock()
+	fmt.Println(`getting`, k)
+	return p.m[k]
+}
+
+func ExampleCmd_Persist() {
+
+	var Cmd = &bonzai.Cmd{
+		Name:    `cmd`,
+		Vars:    bonzai.Vars{{K: `key`, V: `value`, Persist: true}},
+		Persist: new(InMem),
+		Do:      bonzai.Nothing,
+	}
+
+	// nothing is initialized without
+	Cmd.SeekInit(`cmd`)
+
+	fmt.Println(Cmd.Get(`key`))
+	Cmd.Set(`key`, `other`)
+	fmt.Println(Cmd.Get(`key`))
+
+	// Output:
+	// getting key
+	// value
+	// getting key
+	// other
 }

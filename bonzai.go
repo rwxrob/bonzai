@@ -38,7 +38,7 @@ func init() {
 }
 
 // Default persister for any [Cmd] that is not created with its own
-// persistence using [Cmd.WithPersistence]. The [Cmd.Get] and [Cmd.Set]
+// persistence using [Cmd].Persist. The [Cmd.Get] and [Cmd.Set]
 // will use this if Cmd does not have its own. If assigned, will have
 // its [Persister.Setup] method called during init of the bonzai package.
 var Persistence Persister
@@ -82,9 +82,9 @@ var Persistence Persister
 // [Cmd.Set] (which themselves are not implementations of this interface
 // although they use one internally).
 type Persister interface {
-	Setup() error                   // setup existing or create (never clear)
-	Get(key string) (string, error) // accessor, "" if non-existent
-	Set(key, val string) error      // mutator, "" to effectively delete
+	Setup() error          // setup existing or create (never clear)
+	Get(key string) string // accessor, "" if non-existent
+	Set(key, val string)   // mutator, "" to effectively delete
 }
 
 type Cmd struct {
@@ -94,7 +94,8 @@ type Cmd struct {
 
 	// Declaration of shareable variables (set to nil at runtime after
 	// caching internal map, see [Cmd.VarsSlice], [Cmd.Get], [Cmd.Set]).
-	Vars Vars
+	Vars    Vars
+	Persist Persister
 
 	// Work down by this command itself
 	Init func(x *Cmd, args ...string) error // initialization with [SeekInit]
@@ -120,13 +121,12 @@ type Cmd struct {
 	// Self-completion support: complete -C foo foo
 	Comp Completer
 
-	caller    *Cmd            // see [Caller],[Seek], delegation
-	aliases   []string        // see [cacheAlias]
-	opts      []string        // see [cacheOpts]
-	hidden    bool            // see [AsHidden] and [IsHidden]
-	cmdAlias  map[string]*Cmd // see [cacheCmdAlias]
-	vars      map[string]*Var // see [Vars]
-	persister Persister       // see [Persister]
+	caller   *Cmd            // see [Caller],[Seek], delegation
+	aliases  []string        // see [cacheAlias]
+	opts     []string        // see [cacheOpts]
+	hidden   bool            // see [AsHidden] and [IsHidden]
+	cmdAlias map[string]*Cmd // see [cacheCmdAlias]
+	vars     map[string]*Var // see [Vars]
 }
 
 type Vars []Var
@@ -140,8 +140,9 @@ func (vs Vars) String() string {
 // contains a [sync.Mutex] allowing safe-for-concurrency modification
 // when needed. The Env contains the optional name of an environment
 // variable to use instead if set, even if empty (see [Cmd.Get]). If
-// Persist is set to true, persistence drivers used by callers can
-// determine whether to persist or not. See [Cmd.Set].
+// Persist is set to true then uses internal persistence set
+// [Cmd].Persist or [pkg/bonzai.Persistence] if either are
+// available, otherwise silently fails to persist.
 type Var struct {
 	sync.Mutex
 	K       string `json:"k,omitempty"`
@@ -156,48 +157,95 @@ func (v Var) String() string {
 	return string(buf)
 }
 
-// WithPersistence returns a pointer to a copy of the [Cmd] that has had
-// its internal [Persister] assigned that passed as an argument. The
-// [Persister.Setup] method is called and if returns an error panics.
+// WithPersistence overrides or adds [Cmd].Persist. The [Persister.Setup]
+// method is called and panics on error.
 func (x Cmd) WithPersistence(a Persister) *Cmd {
 	if err := a.Setup(); err != nil {
 		panic(err)
 	}
-	x.persister = a
+	x.Persist = a
 	return &x
 }
 
-// Get returns the value of [os.LookupEnv] if Env was set, otherwise,
-// returns the current internal value of Vars[key] (even though Vars is
-// always empty after [Cmd.SeekInit] caches the initial values). If key
-// was not declared in [Cmd].Vars silently returns empty string.
+// Get returns the value of [os.LookupEnv] if [Var].Env was set and
+// a corresponding environment variable was found overriding everything
+// else in priority and shadowing any initially declared in-memory value
+// or persisted value. The environment variable does not change the
+// in-memory or persisted value. Otherwise, if [Var].Persist is true
+// attempts to look it up from either internal persistence set with [Cmd]
+// .Persist or the package [pkg/bonzai.Persistence] default if either is
+// not nil. If a persister is available but returns an empty string then
+// it is assumed the initial value has never been persisted and the
+// in-memory cached value is returned and also persisted with [Cmd].Set
+// ensuring that initial [Cmd].Vars declarations are persisted if they
+// need to be for the first time. Note that none of this works until
+// [Cmd.SeekInit] is called which caches the Vars and sets up
+// persistence. If key was never declared in [Cmd].Vars then returns
+// empty string.
 func (x *Cmd) Get(key string) string {
+	// return empty if wasn't declared
 	v, has := x.vars[key]
 	if !has {
 		return ""
 	}
-	if len(v.Env) > 0 {
+	switch {
+	case len(v.Env) > 0:
 		if val, has := os.LookupEnv(v.Env); has {
 			return val
+		}
+	case v.Persist && x.Persist != nil:
+		pv := x.Persist.Get(key)
+		if len(pv) > 0 {
+			v.V = pv
+		} else {
+			if len(v.V) > 0 {
+				x.Persist.Set(key, v.V)
+			}
+		}
+	case v.Persist && Persistence != nil:
+		pv := Persistence.Get(key)
+		if len(pv) > 0 {
+			v.V = pv
+		} else {
+			if len(v.V) > 0 {
+				Persistence.Set(key, v.V)
+			}
 		}
 	}
 	return v.V
 }
 
-// Set sets the value of the internal Var value for the given key. If
-// the Var.Env is found to exist with [os.LookupEnv] then it is also
-// set. If key was not declared in [Cmd].Vars silenty returns empty
-// string.
+// Set assigns the value of the internal vars value for the given key. If
+// the [Var].Env is found to exist with [os.LookupEnv] then it is only set
+// instead. This allows environment variables to shadow in-memory and
+// persistent variables. If [Cmd].Persist is set then attempts to
+// persist using the internal persister created with [Cmd].Persist or
+// the [pkg/bonzai.Persistence] default if either is not nil. Otherwise,
+// assumes no persistence and only changes the in-memory value.
+// If key was not declared in [Cmd].Vars returns empty string.
 func (x *Cmd) Set(key, value string) {
+	// ignore if undeclared
 	v, has := x.vars[key]
 	if !has {
 		return
 	}
-	v.V = value
+	// only set corresponding env var if found
 	if len(v.Env) > 0 {
-
 		if _, has := os.LookupEnv(v.Env); has {
-			os.Setenv(v.Env, v.V)
+			os.Setenv(v.Env, value)
+			return
+		}
+	}
+	v.V = value
+	// set first persistence found if Persist
+	if v.Persist {
+		if x.Persist != nil {
+			x.Persist.Set(key, value)
+			return
+		}
+		if Persistence != nil {
+			Persistence.Set(key, value)
+			return
 		}
 	}
 }
@@ -776,6 +824,9 @@ func (x *Cmd) SeekInit(args ...string) (*Cmd, []string, error) {
 
 func (x *Cmd) cacheVars() {
 	x.vars = make(map[string]*Var, len(x.Vars))
+	if x.Persist != nil {
+		x.Persist.Setup()
+	}
 	for _, v := range x.Vars {
 		x.vars[v.K] = &v
 	}
