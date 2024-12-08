@@ -887,10 +887,10 @@ func (x *Cmd) Seek(args ...string) (*Cmd, []string) {
 // Returns early with nil values and the error if any Validate or Init
 // function produces an error.
 func (x *Cmd) SeekInit(args ...string) (*Cmd, []string, error) {
-	x.cacheVars()
 	if err := x.Validate(); err != nil {
 		return x, args, err
 	}
+	x.cacheVars()
 	if x.Init != nil {
 		if err := x.Init(x, args...); err != nil {
 			return x, args, err
