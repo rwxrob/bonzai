@@ -657,3 +657,68 @@ func ExampleCmd_Vars_sameInherited() {
 	// value
 
 }
+
+func ExampleCmd_Vars_failedInherit() {
+
+	defer func() {
+		if r := recover(); r != nil {
+			fmt.Printf("Recovered from panic: %v\n", r)
+		}
+	}()
+
+	var subCmd = &bonzai.Cmd{
+		Name: `subcmd`,
+		Vars: bonzai.Vars{{I: `goodluck`}},
+		Do:   bonzai.Nothing,
+	}
+
+	var Cmd = &bonzai.Cmd{
+		Name: `cmd`,
+		Vars: bonzai.Vars{{K: `key`, V: `value`}},
+		Cmds: []*bonzai.Cmd{subCmd},
+	}
+
+	err := Cmd.Run(`subcmd`)
+	if err != nil {
+		fmt.Println(err)
+	}
+	fmt.Println(subCmd.Get(`key`))
+
+	// Output:
+	// Recovered from panic: failed to find inherited Var: goodluck
+}
+
+func ExampleCmd_Vars_inheritDeep() {
+
+	defer func() {
+		if r := recover(); r != nil {
+			fmt.Printf("Recovered from panic: %v\n", r)
+		}
+	}()
+
+	var subsubCmd = &bonzai.Cmd{
+		Name: `subsubcmd`,
+		Vars: bonzai.Vars{{I: `key`}},
+		Do:   bonzai.Nothing,
+	}
+
+	var subCmd = &bonzai.Cmd{
+		Name: `subcmd`,
+		Cmds: []*bonzai.Cmd{subsubCmd},
+	}
+
+	var Cmd = &bonzai.Cmd{
+		Name: `cmd`,
+		Vars: bonzai.Vars{{K: `key`, V: `value`}},
+		Cmds: []*bonzai.Cmd{subCmd},
+	}
+
+	err := Cmd.Run(`subcmd`, `subsubcmd`)
+	if err != nil {
+		fmt.Println(err)
+	}
+	fmt.Println(subsubCmd.Get(`key`))
+
+	// Output:
+	// value
+}

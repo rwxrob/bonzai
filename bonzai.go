@@ -913,12 +913,16 @@ func (x *Cmd) SeekInit(args ...string) (*Cmd, []string, error) {
 }
 
 func (x *Cmd) resolveInheritedVars() {
+
 	for _, v := range x.vars {
 		if len(v.I) == 0 {
 			continue
 		}
 		for cur := x.Caller(); cur != nil && !cur.IsRoot(); cur = cur.Caller() {
 			curvar := cur.lookvar(`key`)
+			if curvar == nil {
+				continue
+			}
 			if curvar.K == v.I {
 				v.Ref = curvar
 			}
