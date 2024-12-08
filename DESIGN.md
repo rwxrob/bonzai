@@ -1,6 +1,6 @@
 # Design decisions
 
-Bonzai takes issue with several traditional software design practices and ideas about human computer interaction --- especially about command line interfaces. As such, several design decisions need some explanation to help people understand why we do the things the way we do.
+Bonzai takes issue with several traditional software design practices and ideas about human computer interaction — especially about command line interfaces. As such, several design decisions need some explanation to help people understand why we do the things the way we do.
 
 ## Dashes it command-line arguments are the devil
 
@@ -24,3 +24,11 @@ This keeps command trees the most organized since many, many things could have a
 ## Use of `v := foo.(type)` style
 
 Always use `v` to receive the value from a type switch.
+
+## Avoid Persister in Var
+
+Making each `Var` aware of its `Persister` seemed like a good idea along with a `Var.Sync()` method. But that would prevent all implementations from changing the default or `Cmd`-specific persister on the fly, so it was avoided.
+
+## Decided to create "inherited" Var type (I) instead of take over
+
+In much the same way that symbolic links are themselves a thing that can be listed and manipulated, Var.I bonzai variables refer to other variables in Var.Ref. This allows them to be listed in help documentation with the same Var.Ref.Short description but tagged with (Inherited) or something whereas if we had replaced the internal cache map links to them directly there would be no way to tell that they were not declared without doing a rather exhaustive comparison against the original Cmd.Vars which is set to nil destructively after the initially declared values are cached.

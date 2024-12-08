@@ -135,8 +135,8 @@ func (vs Vars) String() string {
 }
 
 // Var contains information to be shared between [Cmd] instances and
-// contains a [sync.Mutex] allowing safe-for-concurrency modification
-// when needed. This is used instead of [sync.RWMutex] because it is
+// contains a [pkg/sync.Mutex] allowing safe-for-concurrency modification
+// when needed. This is used instead of [pkg/sync.RWMutex] because it is
 // common for the first Get operation to also set the declared initial
 // value such as when working with persistence.
 //
@@ -151,10 +151,10 @@ func (vs Vars) String() string {
 //
 // # Mandatory explicit declaration
 //
-// Any [Cmd].Get or [Cmd].Set will panic if the key is not
+// Any [Cmd.Get] or [Cmd.Set] will panic if the key is not
 // declared in the [Cmd].Vars slice. This includes keys with empty
 // values (V) that are to be inherited from commands above in the
-// [Cmd].SeekInit path.
+// [Cmd.SeekInit] path.
 //
 // # Environment variables
 //
@@ -171,19 +171,19 @@ func (vs Vars) String() string {
 // When Env is set and an initial value (V) is also set, the environment
 // variable, if found to exist, even if blank, is said to "shadow" the
 // initial and current value (V) as well as any persistence. Get and Set
-// operations will be applied to the in-memory environment variable
+// operations are applied to the in-memory environment variable
 // only. This is useful for use cases that temporarily alter behavior
 // without changing default values or persistent values, such as when
 // debugging, or creating "dry runs". This also provides
 // a well-supported conventional alternative to getopts style options:
 //
-//		LANG=en greet
-//	  GOOS=arch go build
+//	LANG=en greet
+//	GOOS=arch go build
 //
 // # Persistence
 //
 // When Persist is true then either internal persistence ([Cmd].Persist)
-// or default persistence ([pkg/bonzai.Persistence]) is checked and used
+// or default persistence ([Persistence]) is checked and used
 // if available (not nil). If neither is available then it is as if
 // Persist is false. In-memory values (V) are always kept in sync with
 // those persisted depending on the method of persistence employed by
@@ -192,23 +192,20 @@ func (vs Vars) String() string {
 // When Persist is true but the initial value (V) is empty, then persistence
 // is assumed to have the value or be okay with an undefined persisted value.
 //
-// When Persist is true and the initial value (V) is set and [Cmd].Get
+// When Persist is true and the initial value (V) is set and [Cmd.Get]
 // retrieves an empty value (after the delegated call to
-// [Persister].Get), then the initial value (V) is passed to
-// [Persister].Set persisting it for the next time.
+// [Persister.Get]), then the initial value (V) is passed to
+// [Persister.Set] persisting it for the next time.
 //
 // # Explicit inheritance
 //
-// When the initial value (V) is empty and neither Env nor Persist are
-// set then the Var is said to be an "inheritor" meaning that it must
-// inherit from a command above it in the [Cmd].SeekInit path and if not
-// found must panic. When found the inheritor (without a V) is replaced
-// in the internal vars cache map with a direct reference to the inherited
-// Var producing the same result as if the inherited Var had been
-// explicitly declared in the Vars of the command declaring the
-// value-less inheritor. At that point, the both commands ([Cmd]) share
-// the same internal Var for all variable-related operations (Get, Set,
-// Var).
+// When the inheritor (I) field is set, then the variable is inherited
+// from a command above it in the [Cmd.SeekInit] path and if not found
+// must panic. When found, the inheriting Var assigns a reference to the
+// inherited Var as [Var].Ref. The variable-related operations [Cmd.Get]
+// and [Cmd.Set] then directly operate on the Var pointed to by Ref
+// instead of itself. Setting the inheritor field (I) with any other
+// field causes a panic.
 //
 // # Scope and depth
 //
@@ -227,6 +224,8 @@ type Var struct {
 	Env     string `json:"env,omitempty"`
 	Short   string `json:"short,omitempty"`
 	Persist bool   `json:"persist,omitempty"`
+	I       string `json:"i,omitempty"`
+	Ref     *Var   `json:"-"`
 }
 
 func (v Var) String() string {
@@ -256,7 +255,7 @@ func (x Cmd) WithPersistence(a Persister) *Cmd {
 // in-memory cached value is returned and also persisted with [Cmd].Set
 // ensuring that initial [Cmd].Vars declarations are persisted if they
 // need to be for the first time. Note that none of this works until
-// [Cmd.SeekInit] is called which caches the Vars and sets up
+// [Cmd.Run] is called which caches the Vars and sets up
 // persistence. Panics if key was never declared. Locks the variable so
 // safe for concurrency but persisters must implement their own
 // file-level locking if shared between multiple processes.
@@ -265,11 +264,17 @@ func (x *Cmd) Get(key string) string {
 	if !has {
 		panic(`not declared in Vars: ` + key)
 	}
+	if v.Ref != nil {
+		v = v.Ref
+	}
 	v.Lock()
 	defer v.Unlock()
 	switch {
 	case len(v.Env) > 0:
 		if val, has := os.LookupEnv(v.Env); has {
+			if len(v.V) == 0 {
+				v.V = val
+			}
 			return val
 		}
 	case v.Persist && x.Persist != nil:
@@ -332,12 +337,7 @@ func (x *Cmd) Set(key, value string) {
 	}
 }
 
-// Var returns a pointer to the cached Var if key was declared in
-// [Cmd].Vars. This should be used with caution since it bypasses
-// the rules and priorities of Get and Set with regard to environment
-// variable shadowing and persistence. Its primary purpose is to lookup
-// inherited (V-less) Vars during variable caching in SeekInit.
-func (x *Cmd) Var(key string) *Var { return x.vars[key] }
+func (x *Cmd) lookvar(key string) *Var { return x.vars[key] }
 
 // VarsSlice returns a slice with a copy of the current [Cmd].Vars. Use
 // [Cmd.Get] and [Cmd.Set] to access the actual value.
@@ -582,6 +582,7 @@ func (x *Cmd) Run(args ...string) error {
 	if err != nil {
 		return err
 	}
+	c.resolveInheritedVars()
 	return c.call(args)
 }
 
@@ -868,7 +869,7 @@ func (x *Cmd) Seek(args ...string) (*Cmd, []string) {
 }
 
 // SeekInit is the same as [Cmd.Seek] but Vars are cached and the
-// [Cmd].Validate and [Cmd].Init functions are called (if any).
+// [Cmd.Validate] and [Cmd.Init] functions are called (if any).
 // Returns early with nil values and the error if any Validate or Init
 // function produces an error.
 func (x *Cmd) SeekInit(args ...string) (*Cmd, []string, error) {
@@ -911,18 +912,21 @@ func (x *Cmd) SeekInit(args ...string) (*Cmd, []string, error) {
 	return cur, args[n:], err
 }
 
-func (x *Cmd) inheritVar(key string) *Var {
-	for {
-		cur := x.Caller()
-		if cur == nil {
-			break
+func (x *Cmd) resolveInheritedVars() {
+	for _, v := range x.vars {
+		if len(v.I) == 0 {
+			continue
 		}
-		if v := cur.Var(key); v != nil {
-			return v
+		for cur := x.Caller(); cur != nil && !cur.IsRoot(); cur = cur.Caller() {
+			curvar := cur.lookvar(`key`)
+			if curvar.K == v.I {
+				v.Ref = curvar
+			}
+		}
+		if v.Ref == nil {
+			panic(`failed to find inherited Var: ` + v.I)
 		}
 	}
-	panic(`failed to find inherited Var: ` + key)
-	return nil
 }
 
 func (x *Cmd) cacheVars() {
@@ -931,11 +935,15 @@ func (x *Cmd) cacheVars() {
 		x.Persist.Setup()
 	}
 	for _, v := range x.Vars {
-		if len(v.V) == 0 {
-			x.vars[v.K] = x.inheritVar(v.K)
-		} else {
-			x.vars[v.K] = &v
+		if len(v.I) > 0 {
+			if len(v.K) > 0 || len(v.V) > 0 || len(v.Env) > 0 || v.Ref != nil || v.Persist {
+				panic(`inherited Var must have only I field`)
+			}
+			x.vars[v.I] = &v
+			// have to put off Ref assignment until after callers resolved
+			continue
 		}
+		x.vars[v.K] = &v
 	}
 	x.Vars = nil
 }
