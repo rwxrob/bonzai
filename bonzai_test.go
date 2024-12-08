@@ -562,8 +562,7 @@ func ExampleCmd_Vars_inMemory() {
 		Do:   bonzai.Nothing,
 	}
 
-	// vars don't get cached without
-	Cmd.SeekInit(`cmd`)
+	Cmd.Run()
 
 	fmt.Println(Cmd.Get(`key`))
 	Cmd.Set(`key`, `other`)
@@ -584,8 +583,7 @@ func ExampleCmd_Vars_undeclaredPanic() {
 		Do:   bonzai.Nothing,
 	}
 
-	// vars don't get cached without
-	Cmd.SeekInit(`cmd`)
+	Cmd.Run() // vars don't get cached without
 
 	defer func() {
 		if r := recover(); r != nil {
