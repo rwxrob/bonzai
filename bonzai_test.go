@@ -2,7 +2,7 @@ package bonzai_test
 
 import (
 	"fmt"
-	"os"
+	"sync"
 
 	"github.com/rwxrob/bonzai"
 )
@@ -481,37 +481,278 @@ func ExampleCmd_PathDashed() {
 
 }
 
-func ExampleCmd_Vars() {
+type InMem struct {
+	sync.Mutex
+	m map[string]string
+}
 
-	os.Setenv(`ENV1`, `env1val`)
-	defer os.Unsetenv(`ENV1`)
+func (p *InMem) Setup() error {
+	p.m = make(map[string]string)
+	return nil
+}
+func (p *InMem) Set(k, v string) {
+	p.Lock()
+	defer p.Unlock()
+	fmt.Println(`setting:`, k, v)
+	p.m[k] = v
+}
+func (p *InMem) Get(k string) string {
+	p.Lock()
+	defer p.Unlock()
+	fmt.Println(`getting:`, k)
+	return p.m[k]
+}
+
+func ExampleCmd_Persist() {
+
+	/*
+		type InMem struct {
+			sync.Mutex
+			m map[string]string
+		}
+
+		func (p *InMem) Setup() error {
+			p.m = make(map[string]string)
+			return nil
+		}
+		func (p *InMem) Set(k, v string) {
+			p.Lock()
+			defer p.Unlock()
+			fmt.Println(`setting:`, k, v)
+			p.m[k] = v
+		}
+		func (p *InMem) Get(k string) string {
+			p.Lock()
+			defer p.Unlock()
+			fmt.Println(`getting:`, k)
+			return p.m[k]
+		}
+	*/
 
 	var Cmd = &bonzai.Cmd{
-		Name: `foo`,
-		Vars: bonzai.Vars{
-			{K: `key1`, V: `val1`},
-			{K: `key2`, V: `val2`},
-			{K: `env1`, Env: `ENV1`},
-		},
-		Do: bonzai.Nothing,
+		Name: `cmd`,
+		Vars: bonzai.Vars{{K: `key`, V: `value`, P: true}},
+		Pers: new(InMem),
+		Do:   bonzai.Nothing,
 	}
 
-	Cmd.SeekInit(`foo`)                 // caches and zeros Cmd.Vars
-	fmt.Println(Cmd.Vars)               // zeroed out after first SeekInit
-	fmt.Println(Cmd.VarsSlice())        // copy of cached slice
-	fmt.Println(Cmd.Get(`env1`))        // env var wins
-	Cmd.Set(`env1`, `newval`)           // changeable
-	fmt.Println(Cmd.Get(`env1`))        // returns ENV1 value
-	fmt.Println(os.Getenv(`ENV1`))      // which is set for all
-	Cmd.Set(`env2`, `ignored`)          // but nothing new
-	fmt.Printf("%q\n", Cmd.Get(`env2`)) // silently ignored
+	// persistence doesn't get setup without
+	Cmd.SeekInit(`cmd`)
+
+	fmt.Println(Cmd.Get(`key`))
+	Cmd.Set(`key`, `other`)
+	fmt.Println(Cmd.Get(`key`))
 
 	// Output:
-	// null
-	// [{"k":"key1","v":"val1"},{"k":"key2","v":"val2"},{"k":"env1","env":"ENV1"}]
-	// env1val
-	// newval
-	// newval
-	// ""
+	// getting: key
+	// setting: key value
+	// value
+	// setting: key other
+	// getting: key
+	// other
 
+}
+
+func ExampleCmd_Vars_inMemory() {
+
+	var Cmd = &bonzai.Cmd{
+		Name: `cmd`,
+		Vars: bonzai.Vars{{K: `key`, V: `value`}},
+		Pers: new(InMem),
+		Do:   bonzai.Nothing,
+	}
+
+	Cmd.Run()
+
+	fmt.Println(Cmd.Get(`key`))
+	Cmd.Set(`key`, `other`)
+	fmt.Println(Cmd.Get(`key`))
+
+	// Output:
+	// value
+	// other
+
+}
+
+func ExampleCmd_Vars_undeclaredPanic() {
+
+	var Cmd = &bonzai.Cmd{
+		Name: `cmd`,
+		Vars: bonzai.Vars{{K: `key`, V: `value`}},
+		Pers: new(InMem),
+		Do:   bonzai.Nothing,
+	}
+
+	Cmd.Run() // vars don't get cached without
+
+	defer func() {
+		if r := recover(); r != nil {
+			fmt.Printf("Recovered from panic: %v\n", r)
+		}
+	}()
+
+	fmt.Println(Cmd.Get(`undeclared`))
+
+	// Output:
+	// Recovered from panic: not declared in Vars: undeclared
+
+}
+
+func ExampleCmd_Var() {
+
+	var subCmd = &bonzai.Cmd{
+		Name: `subcmd`,
+		Vars: bonzai.Vars{{K: `key`, V: `other`}},
+		Do:   bonzai.Nothing,
+	}
+
+	var Cmd = &bonzai.Cmd{
+		Name: `cmd`,
+		Vars: bonzai.Vars{{K: `key`, V: `value`}},
+		Cmds: []*bonzai.Cmd{subCmd},
+	}
+
+	err := Cmd.Run(`subcmd`)
+	if err != nil {
+		fmt.Println(err)
+	}
+	fmt.Println(Cmd.Get(`key`))
+	fmt.Println(subCmd.Get(`key`))
+
+	// Output:
+	// value
+	// other
+
+}
+
+func ExampleCmd_Vars_sameInherited() {
+
+	defer func() {
+		if r := recover(); r != nil {
+			fmt.Printf("Recovered from panic: %v\n", r)
+		}
+	}()
+
+	var subCmd = &bonzai.Cmd{
+		Name: `subcmd`,
+		Vars: bonzai.Vars{{I: `key`}},
+		Do:   bonzai.Nothing,
+	}
+
+	var Cmd = &bonzai.Cmd{
+		Name: `cmd`,
+		Vars: bonzai.Vars{{K: `key`, V: `value`}},
+		Cmds: []*bonzai.Cmd{subCmd},
+	}
+
+	err := Cmd.Run(`subcmd`)
+	if err != nil {
+		fmt.Println(err)
+	}
+	fmt.Println(subCmd.Get(`key`))
+
+	// Output:
+	// value
+
+}
+
+func ExampleCmd_Vars_failedInherit() {
+
+	defer func() {
+		if r := recover(); r != nil {
+			fmt.Printf("Recovered from panic: %v\n", r)
+		}
+	}()
+
+	var subCmd = &bonzai.Cmd{
+		Name: `subcmd`,
+		Vars: bonzai.Vars{{I: `goodluck`}},
+		Do:   bonzai.Nothing,
+	}
+
+	var Cmd = &bonzai.Cmd{
+		Name: `cmd`,
+		Vars: bonzai.Vars{{K: `key`, V: `value`}},
+		Cmds: []*bonzai.Cmd{subCmd},
+	}
+
+	err := Cmd.Run(`subcmd`)
+	if err != nil {
+		fmt.Println(err)
+	}
+	fmt.Println(subCmd.Get(`key`))
+
+	// Output:
+	// Recovered from panic: failed to find inherited Var: goodluck
+}
+
+func ExampleCmd_Vars_inheritDeep() {
+
+	defer func() {
+		if r := recover(); r != nil {
+			fmt.Printf("Recovered from panic: %v\n", r)
+		}
+	}()
+
+	var subsubCmd = &bonzai.Cmd{
+		Name: `subsubcmd`,
+		Vars: bonzai.Vars{{I: `key`}},
+		Do:   bonzai.Nothing,
+	}
+
+	var subCmd = &bonzai.Cmd{
+		Name: `subcmd`,
+		Cmds: []*bonzai.Cmd{subsubCmd},
+	}
+
+	var Cmd = &bonzai.Cmd{
+		Name: `cmd`,
+		Vars: bonzai.Vars{{K: `key`, V: `value`}},
+		Cmds: []*bonzai.Cmd{subCmd},
+	}
+
+	err := Cmd.Run(`subcmd`, `subsubcmd`)
+	if err != nil {
+		fmt.Println(err)
+	}
+	fmt.Println(subsubCmd.Get(`key`))
+
+	// Output:
+	// value
+}
+
+func ExampleCmd_Vars_inheritDeepSet() {
+
+	defer func() {
+		if r := recover(); r != nil {
+			fmt.Printf("Recovered from panic: %v\n", r)
+		}
+	}()
+
+	var subsubCmd = &bonzai.Cmd{
+		Name: `subsubcmd`,
+		Vars: bonzai.Vars{{I: `key`}},
+		Do:   bonzai.Nothing,
+	}
+
+	var subCmd = &bonzai.Cmd{
+		Name: `subcmd`,
+		Cmds: []*bonzai.Cmd{subsubCmd},
+	}
+
+	var Cmd = &bonzai.Cmd{
+		Name: `cmd`,
+		Vars: bonzai.Vars{{K: `key`, V: `value`}},
+		Cmds: []*bonzai.Cmd{subCmd},
+	}
+
+	err := Cmd.Run(`subcmd`, `subsubcmd`)
+	if err != nil {
+		fmt.Println(err)
+	}
+	subsubCmd.Set(`key`, `newvalue`)
+	fmt.Println(subsubCmd.Get(`key`))
+
+	// Output:
+	// newvalue
 }

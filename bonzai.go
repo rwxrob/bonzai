@@ -30,6 +30,59 @@ func init() {
 		isTruthy {
 		AllowPanic = true
 	}
+	if DefaultPersister != nil {
+		if err := DefaultPersister.Setup(); err != nil {
+			panic(err)
+		}
+	}
+}
+
+// DefaultPersister for any [Cmd] that is not created with its own
+// persistence using [Cmd].Pers. The [Cmd.Get] and [Cmd.Set] use this if
+// Cmd does not have its own. If assigned, its [Persister] method
+// is called during init of the bonzai package.
+var DefaultPersister Persister
+
+// Persister specifies anything that implements a persistence layer for
+// storage and retrieval of key/value combinations.
+//
+// # Empty values
+//
+// Since all implementations must return and set strings, the empty
+// string value is considered unset or non-existent. This is consistent
+// with working with [pkg/os.Getenv]. Therefore, there is no Delete or
+// Has equivalent since a Set("") works to delete a value and
+// a len(Get())>0 is the same as Has.
+//
+// # Setup
+//
+// Set up an existing persistence store or create and initialize a new
+// one if one does not yet exist. Never clears or deletes one that has
+// been previously initialized (which is outside the scope of this
+// interface). Usually this is called within an init() function after
+// the other specific configurations of the driver have been set (much
+// like database or other drivers). When called from init should usually
+// prompt a panic since something has gone wrong during initialization
+// and no attempt to run main should proceed, but this depends on the
+// severity of the error, and that is up to the implementations to
+// decide.
+//
+// # Get
+//
+// Retrieves a value for a specific key in a case-sensitive way or
+// returns an empty string if not found.
+//
+// # Set
+//
+// Assigns a value for a given key. If the key did not exist, must
+// create it. Callers can choose to check for the declaration of a key
+// before calling Set, such as with [Cmd.Vars] and [Cmd.Get] and
+// [Cmd.Set] (which themselves are not implementations of this interface
+// although they use one internally).
+type Persister interface {
+	Setup() error          // setup existing or create (never clear)
+	Get(key string) string // accessor, "" if non-existent
+	Set(key, val string)   // mutator, "" to effectively delete
 }
 
 type Cmd struct {
@@ -40,6 +93,7 @@ type Cmd struct {
 	// Declaration of shareable variables (set to nil at runtime after
 	// caching internal map, see [Cmd.VarsSlice], [Cmd.Get], [Cmd.Set]).
 	Vars Vars
+	Pers Persister
 
 	// Work down by this command itself
 	Init func(x *Cmd, args ...string) error // initialization with [SeekInit]
@@ -81,18 +135,102 @@ func (vs Vars) String() string {
 }
 
 // Var contains information to be shared between [Cmd] instances and
-// contains a [sync.Mutex] allowing safe-for-concurrency modification
-// when needed. The Env contains the optional name of an environment
-// variable to use instead if set, even if empty (see [Cmd.Get]). If
-// Persist is set to true, persistence drivers used by callers can
-// determine whether to persist or not. See [Cmd.Set].
+// contains a [pkg/sync.Mutex] allowing safe-for-concurrency modification
+// when needed. This is used instead of [pkg/sync.RWMutex] because it is
+// common for the first Get operation to also set the declared initial
+// value such as when working with persistence.
+//
+// Var is rarely used directly being declared in [Cmd].Vars and used by
+// [Cmd.Get] and [Cmd.Set] under the hood after being cached internally
+// by the [Cmd.Run] method.
+//
+// # Empty string means undefined
+//
+// Bonzai variables are assumed to be undefined when empty (much like
+// the use of traditional environment variables). This means that
+// command creators must use something besides an empty string for
+// booleans and such. There are no other specific string-to-type
+// marshaling standards defined by Bonzai conventions, only that an
+// empty string means "undefined".
+//
+// # Mandatory explicit declaration
+//
+// [Cmd.Run], [Cmd.Get], or [Cmd.Set] panics if the key referenced is
+// not declared in the [Cmd].Vars slice.
+//
+// # Environment variables
+//
+// When an environment variable name (E) is provided and an initial
+// value (V) is not set, the value of E is looked up is taken as the
+// exact name of an environment variable that, if found to exist, even
+// if blank, is used exactly as if the initial V value had been
+// explicitly assigned that value returned from the environment
+// variable value lookup. One use case is to allow users to decide if
+// they prefer to manage initial values through environment variables
+// instead of the alternatives. Note that when V is assigned indirectly
+// in this way that any persistence is also applied in addition to the
+// in-memory assignment of the value of V.
+//
+// When an environment variable name (E) is provided and an initial
+// value (V) is also set, the environment variable, if found to exist,
+// even if blank, is said to "shadow" the initial and current value (V)
+// as well as any persistence. Get and Set operations are applied to the
+// in-memory environment variable only. This is useful for use cases
+// that temporarily alter behavior without changing default values or
+// persistent values, such as when debugging, or creating "dry runs".
+// This also provides a well-supported conventional alternative to
+// getopts style options:
+//
+//	LANG=en greet
+//	GOOS=arch go build
+//
+// # Persistence
+//
+// When persistence (P) is true then either internal persistence
+// ([Cmd].Pers) or default persistence ([DefaultPersister]) is checked
+// and used if available (not nil). If neither is available then it is
+// as if P is false. In-memory values (V) are always kept in sync
+// with those persisted depending on the method of persistence employed
+// by the [Persister]. Both are always safe for concurrency.
+//
+// When persistence (P) is true but the initial value (V) is empty, then
+// persistence is assumed to have the value or be okay with an undefined
+// persisted value.
+//
+// When persistence (P) is true and the initial value (V) is set and
+// [Cmd.Get] retrieves an empty value (after the delegated call to
+// [Persister].Get), then the initial value (V) is passed to
+// [Persister].Set persisting it for the next time.
+//
+// # Explicit inheritance
+//
+// When the inherits (I) field is set, then the variable is inherited
+// from a command above it and if not found must panic. When found, the
+// inheriting Var internally assigns a reference to the inherited Var as
+// [Var].R. The variable-related operations [Cmd.Get] and [Cmd.Set] then
+// directly operate on the Var pointed to by the inherited Var ref (R)
+// instead of itself. Setting the inheritor field (I) in addition to any
+// with any other field causes a panic.
+//
+// # Scope and depth of inheritance
+//
+// There is no concept of variable scope or depth. This means any
+// subcommand at any depth level may declare that it wants to inherit
+// and therefore retrieve and modify any declared variable above it. It
+// is assumed that any developer composing a Bonzai command branch would
+// look at such declarations in Vars to decide if it is safe to import
+// and compose that subcommand into the compilation of the overall
+// command. The requirement to declare all Vars that do inherit makes
+// this knowledge explicitly visible for all Bonzai commands.
 type Var struct {
 	sync.Mutex
-	K       string `json:"k,omitempty"`
-	V       string `json:"v,omitempty"`
-	Env     string `json:"env,omitempty"`
-	Short   string `json:"short,omitempty"`
-	Persist bool   `json:"persist,omitempty"`
+	K string `json:"k,omitempty"` // key
+	V string `json:"v,omitempty"` // value
+	E string `json:"e,omitempty"` // environment variable name
+	S string `json:"s,omitempty"` // short description
+	P bool   `json:"p,omitempty"` // persistent
+	I string `json:"i,omitempty"` // inherits
+	R *Var   `json:"r,omitempty"` // inherited reference
 }
 
 func (v Var) String() string {
@@ -100,40 +238,114 @@ func (v Var) String() string {
 	return string(buf)
 }
 
-// Get returns the value of [os.LookupEnv] if Env was set, otherwise,
-// returns the current internal value of Vars[key] (even though Vars is
-// always empty after [Cmd.SeekInit] caches the initial values). If key
-// was not declared in [Cmd].Vars silently returns empty string.
+// WithPersister overrides or adds [Cmd].Pers. The [Persister].Setup
+// method is called and panics on error.
+func (x Cmd) WithPersister(a Persister) *Cmd {
+	if err := a.Setup(); err != nil {
+		panic(err)
+	}
+	x.Pers = a
+	return &x
+}
+
+// Get returns the value of [pkg/os.LookupEnv] if [Var].E was set and
+// a corresponding environment variable was found overriding everything
+// else in priority and shadowing any initially declared in-memory value
+// or persisted value. The environment variable does not change the
+// in-memory or persisted value. Otherwise, if [Var].P is true
+// attempts to look it up from either internal persistence set with
+// [Cmd].Pers or the package [DefaultPersister] default if either is
+// not nil. If a persister is available but returns an empty string then
+// it is assumed the initial value has never been persisted and the
+// in-memory cached value is returned and also persisted with [Cmd].Set
+// ensuring that initial [Cmd].Vars declarations are persisted if they
+// need to be for the first time. Note that none of this works until
+// [Cmd.Run] is called which caches the Vars and sets up
+// persistence. Panics if key was never declared. Locks the variable so
+// safe for concurrency but persisters must implement their own
+// file-level locking if shared between multiple processes.
 func (x *Cmd) Get(key string) string {
 	v, has := x.vars[key]
 	if !has {
-		return ""
+		panic(`not declared in Vars: ` + key)
 	}
-	if len(v.Env) > 0 {
-		if val, has := os.LookupEnv(v.Env); has {
+	if v.R != nil {
+		v = v.R
+	}
+	v.Lock()
+	defer v.Unlock()
+	switch {
+	case len(v.E) > 0:
+		if val, has := os.LookupEnv(v.E); has {
+			if len(v.V) == 0 {
+				v.V = val
+			}
 			return val
+		}
+	case v.P && x.Pers != nil:
+		pv := x.Pers.Get(key)
+		if len(pv) > 0 {
+			v.V = pv
+		} else {
+			if len(v.V) > 0 {
+				x.Pers.Set(key, v.V)
+			}
+		}
+	case v.P && DefaultPersister != nil:
+		pv := DefaultPersister.Get(key)
+		if len(pv) > 0 {
+			v.V = pv
+		} else {
+			if len(v.V) > 0 {
+				DefaultPersister.Set(key, v.V)
+			}
 		}
 	}
 	return v.V
 }
 
-// Set sets the value of the internal Var value for the given key. If
-// the Var.Env is found to exist with [os.LookupEnv] then it is also
-// set. If key was not declared in [Cmd].Vars silenty returns empty
-// string.
+// Set assigns the value of the internal vars value for the given key. If
+// the [Var].E is found to exist with [os.LookupEnv] then it is only set
+// instead. This allows environment variables to shadow in-memory and
+// persistent variables. If [Cmd].Pers is set, then attempts to
+// persist using the internal persister created with [Cmd].Pers or
+// the [DefaultPersister] default if either is not nil. Otherwise,
+// assumes no persistence and only changes the in-memory value.
+// Panics if key was not declared in [Cmd].Vars. Locks the Var in
+// question so safe for concurrency.
 func (x *Cmd) Set(key, value string) {
+	// ignore if undeclared
 	v, has := x.vars[key]
 	if !has {
-		return
+		panic(`not declared in Vars: ` + key)
+	}
+	if v.R != nil {
+		v = v.R
+	}
+	v.Lock()
+	defer v.Unlock()
+	// only set corresponding env var if found
+	if len(v.E) > 0 {
+		if _, has := os.LookupEnv(v.E); has {
+			os.Setenv(v.E, value)
+			return
+		}
 	}
 	v.V = value
-	if len(v.Env) > 0 {
-
-		if _, has := os.LookupEnv(v.Env); has {
-			os.Setenv(v.Env, v.V)
+	// set first persistence found if Persist
+	if v.P {
+		if x.Pers != nil {
+			x.Pers.Set(key, value)
+			return
+		}
+		if DefaultPersister != nil {
+			DefaultPersister.Set(key, value)
+			return
 		}
 	}
 }
+
+func (x *Cmd) lookvar(key string) *Var { return x.vars[key] }
 
 // VarsSlice returns a slice with a copy of the current [Cmd].Vars. Use
 // [Cmd.Get] and [Cmd.Set] to access the actual value.
@@ -177,9 +389,9 @@ type CmdCompleter interface {
 }
 
 // Caller returns the internal reference to the parent/caller of this
-// command. It is not set until [Cmd.Seek] is called or indirectly by
-// [Cmd.Run] or [Cmd.Exec]. Caller is set to itself if there is no
-// caller (see [Cmd.IsRoot]).
+// command. It is not set until [Cmd.Seek] or [Cmd.SeekInit] is called
+// or indirectly by [Cmd.Run] or [Cmd.Exec]. Caller is set to itself if
+// there is no caller (see [Cmd.IsRoot]).
 func (x Cmd) Caller() *Cmd { return x.caller }
 
 // WithName sets the [Cmd].Name to name and returns a pointer to a copy
@@ -194,11 +406,11 @@ func (x Cmd) WithName(name string) *Cmd {
 }
 
 // AsHidden returns a copy of the [Cmd] with its internal hidden
-// property set to true preventing it from appearing in [Cmd.CmdTreeString]
-// and some [CmdCompleter] values. Use cases include convenient
-// inclusion of leaf commands that are already available elsewhere (like
-// help or var) and allowing deprecated commands to be supported but
-// hidden.
+// property set to true so that [Cmd.IsHidden] returns true. Use cases
+// include convenient inclusion of leaf commands that are already
+// available elsewhere (like help or var) and allowing deprecated
+// commands to be supported but hidden in help output. See the
+// [pkg/github.com/rwxrob/bonzai/mark/funcs] package for examples.
 func (x Cmd) AsHidden() *Cmd {
 	x.hidden = true
 	return &x
@@ -332,15 +544,15 @@ func (x *Cmd) aliasSlice() []string {
 //
 // # Trapped panics
 //
-// Exec traps any panics with unless the DEBUG environment variable is
+// Exec traps any panics unless the DEBUG environment variable is
 // set (truthy).
 //
 // # Multicall
 //
-// Exec uses [os.Args][0] compared to the [Cmd].Name to resolve what to
+// Exec uses [pkg/os.Args][0] compared to the [Cmd].Name to resolve what to
 // run enabling the use of multicall binaries with dashes in the name (a
-// common design pattern used by other monolith multicalls such as git and
-// busybox).
+// common design pattern used by other monolith multicalls such as Git and
+// BusyBox/Alpine).
 func (x *Cmd) Exec(args ...string) {
 	defer trapPanic()
 	x.recurseIfMulti(args)
@@ -378,6 +590,7 @@ func (x *Cmd) Run(args ...string) error {
 	if err != nil {
 		return err
 	}
+	c.resolveInheritedVars()
 	return c.call(args)
 }
 
@@ -410,6 +623,12 @@ func (c *Cmd) Validate() error {
 
 	case c.Do == nil && len(c.Cmds) == 0 && c.Def == nil:
 		return ErrUncallable{c}
+	}
+	for _, v := range c.Vars {
+		if len(v.I) > 0 &&
+			(len(v.K) > 0 || len(v.V) > 0 || len(v.E) > 0 || v.R != nil || v.P) {
+			return ErrBadVarInheritance{v}
+		}
 	}
 	return nil
 }
@@ -547,7 +766,7 @@ func (x *Cmd) detectCompletion() {
 	}
 }
 
-// String fulfills the [fmt.Stringer] interface for [fmt.Print]
+// String fulfills the [pkg/fmt.Stringer] interface for [pkg/fmt.Print]
 // debugging and template inclusion by simply printing the [Cmd].Name.
 func (x Cmd) String() string { return x.Name }
 
@@ -664,7 +883,7 @@ func (x *Cmd) Seek(args ...string) (*Cmd, []string) {
 }
 
 // SeekInit is the same as [Cmd.Seek] but Vars are cached and the
-// [Cmd].Validate and [Cmd].Init functions are called (if any).
+// [Cmd.Validate] and [Cmd.Init] functions are called (if any).
 // Returns early with nil values and the error if any Validate or Init
 // function produces an error.
 func (x *Cmd) SeekInit(args ...string) (*Cmd, []string, error) {
@@ -707,9 +926,38 @@ func (x *Cmd) SeekInit(args ...string) (*Cmd, []string, error) {
 	return cur, args[n:], err
 }
 
+func (x *Cmd) resolveInheritedVars() {
+
+	for _, v := range x.vars {
+		if len(v.I) == 0 {
+			continue
+		}
+		for cur := x.Caller(); cur != nil && !cur.IsRoot(); cur = cur.Caller() {
+			curvar := cur.lookvar(`key`)
+			if curvar == nil {
+				continue
+			}
+			if curvar.K == v.I {
+				v.R = curvar
+			}
+		}
+		if v.R == nil {
+			panic(`failed to find inherited Var: ` + v.I)
+		}
+	}
+}
+
 func (x *Cmd) cacheVars() {
 	x.vars = make(map[string]*Var, len(x.Vars))
+	if x.Pers != nil {
+		x.Pers.Setup()
+	}
 	for _, v := range x.Vars {
+		if len(v.I) > 0 {
+			x.vars[v.I] = &v
+			// have to put off R assignment until after callers resolved
+			continue
+		}
 		x.vars[v.K] = &v
 	}
 	x.Vars = nil
@@ -913,5 +1161,17 @@ func (e ErrInvalidArg) Error() string {
 	return fmt.Sprintf(
 		`usage error: arg #%v must match: %v`,
 		e.Index+1, e.Exp,
+	)
+}
+
+// ErrBadVarInheritance indicates a [Cmd].Vars [Var] that violated
+// Bonzai variable rules regarding inheritance.
+type ErrBadVarInheritance struct {
+	Var Var
+}
+
+func (e ErrBadVarInheritance) Error() string {
+	return fmt.Sprintf(
+		`inherits requires no other fields be set: %v`, e.Var.I,
 	)
 }
