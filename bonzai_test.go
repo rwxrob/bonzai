@@ -722,3 +722,39 @@ func ExampleCmd_Vars_inheritDeep() {
 	// Output:
 	// value
 }
+
+func ExampleCmd_Vars_inheritDeepSet() {
+
+	defer func() {
+		if r := recover(); r != nil {
+			fmt.Printf("Recovered from panic: %v\n", r)
+		}
+	}()
+
+	var subsubCmd = &bonzai.Cmd{
+		Name: `subsubcmd`,
+		Vars: bonzai.Vars{{I: `key`}},
+		Do:   bonzai.Nothing,
+	}
+
+	var subCmd = &bonzai.Cmd{
+		Name: `subcmd`,
+		Cmds: []*bonzai.Cmd{subsubCmd},
+	}
+
+	var Cmd = &bonzai.Cmd{
+		Name: `cmd`,
+		Vars: bonzai.Vars{{K: `key`, V: `value`}},
+		Cmds: []*bonzai.Cmd{subCmd},
+	}
+
+	err := Cmd.Run(`subcmd`, `subsubcmd`)
+	if err != nil {
+		fmt.Println(err)
+	}
+	subsubCmd.Set(`key`, `newvalue`)
+	fmt.Println(subsubCmd.Get(`key`))
+
+	// Output:
+	// newvalue
+}

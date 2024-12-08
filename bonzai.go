@@ -314,6 +314,9 @@ func (x *Cmd) Set(key, value string) {
 	if !has {
 		panic(`not declared in Vars: ` + key)
 	}
+	if v.Ref != nil {
+		v = v.Ref
+	}
 	v.Lock()
 	defer v.Unlock()
 	// only set corresponding env var if found
