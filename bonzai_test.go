@@ -530,10 +530,10 @@ func ExampleCmd_Persist() {
 	*/
 
 	var Cmd = &bonzai.Cmd{
-		Name:    `cmd`,
-		Vars:    bonzai.Vars{{K: `key`, V: `value`, Persist: true}},
-		Persist: new(InMem),
-		Do:      bonzai.Nothing,
+		Name: `cmd`,
+		Vars: bonzai.Vars{{K: `key`, V: `value`, P: true}},
+		Pers: new(InMem),
+		Do:   bonzai.Nothing,
 	}
 
 	// persistence doesn't get setup without
@@ -556,10 +556,10 @@ func ExampleCmd_Persist() {
 func ExampleCmd_Vars_inMemory() {
 
 	var Cmd = &bonzai.Cmd{
-		Name:    `cmd`,
-		Vars:    bonzai.Vars{{K: `key`, V: `value`}},
-		Persist: new(InMem),
-		Do:      bonzai.Nothing,
+		Name: `cmd`,
+		Vars: bonzai.Vars{{K: `key`, V: `value`}},
+		Pers: new(InMem),
+		Do:   bonzai.Nothing,
 	}
 
 	// vars don't get cached without
@@ -578,10 +578,10 @@ func ExampleCmd_Vars_inMemory() {
 func ExampleCmd_Vars_undeclaredPanic() {
 
 	var Cmd = &bonzai.Cmd{
-		Name:    `cmd`,
-		Vars:    bonzai.Vars{{K: `key`, V: `value`}},
-		Persist: new(InMem),
-		Do:      bonzai.Nothing,
+		Name: `cmd`,
+		Vars: bonzai.Vars{{K: `key`, V: `value`}},
+		Pers: new(InMem),
+		Do:   bonzai.Nothing,
 	}
 
 	// vars don't get cached without
