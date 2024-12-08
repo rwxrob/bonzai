@@ -39,7 +39,7 @@ func init() {
 
 // DefaultPersister for any [Cmd] that is not created with its own
 // persistence using [Cmd].Pers. The [Cmd.Get] and [Cmd.Set] use this if
-// Cmd does not have its own. If assigned, its [Persister.Setup] method
+// Cmd does not have its own. If assigned, its [Persister] method
 // is called during init of the bonzai package.
 var DefaultPersister Persister
 
@@ -199,8 +199,8 @@ func (vs Vars) String() string {
 //
 // When persistence (P) is true and the initial value (V) is set and
 // [Cmd.Get] retrieves an empty value (after the delegated call to
-// [Persister.Get]), then the initial value (V) is passed to
-// [Persister.Set] persisting it for the next time.
+// [Persister].Get), then the initial value (V) is passed to
+// [Persister].Set persisting it for the next time.
 //
 // # Explicit inheritance
 //
@@ -224,13 +224,13 @@ func (vs Vars) String() string {
 // this knowledge explicitly visible for all Bonzai commands.
 type Var struct {
 	sync.Mutex
-	K string `json:"k,omitempty"`
-	V string `json:"v,omitempty"`
-	E string `json:"env,omitempty"`
-	S string `json:"short,omitempty"`
-	P bool   `json:"persist,omitempty"`
-	I string `json:"i,omitempty"`
-	R *Var   `json:"-"`
+	K string `json:"k,omitempty"` // key
+	V string `json:"v,omitempty"` // value
+	E string `json:"e,omitempty"` // environment variable name
+	S string `json:"s,omitempty"` // short description
+	P bool   `json:"p,omitempty"` // persistent
+	I string `json:"i,omitempty"` // inherits
+	R *Var   `json:"r,omitempty"` // inherited reference
 }
 
 func (v Var) String() string {
@@ -238,7 +238,7 @@ func (v Var) String() string {
 	return string(buf)
 }
 
-// WithPersister overrides or adds [Cmd].Pers. The [Persister.Setup]
+// WithPersister overrides or adds [Cmd].Pers. The [Persister].Setup
 // method is called and panics on error.
 func (x Cmd) WithPersister(a Persister) *Cmd {
 	if err := a.Setup(); err != nil {
@@ -248,13 +248,13 @@ func (x Cmd) WithPersister(a Persister) *Cmd {
 	return &x
 }
 
-// Get returns the value of [os.LookupEnv] if [Var].E was set and
+// Get returns the value of [pkg/os.LookupEnv] if [Var].E was set and
 // a corresponding environment variable was found overriding everything
 // else in priority and shadowing any initially declared in-memory value
 // or persisted value. The environment variable does not change the
 // in-memory or persisted value. Otherwise, if [Var].P is true
-// attempts to look it up from either internal persistence set with [Cmd]
-// .Pers or the package [DefaultPersister] default if either is
+// attempts to look it up from either internal persistence set with
+// [Cmd].Pers or the package [DefaultPersister] default if either is
 // not nil. If a persister is available but returns an empty string then
 // it is assumed the initial value has never been persisted and the
 // in-memory cached value is returned and also persisted with [Cmd].Set
@@ -389,9 +389,9 @@ type CmdCompleter interface {
 }
 
 // Caller returns the internal reference to the parent/caller of this
-// command. It is not set until [Cmd.Seek] is called or indirectly by
-// [Cmd.Run] or [Cmd.Exec]. Caller is set to itself if there is no
-// caller (see [Cmd.IsRoot]).
+// command. It is not set until [Cmd.Seek] or [Cmd.SeekInit] is called
+// or indirectly by [Cmd.Run] or [Cmd.Exec]. Caller is set to itself if
+// there is no caller (see [Cmd.IsRoot]).
 func (x Cmd) Caller() *Cmd { return x.caller }
 
 // WithName sets the [Cmd].Name to name and returns a pointer to a copy
@@ -406,11 +406,11 @@ func (x Cmd) WithName(name string) *Cmd {
 }
 
 // AsHidden returns a copy of the [Cmd] with its internal hidden
-// property set to true preventing it from appearing in [Cmd.CmdTreeString]
-// and some [CmdCompleter] values. Use cases include convenient
-// inclusion of leaf commands that are already available elsewhere (like
-// help or var) and allowing deprecated commands to be supported but
-// hidden.
+// property set to true so that [Cmd.IsHidden] returns true. Use cases
+// include convenient inclusion of leaf commands that are already
+// available elsewhere (like help or var) and allowing deprecated
+// commands to be supported but hidden in help output. See the
+// [pkg/github.com/rwxrob/bonzai/mark/funcs] package for examples.
 func (x Cmd) AsHidden() *Cmd {
 	x.hidden = true
 	return &x
@@ -544,15 +544,15 @@ func (x *Cmd) aliasSlice() []string {
 //
 // # Trapped panics
 //
-// Exec traps any panics with unless the DEBUG environment variable is
+// Exec traps any panics unless the DEBUG environment variable is
 // set (truthy).
 //
 // # Multicall
 //
-// Exec uses [os.Args][0] compared to the [Cmd].Name to resolve what to
+// Exec uses [pkg/os.Args][0] compared to the [Cmd].Name to resolve what to
 // run enabling the use of multicall binaries with dashes in the name (a
-// common design pattern used by other monolith multicalls such as git and
-// busybox).
+// common design pattern used by other monolith multicalls such as Git and
+// BusyBox/Alpine).
 func (x *Cmd) Exec(args ...string) {
 	defer trapPanic()
 	x.recurseIfMulti(args)
@@ -766,7 +766,7 @@ func (x *Cmd) detectCompletion() {
 	}
 }
 
-// String fulfills the [fmt.Stringer] interface for [fmt.Print]
+// String fulfills the [pkg/fmt.Stringer] interface for [pkg/fmt.Print]
 // debugging and template inclusion by simply printing the [Cmd].Name.
 func (x Cmd) String() string { return x.Name }
 
@@ -1164,7 +1164,7 @@ func (e ErrInvalidArg) Error() string {
 	)
 }
 
-// ErrBadVarInheritance indicates a [Cmd].Vars [Var] that violeted
+// ErrBadVarInheritance indicates a [Cmd].Vars [Var] that violated
 // Bonzai variable rules regarding inheritance.
 type ErrBadVarInheritance struct {
 	Var Var
