@@ -9,7 +9,7 @@ import (
 var Cmd = &bonzai.Cmd{
 	Name:  `help`,
 	Alias: `h|-h|--help|--h|/?`,
-	Vers:  `v0.7.8`,
+	Vers:  `v0.7.9`,
 	Short: `display command help`,
 	Long: `
 		The {{aka .}} command displays the help information for the
