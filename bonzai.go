@@ -39,8 +39,8 @@ func init() {
 
 // DefaultPersister for any [Cmd] that is not created with its own
 // persistence using [Cmd].Pers. The [Cmd.Get] and [Cmd.Set] use this if
-// Cmd does not have its own. If assigned, its [Persister] method
-// is called during init of the bonzai package.
+// Cmd does not have its own. If assigned, its [Persister] method is
+// called during init of the bonzai package.
 var DefaultPersister Persister
 
 // Persister specifies anything that implements a persistence layer for
@@ -251,8 +251,11 @@ func (x Cmd) WithPersister(a Persister) *Cmd {
 // Get returns the value of [pkg/os.LookupEnv] if [Var].E was set and
 // a corresponding environment variable was found overriding everything
 // else in priority and shadowing any initially declared in-memory value
-// or persisted value. The environment variable does not change the
-// in-memory or persisted value. Otherwise, if [Var].P is true
+// or persisted value even if the found env variable is set to empty
+// string. [Var].V is completely ignored in this case. The
+// environment variable never changes the persisted value.
+//
+// Otherwise, if [Var].P is true
 // attempts to look it up from either internal persistence set with
 // [Cmd].Pers or the package [DefaultPersister] default if either is
 // not nil. If a persister is available but returns an empty string then
@@ -274,14 +277,18 @@ func (x *Cmd) Get(key string) string {
 	}
 	v.Lock()
 	defer v.Unlock()
-	switch {
-	case len(v.E) > 0:
+
+	// env var shadows everything, even if empty
+	if len(v.E) > 0 {
 		if val, has := os.LookupEnv(v.E); has {
 			if len(v.V) == 0 {
 				v.V = val
 			}
 			return val
 		}
+	}
+
+	switch {
 	case v.P && x.Pers != nil:
 		pv := x.Pers.Get(key)
 		if len(pv) > 0 {
@@ -324,13 +331,15 @@ func (x *Cmd) Set(key, value string) {
 	}
 	v.Lock()
 	defer v.Unlock()
-	// only set corresponding env var if found
+
+	// env var shadows everything if found, even if empty
 	if len(v.E) > 0 {
 		if _, has := os.LookupEnv(v.E); has {
 			os.Setenv(v.E, value)
 			return
 		}
 	}
+
 	v.V = value
 	// set first persistence found if Persist
 	if v.P {
