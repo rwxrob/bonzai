@@ -596,6 +596,7 @@ func (x *Cmd) aliasSlice() []string {
 // common design pattern used by other monolith multicalls such as Git and
 // BusyBox/Alpine).
 func (x *Cmd) Exec(args ...string) {
+	log.SetFlags(0)
 	defer trapPanic()
 	x.recurseIfMulti(args)
 	x.detectCompletion()
@@ -612,7 +613,6 @@ func (x *Cmd) Exec(args ...string) {
 // trapPanic recovers from any panic and more gracefully displays the
 // panic by logging it before exiting with a return value of 1.
 var trapPanic = func() {
-	log.SetFlags(0)
 	if !AllowPanic {
 		if r := recover(); r != nil {
 			log.Println(r)
