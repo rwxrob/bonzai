@@ -653,7 +653,7 @@ func (c *Cmd) Validate() error {
 	switch {
 
 	case c == nil:
-		return fmt.Errorf(`developer error: Validate called with nil receiver`)
+		return fmt.Errorf(`developer-error: Validate called with nil receiver`)
 
 	case len(c.Short) > 0 && (len(c.Short) > 50 || !unicode.IsLower(rune(c.Short[0]))):
 		return ErrInvalidShort{c}
@@ -686,7 +686,7 @@ func (c *Cmd) ValidateArgs(args ...string) error {
 	switch {
 
 	case c == nil:
-		return fmt.Errorf(`developer error: Validate called with nil receiver`)
+		return fmt.Errorf(`developer-error: Validate called with nil receiver`)
 
 	case len(args) < c.MinArgs:
 		return ErrNotEnoughArgs{Count: len(args), Min: c.MinArgs}
@@ -1115,7 +1115,7 @@ type ErrInvalidName struct {
 }
 
 func (e ErrInvalidName) Error() string {
-	return fmt.Sprintf(`developer error: invalid name: %v`, e.Name)
+	return fmt.Sprintf(`developer-error: invalid name: %v`, e.Name)
 }
 
 // ErrUncallable indicates that a command requires a Do, one
@@ -1126,7 +1126,7 @@ type ErrUncallable struct {
 
 func (e ErrUncallable) Error() string {
 	return fmt.Sprintf(
-		`developer error: Cmd (%v) requires Do, Def, or Cmds`, e.Cmd)
+		`developer-error: Cmd (%v) requires Do, Def, or Cmds`, e.Cmd)
 }
 
 // ErrDoOrDef suggests that a command cannot have both Do and Def
@@ -1137,7 +1137,7 @@ type ErrDoOrDef struct {
 
 func (e ErrDoOrDef) Error() string {
 	return fmt.Sprintf(
-		`developer error: Cmd.Do or Cmd.Def (never both) (%v)`, e.Cmd.Path())
+		`developer-error: Cmd.Do or Cmd.Def (never both) (%v)`, e.Cmd.Path())
 }
 
 // ErrNotEnoughArgs indicates that insufficient arguments were provided,
@@ -1187,7 +1187,7 @@ type ErrInvalidShort struct {
 
 func (e ErrInvalidShort) Error() string {
 	return fmt.Sprintf(
-		`developer error: Cmd.Short (%v) length must be less than 50 runes and must begin with a lowercase letter`, e.Cmd)
+		`developer-error: Cmd.Short (%v) length must be less than 50 runes and must begin with a lowercase letter`, e.Cmd)
 }
 
 // ErrInvalidVers indicates that the short description length exceeds 50
@@ -1198,7 +1198,7 @@ type ErrInvalidVers struct {
 
 func (e ErrInvalidVers) Error() string {
 	return fmt.Sprintf(
-		`developer error: Cmd.Vers (%v) length must be less than 50 runes`,
+		`developer-error: Cmd.Vers (%v) length must be less than 50 runes`,
 		e.Cmd,
 	)
 }
