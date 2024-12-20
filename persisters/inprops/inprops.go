@@ -1,4 +1,4 @@
-package persisters
+package inprops
 
 import (
 	"bufio"
@@ -8,8 +8,8 @@ import (
 	"github.com/rogpeppe/go-internal/lockedfile"
 )
 
-// Properties represents a simple key-value storage system using the
-// Java Properties file format. Deviations from the standard Properties
+// Persister represents a simple key-value storage system using the
+// Java Persister file format. Deviations from the standard Properties
 // specification:
 //
 // - Comments re not supported and will result in an error if present.
@@ -20,46 +20,58 @@ import (
 //
 // - Keys and values are trimmed of leading and trailing whitespace.
 // - Special characters are escaped and unescaped automatically.
-// - The file format is compatible with most Properties parsers.
+// - The file format is compatible with most Persister parsers.
 //
 // # Usage
 //
-//		  storage := &persisters.Properties{File: "data.properties"}
+//		  storage := &inprops.Persister{File: "data.properties"}
 //		  storage.Setup()
 //		  storage.Set("key", "value")
 //	    value := storage.Get("key")
-type Properties struct {
-	File string // File is the path to the properties file used for storage.
+type Persister struct {
+	File string
 }
 
-func (p *Properties) Setup() error {
+// Setup ensures that the persistence file exists and is ready for use.
+// It opens the file in read-only mode, creating it if it doesn't already exist,
+// and applies secure file permissions (0600) to restrict access.
+// The file is immediately closed after being verified or created.
+// If the file cannot be opened or created, an error is returned.
+func (p *Persister) Setup() error {
 	_, err := lockedfile.OpenFile(p.File, os.O_RDONLY|os.O_CREATE, 0600)
-	return err // Ensure the file exists
+	return err
 }
 
-func (p *Properties) Get(key string) string {
+// Get retrieves the value associated with the given key from the persisted
+// data. The method loads the data from the persistence file in a way
+// that is both safe for concurrency and locked against use by other
+// programs using the lockedfile package (like go binary itself does).
+// If the key is not present in the data, a nil value will be
+// returned.
+func (p *Persister) Get(key string) string {
 	data := p.loadFile()
-	return data[key] // Returns "" if the key is not present
+	return data[key]
 }
 
-func (p *Properties) Set(key, value string) {
+// Set stores a key-value pair in the persisted data. The method loads
+// the existing data from the persistence file, updates the data with
+// the new key-value pair, and saves it back to the file.
+func (p *Persister) Set(key, value string) {
 	data := p.loadFile()
-	data[key] = value // Update the in-memory state
-	p.saveFile(data)  // Save changes back to the file
+	data[key] = value
+	p.saveFile(data)
 }
 
-func (p *Properties) loadFile() map[string]string {
+func (p *Persister) loadFile() map[string]string {
 	data := make(map[string]string)
 	f, err := lockedfile.OpenFile(p.File, os.O_RDONLY, 0600)
 	if err != nil {
 		return data
 	}
 	defer f.Close()
-
 	scanner := bufio.NewScanner(f)
 	for scanner.Scan() {
 		line := scanner.Text()
-		// Parse key=value pairs without skipping blank or commented lines
 		parts := strings.SplitN(line, "=", 2)
 		if len(parts) == 2 {
 			key := strings.TrimSpace(parts[0])
@@ -70,22 +82,20 @@ func (p *Properties) loadFile() map[string]string {
 	return data
 }
 
-func (p *Properties) saveFile(data map[string]string) {
+func (p *Persister) saveFile(data map[string]string) {
 	f, err := lockedfile.OpenFile(p.File, os.O_WRONLY|os.O_CREATE|os.O_TRUNC, 0600)
 	if err != nil {
 		return
 	}
 	defer f.Close()
-
 	writer := bufio.NewWriter(f)
 	for key, value := range data {
 		escapedValue := escapeValue(value)
-		_, _ = writer.WriteString(key + "=" + escapedValue + "\n")
+		writer.WriteString(key + "=" + escapedValue + "\n")
 	}
 	writer.Flush()
 }
 
-// Escapes special characters in properties values
 func escapeValue(value string) string {
 	replacer := strings.NewReplacer(
 		"\n", "\\n",
@@ -98,7 +108,6 @@ func escapeValue(value string) string {
 	return replacer.Replace(value)
 }
 
-// Unescapes special characters in properties values
 func unescapeValue(value string) string {
 	replacer := strings.NewReplacer(
 		"\\n", "\n",

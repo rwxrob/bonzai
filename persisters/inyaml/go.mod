@@ -1,4 +1,4 @@
-module github.com/rwxrob/bonzai/persisters
+module github.com/rwxrob/bonzai/persisters/inyaml
 
 go 1.23.4
 
