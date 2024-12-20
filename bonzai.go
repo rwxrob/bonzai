@@ -232,7 +232,7 @@ type Var struct {
 	P bool   `json:"p,omitempty"` // persistent
 	I string `json:"i,omitempty"` // inherits
 	R bool   `json:"r,omitempty"` // required to be non-empty
-	X *Cmd   `json:"x,omitempty"` // inherited from
+	X *Cmd   `json:"-"`           // inherited from
 }
 
 func (v Var) String() string {
