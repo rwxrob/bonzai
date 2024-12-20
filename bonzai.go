@@ -223,16 +223,30 @@ func (vs Vars) String() string {
 // and compose that subcommand into the compilation of the overall
 // command. The requirement to declare all Vars that do inherit makes
 // this knowledge explicitly visible for all Bonzai commands.
+//
+// # Global package variable injection
+//
+// If the [Var].G is assigned the reference to a string variable, which
+// are usually expected to be package globals that can be used by any
+// command at all in the package, then Get is called on the command when
+// the [Cmd].Vars list is cached during the early SeekInit phase. This
+// means that parent commands can trigger the fetching of those
+// variables and setting their values early on before anything else.
+// This saves considerable boilerplate for otherwise calling Get every
+// time it is needed when---and only when---the value is not expected to
+// change over the life of the program execution (e.g. API keys, account
+// IDs, etc.).
 type Var struct {
 	sync.Mutex
-	K string `json:"k,omitempty"` // key
-	V string `json:"v,omitempty"` // value
-	E string `json:"e,omitempty"` // environment variable name
-	S string `json:"s,omitempty"` // short description
-	P bool   `json:"p,omitempty"` // persistent
-	I string `json:"i,omitempty"` // inherits
-	R bool   `json:"r,omitempty"` // required to be non-empty
-	X *Cmd   `json:"-"`           // inherited from
+	K string  `json:"k,omitempty"` // key
+	V string  `json:"v,omitempty"` // value
+	E string  `json:"e,omitempty"` // environment variable name
+	S string  `json:"s,omitempty"` // short description
+	P bool    `json:"p,omitempty"` // persistent
+	I string  `json:"i,omitempty"` // inherits
+	R bool    `json:"r,omitempty"` // required to be non-empty
+	X *Cmd    `json:"-"`           // inherited from
+	G *string `json:"-"`           // fetch first value into global
 }
 
 func (v Var) String() string {
@@ -655,7 +669,7 @@ func (c *Cmd) Validate() error {
 	}
 	for _, v := range c.Vars {
 		if len(v.I) > 0 &&
-			(len(v.K) > 0 || len(v.V) > 0 || len(v.E) > 0 || v.X != nil || v.P) {
+			(len(v.K) > 0 || len(v.V) > 0 || len(v.E) > 0 || v.X != nil || v.P || v.G != nil) {
 			return ErrBadVarInheritance{v}
 		}
 	}
@@ -994,6 +1008,9 @@ func (x *Cmd) cacheVars() {
 		x.vars[v.K] = &v
 		if v.R && len(x.Get(v.K)) == 0 {
 			panic(`required variable not set: ` + v.K)
+		}
+		if v.G != nil {
+			*(v.G) = x.Get(v.K)
 		}
 	}
 	x.Vars = nil
