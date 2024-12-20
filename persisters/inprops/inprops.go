@@ -3,9 +3,11 @@ package inprops
 import (
 	"bufio"
 	"os"
+	"path/filepath"
 	"strings"
 
 	"github.com/rogpeppe/go-internal/lockedfile"
+	"github.com/rwxrob/bonzai/futil"
 )
 
 // Persister represents a simple key-value storage system using the
@@ -30,6 +32,51 @@ import (
 //	    value := storage.Get("key")
 type Persister struct {
 	File string
+}
+
+func NewUserConfig(name, file string) *Persister {
+	this := new(Persister)
+	dir, err := futil.UserConfigDir()
+	if err != nil {
+		panic(err)
+	}
+	f := filepath.Join(dir, name, file)
+	err = futil.Touch(f)
+	if err != nil {
+		panic(err)
+	}
+	this.File = f
+	return this
+}
+
+func NewUserCache(name, file string) *Persister {
+	this := new(Persister)
+	dir, err := futil.UserCacheDir()
+	if err != nil {
+		panic(err)
+	}
+	f := filepath.Join(dir, name, file)
+	err = futil.Touch(f)
+	if err != nil {
+		panic(err)
+	}
+	this.File = f
+	return this
+}
+
+func NewUserState(name, file string) *Persister {
+	this := new(Persister)
+	dir, err := futil.UserStateDir()
+	if err != nil {
+		panic(err)
+	}
+	f := filepath.Join(dir, name, file)
+	err = futil.Touch(f)
+	if err != nil {
+		panic(err)
+	}
+	this.File = f
+	return this
 }
 
 // Setup ensures that the persistence file exists and is ready for use.

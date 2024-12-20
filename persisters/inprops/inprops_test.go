@@ -88,7 +88,7 @@ func ExampleSet() {
 	out, _ := os.ReadFile(`testdata/temp.props`)
 	fmt.Println(string(out))
 
-	// Output:
+	// Unordered Output:
 	// some=thing
 	// another=one
 }

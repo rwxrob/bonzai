@@ -3,8 +3,10 @@ package inyaml
 import (
 	"io"
 	"os"
+	"path/filepath"
 
 	"github.com/rogpeppe/go-internal/lockedfile"
+	"github.com/rwxrob/bonzai/futil"
 	"gopkg.in/yaml.v3"
 )
 
@@ -23,6 +25,51 @@ import (
 //		     value := storage.Get("key")
 type Persister struct {
 	File string // consider someplace in futil.UserStateDir()
+}
+
+func NewUserConfig(name, file string) *Persister {
+	this := new(Persister)
+	dir, err := futil.UserConfigDir()
+	if err != nil {
+		panic(err)
+	}
+	f := filepath.Join(dir, name, file)
+	err = futil.Touch(f)
+	if err != nil {
+		panic(err)
+	}
+	this.File = f
+	return this
+}
+
+func NewUserCache(name, file string) *Persister {
+	this := new(Persister)
+	dir, err := futil.UserCacheDir()
+	if err != nil {
+		panic(err)
+	}
+	f := filepath.Join(dir, name, file)
+	err = futil.Touch(f)
+	if err != nil {
+		panic(err)
+	}
+	this.File = f
+	return this
+}
+
+func NewUserState(name, file string) *Persister {
+	this := new(Persister)
+	dir, err := futil.UserStateDir()
+	if err != nil {
+		panic(err)
+	}
+	f := filepath.Join(dir, name, file)
+	err = futil.Touch(f)
+	if err != nil {
+		panic(err)
+	}
+	this.File = f
+	return this
 }
 
 // Setup ensures that the persistence file exists and is ready for use.
