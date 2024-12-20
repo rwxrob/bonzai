@@ -358,12 +358,11 @@ var UserHomeDir = os.UserHomeDir
 // UserConfigDir returns the path to the user's config directory,
 // checking [$XDG_CONFIG_HOME] environment variable first. It defaults to
 // joining [UserHomeDir] with `.config` if the variable is unset on Unix
-// systems (including darwin unlike [pkg/os.UserConfigDir]). On Windows it
-// returns %AppData%. It returns an error if [UserHomeDir] fails.
+// systems. Note that this is unlike [pkg/os.UserConfigDir] by design
+// for better intuitive consistency despite the defined "standards" from
+// operating system vendors. This difference is particularly important
+// given the prevalence of WSL2 usage requiring a clear distinction.
 func UserConfigDir() (string, error) {
-	if runtime.GOOS == "windows" {
-		return os.Getenv(`AppData`), nil
-	}
 	path, has := os.LookupEnv(`XDG_CONFIG_HOME`)
 	if !has {
 		dir, err := UserHomeDir()
