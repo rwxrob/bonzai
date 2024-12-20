@@ -38,8 +38,8 @@ func init() {
 }
 
 // DefaultPersister for any [Cmd] that is not created with its own
-// persistence using [Cmd].Persister. The [Cmd.Get] and [Cmd.Set] use this if
-// Cmd does not have its own. If assigned, its [Persister] method is
+// persistence using [Cmd].Persist. The [Cmd.Get] and [Cmd.Set] use this if
+// Cmd does not have its own. If assigned, its [Persist] method is
 // called during init of the bonzai package.
 var DefaultPersister Persister
 
@@ -92,8 +92,8 @@ type Cmd struct {
 
 	// Declaration of shareable variables (set to nil at runtime after
 	// caching internal map, see [Cmd.VarsSlice], [Cmd.Get], [Cmd.Set]).
-	Vars      Vars
-	Persister Persister
+	Vars    Vars
+	Persist Persister
 
 	// Work down by this command itself
 	Init func(x *Cmd, args ...string) error // initialization with [SeekInit]
@@ -187,7 +187,7 @@ func (vs Vars) String() string {
 // # Persistence
 //
 // When persistence (P) is true then either internal persistence
-// ([Cmd].Persister) or default persistence ([DefaultPersister]) is checked
+// ([Cmd].Persist) or default persistence ([DefaultPersister]) is checked
 // and used if available (not nil). If neither is available then it is
 // as if P is false. In-memory values (V) are always kept in sync
 // with those persisted depending on the method of persistence employed
@@ -240,13 +240,13 @@ func (v Var) String() string {
 	return string(buf)
 }
 
-// WithPersister overrides or adds [Cmd].Persister. The [Persister].Setup
+// WithPersister overrides or adds [Cmd].Persist. The [Persister].Setup
 // method is called and panics on error.
 func (x Cmd) WithPersister(a Persister) *Cmd {
 	if err := a.Setup(); err != nil {
 		panic(err)
 	}
-	x.Persister = a
+	x.Persist = a
 	return &x
 }
 
@@ -259,7 +259,7 @@ func (x Cmd) WithPersister(a Persister) *Cmd {
 //
 // Otherwise, if [Var].P is true
 // attempts to look it up from either internal persistence set with
-// [Cmd].Persister or the package [DefaultPersister] default if either is
+// [Cmd].Persist or the package [DefaultPersister] default if either is
 // not nil. If a persister is available but returns an empty string then
 // it is assumed the initial value has never been persisted and the
 // in-memory cached value is returned and also persisted with [Cmd].Set
@@ -296,13 +296,13 @@ func (x *Cmd) Get(key string) string {
 	}
 
 	// local persister, usually setup in x.Init
-	if v.P && x.Persister != nil {
-		pv := x.Persister.Get(key)
+	if v.P && x.Persist != nil {
+		pv := x.Persist.Get(key)
 		if len(pv) > 0 {
 			v.V = pv
 		} else {
 			if len(v.V) > 0 {
-				x.Persister.Set(key, v.V)
+				x.Persist.Set(key, v.V)
 			}
 		}
 		return v.V
@@ -360,10 +360,10 @@ func (x *Cmd) Set(key, value string) {
 	}
 	v.V = value
 
-	// set first persistence found if Persister
+	// set first persistence found if Persist
 	if v.P {
-		if x.Persister != nil {
-			x.Persister.Set(key, value)
+		if x.Persist != nil {
+			x.Persist.Set(key, value)
 			return
 		}
 		if DefaultPersister != nil {
@@ -982,8 +982,8 @@ func (x *Cmd) resolveInheritedVars() {
 
 func (x *Cmd) cacheVars() {
 	x.vars = make(map[string]*Var, len(x.Vars))
-	if x.Persister != nil {
-		x.Persister.Setup()
+	if x.Persist != nil {
+		x.Persist.Setup()
 	}
 	for _, v := range x.Vars {
 		if len(v.I) > 0 {
