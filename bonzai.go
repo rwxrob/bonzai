@@ -38,7 +38,7 @@ func init() {
 }
 
 // DefaultPersister for any [Cmd] that is not created with its own
-// persistence using [Cmd].Pers. The [Cmd.Get] and [Cmd.Set] use this if
+// persistence using [Cmd].Persister. The [Cmd.Get] and [Cmd.Set] use this if
 // Cmd does not have its own. If assigned, its [Persister] method is
 // called during init of the bonzai package.
 var DefaultPersister Persister
@@ -92,8 +92,8 @@ type Cmd struct {
 
 	// Declaration of shareable variables (set to nil at runtime after
 	// caching internal map, see [Cmd.VarsSlice], [Cmd.Get], [Cmd.Set]).
-	Vars Vars
-	Pers Persister
+	Vars      Vars
+	Persister Persister
 
 	// Work down by this command itself
 	Init func(x *Cmd, args ...string) error // initialization with [SeekInit]
@@ -187,7 +187,7 @@ func (vs Vars) String() string {
 // # Persistence
 //
 // When persistence (P) is true then either internal persistence
-// ([Cmd].Pers) or default persistence ([DefaultPersister]) is checked
+// ([Cmd].Persister) or default persistence ([DefaultPersister]) is checked
 // and used if available (not nil). If neither is available then it is
 // as if P is false. In-memory values (V) are always kept in sync
 // with those persisted depending on the method of persistence employed
@@ -205,12 +205,13 @@ func (vs Vars) String() string {
 // # Explicit inheritance
 //
 // When the inherits (I) field is set, then the variable is inherited
-// from a command above it and if not found must panic. When found, the
-// inheriting Var internally assigns a reference to the inherited Var as
-// [Var].R. The variable-related operations [Cmd.Get] and [Cmd.Set] then
-// directly operate on the Var pointed to by the inherited Var ref (R)
-// instead of itself. Setting the inheritor field (I) in addition to any
-// with any other field causes a panic.
+// from some command above it and if not found must panic. When found,
+// the inheriting Var internally assigns a reference ([Var].R) to the
+// [Cmd] in which the inherited Var was declared [Var].R. The
+// variable-related operations [Cmd.Get] and [Cmd.Set] then directly
+// operate on the Var pointed to by the inherited Var ref (R) instead of
+// itself. Setting the inheritor field (I) in addition to any
+// other field causes a panic.
 //
 // # Scope and depth of inheritance
 //
@@ -230,7 +231,7 @@ type Var struct {
 	S string `json:"s,omitempty"` // short description
 	P bool   `json:"p,omitempty"` // persistent
 	I string `json:"i,omitempty"` // inherits
-	R *Var   `json:"r,omitempty"` // inherited reference
+	R *Cmd   `json:"r,omitempty"` // inherited from
 }
 
 func (v Var) String() string {
@@ -238,13 +239,13 @@ func (v Var) String() string {
 	return string(buf)
 }
 
-// WithPersister overrides or adds [Cmd].Pers. The [Persister].Setup
+// WithPersister overrides or adds [Cmd].Persister. The [Persister].Setup
 // method is called and panics on error.
 func (x Cmd) WithPersister(a Persister) *Cmd {
 	if err := a.Setup(); err != nil {
 		panic(err)
 	}
-	x.Pers = a
+	x.Persister = a
 	return &x
 }
 
@@ -257,7 +258,7 @@ func (x Cmd) WithPersister(a Persister) *Cmd {
 //
 // Otherwise, if [Var].P is true
 // attempts to look it up from either internal persistence set with
-// [Cmd].Pers or the package [DefaultPersister] default if either is
+// [Cmd].Persister or the package [DefaultPersister] default if either is
 // not nil. If a persister is available but returns an empty string then
 // it is assumed the initial value has never been persisted and the
 // in-memory cached value is returned and also persisted with [Cmd].Set
@@ -268,13 +269,18 @@ func (x Cmd) WithPersister(a Persister) *Cmd {
 // safe for concurrency but persisters must implement their own
 // file-level locking if shared between multiple processes.
 func (x *Cmd) Get(key string) string {
+
+	// declaration is mandatory
 	v, has := x.vars[key]
 	if !has {
 		panic(`not declared in Vars: ` + key)
 	}
+
+	// inherited, recurse
 	if v.R != nil {
-		v = v.R
+		return v.R.Get(key)
 	}
+
 	v.Lock()
 	defer v.Unlock()
 
@@ -288,17 +294,22 @@ func (x *Cmd) Get(key string) string {
 		}
 	}
 
-	switch {
-	case v.P && x.Pers != nil:
-		pv := x.Pers.Get(key)
+	// local persister, usually setup in x.Init
+	if v.P && x.Persister != nil {
+		pv := x.Persister.Get(key)
 		if len(pv) > 0 {
 			v.V = pv
 		} else {
 			if len(v.V) > 0 {
-				x.Pers.Set(key, v.V)
+				x.Persister.Set(key, v.V)
 			}
 		}
-	case v.P && DefaultPersister != nil:
+		return v.V
+
+	}
+
+	// package-wide default persister
+	if v.P && DefaultPersister != nil {
 		pv := DefaultPersister.Get(key)
 		if len(pv) > 0 {
 			v.V = pv
@@ -307,28 +318,35 @@ func (x *Cmd) Get(key string) string {
 				DefaultPersister.Set(key, v.V)
 			}
 		}
+		return v.V
 	}
-	return v.V
+
+	return ""
 }
 
 // Set assigns the value of the internal vars value for the given key. If
 // the [Var].E is found to exist with [os.LookupEnv] then it is only set
 // instead. This allows environment variables to shadow in-memory and
-// persistent variables. If [Cmd].Pers is set, then attempts to
-// persist using the internal persister created with [Cmd].Pers or
+// persistent variables. If [Cmd].Persister is set, then attempts to
+// persist using the internal persister created with [Cmd].Persister or
 // the [DefaultPersister] default if either is not nil. Otherwise,
 // assumes no persistence and only changes the in-memory value.
 // Panics if key was not declared in [Cmd].Vars. Locks the Var in
 // question so safe for concurrency.
 func (x *Cmd) Set(key, value string) {
-	// ignore if undeclared
+
+	// declaration is mandatory
 	v, has := x.vars[key]
 	if !has {
 		panic(`not declared in Vars: ` + key)
 	}
+
+	// inherited, recurse
 	if v.R != nil {
-		v = v.R
+		v.R.Set(key, value)
+		return
 	}
+
 	v.Lock()
 	defer v.Unlock()
 
@@ -339,12 +357,12 @@ func (x *Cmd) Set(key, value string) {
 			return
 		}
 	}
-
 	v.V = value
-	// set first persistence found if Persist
+
+	// set first persistence found if Persister
 	if v.P {
-		if x.Pers != nil {
-			x.Pers.Set(key, value)
+		if x.Persister != nil {
+			x.Persister.Set(key, value)
 			return
 		}
 		if DefaultPersister != nil {
@@ -946,7 +964,7 @@ func (x *Cmd) resolveInheritedVars() {
 				continue
 			}
 			if curvar.K == v.I {
-				v.R = curvar
+				v.R = cur
 			}
 		}
 		if v.R == nil {
@@ -957,8 +975,8 @@ func (x *Cmd) resolveInheritedVars() {
 
 func (x *Cmd) cacheVars() {
 	x.vars = make(map[string]*Var, len(x.Vars))
-	if x.Pers != nil {
-		x.Pers.Setup()
+	if x.Persister != nil {
+		x.Persister.Setup()
 	}
 	for _, v := range x.Vars {
 		if len(v.I) > 0 {
