@@ -206,10 +206,10 @@ func (vs Vars) String() string {
 //
 // When the inherits (I) field is set, then the variable is inherited
 // from some command above it and if not found must panic. When found,
-// the inheriting Var internally assigns a reference ([Var].R) to the
-// [Cmd] in which the inherited Var was declared [Var].R. The
+// the inheriting Var internally assigns a reference ([Var].X) to the
+// [Cmd] in which the inherited Var was declared [Var].X. The
 // variable-related operations [Cmd.Get] and [Cmd.Set] then directly
-// operate on the Var pointed to by the inherited Var ref (R) instead of
+// operate on the Var pointed to by the inherited Var ref (X) instead of
 // itself. Setting the inheritor field (I) in addition to any
 // other field causes a panic.
 //
@@ -231,7 +231,8 @@ type Var struct {
 	S string `json:"s,omitempty"` // short description
 	P bool   `json:"p,omitempty"` // persistent
 	I string `json:"i,omitempty"` // inherits
-	R *Cmd   `json:"r,omitempty"` // inherited from
+	R bool   `json:"r,omitempty"` // required to be non-empty
+	X *Cmd   `json:"x,omitempty"` // inherited from
 }
 
 func (v Var) String() string {
@@ -269,7 +270,6 @@ func (x Cmd) WithPersister(a Persister) *Cmd {
 // safe for concurrency but persisters must implement their own
 // file-level locking if shared between multiple processes.
 func (x *Cmd) Get(key string) string {
-
 	// declaration is mandatory
 	v, has := x.vars[key]
 	if !has {
@@ -277,8 +277,8 @@ func (x *Cmd) Get(key string) string {
 	}
 
 	// inherited, recurse
-	if v.R != nil {
-		return v.R.Get(key)
+	if v.X != nil {
+		return v.X.Get(key)
 	}
 
 	v.Lock()
@@ -286,6 +286,7 @@ func (x *Cmd) Get(key string) string {
 
 	// env var shadows everything, even if empty
 	if len(v.E) > 0 {
+
 		if val, has := os.LookupEnv(v.E); has {
 			if len(v.V) == 0 {
 				v.V = val
@@ -342,8 +343,8 @@ func (x *Cmd) Set(key, value string) {
 	}
 
 	// inherited, recurse
-	if v.R != nil {
-		v.R.Set(key, value)
+	if v.X != nil {
+		v.X.Set(key, value)
 		return
 	}
 
@@ -597,6 +598,7 @@ func (x *Cmd) Exec(args ...string) {
 // trapPanic recovers from any panic and more gracefully displays the
 // panic by logging it before exiting with a return value of 1.
 var trapPanic = func() {
+	log.SetFlags(0)
 	if !AllowPanic {
 		if r := recover(); r != nil {
 			log.Println(r)
@@ -653,7 +655,7 @@ func (c *Cmd) Validate() error {
 	}
 	for _, v := range c.Vars {
 		if len(v.I) > 0 &&
-			(len(v.K) > 0 || len(v.V) > 0 || len(v.E) > 0 || v.R != nil || v.P) {
+			(len(v.K) > 0 || len(v.V) > 0 || len(v.E) > 0 || v.X != nil || v.P) {
 			return ErrBadVarInheritance{v}
 		}
 	}
@@ -964,10 +966,15 @@ func (x *Cmd) resolveInheritedVars() {
 				continue
 			}
 			if curvar.K == v.I {
-				v.R = cur
+				v.X = cur
+				if v.R {
+					if len(cur.Get(v.I)) == 0 {
+						panic(`required but not set: ` + v.I)
+					}
+				}
 			}
 		}
-		if v.R == nil {
+		if v.X == nil {
 			panic(`failed to find inherited Var: ` + v.I)
 		}
 	}
@@ -981,10 +988,13 @@ func (x *Cmd) cacheVars() {
 	for _, v := range x.Vars {
 		if len(v.I) > 0 {
 			x.vars[v.I] = &v
-			// have to put off R assignment until after callers resolved
+			// have to put off X assignment until after callers resolved
 			continue
 		}
 		x.vars[v.K] = &v
+		if v.R && len(x.Get(v.K)) == 0 {
+			panic(`required variable not set: ` + v.K)
+		}
 	}
 	x.Vars = nil
 }
