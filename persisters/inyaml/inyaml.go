@@ -79,10 +79,10 @@ func NewUserState(name, file string) *Persister {
 // If the file cannot be opened or created, an error is returned.
 func (p *Persister) Setup() error {
 	f, err := lockedfile.OpenFile(p.File, os.O_RDONLY|os.O_CREATE, 0600)
+	defer f.Close()
 	if err != nil {
 		return err
 	}
-	f.Close()
 	return nil
 }
 
@@ -109,10 +109,10 @@ func (p *Persister) Set(key, value string) {
 func (p *Persister) loadFile() map[string]string {
 	data := make(map[string]string)
 	f, err := lockedfile.OpenFile(p.File, os.O_RDONLY, 0600)
+	defer f.Close()
 	if err != nil {
 		return data
 	}
-	defer f.Close()
 	content, err := io.ReadAll(f)
 	if err != nil || len(content) == 0 {
 		return data
@@ -123,10 +123,10 @@ func (p *Persister) loadFile() map[string]string {
 
 func (p *Persister) saveFile(data map[string]string) {
 	f, err := lockedfile.OpenFile(p.File, os.O_WRONLY|os.O_CREATE|os.O_TRUNC, 0600)
+	defer f.Close()
 	if err != nil {
 		return
 	}
-	defer f.Close()
 	content, _ := yaml.Marshal(data)
 	f.Write(content)
 }

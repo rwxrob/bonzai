@@ -65,11 +65,9 @@ func NewUserState(name, file string) *Persister {
 // created. If the file cannot be opened or created, an error is
 // returned.
 func (p *Persister) Setup() error {
-	_, err := lockedfile.OpenFile(p.File, os.O_RDONLY|os.O_CREATE, 0600)
-	if err != nil {
-		return err
-	}
-	return nil
+	f, err := lockedfile.OpenFile(p.File, os.O_RDONLY|os.O_CREATE, 0600)
+	defer f.Close()
+	return err
 }
 
 // Get retrieves the value associated with the given key from the persisted
@@ -95,19 +93,19 @@ func (p *Persister) Set(key, value string) {
 func (p *Persister) loadFile() map[string]string {
 	data := make(map[string]string)
 	f, err := lockedfile.OpenFile(p.File, os.O_RDONLY, 0600)
+	defer f.Close()
 	if err != nil {
 		return data
 	}
-	defer f.Close()
 	json.NewDecoder(f).Decode(&data)
 	return data
 }
 
 func (p *Persister) saveFile(data map[string]string) {
 	f, err := lockedfile.OpenFile(p.File, os.O_WRONLY|os.O_CREATE|os.O_TRUNC, 0600)
+	defer f.Close()
 	if err != nil {
 		return
 	}
-	defer f.Close()
 	json.NewEncoder(f).Encode(data)
 }
