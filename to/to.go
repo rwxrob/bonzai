@@ -201,9 +201,9 @@ func PrefixTrimmed(in, pre string) string {
 func LinesChopped(in string, offset int) string {
 	lines := Lines(in)
 	if offset > 0 {
-		return strings.Join(lines[:offset+1], "\n")
+		return strings.Join(lines[:offset], "\n")
 	}
-	return strings.Join(lines[-offset+1:], "\n")
+	return strings.Join(lines[-offset:], "\n")
 }
 
 var isblank = regexp.MustCompile(`^\s*$`)

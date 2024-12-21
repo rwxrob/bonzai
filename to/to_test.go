@@ -198,27 +198,17 @@ func ExamplePrefixTrimmed() {
 }
 
 func ExampleLinesChopped_fromTop() {
-	fmt.Println(to.LinesChopped(`
-line one
-line two
-line three
-line four
-`, -2))
+	fmt.Println(to.LinesChopped("one\ntwo\nthree\nfour", -2))
 	// Output:
-	// line three
-	// line four
+	// three
+	// four
 }
 
 func ExampleLinesChopped_fromBottom() {
-	fmt.Println(to.LinesChopped(`
-line one
-line two
-line three
-line four
-`, 2))
+	fmt.Println(to.LinesChopped("one\ntwo\nthree\nfour", 2))
 	// Output:
-	// line one
-	// line two
+	// one
+	// two
 }
 
 func ExampleIndentWrapped() {
