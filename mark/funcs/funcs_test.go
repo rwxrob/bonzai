@@ -71,16 +71,12 @@ func ExampleCommand() {
 	}
 
 	Cmd.Seek(`foo`, `subfoo`) // required for default detection
-
-	fmt.Print("# Commands\n\n")
 	fmt.Println(funcs.Commands(Cmd))
 
 	// Output:
-	// # Commands
-	//
-	//     foo      ← foo this command (default)
-	//       subfoo ← under the foo command
-	//     bar      ← bar this command
+	// foo      ← foo this command (default)
+	//   subfoo ← under the foo command
+	// bar      ← bar this command
 }
 
 func ExampleCommands_hidden() {
@@ -117,15 +113,11 @@ func ExampleCommands_hidden() {
 	}
 
 	Cmd.Seek(`foo`, `sssh`, `some`) // required for default detection
-
-	fmt.Print("# Commands\n\n")
 	fmt.Println(funcs.Commands(Cmd))
 
 	// Output:
-	// # Commands
-	//
-	//     foo      ← foo this command (default)
-	//       subfoo ← under the foo command
-	//     bar      ← bar this command
+	// foo      ← foo this command (default)
+	//   subfoo ← under the foo command
+	// bar      ← bar this command
 
 }

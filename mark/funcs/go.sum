@@ -4,6 +4,8 @@ github.com/rwxrob/bonzai v0.50.0 h1:1WjfUYQV1EaJRqNX2R52+4FEPnYT76OmIyEzFb7moZI=
 github.com/rwxrob/bonzai v0.50.0/go.mod h1:217QTdfv41+Dji8cAeko6oXcaPR9I31xvbOP9ksNx5U=
 github.com/rwxrob/bonzai v0.56.4 h1:Xyu62tOFZb+mN1oVTIXps0QEDrtD0YQcGOyGufuzZPE=
 github.com/rwxrob/bonzai v0.56.4/go.mod h1:217QTdfv41+Dji8cAeko6oXcaPR9I31xvbOP9ksNx5U=
+github.com/rwxrob/bonzai v0.56.5 h1:0t60PHGt7jHoQtbqFaSU0t2xMlnKSKm3oFC5OGpRBxA=
+github.com/rwxrob/bonzai v0.56.5/go.mod h1:217QTdfv41+Dji8cAeko6oXcaPR9I31xvbOP9ksNx5U=
 github.com/rwxrob/bonzai/ds v0.1.1 h1:yC+GoUH/5TPt86qJmQRsD8OHuODJoDt9UgkWQM8yPzA=
 github.com/rwxrob/bonzai/ds v0.1.1/go.mod h1:lMfjt9r8FsBDSzzZ/VtFSNIKuwhPPf9sfDi9C3x6sFo=
 github.com/rwxrob/bonzai/fn v0.8.2 h1:th0470vtqB3mgXqgECNGpG738GFB9QNb5APGyY7QQFk=
@@ -30,5 +32,7 @@ github.com/rwxrob/bonzai/to v0.5.0 h1:tlHqZl5etrlGnN0/mX/A9GP8a0cTZH4nXjv8jpDKiK
 github.com/rwxrob/bonzai/to v0.5.0/go.mod h1:ProJOc9G7ucgJMeZ72YPMczPHNrlSeWxXXrjKZYZ2jU=
 github.com/rwxrob/bonzai/to v0.5.1 h1:SbpDurzNeioVbRLysv/pprJ58Q9zCfKYVzy/fJn1RGw=
 github.com/rwxrob/bonzai/to v0.5.1/go.mod h1:ProJOc9G7ucgJMeZ72YPMczPHNrlSeWxXXrjKZYZ2jU=
+github.com/rwxrob/bonzai/to v0.6.0 h1:o4xSWCnq2Vyd6VfWv1GFlU8ZrwfHODn4pRVmyl0ro0g=
+github.com/rwxrob/bonzai/to v0.6.0/go.mod h1:ProJOc9G7ucgJMeZ72YPMczPHNrlSeWxXXrjKZYZ2jU=
 github.com/rwxrob/bonzai/uniq v0.1.0 h1:xOlTWnaotslv1I0Nc+3+qXHxecoxNSROo871S2m3cq4=
 github.com/rwxrob/bonzai/uniq v0.1.0/go.mod h1:RsSPso5Dhs1tYEjhuVA4b8DM5l0pQPhGebm8Lx5XHc8=

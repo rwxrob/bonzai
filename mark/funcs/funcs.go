@@ -25,9 +25,77 @@ var Map = template.FuncMap{
 	"statedir":     futil.UserStateDir,
 	"pathsep":      func() string { return string(os.PathSeparator) },
 	"pathjoin":     filepath.Join,
+	"indent":       to.Indented,
 	"aka":          AKA,
 	"code":         Code,
 	"commands":     Commands,
+	"command":      Command,
+	"summary":      Summary,
+	"usage":        Usage,
+	"hasenv":       HasEnv,
+	"long":         Long,
+}
+
+// Long returns the Long description of the command if found dedented so
+// that it is left justified completely. Combine with indent when
+// needed.
+func Long(x *bonzai.Cmd) string {
+	out := new(strings.Builder)
+	if len(x.Long) > 0 {
+		out.WriteString("\n" + to.Dedented(x.Long))
+		if x.Long[len(x.Long)-1] != '\n' {
+			out.WriteString("\n")
+		}
+	}
+	return out.String()
+}
+
+// Summary returns the AKA joined by a long dash with the commands Short
+// description if it has one.
+func Summary(x *bonzai.Cmd) string {
+	if x.Short == "" {
+		return AKA(x)
+	}
+	return AKA(x) + " — " + x.Short
+}
+
+// Command returns the name of the command joined to any aliases at the
+// end.
+func Command(x *bonzai.Cmd) string {
+	if x.Alias == "" {
+		return x.Name
+	}
+	return x.Alias + `|` + x.Name
+}
+
+// HasEnv returns true if command has declared any environment variables
+// in its Vars. Note that inherited vars are not resolved to see if they
+// resolved to environment variables (Var.E).
+func HasEnv(x *bonzai.Cmd) bool {
+	vars := x.VarsSlice()
+	if len(vars) > 0 {
+		for _, v := range vars {
+			if v.E != "" {
+				return true
+			}
+		}
+	}
+	return false
+}
+
+// Usage return the [Command] plus any available Usage information. If
+// there is no usage, it is inferred.
+func Usage(x *bonzai.Cmd) string {
+	usage := x.Usage
+	if usage == "" {
+		if len(x.Cmds) > 0 {
+			usage = `COMMAND`
+		}
+		if x.Alias != "" {
+			usage += `|` + x.Alias
+		}
+	}
+	return Command(x) + " " + usage
 }
 
 // AKA returns the name followed by all aliases in parenthesis joined
@@ -65,10 +133,9 @@ func Code(it any) string { return fmt.Sprintf("`%v`", it) }
 // It aligns [Cmd].Short summaries in the output for better
 // readability, adjusting spaces based on the position of the dashes.
 func Commands(x *bonzai.Cmd) string {
-	tree := cmdTree(x, 2)
-	tree = to.PrefixTrimmed(tree, `  `)
-	lines := to.Lines(tree)
-	lines = lines[1:]
+	tree := CmdTree(x, 2)
+	tree = to.PrefixTrimmed(`  `, tree)
+	lines := to.Lines(tree)[1:]
 	var widest int
 	for _, line := range lines {
 		if length := countRunes(line, '←'); length > widest {
@@ -78,15 +145,15 @@ func Commands(x *bonzai.Cmd) string {
 	for i, line := range lines {
 		parts := strings.Split(line, "←")
 		if len(parts) > 1 {
-			lines[i] = fmt.Sprintf("    %-*v←%v", widest, parts[0], parts[1])
+			lines[i] = fmt.Sprintf("%-*v←%v", widest, parts[0], parts[1])
 		} else {
-			lines[i] = "    " + line
+			lines[i] = line
 		}
 	}
 	return strings.Join(lines, "\n") + "\n"
 }
 
-func cmdTree(x *bonzai.Cmd, depth int) string {
+func CmdTree(x *bonzai.Cmd, depth int) string {
 	out := new(strings.Builder)
 	hideunder := -1
 	addbranch := func(level int, c *bonzai.Cmd) error {
