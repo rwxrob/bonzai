@@ -28,6 +28,7 @@ var Map = template.FuncMap{
 	"aka":          AKA,
 	"code":         Code,
 	"cmdtree":      CmdTree,
+	"commands":     Commands,
 }
 
 // AKA returns the name followed by all aliases in parenthesis joined
@@ -59,6 +60,14 @@ func AKA(x *bonzai.Cmd) string {
 // [bonzai.Cmd].Short but cannot because backticks are already used to
 // contain the multi-line text itself.
 func Code(it any) string { return fmt.Sprintf("`%v`", it) }
+
+// Commands returns the same as CmdTree but without the command itself.
+func Commands(x *bonzai.Cmd) string {
+	buf := CmdTree(x)
+	buf = to.PrefixTrimmed(buf, `  `)
+	buf = to.LinesChopped(buf, -1)
+	return buf
+}
 
 // CmdTree generates and returns a formatted string representation
 // of the command tree for the [Cmd] instance and all its [Cmd].Cmds

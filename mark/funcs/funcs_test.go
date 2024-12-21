@@ -84,6 +84,47 @@ func ExampleCmdTree() {
 	//       bar      ← bar this command
 }
 
+func ExampleCommands() {
+	var subFooCmd = &bonzai.Cmd{
+		Name:  `subfoo`,
+		Alias: `sf`,
+		Short: `under the foo command`,
+	}
+
+	var fooCmd = &bonzai.Cmd{
+		Name:  `foo`,
+		Alias: `f`,
+		Short: `foo this command`,
+		Cmds:  []*bonzai.Cmd{subFooCmd},
+	}
+
+	var barCmd = &bonzai.Cmd{
+		Name:  `bar`,
+		Alias: `b`,
+		Short: `bar this command`,
+	}
+
+	var Cmd = &bonzai.Cmd{
+		Name:  `mycmd`,
+		Alias: `my|cmd`,
+		Short: `my command short summary`,
+		Cmds:  []*bonzai.Cmd{fooCmd, barCmd},
+		Def:   fooCmd,
+	}
+
+	Cmd.Seek(`foo`, `subfoo`) // required for default detection
+
+	fmt.Print("# Commands\n\n")
+	fmt.Println(funcs.Commands(Cmd))
+
+	// Output:
+	// # Commands
+	//
+	//     foo      ← foo this command (default)
+	//       subfoo ← under the foo command
+	//     bar      ← bar this command
+}
+
 func ExampleCmdTree_hidden() {
 	var subFooCmd = &bonzai.Cmd{
 		Name:  `subfoo`,
