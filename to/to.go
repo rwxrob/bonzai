@@ -196,6 +196,16 @@ func PrefixTrimmed(in, pre string) string {
 	return strings.Join(lines, "\n")
 }
 
+// LinesChopped returns the string with lines chopped from the bottom
+// (positive offset) or the top (negative offset).
+func LinesChopped(in string, offset int) string {
+	lines := Lines(in)
+	if offset > 0 {
+		return strings.Join(lines[:offset+1], "\n")
+	}
+	return strings.Join(lines[-offset+1:], "\n")
+}
+
 var isblank = regexp.MustCompile(`^\s*$`)
 
 // Dedented discards any initial blank lines with nothing but whitespace in

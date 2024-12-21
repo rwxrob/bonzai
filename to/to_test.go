@@ -197,6 +197,30 @@ func ExamplePrefixTrimmed() {
 	// thing
 }
 
+func ExampleLinesChopped_fromTop() {
+	fmt.Println(to.LinesChopped(`
+line one
+line two
+line three
+line four
+`, -2))
+	// Output:
+	// line three
+	// line four
+}
+
+func ExampleLinesChopped_fromBottom() {
+	fmt.Println(to.LinesChopped(`
+line one
+line two
+line three
+line four
+`, 2))
+	// Output:
+	// line one
+	// line two
+}
+
 func ExampleIndentWrapped() {
 	description := `
 		The y2j command converts YAML (including references and
