@@ -27,7 +27,6 @@ var Map = template.FuncMap{
 	"pathjoin":     filepath.Join,
 	"aka":          AKA,
 	"code":         Code,
-	"cmdtree":      CmdTree,
 	"commands":     Commands,
 }
 
@@ -61,21 +60,15 @@ func AKA(x *bonzai.Cmd) string {
 // contain the multi-line text itself.
 func Code(it any) string { return fmt.Sprintf("`%v`", it) }
 
-// Commands returns the same as CmdTree but without the command itself.
-func Commands(x *bonzai.Cmd) string {
-	buf := CmdTree(x)
-	buf = to.PrefixTrimmed(buf, `  `)
-	buf = to.LinesChopped(buf, -1)
-	return buf
-}
-
-// CmdTree generates and returns a formatted string representation
-// of the command tree for the [Cmd] instance and all its [Cmd].Cmds
-// subcommands. It aligns [Cmd].Short summaries in the output for better
+// Commands generates and returns a formatted string representation
+// of the commands and subcommands for the [Cmd] instance.
+// It aligns [Cmd].Short summaries in the output for better
 // readability, adjusting spaces based on the position of the dashes.
-func CmdTree(x *bonzai.Cmd) string {
+func Commands(x *bonzai.Cmd) string {
 	tree := cmdTree(x, 2)
+	tree = to.PrefixTrimmed(tree, `  `)
 	lines := to.Lines(tree)
+	lines = lines[1:]
 	var widest int
 	for _, line := range lines {
 		if length := countRunes(line, '←'); length > widest {
