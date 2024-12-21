@@ -104,9 +104,10 @@ type Cmd struct {
 	Def  *Cmd   // default (optional if Do or Cmds, not required in Cmds)
 
 	// Documentation
-	Vers  string           // text (<50 runes) (optional)
+	Usage string           // text (<70 runes) (optional)
 	Short string           // text (<50 runes) (optional)
 	Long  string           // text/markup (optional)
+	Vers  string           // text (<50 runes) (optional)
 	Funcs template.FuncMap // own template tags (optional)
 
 	// Faster than "if" conditions in [Cmd.Do] (all optional)
@@ -658,6 +659,9 @@ func (c *Cmd) Validate() error {
 	case len(c.Short) > 0 && (len(c.Short) > 50 || !unicode.IsLower(rune(c.Short[0]))):
 		return ErrInvalidShort{c}
 
+	case len(c.Usage) > 70:
+		return ErrInvalidUsage{c}
+
 	case len(c.Vers) > 50:
 		return ErrInvalidVers{c}
 
@@ -1188,6 +1192,17 @@ type ErrInvalidShort struct {
 func (e ErrInvalidShort) Error() string {
 	return fmt.Sprintf(
 		`developer-error: Cmd.Short (%v) length must be less than 50 runes and must begin with a lowercase letter`, e.Cmd)
+}
+
+// ErrInvalidUsage indicates that the short description length exceeds 50
+// characters, providing a reference to the [Cmd] and its [Usage] description.
+type ErrInvalidUsage struct {
+	Cmd *Cmd
+}
+
+func (e ErrInvalidUsage) Error() string {
+	return fmt.Sprintf(
+		`developer-error: Cmd.Usage (%v) length must be less than 70 runes`, e.Cmd)
 }
 
 // ErrInvalidVers indicates that the short description length exceeds 50
