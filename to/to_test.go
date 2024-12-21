@@ -140,7 +140,7 @@ func ExampleIndentation() {
 
 // wrapped, count = to.Wrapped("There I was not knowing what to do about this exceedingly long line and knowing that certain people would shun me for injecting\nreturns wherever I wanted.", 40)
 func ExampleWrapped() {
-	wrapped, count := to.Wrapped("some thing", 3)
+	wrapped, count := to.Wrapped(3, "some thing")
 	fmt.Printf("%q %v\n", wrapped, count)
 
 	// Output:
@@ -156,7 +156,7 @@ func ExampleWrapped_long() {
 		Querying configuration data, however, can be easily accomplished
 		with the <query> command that uses jq-like selection syntax.`
 
-	out, count := to.Wrapped(in, 80)
+	out, count := to.Wrapped(80, in)
 	fmt.Println(count)
 	fmt.Printf("%q", out)
 
@@ -167,7 +167,7 @@ func ExampleWrapped_long() {
 
 func ExampleWrapped_escapes() {
 	in := `Here is a ` + "\033[34m" + `blue` + "\033[0m" + ` thing `
-	out, count := to.Wrapped(in, 16)
+	out, count := to.Wrapped(16, in)
 	fmt.Println(count)
 	fmt.Printf("%q", out)
 	// Output:
@@ -176,7 +176,7 @@ func ExampleWrapped_escapes() {
 }
 
 func ExampleIndented() {
-	fmt.Println("Indented:\n" + to.Indented("some\nthing", 4))
+	fmt.Println("Indented:\n" + to.Indented(4, "some\nthing"))
 	// Output:
 	// Indented:
 	//     some
@@ -184,28 +184,28 @@ func ExampleIndented() {
 }
 
 func ExamplePrefixed() {
-	fmt.Println(to.Prefixed("some\nthing", "P  "))
+	fmt.Println(to.Prefixed("P ", "some\nthing"))
 	// Output:
-	// P  some
-	// P  thing
+	// P some
+	// P thing
 }
 
 func ExamplePrefixTrimmed() {
-	fmt.Println(to.PrefixTrimmed("P some\nP thing", "P "))
+	fmt.Println(to.PrefixTrimmed("P ", "P some\nP thing"))
 	// Output:
 	// some
 	// thing
 }
 
 func ExampleLinesChopped_fromTop() {
-	fmt.Println(to.LinesChopped("one\ntwo\nthree\nfour", -2))
+	fmt.Println(to.LinesChopped(-2, "one\ntwo\nthree\nfour"))
 	// Output:
 	// three
 	// four
 }
 
 func ExampleLinesChopped_fromBottom() {
-	fmt.Println(to.LinesChopped("one\ntwo\nthree\nfour", 2))
+	fmt.Println(to.LinesChopped(2, "one\ntwo\nthree\nfour"))
 	// Output:
 	// one
 	// two
@@ -221,7 +221,7 @@ func ExampleIndentWrapped() {
 
 		`
 
-	fmt.Println("Indented:\n" + to.IndentWrapped(description, 7, 60))
+	fmt.Println("Indented:\n" + to.IndentWrapped(7, 60, description))
 
 	// Output:
 	// Indented:
