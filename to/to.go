@@ -187,6 +187,15 @@ func Prefixed(in, pre string) string {
 	return strings.Join(lines, "\n")
 }
 
+// PrefixTrimmed returns a string where every line has the passed prefix
+// removed if found at the absolute beginning of the line. Carriage
+// returns (if any) are dropped.
+func PrefixTrimmed(in, pre string) string {
+	lines := Lines(in)
+	lines = maps.TrimPrefix(lines, pre)
+	return strings.Join(lines, "\n")
+}
+
 var isblank = regexp.MustCompile(`^\s*$`)
 
 // Dedented discards any initial blank lines with nothing but whitespace in

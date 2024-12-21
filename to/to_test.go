@@ -190,6 +190,13 @@ func ExamplePrefixed() {
 	// P  thing
 }
 
+func ExamplePrefixTrimmed() {
+	fmt.Println(to.PrefixTrimmed("P some\nP thing", "P "))
+	// Output:
+	// some
+	// thing
+}
+
 func ExampleIndentWrapped() {
 	description := `
 		The y2j command converts YAML (including references and
