@@ -520,24 +520,18 @@ func Type[T any](from string, this T) T {
 
 // TrimVisible removes anything but unicode.IsPrint and then trims. It
 // does not crunch spaces, however.
-func TrimVisible(
-	in string,
-) string {
+func TrimVisible(in string) string {
 	return strings.TrimSpace(Visible(in))
 }
 
 // TrimCrunchSpace is same as CrunchSpace but trims initial and trailing
 // space.
-func TrimCrunchSpace(
-	in string,
-) string {
+func TrimCrunchSpace(in string) string {
 	return strings.TrimSpace(CrunchSpace(in))
 }
 
 // TrimCrunchSpaceVisible is same as CrunchSpaceVisible but trims initial and trailing
 // space.
-func TrimCrunchSpaceVisible(
-	in string,
-) string {
+func TrimCrunchSpaceVisible(in string) string {
 	return strings.TrimSpace(CrunchSpaceVisible(in))
 }
