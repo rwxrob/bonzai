@@ -489,35 +489,55 @@ func Visible(in string) string {
 // determine the conversion logic and returns the converted value if
 // successful. If conversion fails, it returns [this] as a fallback.
 func Type[T any](from string, this T) T {
-	var result any = this
-	var err error
+	var result T
 	switch any(this).(type) {
 	case bool:
-		result = is.Truthy(from)
+		b := is.Truthy(from)
+		result = any(b).(T)
 	case int:
-		result, err = strconv.Atoi(from)
+		i64, err := strconv.ParseInt(from, 10, 64)
 		if err != nil {
 			return this
 		}
+
+		if int64(int(i64)) != i64 {
+			return this
+		}
+		result = any(int(i64)).(T)
 	case float64:
-		result, err = strconv.ParseFloat(from, 64)
+		f64, err := strconv.ParseFloat(from, 64)
 		if err != nil {
 			return this
 		}
+		result = any(f64).(T)
 	case string:
-		result = from
+		result = any(from).(T)
+	default:
+		return this
 	}
-	return result.(T)
+	return result
 }
 
 // TrimVisible removes anything but unicode.IsPrint and then trims. It
 // does not crunch spaces, however.
-func TrimVisible(in string) string { return strings.TrimSpace(Visible(in)) }
+func TrimVisible(
+	in string,
+) string {
+	return strings.TrimSpace(Visible(in))
+}
 
 // TrimCrunchSpace is same as CrunchSpace but trims initial and trailing
 // space.
-func TrimCrunchSpace(in string) string { return strings.TrimSpace(CrunchSpace(in)) }
+func TrimCrunchSpace(
+	in string,
+) string {
+	return strings.TrimSpace(CrunchSpace(in))
+}
 
 // TrimCrunchSpaceVisible is same as CrunchSpaceVisible but trims initial and trailing
 // space.
-func TrimCrunchSpaceVisible(in string) string { return strings.TrimSpace(CrunchSpaceVisible(in)) }
+func TrimCrunchSpaceVisible(
+	in string,
+) string {
+	return strings.TrimSpace(CrunchSpaceVisible(in))
+}

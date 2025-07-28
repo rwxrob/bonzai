@@ -94,19 +94,19 @@ func ExampleHuman() {
 	// FooFunc
 }
 
-func ExampleDedent_simple() {
+func ExampleDedented_simple() {
 	fmt.Printf("%q\n", to.Dedented("\n    foo\n    bar"))
 	// Output:
 	// "foo\nbar"
 }
 
-func ExampleDedent_tabs_or_Spaces() {
+func ExampleDedented_tabs_or_Spaces() {
 	fmt.Printf("%q\n", to.Dedented("\n\t\tfoo\n\t\tbar"))
 	// Output:
 	// "foo\nbar"
 }
 
-func ExampleDedent_multiple_Blank_Lines() {
+func ExampleDedented_multiple_blank_lines() {
 	fmt.Printf("%q\n", to.Dedented("\n\n   \n\n    foo\n    bar"))
 	fmt.Printf("%q\n", to.Dedented("\n   \n\n  \n   some"))
 	// Output:
@@ -114,13 +114,13 @@ func ExampleDedent_multiple_Blank_Lines() {
 	// "some"
 }
 
-func ExampleDedent_accidental_Chop() {
+func ExampleDedented_accidental_chop() {
 	fmt.Printf("%q\n", to.Dedented("\n\n   \n\n    foo\n   bar"))
 	// Output:
 	// "foo\nar"
 }
 
-func ExampleDedent_single_blank_line() {
+func ExampleDedented_single_blank_line() {
 	fmt.Printf("%q\n", to.Dedented("    \n"))
 	// Output:
 	// ""
@@ -377,6 +377,19 @@ func ExampleType() {
 
 	fmt.Println("hello, hello", to.Type("hello", "default"))
 
+	fmt.Println("abc, 10", to.Type("abc", 10))
+	fmt.Println("abc, 2.0", to.Type("abc", 2.0))
+	fmt.Println("1.23, 0", to.Type("1.23", 0))
+	fmt.Println(
+		"999999999999999999999, 0",
+		to.Type("999999999999999999999", 0),
+	)
+	fmt.Println("yes, false", to.Type("yes", false))
+	fmt.Println("0, true", to.Type("0", true))
+	fmt.Println("   , 0", to.Type("   ", 0))
+	fmt.Println("   , true", to.Type("   ", true))
+	fmt.Println("123, int64(0)", to.Type("123", int64(0)))
+
 	// Output:
 	// true, false true
 	// false, false false
@@ -392,4 +405,13 @@ func ExampleType() {
 	// -14, 0.0 -14
 	// "", 0.0 0
 	// hello, hello hello
+	// abc, 10 10
+	// abc, 2.0 2
+	// 1.23, 0 0
+	// 999999999999999999999, 0 0
+	// yes, false false
+	// 0, true false
+	//    , 0 0
+	//    , true false
+	// 123, int64(0) 0
 }
