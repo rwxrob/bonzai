@@ -37,7 +37,7 @@ func TidyDependents() error {
 		if err != nil {
 			return err
 		}
-		fmt.Printf("\n%s:\n",rel)
+		fmt.Printf("\n%s:\n", rel)
 		os.Chdir(dep.path)
 		update()
 		tidy()
@@ -65,7 +65,7 @@ func TidyDependencies() error {
 		if err != nil {
 			return err
 		}
-		fmt.Printf("\n%s:\n",rel)
+		fmt.Printf("\n%s:\n", rel)
 		os.Chdir(dep.path)
 		update()
 		tidy()

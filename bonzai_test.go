@@ -2,7 +2,6 @@ package bonzai_test
 
 import (
 	"fmt"
-	"os"
 
 	"github.com/rwxrob/bonzai"
 )
@@ -71,6 +70,44 @@ func ExampleCmd_WithName() {
 	// i am bar
 }
 
+func ExampleCmd_SeekInit() {
+
+	var foo = &bonzai.Cmd{
+		Name: `foo`,
+		Do: func(*bonzai.Cmd, ...string) error {
+			fmt.Println(`I am foo`)
+			return nil
+		},
+	}
+
+	var bar = &bonzai.Cmd{
+		Name: `bar`,
+		Cmds: []*bonzai.Cmd{foo},
+		Do: func(*bonzai.Cmd, ...string) error {
+			fmt.Println(`I am bar`)
+			return nil
+		},
+	}
+
+	var baz = &bonzai.Cmd{
+		Name:   `baz`,
+		Cmds:   []*bonzai.Cmd{bar},
+		NoArgs: true,
+		Do: func(*bonzai.Cmd, ...string) error {
+			fmt.Println(`I am baz`)
+			return nil
+		},
+	}
+
+	fmt.Println(baz.SeekInit(`bar`))
+	fmt.Println(baz.SeekInit(`bar`, `arg1`))
+
+	// Output:
+	// bar [] <nil>
+	// bar [arg1] <nil>
+
+}
+
 func ExampleCmd_Run() {
 	var fooCmd = &bonzai.Cmd{
 		Name: `foo`,
@@ -118,7 +155,8 @@ func ExampleErrInvalidVers() {
 	fmt.Println(err)
 
 	// Output:
-	// Cmd.Vers length >50 for "foo": "this is a long version that is longer than 50 runes"
+	// developer-error: Cmd.Vers (foo) length must be less than 50 runes
+
 }
 
 func ExampleErrInvalidShort() {
@@ -131,7 +169,30 @@ func ExampleErrInvalidShort() {
 	fmt.Println(err)
 
 	// Output:
-	// Short length >50 or not lower for "foo": "this is a long short desc that is longer than 50 runes"
+	// developer-error: Cmd.Short (foo) length must be less than 50 runes and must begin with a lowercase letter
+
+}
+
+func ExampleCmd_Def() {
+
+	var foo = &bonzai.Cmd{
+		Name: `foo`,
+		Do:   bonzai.Nothing,
+	}
+
+	var Cmd = &bonzai.Cmd{
+		Name: `mycmd`,
+		Def:  foo,
+	}
+
+	x, args, err := Cmd.SeekInit(`arg1`, `arg2`)
+	fmt.Println(x, args, err)
+	fmt.Println(x.Caller())
+
+	// Output:
+	// foo [arg1 arg2] <nil>
+	// mycmd
+
 }
 
 func ExampleValidate() {
@@ -159,7 +220,7 @@ func ExampleValidate() {
 	fmt.Println(err)
 
 	// Output:
-	// Short length >50 or not lower for "foo": "this is a long short desc that is longer than 50 runes"
+	// developer-error: Cmd.Short (foo) length must be less than 50 runes and must begin with a lowercase letter
 	// <nil>
 }
 
@@ -175,7 +236,7 @@ func ExampleErrInvalidArg() {
 	fmt.Println(err)
 
 	// Output:
-	// arg #1 must match: ^o+$
+	// usage error: arg #1 must match: ^o+$
 }
 
 func ExampleCmd_WalkDeep() {
@@ -286,22 +347,6 @@ func ExampleSeek() {
 
 }
 
-func ExampleCmd_Env() {
-	defer os.Unsetenv(`SOME`)
-
-	var Cmd = &bonzai.Cmd{
-		Name: `foo`,
-		Env:  bonzai.VarMap{`SOME`: {Str: `thing`}},
-		Def:  &bonzai.Cmd{Name: `nothing`},
-	}
-
-	Cmd.Run()
-	fmt.Println(os.Getenv(`SOME`))
-
-	// Output:
-	// thing
-}
-
 func ExampleCmd_Init() {
 
 	printname := func(x *bonzai.Cmd, _ ...string) error {
@@ -313,14 +358,124 @@ func ExampleCmd_Init() {
 		Name: `foo`,
 		Init: printname,
 		Cmds: []*bonzai.Cmd{
-			{Name: `nothing`, Init: printname},
-			{Name: `other`, Init: printname},
+			{
+				Name: `nothing`,
+				Init: printname,
+				Do:   bonzai.Nothing,
+			},
+			{
+				Name: `other`,
+				Init: printname,
+				Do:   bonzai.Nothing,
+			},
 		},
 	}
 
-	Cmd.Run(`nothing`)
-	Cmd.Run(`other`)
+	if err := Cmd.Run(`nothing`); err != nil {
+		fmt.Println(err)
+	}
+
+	if err := Cmd.Run(`other`); err != nil {
+		fmt.Println(err)
+	}
 
 	// Output:
 	// foo nothing foo other
+}
+
+func ExampleWalkDeep_hidden() {
+	var subFooCmd = &bonzai.Cmd{
+		Name:  `subfoo`,
+		Alias: `sf`,
+		Short: `under the foo command`,
+	}
+
+	var sssh = &bonzai.Cmd{
+		Name: `sssh`,
+		Do:   bonzai.Nothing,
+	}
+
+	var fooCmd = &bonzai.Cmd{
+		Name:  `foo`,
+		Alias: `f`,
+		Short: `foo this command`,
+		Cmds:  []*bonzai.Cmd{subFooCmd, sssh.AsHidden()},
+	}
+
+	var barCmd = &bonzai.Cmd{
+		Name:  `bar`,
+		Alias: `b`,
+		Short: `bar this command`,
+	}
+
+	var Cmd = &bonzai.Cmd{
+		Name:  `mycmd`,
+		Alias: `my|cmd`,
+		Short: `my command short summary`,
+		Cmds:  []*bonzai.Cmd{fooCmd, barCmd},
+		Def:   fooCmd,
+	}
+
+	printname := func(level int, x *bonzai.Cmd) error {
+		if x.IsHidden() {
+			return nil
+		}
+		for range level {
+			fmt.Print("  ")
+		}
+		fmt.Println(x.Name)
+		return nil
+	}
+
+	Cmd.WalkDeep(printname, nil)
+
+	// Output:
+	// mycmd
+	//   foo
+	//     subfoo
+	//   bar
+
+}
+
+func ExampleCmd_PathDashed() {
+	var subFooCmd = &bonzai.Cmd{
+		Name:  `subfoo`,
+		Alias: `sf`,
+		Short: `under the foo command`,
+	}
+
+	var sssh = &bonzai.Cmd{
+		Name: `sssh`,
+		Do:   bonzai.Nothing,
+	}
+
+	var fooCmd = &bonzai.Cmd{
+		Name:  `foo`,
+		Alias: `f`,
+		Short: `foo this command`,
+		Cmds:  []*bonzai.Cmd{subFooCmd, sssh.AsHidden()},
+	}
+
+	var barCmd = &bonzai.Cmd{
+		Name:  `bar`,
+		Alias: `b`,
+		Short: `bar this command`,
+	}
+
+	var Cmd = &bonzai.Cmd{
+		Name:  `mycmd`,
+		Alias: `my|cmd`,
+		Short: `my command short summary`,
+		Cmds:  []*bonzai.Cmd{fooCmd, barCmd},
+		Def:   fooCmd,
+	}
+
+	cmd, args, err := Cmd.SeekInit(`foo`, `sssh`)
+	fmt.Println(cmd, args, err)
+	fmt.Println(cmd.PathDashed())
+
+	// Output:
+	// sssh [] <nil>
+	// foo-sssh
+
 }

@@ -5,14 +5,23 @@ import (
 	"time"
 
 	"github.com/rwxrob/bonzai"
+	"github.com/rwxrob/bonzai/cmds/help"
 	"github.com/rwxrob/bonzai/comp"
 )
 
 var Cmd = &bonzai.Cmd{
 	Name:  `sunrise`,
-	Vers:  `v1.0.2`,
+	Vers:  `v1.0.3`,
 	Short: `showcase all colors of terminal`,
 	Comp:  comp.Cmds,
+	Cmds:  []*bonzai.Cmd{help.Cmd},
+	Long: `
+    Examples
+
+        sunrise
+        sunrise 5
+        sunrise 20
+	`,
 
 	MaxArgs: 1,
 

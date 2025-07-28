@@ -20,6 +20,11 @@ func Prefix(in []string, pre string) []string {
 	return fn.Map(in, func(i string) string { return pre + i })
 }
 
+// TrimPrefix adds a prefix to the string.
+func TrimPrefix(in []string, pre string) []string {
+	return fn.Map(in, func(i string) string { return strings.TrimPrefix(i, pre) })
+}
+
 // Keys returns the keys in lexicographically sorted order.
 func Keys[T any](m map[string]T) []string {
 	keys := []string{}

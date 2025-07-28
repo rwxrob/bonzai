@@ -1,0 +1,31 @@
+document:
+  margin: 0
+  block_prefix: ""
+  block_suffix: ""
+heading:
+  block_prefix: ""
+  block_suffix: ""
+h1:
+  background_color: ""
+  color: "11"
+  prefix: ""
+  suffix: ""
+  block_prefix: ""
+  block_suffix: ""
+h2:
+  background_color: ""
+  color: "5"
+paragraph:
+  margin: 6
+  block_prefix: ""
+list:
+  margin: 6
+code_block:
+  margin: 6
+blockquote:
+  margin: 6
+code:
+  color: "11"
+  background_color: ""
+  prefix: ""
+  suffix: ""

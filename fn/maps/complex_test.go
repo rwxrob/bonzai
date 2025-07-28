@@ -15,6 +15,12 @@ func ExamplePrefix() {
 	// [myfoo mybar]
 }
 
+func ExampleTrimPrefix() {
+	fmt.Println(maps.TrimPrefix([]string{"myfoo", "mybar"}, "my"))
+	// Output:
+	// [foo bar]
+}
+
 func ExampleKeys() {
 	m1 := map[string]int{"two": 2, "three": 3, "one": 1}
 	m2 := map[string]string{"two": "two", "three": "three", "one": "one"}

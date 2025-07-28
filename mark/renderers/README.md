@@ -1,1 +1,0 @@
-# BonzaiMark (zmark) renderers

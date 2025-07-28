@@ -8,9 +8,9 @@ import (
 	"os"
 	"path"
 	"path/filepath"
+	"runtime"
 	"strconv"
 	"strings"
-	"syscall"
 	"time"
 )
 
@@ -353,24 +353,46 @@ func IsSymLink(path string) (bool, error) {
 	return info.Mode()&os.ModeSymlink != 0, nil
 }
 
-// IsHardLink attempts to determine if the file at the end of path is
-// a unix/linux hard link by counting its number of links. On Windows
-// always returns false.
-func IsHardLink(path string) (bool, error) {
-	info, err := os.Lstat(path)
-	if err != nil {
-		return false, err
+var UserHomeDir = os.UserHomeDir
+
+// UserConfigDir returns the path to the user's config directory,
+// checking [$XDG_CONFIG_HOME] environment variable first. It defaults to
+// joining [UserHomeDir] with `.config` if the variable is unset on Unix
+// systems. Note that this is unlike [pkg/os.UserConfigDir] by design
+// for better intuitive consistency despite the defined "standards" from
+// operating system vendors. This difference is particularly important
+// given the prevalence of WSL2 usage requiring a clear distinction.
+func UserConfigDir() (string, error) {
+	path, has := os.LookupEnv(`XDG_CONFIG_HOME`)
+	if !has {
+		dir, err := UserHomeDir()
+		if err != nil {
+			return "", err
+		}
+		path = filepath.Join(dir, `.config`)
 	}
-	stat, ok := info.Sys().(*syscall.Stat_t)
-	if !ok {
-		return false, fmt.Errorf("unable to retrieve file information")
-	}
-	return stat.Nlink > 1, nil
+	return path, nil
 }
 
-var UserHomeDir = os.UserHomeDir
-var UserCacheDir = os.UserCacheDir
-var UserConfigDir = os.UserConfigDir
+// UserCacheDir returns the path to the user's cache directory,
+// checking [$XDG_CACHE_HOME] environment variable first. It defaults to
+// joining [UserHomeDir] with `.cache` if the variable is unset on Unix
+// systems (including darwin unlike [pkg/os.UserCacheDir]). On Windows it
+// returns %LocalAppData%. It returns an error if [UserHomeDir] fails.
+func UserCacheDir() (string, error) {
+	if runtime.GOOS == "windows" {
+		return os.Getenv(`LocalAppData`), nil
+	}
+	path, has := os.LookupEnv(`XDG_CACHE_HOME`)
+	if !has {
+		dir, err := UserHomeDir()
+		if err != nil {
+			return "", err
+		}
+		path = filepath.Join(dir, `.cache`)
+	}
+	return path, nil
+}
 
 // UserStateDir returns the path to the user's state directory,
 // checking [XDG_STATE_HOME] environment variable first. It defaults

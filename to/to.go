@@ -161,30 +161,50 @@ func Lines(in any) []string {
 
 // Indented returns a string with each line indented by the specified
 // number of spaces. Carriage returns are stripped (if found) as
-// a side-effect.
-func Indented(in string, indent int) string {
-	var buf string
-	for _, line := range Lines(in) {
-		buf += fmt.Sprintln(strings.Repeat(" ", indent) + line)
-	}
-	return buf
+// a side-effect. Per [pkg/text/template] rules, the string input
+// argument is last so that this function can be used as-is within
+// template pipe constructs:
+//
+//	{{ .Some | indent 4 }}
+func Indented(indent int, in string) string {
+	prefix := strings.Repeat(" ", indent)
+	return Prefixed(prefix, in)
 }
 
 // IndentWrapped adds the specified number of spaces to the beginning of
 // every line ensuring that the wrapping is preserved to the specified
-// width. See Wrapped.
-func IndentWrapped(in string, indent, width int) string {
+// width. See Wrapped and Indented.
+func IndentWrapped(indent, width int, in string) string {
 	wwidth := width - indent
-	body, _ := Wrapped(in, wwidth)
-	return Indented(body, indent)
+	body, _ := Wrapped(wwidth, in)
+	return Indented(indent, body)
 }
 
 // Prefixed returns a string where every line is prefixed. Carriage
 // returns (if any) are dropped.
-func Prefixed(in, pre string) string {
+func Prefixed(pre, in string) string {
 	lines := Lines(in)
 	lines = maps.Prefix(lines, pre)
 	return strings.Join(lines, "\n")
+}
+
+// PrefixTrimmed returns a string where every line has the passed prefix
+// removed if found at the absolute beginning of the line. Carriage
+// returns (if any) are dropped.
+func PrefixTrimmed(pre, in string) string {
+	lines := Lines(in)
+	lines = maps.TrimPrefix(lines, pre)
+	return strings.Join(lines, "\n")
+}
+
+// LinesChopped returns the string with lines chopped from the bottom
+// (positive offset) or the top (negative offset).
+func LinesChopped(offset int, in string) string {
+	lines := Lines(in)
+	if offset > 0 {
+		return strings.Join(lines[:offset], "\n")
+	}
+	return strings.Join(lines[-offset:], "\n")
 }
 
 var isblank = regexp.MustCompile(`^\s*$`)
@@ -275,7 +295,7 @@ func Words(it string) string {
 	return strings.Join(qstack.Fields(it).Items(), " ")
 }
 
-// Wrapped will return a word wrapped string at the given boundary width
+// Wrapped returns a word wrapped string at the given boundary width
 // (in bytes) and the count of words contained in the string.  All
 // white space is compressed to a single space. Any width less than
 // 1 will simply trim and crunch white space returning essentially the
@@ -287,7 +307,7 @@ func Words(it string) string {
 // that is not unicode.IsSpace or unicode.IsGraphic will be ignored in
 // the column count. Any terminal escapes that begin with \033[ will
 // also be kept automatically out of calculations. See Unescaped.
-func Wrapped(it string, width int) (string, int) {
+func Wrapped(width int, it string) (string, int) {
 	words := qstack.Fields(it)
 	if width < 1 {
 		return strings.Join(words.Items(), " "), words.Len

@@ -11,18 +11,42 @@ var cmd = &bonzai.Cmd{
 	Alias: `h|ht`,
 	Short: `just a help test`,
 	Opts:  `some|-y|--yaml`,
-	Cmds:  []*bonzai.Cmd{help.Cmd, fooCmd},
-	// Cmds:  []*bonzai.Cmd{fooCmd},
-	Comp: comp.CmdsOpts,
-	Def:  help.Cmd,
-	// Def:   fooCmd,
+	Cmds:  []*bonzai.Cmd{help.Cmd, fooCmd, hiddenCmd.AsHidden()},
+	Comp:  comp.CmdsOpts,
+	Def:   help.Cmd,
 }
 
 var fooCmd = &bonzai.Cmd{
 	Name: `foo`,
-	Do: func(_ *bonzai.Cmd, _ ...string) error {
-		return nil
-	},
+	Cmds: []*bonzai.Cmd{underfooCmd},
+	Long: `
+A whole bunch of stuff:
+
+~~~go
+package main
+import "this"
+
+func main() {
+	fmt.Println("something")
+}
+
+~~~
+`,
+}
+
+var underfooCmd = &bonzai.Cmd{
+	Name: `underfoo`,
+	Do:   bonzai.Nothing,
+}
+
+var hiddenCmd = &bonzai.Cmd{
+	Name: `imhidden`,
+	Cmds: []*bonzai.Cmd{help.Cmd, barCmd},
+}
+
+var barCmd = &bonzai.Cmd{
+	Name: `bar`,
+	Do:   bonzai.Nothing,
 }
 
 func main() {
