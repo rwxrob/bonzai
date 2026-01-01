@@ -85,6 +85,35 @@ type Persister interface {
 	Set(key, val string)   // mutator, "" to effectively delete
 }
 
+// McpMeta contains optional metadata for MCP tool generation.
+// When set, a Cmd can be exposed as an MCP tool via the mcp package.
+type McpMeta struct {
+	// Tool description (defaults to Cmd.Short if empty)
+	Desc string
+
+	// Parameter definitions for the MCP tool schema
+	Params []McpParam
+
+	// Example usage for documentation
+	Examples []string
+
+	// Whether this command supports streaming responses
+	Streaming bool
+
+	// Resource URI if this command exposes an MCP resource
+	Resource string
+}
+
+// McpParam defines a parameter for MCP tool schema generation.
+type McpParam struct {
+	Name     string   // parameter name
+	Desc     string   // description
+	Type     string   // "string", "number", "boolean", "array"
+	Required bool     // whether required
+	Enum     []string // allowed values (optional)
+	Pattern  string   // regex pattern (optional)
+}
+
 type Cmd struct {
 	Name  string // ex: delete (required)
 	Alias string // ex: rm|d|del (optional)
@@ -109,6 +138,9 @@ type Cmd struct {
 	Long  string           // text/markup (optional)
 	Vers  string           // text (<50 runes) (optional)
 	Funcs template.FuncMap // own template tags (optional)
+
+	// MCP (Model Context Protocol) metadata for tool generation
+	Mcp *McpMeta // optional MCP tool metadata
 
 	// Faster than "if" conditions in [Cmd.Do] (all optional)
 	MinArgs  int    // min
@@ -263,6 +295,21 @@ func (x Cmd) WithPersister(a Persister) *Cmd {
 	}
 	x.Persist = a
 	return &x
+}
+
+// WithMcp returns a copy of the Cmd with MCP metadata set.
+// This enables fluent configuration for MCP-native commands.
+func (x Cmd) WithMcp(meta *McpMeta) *Cmd {
+	x.Mcp = meta
+	return &x
+}
+
+// McpDesc returns the MCP description, falling back to Short if not set.
+func (x *Cmd) McpDesc() string {
+	if x.Mcp != nil && len(x.Mcp.Desc) > 0 {
+		return x.Mcp.Desc
+	}
+	return x.Short
 }
 
 // Get returns the value of [pkg/os.LookupEnv] if [Var].E was set and
