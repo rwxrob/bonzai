@@ -6,8 +6,8 @@ import (
 	"testing"
 
 	"github.com/mark3labs/mcp-go/mcp"
-	"github.com/rwxrob/bonzai"
-	bmcp "github.com/rwxrob/bonzai/mcp"
+	"github.com/BuddhiLW/bonzai"
+	bmcp "github.com/BuddhiLW/bonzai/mcp"
 )
 
 func TestNewServer_Basic(t *testing.T) {

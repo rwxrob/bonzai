@@ -7,8 +7,8 @@ import (
 	"path/filepath"
 	"strings"
 
-	"github.com/rwxrob/bonzai/fn/filt"
-	"github.com/rwxrob/bonzai/futil"
+	"github.com/BuddhiLW/bonzai/fn/filt"
+	"github.com/BuddhiLW/bonzai/futil"
 )
 
 type fileDir struct{}

@@ -3,7 +3,7 @@ package futil_test
 import (
 	"fmt"
 
-	"github.com/rwxrob/bonzai/futil"
+	"github.com/BuddhiLW/bonzai/futil"
 )
 
 /*

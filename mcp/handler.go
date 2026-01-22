@@ -12,7 +12,7 @@ import (
 
 	"github.com/mark3labs/mcp-go/mcp"
 	"github.com/mark3labs/mcp-go/server"
-	"github.com/rwxrob/bonzai"
+	"github.com/BuddhiLW/bonzai"
 )
 
 // WrapHandler converts a Cmd.Do function to an MCP handler function.

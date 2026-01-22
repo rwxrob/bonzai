@@ -1,6 +1,6 @@
 package main
 
-import "github.com/rwxrob/bonzai/cmds/rayfish"
+import "github.com/BuddhiLW/bonzai/cmds/rayfish"
 
 func main() {
 	rayfish.Cmd.Exec()

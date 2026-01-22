@@ -6,8 +6,8 @@ package filt_test
 import (
 	"fmt"
 
-	"github.com/rwxrob/bonzai/fn/each"
-	"github.com/rwxrob/bonzai/fn/filt"
+	"github.com/BuddhiLW/bonzai/fn/each"
+	"github.com/BuddhiLW/bonzai/fn/filt"
 )
 
 func ExampleHasPrefix() {

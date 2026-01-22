@@ -3,8 +3,8 @@ package git
 import (
 	"strings"
 
-	"github.com/rwxrob/bonzai"
-	"github.com/rwxrob/bonzai/run"
+	"github.com/BuddhiLW/bonzai"
+	"github.com/BuddhiLW/bonzai/run"
 )
 
 type tags struct{}

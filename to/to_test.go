@@ -7,10 +7,10 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/rwxrob/bonzai/fn"
-	"github.com/rwxrob/bonzai/fn/each"
+	"github.com/BuddhiLW/bonzai/fn"
+	"github.com/BuddhiLW/bonzai/fn/each"
 
-	"github.com/rwxrob/bonzai/to"
+	"github.com/BuddhiLW/bonzai/to"
 )
 
 type stringer struct{}

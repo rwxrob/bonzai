@@ -1,6 +1,6 @@
 package yq_test
 
-import yq "github.com/rwxrob/bonzai/yq"
+import yq "github.com/BuddhiLW/bonzai/yq"
 
 func ExampleEvaluate() {
 	yq.Evaluate(`.[] | keys`, `testdata/sample.yaml`)

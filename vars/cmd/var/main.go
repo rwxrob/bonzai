@@ -1,6 +1,6 @@
 package main
 
-import "github.com/rwxrob/bonzai/vars"
+import "github.com/BuddhiLW/bonzai/vars"
 
 func main() {
 	vars.Cmd.Run()

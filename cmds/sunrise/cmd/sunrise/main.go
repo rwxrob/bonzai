@@ -1,6 +1,6 @@
 package main
 
-import "github.com/rwxrob/bonzai/cmds/sunrise"
+import "github.com/BuddhiLW/bonzai/cmds/sunrise"
 
 func main() {
 	sunrise.Cmd.Exec()

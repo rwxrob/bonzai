@@ -1,6 +1,6 @@
 package comp
 
-import "github.com/rwxrob/bonzai"
+import "github.com/BuddhiLW/bonzai"
 
 var (
 	current                *bonzai.Cmd // [bonzai.CmdCompleter]

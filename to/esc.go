@@ -1,6 +1,6 @@
 package to
 
-import "github.com/rwxrob/bonzai/fn"
+import "github.com/BuddhiLW/bonzai/fn"
 
 // EscThese is set to the default UNIX shell characters which require
 // escaping to be used safely on the terminal. It can be changed to suit

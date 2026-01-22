@@ -6,8 +6,8 @@ import (
 	"fmt"
 
 	"github.com/charmbracelet/glamour"
-	"github.com/rwxrob/bonzai"
-	"github.com/rwxrob/bonzai/mark"
+	"github.com/BuddhiLW/bonzai"
+	"github.com/BuddhiLW/bonzai/mark"
 	"gopkg.in/yaml.v3"
 )
 

@@ -5,7 +5,7 @@ import (
 	"os"
 	"os/exec"
 
-	"github.com/rwxrob/bonzai/run"
+	"github.com/BuddhiLW/bonzai/run"
 )
 
 var EditorPriority = []string{

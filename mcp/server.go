@@ -3,7 +3,7 @@ package mcp
 import (
 	"github.com/mark3labs/mcp-go/mcp"
 	"github.com/mark3labs/mcp-go/server"
-	"github.com/rwxrob/bonzai"
+	"github.com/BuddhiLW/bonzai"
 )
 
 // config holds configuration options for server creation

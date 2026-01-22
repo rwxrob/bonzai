@@ -19,7 +19,7 @@ import (
 	"strings"
 	"time"
 
-	rwxjson "github.com/rwxrob/bonzai/json"
+	rwxjson "github.com/BuddhiLW/bonzai/json"
 	"gopkg.in/yaml.v3"
 )
 

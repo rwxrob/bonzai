@@ -3,8 +3,8 @@ package redu_test
 import (
 	"fmt"
 
-	"github.com/rwxrob/bonzai/fn/each"
-	"github.com/rwxrob/bonzai/fn/redu"
+	"github.com/BuddhiLW/bonzai/fn/each"
+	"github.com/BuddhiLW/bonzai/fn/redu"
 )
 
 func ExampleLongest() {

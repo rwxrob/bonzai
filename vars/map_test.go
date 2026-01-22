@@ -4,8 +4,8 @@ import (
 	"fmt"
 	"os"
 
-	"github.com/rwxrob/bonzai/futil"
-	"github.com/rwxrob/bonzai/vars"
+	"github.com/BuddhiLW/bonzai/futil"
+	"github.com/BuddhiLW/bonzai/vars"
 )
 
 func ExampleNewMapFrom() {

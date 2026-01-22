@@ -7,9 +7,9 @@ import (
 	"path/filepath"
 	"strings"
 
-	"github.com/rwxrob/bonzai/futil"
-	"github.com/rwxrob/bonzai/run"
-	"github.com/rwxrob/bonzai/to"
+	"github.com/BuddhiLW/bonzai/futil"
+	"github.com/BuddhiLW/bonzai/run"
+	"github.com/BuddhiLW/bonzai/to"
 )
 
 type node struct {

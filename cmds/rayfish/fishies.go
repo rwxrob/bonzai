@@ -9,7 +9,7 @@ import (
 
 	"golang.org/x/term"
 
-	"github.com/rwxrob/bonzai/anim"
+	"github.com/BuddhiLW/bonzai/anim"
 )
 
 // getTerminalSize retrieves current terminal dimensions

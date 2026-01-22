@@ -4,8 +4,8 @@ import (
 	stdjson "encoding/json"
 	"fmt"
 
-	"github.com/rwxrob/bonzai/fn"
-	json "github.com/rwxrob/bonzai/json"
+	"github.com/BuddhiLW/bonzai/fn"
+	json "github.com/BuddhiLW/bonzai/json"
 )
 
 func ExampleEscape() {

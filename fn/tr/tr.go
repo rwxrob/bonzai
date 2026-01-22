@@ -1,6 +1,6 @@
 package tr
 
-import "github.com/rwxrob/bonzai/fn"
+import "github.com/BuddhiLW/bonzai/fn"
 
 type Strings fn.Transformer[string, string]
 type Ints fn.Transformer[int, int]

@@ -1,0 +1,34 @@
+{
+  "date": "2026-01-01",
+  "focus_area": "bonzai MCP-native integration",
+  "branches_created": ["feat/mcp-metadata"],
+  "key_files": [
+    "bonzai.go",
+    "bonzai_test.go"
+  ],
+  "adrs_created": [],
+  "completed_tasks": [
+    "Phase 0: Research MCP Go SDK options (mark3labs/mcp-go)",
+    "Phase 1: Add MCP metadata to Cmd struct (McpMeta, McpParam types)",
+    "Created PR #304 to upstream rwxrob/bonzai"
+  ],
+  "in_progress_tasks": [
+    "Phase 2: Create mcp/ package for server generation",
+    "Phase 3-7: Schema generation, handler mapping, resources, streaming, examples"
+  ],
+  "blocking_issues": [
+    "Pre-existing test failures in bonzai_test.go (Example functions reference non-existent symbols)"
+  ],
+  "next_actions": [
+    "Wait for PR #304 review/merge",
+    "Implement Phase 2: mcp/ package with NewServer(*Cmd) and WalkDeep traversal",
+    "Generate JSON schemas from Cmd.Opts, MinArgs, RegxArgs",
+    "Map Cmd.Do to MCP tool handlers"
+  ],
+  "decisions_made": [
+    "Use mark3labs/mcp-go SDK (proven in lazywal and openpomodoro-cli)",
+    "MCP metadata is optional via Mcp *McpMeta pointer (backward compatible)",
+    "McpDesc() falls back to Cmd.Short when Mcp.Desc is empty",
+    "Follow Hive Architecture pattern for parallel swarm implementation"
+  ]
+}

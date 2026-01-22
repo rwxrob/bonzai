@@ -1,7 +1,7 @@
 package main
 
 import (
-	"github.com/rwxrob/bonzai/cmds/kimono"
+	"github.com/BuddhiLW/bonzai/cmds/kimono"
 )
 
 func main() {

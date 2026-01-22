@@ -8,7 +8,7 @@ import (
 	"log"
 	"os"
 
-	"github.com/rwxrob/bonzai/fn/each"
+	"github.com/BuddhiLW/bonzai/fn/each"
 )
 
 func ExampleDo() {

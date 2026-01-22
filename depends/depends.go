@@ -6,7 +6,7 @@ import (
 	"os/exec"
 	"syscall"
 
-	"github.com/rwxrob/bonzai/term"
+	"github.com/BuddhiLW/bonzai/term"
 )
 
 // OnWithHook checks if each dependency in dependencies exists in the

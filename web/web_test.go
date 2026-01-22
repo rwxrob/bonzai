@@ -5,7 +5,7 @@ import (
 	"net/http"
 	ht "net/http/httptest"
 
-	web "github.com/rwxrob/bonzai/web"
+	web "github.com/BuddhiLW/bonzai/web"
 )
 
 func ExampleFetch_get() {

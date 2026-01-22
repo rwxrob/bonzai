@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"os"
 
-	"github.com/rwxrob/bonzai/persisters/inyaml"
+	"github.com/BuddhiLW/bonzai/persisters/inyaml"
 )
 
 func ExampleSetup() {

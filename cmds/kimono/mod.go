@@ -7,8 +7,8 @@ import (
 	"path/filepath"
 	"strings"
 
-	"github.com/rwxrob/bonzai/futil"
-	"github.com/rwxrob/bonzai/run"
+	"github.com/BuddhiLW/bonzai/futil"
+	"github.com/BuddhiLW/bonzai/run"
 )
 
 // Tidy runs `go get -u` and `go mod tidy` on all supported Go

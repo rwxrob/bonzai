@@ -1,6 +1,6 @@
 package yaml_test
 
-import "github.com/rwxrob/bonzai/yaml"
+import "github.com/BuddhiLW/bonzai/yaml"
 
 func ExampleThis_string() {
 	this := yaml.This{"foo"}

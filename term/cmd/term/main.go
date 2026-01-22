@@ -3,7 +3,7 @@ package main
 import (
 	"fmt"
 
-	"github.com/rwxrob/bonzai/term"
+	"github.com/BuddhiLW/bonzai/term"
 )
 
 func main() {

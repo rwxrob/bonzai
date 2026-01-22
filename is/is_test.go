@@ -3,7 +3,7 @@ package is_test
 import (
 	"fmt"
 
-	"github.com/rwxrob/bonzai/is"
+	"github.com/BuddhiLW/bonzai/is"
 )
 
 func ExampleAllLatinASCIILower() {

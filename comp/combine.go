@@ -1,10 +1,10 @@
 package comp
 
 import (
-	"github.com/rwxrob/bonzai"
-	"github.com/rwxrob/bonzai/fn/filt"
-	"github.com/rwxrob/bonzai/fn/redu"
-	"github.com/rwxrob/bonzai/fn/tr"
+	"github.com/BuddhiLW/bonzai"
+	"github.com/BuddhiLW/bonzai/fn/filt"
+	"github.com/BuddhiLW/bonzai/fn/redu"
+	"github.com/BuddhiLW/bonzai/fn/tr"
 )
 
 type Combine []any

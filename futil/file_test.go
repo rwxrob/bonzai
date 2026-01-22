@@ -7,7 +7,7 @@ import (
 	ht "net/http/httptest"
 	"os"
 
-	"github.com/rwxrob/bonzai/futil"
+	"github.com/BuddhiLW/bonzai/futil"
 )
 
 func ExampleTouch_create() {

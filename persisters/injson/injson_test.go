@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"os"
 
-	"github.com/rwxrob/bonzai/persisters/injson"
+	"github.com/BuddhiLW/bonzai/persisters/injson"
 )
 
 func ExampleSetup() {
