@@ -50,7 +50,7 @@ func Download(opts DownloadOptions) (*Result, error) {
 
 	video, err := client.GetVideoContext(ctx, opts.URL)
 	if err != nil {
-		return nil, fmt.Errorf("yt: get video: %w", err)
+		return nil, fmt.Errorf("yt: get video (%s): %w", opts.URL, err)
 	}
 
 	format := bestProgressive(video.Formats)
