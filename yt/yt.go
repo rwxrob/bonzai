@@ -39,6 +39,8 @@ func Download(opts DownloadOptions) (*Result, error) {
 		return nil, errors.New("yt: missing URL")
 	}
 
+	opts.URL = NormalizeURL(opts.URL)
+
 	ctx := context.Background()
 	if opts.Timeout > 0 {
 		var cancel context.CancelFunc
