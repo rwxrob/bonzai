@@ -643,6 +643,19 @@ func (x *Cmd) Run(args ...string) error {
 // arguments and always returns nil, indicating no operation is performed.
 var Nothing = func(*Cmd, ...string) error { return nil }
 
+// Would is a no-op function that implements the command function signature
+// for [Cmd] like Nothing but also prints a string if provided.
+var Would = func(x *Cmd, args ...string) error {
+	message := `would ` + x.Name
+	if len(args) > 0 {
+		message = args[0]
+		return nil
+	}
+	fmt.Println(message)
+	return nil
+}
+var Wood = Would // just for fun
+
 // Validate checks the integrity of the command. It verifies that
 // the command is not nil, validates the length and format of the
 // Short and Vers fields, checks the validity of the command
