@@ -36,7 +36,7 @@ type Result struct {
 
 func Download(opts DownloadOptions) (*Result, error) {
 	if strings.TrimSpace(opts.URL) == "" {
-		return nil, errors.New("ytdl: missing URL")
+		return nil, errors.New("yt: missing URL")
 	}
 
 	ctx := context.Background()
@@ -50,17 +50,17 @@ func Download(opts DownloadOptions) (*Result, error) {
 
 	video, err := client.GetVideoContext(ctx, opts.URL)
 	if err != nil {
-		return nil, fmt.Errorf("ytdl: get video: %w", err)
+		return nil, fmt.Errorf("yt: get video: %w", err)
 	}
 
 	format := bestProgressive(video.Formats)
 	if format == nil {
-		return nil, errors.New("ytdl: no progressive stream found")
+		return nil, errors.New("yt: no progressive stream found")
 	}
 
 	stream, size, err := client.GetStreamContext(ctx, video, format)
 	if err != nil {
-		return nil, fmt.Errorf("ytdl: get stream: %w", err)
+		return nil, fmt.Errorf("yt: get stream: %w", err)
 	}
 	defer stream.Close()
 
@@ -70,7 +70,7 @@ func Download(opts DownloadOptions) (*Result, error) {
 	}
 
 	if err := os.MkdirAll(dir, 0o755); err != nil {
-		return nil, fmt.Errorf("ytdl: create output dir: %w", err)
+		return nil, fmt.Errorf("yt: create output dir: %w", err)
 	}
 
 	name := opts.OutputName
@@ -86,12 +86,12 @@ func Download(opts DownloadOptions) (*Result, error) {
 
 	out, err := os.Create(path)
 	if err != nil {
-		return nil, fmt.Errorf("ytdl: create file: %w", err)
+		return nil, fmt.Errorf("yt: create file: %w", err)
 	}
 	defer out.Close()
 
 	if _, err := io.Copy(out, stream); err != nil {
-		return nil, fmt.Errorf("ytdl: write file: %w", err)
+		return nil, fmt.Errorf("yt: write file: %w", err)
 	}
 
 	return &Result{
