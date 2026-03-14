@@ -5,13 +5,13 @@ import (
 	"os"
 	"path/filepath"
 
-	"github.com/rwxrob/bonzai"
-	"github.com/rwxrob/bonzai/cmds/help"
-	"github.com/rwxrob/bonzai/comp"
-	"github.com/rwxrob/bonzai/comp/completers/git"
-	"github.com/rwxrob/bonzai/fn/each"
-	"github.com/rwxrob/bonzai/futil"
-	"github.com/rwxrob/bonzai/vars"
+	"github.com/BuddhiLW/bonzai"
+	"github.com/BuddhiLW/bonzai/cmds/help"
+	"github.com/BuddhiLW/bonzai/comp"
+	"github.com/BuddhiLW/bonzai/comp/completers/git"
+	"github.com/BuddhiLW/bonzai/fn/each"
+	"github.com/BuddhiLW/bonzai/futil"
+	"github.com/BuddhiLW/bonzai/vars"
 )
 
 const (

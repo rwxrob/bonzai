@@ -7,8 +7,8 @@ import (
 	"fmt"
 	"log"
 
-	"github.com/rwxrob/bonzai/ds/qstack"
-	"github.com/rwxrob/bonzai/json"
+	"github.com/BuddhiLW/bonzai/ds/qstack"
+	"github.com/BuddhiLW/bonzai/json"
 )
 
 // Node is an implementation of a "node" from traditional rooted node

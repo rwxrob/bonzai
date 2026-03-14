@@ -6,8 +6,8 @@ package maps_test
 import (
 	"os"
 
-	"github.com/rwxrob/bonzai/fn/each"
-	"github.com/rwxrob/bonzai/fn/maps"
+	"github.com/BuddhiLW/bonzai/fn/each"
+	"github.com/BuddhiLW/bonzai/fn/maps"
 )
 
 func ExampleMarkDirs() {

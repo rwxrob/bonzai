@@ -19,11 +19,11 @@ import (
 	"sync"
 	"time"
 
-	"github.com/rwxrob/bonzai/edit"
-	"github.com/rwxrob/bonzai/fn/maps"
-	"github.com/rwxrob/bonzai/futil"
-	"github.com/rwxrob/bonzai/run"
-	"github.com/rwxrob/bonzai/to"
+	"github.com/BuddhiLW/bonzai/edit"
+	"github.com/BuddhiLW/bonzai/fn/maps"
+	"github.com/BuddhiLW/bonzai/futil"
+	"github.com/BuddhiLW/bonzai/run"
+	"github.com/BuddhiLW/bonzai/to"
 )
 
 const DefaultFileName = `vars.properties`

@@ -8,7 +8,7 @@ import (
 	"os/exec"
 	"testing"
 
-	"github.com/rwxrob/bonzai/run"
+	"github.com/BuddhiLW/bonzai/run"
 )
 
 // go coverage detection is bork for this sort of stuff, oh well, we

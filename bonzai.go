@@ -85,6 +85,35 @@ type Persister interface {
 	Set(key, val string)   // mutator, "" to effectively delete
 }
 
+// McpMeta contains optional metadata for MCP tool generation.
+// When set, a Cmd can be exposed as an MCP tool via the mcp package.
+type McpMeta struct {
+	// Tool description (defaults to Cmd.Short if empty)
+	Desc string
+
+	// Parameter definitions for the MCP tool schema
+	Params []McpParam
+
+	// Example usage for documentation
+	Examples []string
+
+	// Whether this command supports streaming responses
+	Streaming bool
+
+	// Resource URI if this command exposes an MCP resource
+	Resource string
+}
+
+// McpParam defines a parameter for MCP tool schema generation.
+type McpParam struct {
+	Name     string   // parameter name
+	Desc     string   // description
+	Type     string   // "string", "number", "boolean", "array"
+	Required bool     // whether required
+	Enum     []string // allowed values (optional)
+	Pattern  string   // regex pattern (optional)
+}
+
 type Cmd struct {
 	Name  string // ex: delete (required)
 	Alias string // ex: rm|d|del (optional)
@@ -109,6 +138,9 @@ type Cmd struct {
 	Long  string           // text/markup (optional)
 	Vers  string           // text (<50 runes) (optional)
 	Funcs template.FuncMap // own template tags (optional)
+
+	// MCP (Model Context Protocol) metadata for tool generation
+	Mcp *McpMeta // optional MCP tool metadata
 
 	// Faster than "if" conditions in [Cmd.Do] (all optional)
 	MinArgs  int    // min
@@ -265,6 +297,21 @@ func (x Cmd) WithPersister(a Persister) *Cmd {
 	return &x
 }
 
+// WithMcp returns a copy of the Cmd with MCP metadata set.
+// This enables fluent configuration for MCP-native commands.
+func (x Cmd) WithMcp(meta *McpMeta) *Cmd {
+	x.Mcp = meta
+	return &x
+}
+
+// McpDesc returns the MCP description, falling back to Short if not set.
+func (x *Cmd) McpDesc() string {
+	if x.Mcp != nil && len(x.Mcp.Desc) > 0 {
+		return x.Mcp.Desc
+	}
+	return x.Short
+}
+
 // Get returns the value of [pkg/os.LookupEnv] if [Var].E was set and
 // a corresponding environment variable was found overriding everything
 // else in priority and shadowing any initially declared in-memory value
@@ -419,12 +466,12 @@ type Completer interface {
 // CmdCompleter is a specialized [Completer] that requires a [Cmd]. This
 // is used for the following core completions:
 //
-//   - [pkg/github.com/rwxrob/bonzai/comp.Cmds]
-//   - [pkg/github.com/rwxrob/bonzai/comp.Aliases]
-//   - [pkg/github.com/rwxrob/bonzai/comp.CmdsAliases]
-//   - [pkg/github.com/rwxrob/bonzai/comp.Opts]
-//   - [pkg/github.com/rwxrob/bonzai/comp.CmdsOpts]
-//   - [pkg/github.com/rwxrob/bonzai/comp.CmdsOptsAliases]
+//   - [pkg/github.com/BuddhiLW/bonzai/comp.Cmds]
+//   - [pkg/github.com/BuddhiLW/bonzai/comp.Aliases]
+//   - [pkg/github.com/BuddhiLW/bonzai/comp.CmdsAliases]
+//   - [pkg/github.com/BuddhiLW/bonzai/comp.Opts]
+//   - [pkg/github.com/BuddhiLW/bonzai/comp.CmdsOpts]
+//   - [pkg/github.com/BuddhiLW/bonzai/comp.CmdsOptsAliases]
 type CmdCompleter interface {
 	Completer
 	Cmd() *Cmd
@@ -453,7 +500,7 @@ func (x Cmd) WithName(name string) *Cmd {
 // include convenient inclusion of leaf commands that are already
 // available elsewhere (like help or var) and allowing deprecated
 // commands to be supported but hidden in help output. See the
-// [pkg/github.com/rwxrob/bonzai/mark/funcs] package for examples.
+// [pkg/github.com/BuddhiLW/bonzai/mark/funcs] package for examples.
 func (x Cmd) AsHidden() *Cmd {
 	x.hidden = true
 	return &x
@@ -476,7 +523,7 @@ func (x *Cmd) Aliases() []string {
 // IsValidName is assigned a function that returns a boolean for the
 // given name. Note that if this is changed certain characters may break
 // the creation of multicall binary links and bash completion. See the
-// [pkg/github.com/rwxrob/bonzai/is] package for alternatives.
+// [pkg/github.com/BuddhiLW/bonzai/is] package for alternatives.
 var IsValidName = allLatinASCIILowerWithDashes
 
 func allLatinASCIILowerWithDashes(in string) bool {
@@ -581,7 +628,7 @@ func (x *Cmd) aliasSlice() []string {
 //	complete -C foo foo
 //
 // See [Completer] and [CmdCompleter] for more information about
-// completion and the [pkg/github.com/rwxrob/bonzai/comp/completers]
+// completion and the [pkg/github.com/BuddhiLW/bonzai/comp/completers]
 // package for a growing collection of community maintained common
 // completer implementations. Contributions always welcome.
 //
@@ -912,7 +959,7 @@ func (x *Cmd) CmdNames() []string {
 // along with the remaining arguments. Typically the args passed are
 // directly derived from the command line. Seek also sets [Cmd.Caller]
 // on each [Cmd] in the path. Seek is indirectly called by [Cmd.Run] and
-// [Cmd.Exec]. See [pkg/github.com/rwxrob/bonzai/cmds/help] for
+// [Cmd.Exec]. See [pkg/github.com/BuddhiLW/bonzai/cmds/help] for
 // a practical example of how and why a command might need to call Seek.
 // Also see [Cmd.SeekInit] when environment variables and initialization
 // functions are wanted as well. Seek returns its receiver and the same

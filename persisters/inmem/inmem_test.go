@@ -3,7 +3,7 @@ package inmem_test
 import (
 	"fmt"
 
-	"github.com/rwxrob/bonzai/persisters/inmem"
+	"github.com/BuddhiLW/bonzai/persisters/inmem"
 )
 
 func ExampleSetup() {

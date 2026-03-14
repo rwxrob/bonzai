@@ -1,8 +1,8 @@
 package comp
 
 import (
-	"github.com/rwxrob/bonzai"
-	"github.com/rwxrob/bonzai/fn/filt"
+	"github.com/BuddhiLW/bonzai"
+	"github.com/BuddhiLW/bonzai/fn/filt"
 )
 
 type aliases struct{}

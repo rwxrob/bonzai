@@ -7,7 +7,7 @@ import (
 	"sort"
 	"strings"
 
-	"github.com/rwxrob/bonzai/fn"
+	"github.com/BuddhiLW/bonzai/fn"
 )
 
 // Note to maintainers: This file contains maps that require additional

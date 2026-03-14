@@ -9,9 +9,9 @@ import (
 
 	"golang.org/x/mod/semver"
 
-	"github.com/rwxrob/bonzai/fn/each"
-	"github.com/rwxrob/bonzai/futil"
-	"github.com/rwxrob/bonzai/run"
+	"github.com/BuddhiLW/bonzai/fn/each"
+	"github.com/BuddhiLW/bonzai/futil"
+	"github.com/BuddhiLW/bonzai/run"
 )
 
 type VerPart int

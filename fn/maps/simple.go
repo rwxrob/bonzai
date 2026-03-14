@@ -8,8 +8,8 @@ import (
 	"path/filepath"
 	"strings"
 
-	"github.com/rwxrob/bonzai/fn"
-	"github.com/rwxrob/bonzai/fn/mapf"
+	"github.com/BuddhiLW/bonzai/fn"
+	"github.com/BuddhiLW/bonzai/fn/mapf"
 )
 
 // Note to maintainers: This file contains simple maps that are

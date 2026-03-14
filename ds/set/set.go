@@ -7,7 +7,7 @@ sets of anything convert to its string notation with to.String.
 */
 package set
 
-import "github.com/rwxrob/bonzai/to"
+import "github.com/BuddhiLW/bonzai/to"
 
 // Minus performs a set "minus" operation by returning a new set with
 // the elements of the second set removed from it. Any type type may be

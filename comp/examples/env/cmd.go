@@ -3,10 +3,10 @@ package main
 import (
 	"fmt"
 
-	"github.com/rwxrob/bonzai"
-	"github.com/rwxrob/bonzai/cmds/help"
-	"github.com/rwxrob/bonzai/comp"
-	"github.com/rwxrob/bonzai/fn/tr"
+	"github.com/BuddhiLW/bonzai"
+	"github.com/BuddhiLW/bonzai/cmds/help"
+	"github.com/BuddhiLW/bonzai/comp"
+	"github.com/BuddhiLW/bonzai/fn/tr"
 )
 
 var XDG = comp.Env{"XDG_", false}

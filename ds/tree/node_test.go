@@ -3,7 +3,7 @@ package tree_test
 import (
 	"fmt"
 
-	"github.com/rwxrob/bonzai/ds/tree"
+	"github.com/BuddhiLW/bonzai/ds/tree"
 )
 
 func ExampleNode_type_is_Integer() {

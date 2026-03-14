@@ -4,8 +4,8 @@ import (
 	"fmt"
 	"os"
 
-	"github.com/rwxrob/bonzai/comp"
-	"github.com/rwxrob/bonzai/fn/tr"
+	"github.com/BuddhiLW/bonzai/comp"
+	"github.com/BuddhiLW/bonzai/fn/tr"
 )
 
 func ExampleCompNames_Complete() {

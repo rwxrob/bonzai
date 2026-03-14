@@ -1,8 +1,8 @@
 package main
 
 import (
-	"github.com/rwxrob/bonzai"
-	"github.com/rwxrob/bonzai/comp"
+	"github.com/BuddhiLW/bonzai"
+	"github.com/BuddhiLW/bonzai/comp"
 	"github.com/rwxrob/term"
 )
 

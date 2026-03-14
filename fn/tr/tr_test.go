@@ -3,7 +3,7 @@ package tr_test
 import (
 	"fmt"
 
-	"github.com/rwxrob/bonzai/fn/tr"
+	"github.com/BuddhiLW/bonzai/fn/tr"
 )
 
 func ExamplePrefix() {

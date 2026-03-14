@@ -6,7 +6,7 @@ import (
 	"os"
 	"regexp"
 
-	"github.com/rwxrob/bonzai/scanner"
+	"github.com/BuddhiLW/bonzai/scanner"
 )
 
 func ExampleS_init() {

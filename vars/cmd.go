@@ -5,12 +5,12 @@ import (
 	"path/filepath"
 	"strings"
 
-	"github.com/rwxrob/bonzai"
-	"github.com/rwxrob/bonzai/cmds/help"
-	"github.com/rwxrob/bonzai/comp"
-	"github.com/rwxrob/bonzai/futil"
-	"github.com/rwxrob/bonzai/run"
-	"github.com/rwxrob/bonzai/term"
+	"github.com/BuddhiLW/bonzai"
+	"github.com/BuddhiLW/bonzai/cmds/help"
+	"github.com/BuddhiLW/bonzai/comp"
+	"github.com/BuddhiLW/bonzai/futil"
+	"github.com/BuddhiLW/bonzai/run"
+	"github.com/BuddhiLW/bonzai/term"
 )
 
 func cmdDefMap(x *bonzai.Cmd) (*Map, error) {

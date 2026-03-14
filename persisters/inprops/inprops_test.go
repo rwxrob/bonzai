@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"os"
 
-	"github.com/rwxrob/bonzai/persisters/inprops"
+	"github.com/BuddhiLW/bonzai/persisters/inprops"
 )
 
 func ExampleSetup() {

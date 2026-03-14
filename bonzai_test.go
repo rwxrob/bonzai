@@ -2,8 +2,9 @@ package bonzai_test
 
 import (
 	"fmt"
+	"testing"
 
-	"github.com/rwxrob/bonzai"
+	"github.com/BuddhiLW/bonzai"
 )
 
 func ExampleCmd_Aliases() {
@@ -478,4 +479,48 @@ func ExampleCmd_PathDashed() {
 	// sssh [] <nil>
 	// foo-sssh
 
+}
+
+func TestMcpMeta(t *testing.T) {
+	cmd := &bonzai.Cmd{
+		Name:  "test",
+		Short: "test command",
+		Do:    bonzai.Nothing,
+		Mcp: &bonzai.McpMeta{
+			Desc: "MCP tool description",
+			Params: []bonzai.McpParam{
+				{Name: "path", Desc: "file path", Type: "string", Required: true},
+			},
+		},
+	}
+
+	if cmd.McpDesc() != "MCP tool description" {
+		t.Error("McpDesc should return Mcp.Desc when set")
+	}
+}
+
+func TestMcpDescFallback(t *testing.T) {
+	cmd := &bonzai.Cmd{
+		Name:  "test",
+		Short: "fallback description",
+		Do:    bonzai.Nothing,
+	}
+
+	if cmd.McpDesc() != "fallback description" {
+		t.Error("McpDesc should fall back to Short when Mcp is nil")
+	}
+}
+
+func TestWithMcp(t *testing.T) {
+	original := &bonzai.Cmd{Name: "test", Do: bonzai.Nothing}
+	meta := &bonzai.McpMeta{Desc: "with mcp"}
+
+	copy := original.WithMcp(meta)
+
+	if copy.Mcp == nil || copy.Mcp.Desc != "with mcp" {
+		t.Error("WithMcp should set MCP metadata")
+	}
+	if original.Mcp != nil {
+		t.Error("WithMcp should not modify original")
+	}
 }

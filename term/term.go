@@ -17,7 +17,7 @@ import (
 	"syscall"
 	"unicode"
 
-	"github.com/rwxrob/bonzai/term/esc"
+	"github.com/BuddhiLW/bonzai/term/esc"
 	"golang.org/x/crypto/ssh/terminal"
 )
 

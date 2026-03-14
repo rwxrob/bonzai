@@ -7,7 +7,7 @@ import (
 	"path/filepath"
 	"strings"
 
-	"github.com/rwxrob/bonzai/fn"
+	"github.com/BuddhiLW/bonzai/fn"
 )
 
 type Strings fn.Filterer[string]

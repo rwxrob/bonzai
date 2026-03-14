@@ -3,7 +3,7 @@ package github_test
 import (
 	"fmt"
 
-	"github.com/rwxrob/bonzai/github"
+	"github.com/BuddhiLW/bonzai/github"
 )
 
 func ExampleClient_defaults() {

@@ -3,8 +3,8 @@ package comp_test
 import (
 	"fmt"
 
-	"github.com/rwxrob/bonzai"
-	"github.com/rwxrob/bonzai/comp"
+	"github.com/BuddhiLW/bonzai"
+	"github.com/BuddhiLW/bonzai/comp"
 )
 
 func ExampleAliases_Complete() {

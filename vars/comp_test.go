@@ -4,9 +4,9 @@
 package vars_test
 
 import (
-	"github.com/rwxrob/bonzai/json"
+	"github.com/BuddhiLW/bonzai/json"
 
-	"github.com/rwxrob/bonzai/vars"
+	"github.com/BuddhiLW/bonzai/vars"
 )
 
 func ExampleComp_Complete() {

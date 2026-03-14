@@ -32,9 +32,62 @@ Take a look at the following commands to get an idea of what can be done:
 
 We have worked hard keep things as simple as possible so they are intuitive and to document this package as succinctly as possible so it is very usable from any decent tool that allows looking up documentation while writing the code.
 
+## MCP (Model Context Protocol) Native
+
+Bonzai commands can be automatically exposed as MCP tools for AI assistants like Claude. This allows your CLI tools to be used directly by AI agents.
+
+### Quick Start
+
+1. Add MCP metadata to your commands:
+
+```go
+var MyCmd = &bonzai.Cmd{
+    Name:  `mycmd`,
+    Short: `does something useful`,
+    Mcp: &bonzai.McpMeta{
+        Params: []bonzai.McpParam{
+            {Name: "input", Desc: "Input to process", Required: true},
+        },
+    },
+    Do: func(x *bonzai.Cmd, args ...string) error {
+        // implementation
+        return nil
+    },
+}
+```
+
+2. Create an MCP server binary:
+
+```go
+// cmd/myapp-mcp/main.go
+package main
+
+import (
+    "log"
+    "github.com/mark3labs/mcp-go/server"
+    bmcp "github.com/rwxrob/bonzai/mcp"
+    "mymodule/mycmd"
+)
+
+func main() {
+    s := bmcp.NewServer(mycmd.Root, bmcp.OnlyTagged())
+    if err := server.ServeStdio(s); err != nil {
+        log.Fatalf("Server error: %v", err)
+    }
+}
+```
+
+3. Register with Claude Code:
+
+```bash
+claude mcp add --scope user --transport stdio myapp -- myapp-mcp
+```
+
+For complete documentation including persistent state, examples, and best practices, see **[docs/mcp.md](docs/mcp.md)**.
+
 ## Legal
 
-Copyright 2024 Robert S. Muhlestein (<mailto:rob@rwx.gg>)  
+Copyright 2024 Robert S. Muhlestein (<mailto:rob@rwx.gg>)
 SPDX-License-Identifier: Apache-2.0
 
 "Bonzai" and "bonzai" are legal trademarks of Robert S. Muhlestein but

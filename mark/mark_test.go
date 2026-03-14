@@ -4,8 +4,8 @@ import (
 	"fmt"
 	"text/template"
 
-	"github.com/rwxrob/bonzai"
-	"github.com/rwxrob/bonzai/mark"
+	"github.com/BuddhiLW/bonzai"
+	"github.com/BuddhiLW/bonzai/mark"
 )
 
 type Thing struct {
