@@ -12,6 +12,7 @@ import (
 	"github.com/rwxrob/bonzai/futil"
 	"github.com/rwxrob/bonzai/mark/funcs"
 	"github.com/rwxrob/bonzai/run"
+	"github.com/rwxrob/bonzai/term"
 	"github.com/rwxrob/bonzai/to"
 )
 
@@ -264,4 +265,86 @@ func countRunes(in string, it rune) int {
 		i++
 	}
 	return i
+}
+
+// Print renders the bonzai mark output for the given [Cmd] to stdout
+// using terminal-aware width detection and minimal markdown rendering:
+// section headers become bold uppercase, code blocks are preserved, and
+// paragraphs are word-wrapped to the terminal width.
+func Print(x *bonzai.Cmd) error {
+	md, err := Bonzai(x)
+	if err != nil {
+		return err
+	}
+	term.WinSizeUpdate()
+	width := int(term.WinSize.Col)
+	if width < 10 {
+		width = 80
+	}
+	fmt.Print("\033[2J\033[H" + render(md, width))
+	return nil
+}
+
+func render(md string, width int) string {
+	lines := strings.Split(md, "\n")
+	var out strings.Builder
+	var inCode bool
+
+	for i := 0; i < len(lines); i++ {
+		line := lines[i]
+		trimmed := strings.TrimSpace(line)
+
+		if strings.HasPrefix(trimmed, "~~~") || strings.HasPrefix(trimmed, "```") {
+			if inCode {
+				inCode = false
+				out.WriteString("\n")
+			} else {
+				inCode = true
+				out.WriteString("\n")
+			}
+			continue
+		}
+
+		if inCode {
+			out.WriteString("    " + line + "\n")
+			continue
+		}
+
+		if strings.HasPrefix(line, "    ") {
+			out.WriteString(line + "\n")
+			continue
+		}
+
+		if strings.HasPrefix(trimmed, "#") {
+			title := strings.TrimLeft(trimmed, "# ")
+			out.WriteString(term.Bold + strings.ToUpper(title) + term.Reset + "\n\n")
+			continue
+		}
+
+		if trimmed == "" {
+			out.WriteString("\n")
+			continue
+		}
+
+		var para strings.Builder
+		para.WriteString(line)
+		for i+1 < len(lines) {
+			next := lines[i+1]
+			nextTrimmed := strings.TrimSpace(next)
+			if nextTrimmed == "" ||
+				strings.HasPrefix(nextTrimmed, "#") ||
+				strings.HasPrefix(nextTrimmed, "~~~") ||
+				strings.HasPrefix(nextTrimmed, "```") ||
+				strings.HasPrefix(next, "    ") {
+				break
+			}
+			i++
+			para.WriteString(" " + next)
+		}
+
+		wrapped, _ := to.Wrapped(width, para.String())
+		out.WriteString(wrapped + "\n")
+	}
+
+	return out.String()
 }
