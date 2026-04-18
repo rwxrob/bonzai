@@ -6,8 +6,6 @@ require (
 	github.com/rwxrob/bonzai v0.56.5
 	github.com/rwxrob/bonzai/comp v0.10.0
 	github.com/rwxrob/bonzai/mark v0.12.0
-	github.com/rwxrob/bonzai/term v0.2.1
-	github.com/rwxrob/bonzai/to v0.6.1
 )
 
 require (
@@ -19,8 +17,6 @@ require (
 	github.com/rwxrob/bonzai/mark/funcs v0.8.6 // indirect
 	github.com/rwxrob/bonzai/run v0.7.0 // indirect
 	github.com/rwxrob/bonzai/scanner v0.1.0 // indirect
+	github.com/rwxrob/bonzai/to v0.6.1 // indirect
 	github.com/rwxrob/bonzai/uniq v0.1.0 // indirect
-	golang.org/x/crypto v0.28.0 // indirect
-	golang.org/x/sys v0.26.0 // indirect
-	golang.org/x/term v0.25.0 // indirect
 )
