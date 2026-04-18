@@ -1,23 +1,19 @@
 package help
 
 import (
-	_ "embed"
-	"encoding/json"
 	"fmt"
+	"strings"
 
-	"github.com/charmbracelet/glamour"
 	"github.com/rwxrob/bonzai"
 	"github.com/rwxrob/bonzai/mark"
-	"gopkg.in/yaml.v3"
+	"github.com/rwxrob/bonzai/term"
+	"github.com/rwxrob/bonzai/to"
 )
-
-//go:embed style.yaml
-var Style []byte
 
 var Cmd = &bonzai.Cmd{
 	Name:  `help`,
 	Alias: `h|-h|--help|--h|/?`,
-	Vers:  `v0.8.0`,
+	Vers:  `v0.9.0`,
 	Short: `display command help`,
 	Long: `
 		The {{code .Name}} command displays the help information for the
@@ -39,33 +35,87 @@ var Cmd = &bonzai.Cmd{
 			return err
 		}
 
-		// load embedded yaml file and convert to json
-		styleMap := map[string]any{}
-		if err := yaml.Unmarshal(Style, &styleMap); err != nil {
-			return err
-		}
-		jsonBytes, err := json.Marshal(styleMap)
-		if err != nil {
-			return err
+		term.WinSizeUpdate()
+		width := int(term.WinSize.Col)
+		if width < 10 {
+			width = 80
 		}
 
-		renderer, err := glamour.NewTermRenderer(
-			glamour.WithAutoStyle(),
-			glamour.WithPreservedNewLines(),
-			glamour.WithStylesFromJSONBytes(jsonBytes),
-		)
-
-		if err != nil {
-			return fmt.Errorf("developer-error: %v", err)
-		}
-
-		rendered, err := renderer.Render(md)
-		if err != nil {
-			return fmt.Errorf("developer-error: %v", err)
-		}
-
-		fmt.Println("\u001b[2J\u001b[H" + rendered)
+		rendered := renderMarkdown(md, width)
+		fmt.Print("\033[2J\033[H" + rendered)
 
 		return nil
 	},
+}
+
+// renderMarkdown performs minimal markdown rendering for terminal
+// output: section headers become bold uppercase, code blocks are
+// preserved as-is, and paragraphs are word-wrapped to the given width.
+func renderMarkdown(md string, width int) string {
+	lines := strings.Split(md, "\n")
+	var out strings.Builder
+	var inCode bool
+
+	for i := 0; i < len(lines); i++ {
+		line := lines[i]
+
+		// fenced code blocks (~~~ or ```)
+		trimmed := strings.TrimSpace(line)
+		if strings.HasPrefix(trimmed, "~~~") || strings.HasPrefix(trimmed, "```") {
+			if inCode {
+				inCode = false
+				out.WriteString("\n")
+				continue
+			}
+			inCode = true
+			out.WriteString("\n")
+			continue
+		}
+
+		if inCode {
+			out.WriteString("    " + line + "\n")
+			continue
+		}
+
+		// indented code blocks (4+ spaces)
+		if len(line) > 0 && strings.HasPrefix(line, "    ") {
+			out.WriteString(line + "\n")
+			continue
+		}
+
+		// section headers
+		if strings.HasPrefix(trimmed, "#") {
+			title := strings.TrimLeft(trimmed, "# ")
+			out.WriteString(term.Bold + strings.ToUpper(title) + term.Reset + "\n\n")
+			continue
+		}
+
+		// blank lines
+		if trimmed == "" {
+			out.WriteString("\n")
+			continue
+		}
+
+		// regular paragraph: collect contiguous non-blank lines
+		var para strings.Builder
+		para.WriteString(line)
+		for i+1 < len(lines) {
+			next := lines[i+1]
+			nextTrimmed := strings.TrimSpace(next)
+			if nextTrimmed == "" ||
+				strings.HasPrefix(nextTrimmed, "#") ||
+				strings.HasPrefix(nextTrimmed, "~~~") ||
+				strings.HasPrefix(nextTrimmed, "```") ||
+				strings.HasPrefix(next, "    ") {
+				break
+			}
+			i++
+			para.WriteString(" " + next)
+		}
+
+		wrapped, _ := to.Wrapped(width, para.String())
+		out.WriteString(wrapped + "\n")
+	}
+
+	return out.String()
 }
