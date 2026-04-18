@@ -36,7 +36,8 @@ type Map struct {
 	lastload time.Time
 }
 
-// Map implements [Driver]
+// Map implements [Driver]. All public methods are safe for concurrent
+// use by multiple goroutines.
 var _ Driver = new(Map)
 
 // All returns the state data file as text marshaled in the format: k=v,
@@ -131,15 +132,17 @@ func (c *Map) loadFile(file string) (err error) {
 	}
 
 	c.lastload = info.ModTime()
-	return c.Load(string(buf))
+	return c.unmarshalText(buf)
 }
 
 // Load accepts a string of key-value pairs and adds them to the map,
 // where pairs are separated by newlines and each pair is in the format
 // "k=v". Implements [Driver].
 func (m *Map) Load(keyvals string) error {
+	m.Lock()
+	defer m.Unlock()
 	m.refresh()
-	err := m.UnmarshalText([]byte(keyvals))
+	err := m.unmarshalText([]byte(keyvals))
 	if err != nil {
 		return err
 	}
@@ -152,6 +155,10 @@ func (m *Map) Load(keyvals string) error {
 func (c *Map) UnmarshalText(in []byte) error {
 	c.Lock()
 	defer c.Unlock()
+	return c.unmarshalText(in)
+}
+
+func (c *Map) unmarshalText(in []byte) error {
 	lines := to.Lines(string(in))
 	for _, line := range lines {
 		parts := strings.SplitN(line, `=`, 2)
@@ -223,8 +230,8 @@ func (m *Map) Edit() error { return edit.Files(m.File) }
 // by locking before the operation and unlocking afterward.
 func (m *Map) Clear() error {
 	m.Lock()
+	defer m.Unlock()
 	maps.Clear(m.M)
-	m.Unlock()
 	if len(m.File) > 0 {
 		return m.save()
 	}
@@ -235,6 +242,8 @@ func (m *Map) Clear() error {
 // the key does not exist. Get calls [Map.FileHasChanged] and if true
 // calls [Map.Load].
 func (m *Map) Get(key string) (string, error) {
+	m.Lock()
+	defer m.Unlock()
 	m.refresh()
 	if val, exists := m.M[key]; exists {
 		return val, nil
@@ -246,6 +255,8 @@ func (m *Map) Get(key string) (string, error) {
 // after refreshing the map's data. Returns true if the
 // key is present; otherwise, it returns false.
 func (m *Map) Has(key string) bool {
+	m.Lock()
+	defer m.Unlock()
 	m.refresh()
 	_, has := m.M[key]
 	return has
@@ -255,6 +266,8 @@ func (m *Map) Has(key string) bool {
 // the given regular expression. An empty string is a valid (non-error)
 // result indicating nothing matched. Fulfills the [Driver] interface.
 func (m *Map) GrepK(regx string) (string, error) {
+	m.Lock()
+	defer m.Unlock()
 	var buf strings.Builder
 	if len(m.File) > 0 {
 		if err := m.refresh(); err != nil {
@@ -276,6 +289,8 @@ func (m *Map) GrepK(regx string) (string, error) {
 // GrepV returns all key-value pairs associated with a value that matches
 // the given regular expression. Fulfills the [Driver] interface.
 func (m *Map) GrepV(regx string) (string, error) {
+	m.Lock()
+	defer m.Unlock()
 	var buf strings.Builder
 	if len(m.File) > 0 {
 		if err := m.refresh(); err != nil {
@@ -296,6 +311,8 @@ func (m *Map) GrepV(regx string) (string, error) {
 
 // Set adds or updates the value associated with a key.
 func (m *Map) Set(key, val string) error {
+	m.Lock()
+	defer m.Unlock()
 	m.refresh()
 	if cur, has := m.M[key]; has && val == cur {
 		return nil
@@ -306,7 +323,7 @@ func (m *Map) Set(key, val string) error {
 
 // Save persists the current map to file. See OverWrite.
 func (m *Map) save() error {
-	byt, err := m.MarshalText()
+	byt, err := m.marshalText()
 	if err != nil {
 		return err
 	}
@@ -317,6 +334,10 @@ func (m *Map) save() error {
 func (c *Map) MarshalText() ([]byte, error) {
 	c.Lock()
 	defer c.Unlock()
+	return c.marshalText()
+}
+
+func (c *Map) marshalText() ([]byte, error) {
 	lines := make([]string, 0, len(c.M))
 	for k, v := range c.M {
 		lines = append(lines, k+"="+to.EscReturns(v))
@@ -333,6 +354,8 @@ func (c *Map) MarshalText() ([]byte, error) {
 // Delete deletes an entry from the persistent cache. Fulfills the
 // [Driver] interface.
 func (m *Map) Delete(key string) error {
+	m.Lock()
+	defer m.Unlock()
 	if err := m.refresh(); err != nil {
 		return err
 	}
@@ -346,6 +369,8 @@ func (m *Map) Delete(key string) error {
 // linearly passes through every map rather than attempt to sort the map
 // keys first.
 func (m *Map) KeysWithPrefix(pre string) ([]string, error) {
+	m.Lock()
+	defer m.Unlock()
 	if err := m.refresh(); err != nil {
 		return []string{}, err
 	}
