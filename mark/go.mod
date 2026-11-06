@@ -7,7 +7,6 @@ require (
 	github.com/chaitanyabsprip/bonzai/futil v0.3.1
 	github.com/chaitanyabsprip/bonzai/run v0.7.1
 	github.com/chaitanyabsprip/bonzai/to v0.3.1
-	github.com/rwxrob/bonzai/mark/funcs v0.8.6
 )
 
 require (
@@ -17,13 +16,4 @@ require (
 	github.com/chaitanyabsprip/bonzai/scanner v0.1.1 // indirect
 	github.com/chaitanyabsprip/bonzai/uniq v0.1.1 // indirect
 	github.com/rogpeppe/go-internal v1.13.1 // indirect
-	github.com/rwxrob/bonzai v0.56.5 // indirect
-	github.com/rwxrob/bonzai/ds v0.1.1 // indirect
-	github.com/rwxrob/bonzai/fn v0.9.0 // indirect
-	github.com/rwxrob/bonzai/futil v0.4.0 // indirect
-	github.com/rwxrob/bonzai/is v0.3.0 // indirect
-	github.com/rwxrob/bonzai/run v0.7.0 // indirect
-	github.com/rwxrob/bonzai/scanner v0.1.0 // indirect
-	github.com/rwxrob/bonzai/to v0.6.1 // indirect
-	github.com/rwxrob/bonzai/uniq v0.1.0 // indirect
 )

@@ -10,7 +10,6 @@ import (
 
 	"github.com/chaitanyabsprip/bonzai"
 	"github.com/chaitanyabsprip/bonzai/futil"
-	"github.com/rwxrob/bonzai/mark/funcs"
 	"github.com/chaitanyabsprip/bonzai/run"
 	"github.com/chaitanyabsprip/bonzai/to"
 )
@@ -26,7 +25,6 @@ var DefaultBonzaiCmdTemplate string
 // See following for details:
 //
 // - [pkg/github.com/chaitanyabsprip/bonzai]
-// - [pkg/github.com/rwxrob/bonzai/mark/funcs]
 // - [pkg/text/template]
 //
 // Normally, the output from this command is then passed to anything
@@ -34,7 +32,7 @@ var DefaultBonzaiCmdTemplate string
 // Any of the functions from the funcs library can be overridden by
 // Cmd.Funcs instead.
 func Bonzai(x *bonzai.Cmd) (string, error) {
-	f := to.MergedMaps(funcs.Map, x.Funcs)
+	f := to.MergedMaps(Map, x.Funcs)
 	return Fill(x, f, DefaultBonzaiCmdTemplate)
 }
 
